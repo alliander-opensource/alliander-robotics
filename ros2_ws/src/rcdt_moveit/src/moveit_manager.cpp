@@ -4,18 +4,6 @@
 
 #include "moveit_manager.hpp"
 
-#include <moveit/move_group_interface/move_group_interface.hpp>
-#include <moveit/robot_state/robot_state.hpp>
-#include <rclcpp/executors/multi_threaded_executor.hpp>
-#include <rclcpp/logging.hpp>
-#include <rclcpp/node_options.hpp>
-#include <rclcpp/parameter_value.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <vector>
-
-using std::placeholders::_1;
-using std::placeholders::_2;
-
 MoveitManager::MoveitManager(rclcpp::Node::SharedPtr node_)
     : node(node_),
       tf_broadcaster(node),

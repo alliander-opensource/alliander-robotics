@@ -45,7 +45,7 @@ def launch_setup(context: LaunchContext) -> list:
     if simulation:
         fr3_gripper = Node(
             package="rcdt_franka",
-            executable="franka_gripper_simulation.py",
+            executable="fr3_gripper_simulation",
             output="screen",
             namespace=namespace,
         )
@@ -75,9 +75,11 @@ def launch_setup(context: LaunchContext) -> list:
         Register.on_exit(joint_state_broadcaster_spawner, context),
         Register.on_exit(fr3_arm_controller_spawner, context),
         Register.on_start(fr3_gripper, context),
-        Register.on_exit(gripper_action_controller_spawner, context)
-        if simulation
-        else SKIP,
+        (
+            Register.on_exit(gripper_action_controller_spawner, context)
+            if simulation
+            else SKIP
+        ),
     ]
 
 

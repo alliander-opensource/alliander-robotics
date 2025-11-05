@@ -27,20 +27,18 @@ def launch_setup(context: LaunchContext) -> list:
     if use_sim:
         convert_32FC1_to_16UC1_node = Node(  # noqa: N806
             package="rcdt_sensors",
-            executable="convert_32FC1_to_16UC1.py",
+            executable="convert_32FC1_to_16UC1",
             namespace=namespace,
         )
         combine_camera_topics_node = Node(
             package="rcdt_sensors",
-            executable="combine_camera_topics.py",
+            executable="combine_camera_topics",
             namespace=namespace,
         )
-        realsense = LaunchDescription(
-            [
-                Register.on_start(convert_32FC1_to_16UC1_node, context),
-                Register.on_start(combine_camera_topics_node, context),
-            ]
-        )
+        return [
+            Register.on_start(convert_32FC1_to_16UC1_node, context),
+            Register.on_start(combine_camera_topics_node, context),
+        ]
     else:
         realsense2_camera_node = Node(
             package="realsense2_camera",
@@ -85,7 +83,7 @@ def launch_setup(context: LaunchContext) -> list:
             [Register.on_start(realsense2_camera_node, context)]
         )
 
-    return [realsense]
+        return [realsense]
 
 
 def generate_launch_description() -> LaunchDescription:

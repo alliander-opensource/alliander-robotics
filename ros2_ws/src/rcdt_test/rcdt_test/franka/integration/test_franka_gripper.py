@@ -11,7 +11,7 @@ from rcdt_launch.robot import Arm
 from rcdt_utilities.launch_utils import assert_for_message, get_file_path
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.test_utils import (
-    call_trigger_service,
+    call_trigger_action,
     wait_for_register,
     wait_until_reached_joint,
 )
@@ -64,14 +64,14 @@ def test_joint_states_published(timeout: int) -> None:
 
 @pytest.mark.launch(fixture=franka_and_gripper_launch)
 @pytest.mark.parametrize(
-    "service, expected_value",
+    "action, expected_value",
     [
-        (f"{namespace}/close_gripper", 0.00),
-        (f"{namespace}/open_gripper", 0.04),
+        (f"{namespace}/gripper/close", 0.00),
+        (f"{namespace}/gripper/open", 0.04),
     ],
 )
 def test_gripper_action(
-    service: str,
+    action: str,
     expected_value: float,
     test_node: Node,
     finger_joint_fault_tolerance: float,
@@ -80,13 +80,13 @@ def test_gripper_action(
     """Test gripper open/close action and verify joint state.
 
     Args:
-        service (str): The service to call for the gripper action.
+        action (str): The action to call.
         expected_value (float): The expected joint value after the action.
         test_node (Node): The test node to use for the test.
         finger_joint_fault_tolerance (float): The tolerance for the finger joint position.
         timeout (int): The timeout in seconds before stopping the test.
     """
-    assert call_trigger_service(test_node, service, timeout=timeout) is True
+    assert call_trigger_action(test_node, action, timeout=timeout) is True
     reached_goal, joint_value = wait_until_reached_joint(
         namespace=namespace,
         joint="fr3_finger_joint1",

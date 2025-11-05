@@ -11,6 +11,7 @@
 #include <moveit/move_group_interface/move_group_interface.hpp>
 #include <moveit/planning_scene_interface/planning_scene_interface.hpp>
 #include <moveit/robot_model/joint_model_group.hpp>
+#include <moveit/robot_state/robot_state.hpp>
 #include <moveit_msgs/srv/servo_command_type.hpp>
 #include <rcdt_messages/srv/add_marker.hpp>
 #include <rcdt_messages/srv/add_object.hpp>
@@ -20,13 +21,22 @@
 #include <rcdt_messages/srv/move_to_configuration.hpp>
 #include <rcdt_messages/srv/pose_stamped_srv.hpp>
 #include <rcdt_messages/srv/transform_goal_pose.hpp>
+#include <rclcpp/executors/multi_threaded_executor.hpp>
+#include <rclcpp/logging.hpp>
 #include <rclcpp/node.hpp>
+#include <rclcpp/node_options.hpp>
+#include <rclcpp/parameter_value.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <rviz_visual_tools/rviz_visual_tools.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <string>
+#include <vector>
 
 #include "geometry_msgs/msg/transform_stamped.hpp"
+
+using std::placeholders::_1;
+using std::placeholders::_2;
 
 typedef rcdt_messages::srv::AddObject AddObject;
 typedef rcdt_messages::srv::AddMarker AddMarker;

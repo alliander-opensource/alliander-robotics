@@ -11,9 +11,25 @@ find_package(ament_cmake_python REQUIRED)
 
 # Other dependencies:
 find_package(rclpy REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(realsense2_camera_msgs REQUIRED)
 find_package(rcdt_utilities REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(OpenCV REQUIRED)
+
+# C++ executables:
+include_directories(include)
+add_executable(convert_32FC1_to_16UC1 src/convert_32FC1_to_16UC1.cpp)
+ament_target_dependencies(convert_32FC1_to_16UC1
+  rclcpp
+  cv_bridge
+  OpenCV
+)
+
+install(
+  TARGETS convert_32FC1_to_16UC1
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Python executables:
 install(

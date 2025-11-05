@@ -22,20 +22,10 @@ def launch_setup(context: LaunchContext) -> list:
     """
     namespace = namespace_arg.string_value(context)
 
-    open_gripper = Node(
-        package="rcdt_franka",
-        executable="open_gripper.py",
-        namespace=namespace,
-    )
-    close_gripper = Node(
-        package="rcdt_franka",
-        executable="close_gripper.py",
-        namespace=namespace,
-    )
+    gripper = Node(package="rcdt_franka", executable="gripper", namespace=namespace)
 
     return [
-        Register.on_start(open_gripper, context),
-        Register.on_start(close_gripper, context),
+        Register.on_start(gripper, context),
     ]
 
 

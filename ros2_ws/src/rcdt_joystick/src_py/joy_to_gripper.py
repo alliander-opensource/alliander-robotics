@@ -8,12 +8,12 @@ from threading import Thread
 from typing import Literal
 
 import rclpy
+from rcdt_messages.action import Trigger as TriggerAction
 from rcdt_utilities.launch_utils import get_file_path, get_yaml, spin_executor
-from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.action import ActionClient
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
-from std_srvs.srv import Trigger
 
 
 class JoyToGripper(Node):
@@ -31,17 +31,8 @@ class JoyToGripper(Node):
         config_pkg = self.get_parameter("config_pkg").get_parameter_value().string_value
 
         ns = self.get_namespace()
-
-        cbg_open_gripper = MutuallyExclusiveCallbackGroup()
-        self.open_gripper = self.create_client(
-            Trigger, f"{ns}/open_gripper", callback_group=cbg_open_gripper
-        )
-
-        cbg_close_gripper = MutuallyExclusiveCallbackGroup()
-        self.close_gripper = self.create_client(
-            Trigger, f"{ns}/close_gripper", callback_group=cbg_close_gripper
-        )
-
+        self.open_gripper = ActionClient(self, TriggerAction, f"{ns}/gripper/open")
+        self.close_gripper = ActionClient(self, TriggerAction, f"{ns}/gripper/close")
         self.create_subscription(Joy, f"{ns}/joy", self.handle_input, 10)
 
         config = get_file_path(config_pkg, ["config"], "gamepad_mapping.yaml")
@@ -85,9 +76,9 @@ class JoyToGripper(Node):
         self.busy = True
         match action:
             case "open_gripper":
-                self.open_gripper.call(Trigger.Request())
+                self.open_gripper.send_goal_async(TriggerAction.Goal())
             case "close_gripper":
-                self.close_gripper.call(Trigger.Request())
+                self.close_gripper.send_goal_async(TriggerAction.Goal())
         self.busy = False
 
 

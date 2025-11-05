@@ -1,0 +1,10 @@
+[
+    {
+        "button": 0,
+        "service": "service"
+    },
+    {
+        "button": 1,
+        "topic": "/panther/joy"
+    }
+]

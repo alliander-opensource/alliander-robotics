@@ -18,6 +18,7 @@ apt install -y \
     zstd
 
 apt install -y \
+    ros-$ROS_DISTRO-cv-bridge \
     ros-$ROS_DISTRO-launch-pytest \
     ros-$ROS_DISTRO-moveit \
     ros-$ROS_DISTRO-moveit-servo \
