@@ -7,7 +7,6 @@ from _pytest.fixtures import SubRequest
 from geometry_msgs.msg import Pose
 from rcdt_utilities.launch_utils import assert_for_message
 from rcdt_utilities.test_utils import (
-    assert_joy_topic_switch,
     assert_movements_with_joy,
     call_trigger_service,
     wait_for_register,
@@ -67,23 +66,6 @@ def get_tests(namespace: str) -> dict:
                 timeout=timeout,
             )
             is True
-        )
-
-    def test_switch_joy_to_panther_topic(
-        _self: object, test_node: Node, timeout: int
-    ) -> None:
-        """Test that the joy topic switches to the Panther topic.
-
-        Args:
-            _self (object): The test class instance.
-            test_node (Node): The ROS 2 node to use for the test.
-            timeout (int): The timeout in seconds to wait before failing the test.
-        """
-        assert_joy_topic_switch(
-            node=test_node,
-            expected_topic=f"/{namespace}/joy",
-            button_config=[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            timeout=timeout,
         )
 
     def test_move_panther_with_joy(

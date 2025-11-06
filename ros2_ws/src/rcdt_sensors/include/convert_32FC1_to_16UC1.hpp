@@ -26,6 +26,10 @@ class Convert32FC1to16UC1 : public rclcpp::Node {
   rclcpp::Subscription<Image>::SharedPtr subscription;
   /// Publisher for 16-bit unsigned int data in mm.
   rclcpp::Publisher<Image>::SharedPtr publisher;
-  /// Callback where data type and scale are changed.
+
+  /**
+   * @brief Callback where data type and scale are changed.
+   * @param msg Input image to apply changes to.
+   */
   void subscription_callback(Image msg);
 };

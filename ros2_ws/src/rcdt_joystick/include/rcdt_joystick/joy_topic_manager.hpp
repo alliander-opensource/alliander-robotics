@@ -9,23 +9,13 @@
 #include <rclcpp/node.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 
+#include "button.hpp"
+
 using std::placeholders::_1;
 using std::placeholders::_2;
 
 using json = nlohmann::json;
 using Joy = sensor_msgs::msg::Joy;
-
-/// Struct that links joystick buttons to topics.
-struct Button {
-  /// Joystick button key.
-  int key;
-  /// Topic to publish on.
-  std::string topic;
-  /// Service to publish on.
-  std::string service;
-  /// Joystick button state.
-  int state = -1;
-};
 
 /// Class to send joystick button commands to ROS topics.
 class JoyTopicManager : public rclcpp::Node {
@@ -36,6 +26,10 @@ class JoyTopicManager : public rclcpp::Node {
   std::string file_name = "/config/gamepad_mapping.json";
   /// Constructor.
   JoyTopicManager();
+
+#ifdef BUILD_TESTING
+  std::map<int, Button> get_button_states() const { return buttons; }
+#endif
 
  private:
   /// HashMap between button keys and Button structs.

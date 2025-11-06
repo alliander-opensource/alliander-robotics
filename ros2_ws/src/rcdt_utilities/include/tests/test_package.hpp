@@ -5,9 +5,9 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <memory>
 #include <rcdt_messages/srv/express_pose_in_other_frame.hpp>
 #include <rcdt_messages/srv/transform_pose.hpp>
+#include <rclcpp/duration.hpp>
 #include <rclcpp/executors.hpp>
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <rclcpp/executors/single_threaded_executor.hpp>
@@ -16,6 +16,7 @@
 
 #include "rcdt_messages/srv/express_pose_in_other_frame.hpp"
 #include "rcdt_messages/srv/transform_pose.hpp"
+#include "rcdt_utilities/manipulate_pose.hpp"
 
 /**
  * Class to test the package.

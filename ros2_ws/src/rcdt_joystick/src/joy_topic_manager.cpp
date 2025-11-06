@@ -2,7 +2,7 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
-#include "joy_topic_manager.hpp"
+#include "rcdt_joystick/joy_topic_manager.hpp"
 
 JoyTopicManager::JoyTopicManager() : Node("joy_topic_manager") {
   this->declare_parameter("joy_topic", "/joy");
@@ -89,10 +89,4 @@ void JoyTopicManager::add_button(json json) {
 
   RCLCPP_WARN(this->get_logger(),
               "A key 'topic' or 'service' was expected in JSON.");
-}
-
-int main(int argc, char** argv) {
-  rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<JoyTopicManager>());
-  rclcpp::shutdown();
 }

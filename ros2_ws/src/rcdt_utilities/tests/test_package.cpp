@@ -4,18 +4,6 @@
 
 #include "tests/test_package.hpp"
 
-#include <gtest/gtest.h>
-
-#include <chrono>
-#include <future>
-#include <memory>
-#include <rclcpp/duration.hpp>
-#include <rclcpp/future_return_code.hpp>
-
-#include "geometry_msgs/msg/transform.hpp"
-#include "rcdt_messages/srv/transform_pose.hpp"
-#include "rcdt_utilities/manipulate_pose.hpp"
-
 #define PI 3.14159265
 
 /**

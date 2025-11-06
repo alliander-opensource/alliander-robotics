@@ -2,7 +2,9 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
-#include <memory>
+#include <tf2/convert.hpp>
+#include <tf2/exceptions.hpp>
+#include <tf2/time.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2_ros/transform_listener.hpp>
 

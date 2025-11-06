@@ -280,7 +280,7 @@ class Platform:  # noqa: PLR0904
         nodes.append(
             Node(
                 package="rcdt_joystick",
-                executable="joy_topic_manager.py",
+                executable="joy_topic_manager",
                 parameters=[
                     {"buttons": buttons},
                     {"services": services},
@@ -613,7 +613,9 @@ class Platform:  # noqa: PLR0904
             self.controller_path, launch_arguments=launch_arguments
         )
 
-    def create_launch_description(self) -> list[RegisteredLaunchDescription]:  # noqa: PLR6301
+    def create_launch_description(  # noqa: PLR6301
+        self,
+    ) -> list[RegisteredLaunchDescription]:
         """Create the launch description for the specific platform.
 
         Returns:
