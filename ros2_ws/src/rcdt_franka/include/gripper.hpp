@@ -6,8 +6,11 @@
 #include <franka_msgs/action/move.hpp>
 #include <rcdt_messages/action/trigger.hpp>
 #include <rclcpp/client.hpp>
+#include <rclcpp/executors.hpp>
 #include <rclcpp/node.hpp>
+#include <rclcpp/utilities.hpp>
 #include <rclcpp_action/client.hpp>
+#include <rclcpp_action/client_goal_handle.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <string>

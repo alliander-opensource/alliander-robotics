@@ -5,8 +5,11 @@
 #include "fr3_gripper_simulation.hpp"
 
 Fr3Gripper::Fr3Gripper() : Node("fr3_gripper") {
-  client = rclcpp_action::create_client<GripperCommand>(
-      this, "/franka/gripper_action_controller/gripper_cmd");
+  std::string ns = this->get_namespace();
+  std::string node_name = this->get_name();
+
+  client = rclcpp_action::create_client<ParallelGripperCommand>(
+      this, ns + "/gripper_action_controller/gripper_cmd");
   grasp_server = rclcpp_action::create_server<Grasp>(
       this, "~/grasp", std::bind(&Fr3Gripper::handle_goal<Grasp>, this, _1, _2),
       std::bind(&Fr3Gripper::handle_cancel<Grasp>, this, _1),
@@ -56,9 +59,9 @@ void Fr3Gripper::handle_accepted(
 template <>
 void Fr3Gripper::execute<Grasp>(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<Grasp>> goal_handle) {
-  auto goal = GripperCommand::Goal();
-  goal.command.position = respect_limits(goal_handle->get_goal()->width);
-  goal.command.max_effort = goal_handle->get_goal()->force;
+  auto goal = ParallelGripperCommand::Goal();
+  goal.command.position = {respect_limits(goal_handle->get_goal()->width)};
+  goal.command.effort = {goal_handle->get_goal()->force};
 
   send_goal(goal);
 
@@ -83,8 +86,8 @@ template <>
 void Fr3Gripper::execute<Homing>(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<Homing>>
         goal_handle) {
-  auto goal = GripperCommand::Goal();
-  goal.command.position = upper_limit;
+  auto goal = ParallelGripperCommand::Goal();
+  goal.command.position = {upper_limit};
 
   send_goal(goal);
 
@@ -108,8 +111,8 @@ void Fr3Gripper::execute<Homing>(
 template <>
 void Fr3Gripper::execute<Move>(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<Move>> goal_handle) {
-  auto goal = GripperCommand::Goal();
-  goal.command.position = respect_limits(goal_handle->get_goal()->width);
+  auto goal = ParallelGripperCommand::Goal();
+  goal.command.position = {respect_limits(goal_handle->get_goal()->width)};
 
   send_goal(goal);
 
@@ -125,9 +128,9 @@ void Fr3Gripper::execute<Move>(
   }
 };
 
-bool Fr3Gripper::send_goal(const GripperCommand::Goal& goal) {
+bool Fr3Gripper::send_goal(const ParallelGripperCommand::Goal& goal) {
   auto future_goal_handle = client->async_send_goal(goal);
-  if (future_goal_handle.wait_for(std::chrono::seconds(5)) ==
+  if (future_goal_handle.wait_for(std::chrono::seconds(6)) ==
       std::future_status::timeout) {
     RCLCPP_ERROR(this->get_logger(), "Failed to obtain goal_handle. Timeout.");
     return false;
@@ -153,9 +156,9 @@ double Fr3Gripper::respect_limits(double width) {
   return std::min(upper_limit, std::max(lower_limit, width));
 }
 
-bool Fr3Gripper::goal_reached(const GripperCommand::Goal& goal,
-                              const GripperCommand::Result& result) {
-  return std::abs(goal.command.position - result.position) <= tolerance;
+bool Fr3Gripper::goal_reached(const ParallelGripperCommand::Goal& goal,
+                              const ParallelGripperCommand::Result& result) {
+  return result.reached_goal;
 }
 
 int main(int argc, char** argv) {

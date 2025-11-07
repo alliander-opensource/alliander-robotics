@@ -2,7 +2,7 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
-#include <control_msgs/action/gripper_command.hpp>
+#include <control_msgs/action/parallel_gripper_command.hpp>
 #include <franka_msgs/action/grasp.hpp>
 #include <franka_msgs/action/homing.hpp>
 #include <franka_msgs/action/move.hpp>
@@ -22,7 +22,7 @@ typedef franka_msgs::action::Grasp Grasp;
 typedef franka_msgs::action::Homing Homing;
 typedef franka_msgs::action::Move Move;
 
-typedef control_msgs::action::GripperCommand GripperCommand;
+typedef control_msgs::action::ParallelGripperCommand ParallelGripperCommand;
 
 /** A node to simulate the fr3_gripper node of the real robot. */
 class Fr3Gripper : public rclcpp::Node {
@@ -38,7 +38,7 @@ class Fr3Gripper : public rclcpp::Node {
   double tolerance = 0.001;
 
   /** The action client to control the gripper. */
-  rclcpp_action::Client<GripperCommand>::SharedPtr client;
+  rclcpp_action::Client<ParallelGripperCommand>::SharedPtr client;
 
   /** The action server to accept grasp requests. */
   rclcpp_action::Server<Grasp>::SharedPtr grasp_server;
@@ -98,7 +98,7 @@ class Fr3Gripper : public rclcpp::Node {
    * @param goal
    * @return bool
    */
-  bool send_goal(const GripperCommand::Goal& goal);
+  bool send_goal(const ParallelGripperCommand::Goal& goal);
 
   /**
    * @brief Check if the goal has been reached
@@ -107,8 +107,8 @@ class Fr3Gripper : public rclcpp::Node {
    * @param result
    * @return bool
    */
-  bool goal_reached(const GripperCommand::Goal& goal,
-                    const GripperCommand::Result& result);
+  bool goal_reached(const ParallelGripperCommand::Goal& goal,
+                    const ParallelGripperCommand::Result& result);
 
   /**
    * @brief Return the width respecting the limits

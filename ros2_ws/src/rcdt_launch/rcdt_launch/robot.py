@@ -280,7 +280,7 @@ class Platform:  # noqa: PLR0904
         nodes.append(
             Node(
                 package="rcdt_joystick",
-                executable="joy_topic_manager",
+                executable="joy_topic_manager.py",
                 parameters=[
                     {"buttons": buttons},
                     {"services": services},

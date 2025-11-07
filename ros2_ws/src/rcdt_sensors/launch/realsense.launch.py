@@ -30,14 +30,8 @@ def launch_setup(context: LaunchContext) -> list:
             executable="convert_32FC1_to_16UC1",
             namespace=namespace,
         )
-        combine_camera_topics_node = Node(
-            package="rcdt_sensors",
-            executable="combine_camera_topics",
-            namespace=namespace,
-        )
         return [
             Register.on_start(convert_32FC1_to_16UC1_node, context),
-            Register.on_start(combine_camera_topics_node, context),
         ]
     else:
         realsense2_camera_node = Node(

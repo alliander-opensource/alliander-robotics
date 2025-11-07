@@ -18,9 +18,10 @@ mkdir -p ~/.vscode-server
 mkdir -p $SCRIPT_DIR/.config/pyflow
 cp --update=none -a pyflow/default_config/. .config/pyflow
 touch $SCRIPT_DIR/.personal.bashrc
-docker pull $IMAGE:$image_tag
+# docker pull $IMAGE:$image_tag
 
 mkdir -p $SCRIPT_DIR/.cache/zed/resources $SCRIPT_DIR/.cache/zed/settings
 
+image_tag=latest
 echo Running $IMAGE:$image_tag ...
 IMAGE_TAG=$image_tag docker compose -f $SCRIPT_DIR/.devcontainer/docker-compose.yml run --rm $SERVICE

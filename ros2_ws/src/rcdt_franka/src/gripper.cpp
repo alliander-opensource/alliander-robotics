@@ -4,26 +4,25 @@
 
 #include "gripper.hpp"
 
-#include <functional>
-#include <rclcpp/executors.hpp>
-#include <rclcpp/utilities.hpp>
-#include <rclcpp_action/client_goal_handle.hpp>
-#include <string>
-
 using std::placeholders::_1;
 using std::placeholders::_2;
 
 Gripper::Gripper() : Node("gripper") {
+  std::string ns = this->get_namespace();
+  std::string node_name = this->get_name();
+
   client_move =
-      rclcpp_action::create_client<Move>(this, "/franka/fr3_gripper/move");
+      rclcpp_action::create_client<Move>(this, ns + "/fr3_gripper/move");
   client_grasp =
-      rclcpp_action::create_client<Grasp>(this, "/franka/fr3_gripper/grasp");
+      rclcpp_action::create_client<Grasp>(this, ns + "/fr3_gripper/grasp");
   service_open = rclcpp_action::create_server<Trigger>(
-      this, "~/open", std::bind(&Gripper::handle_goal, this, _1, _2),
+      this, ns + "/" + node_name + "/open",
+      std::bind(&Gripper::handle_goal, this, _1, _2),
       std::bind(&Gripper::handle_cancel, this, _1),
       std::bind(&Gripper::handle_accepted, this, _1, "open"));
   service_close = rclcpp_action::create_server<Trigger>(
-      this, "~/close", std::bind(&Gripper::handle_goal, this, _1, _2),
+      this, ns + "/" + node_name + "/close",
+      std::bind(&Gripper::handle_goal, this, _1, _2),
       std::bind(&Gripper::handle_cancel, this, _1),
       std::bind(&Gripper::handle_accepted, this, _1, "close"));
 };

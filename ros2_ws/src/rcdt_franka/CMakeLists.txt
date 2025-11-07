@@ -39,12 +39,6 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# Python executables:
-install(
-  DIRECTORY src_py/
-  DESTINATION lib/${PROJECT_NAME}
-)
-
 # Shared folders:
 install(
   DIRECTORY launch config urdf

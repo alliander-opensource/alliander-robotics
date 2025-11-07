@@ -241,6 +241,68 @@ def call_express_pose_in_other_frame(
     return response
 
 
+def assert_joy_topic_switch(
+    node: Node,
+    expected_topic: str,
+    button_config: list[int],
+    timeout: int,
+    state_topic: str = "/joy_topic_manager/state",
+) -> None:
+    """Publishes a Joy message and asserts that the expected topic is published on state_topic.
+
+    Args:
+        node (Node): rclpy test node.
+        expected_topic (str): Expected topic that should be published by the JoyTopicManager.
+        button_config (list[int]): Joy message buttons to trigger the topic change.
+        timeout (int): Max time to wait for the result.
+        state_topic (str): Topic to listen for state updates from joy_topic_manager.
+    """
+    logger.info("Starting to assert joy topic switch")
+    qos = QoSProfile(
+        depth=1,
+        durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+        history=QoSHistoryPolicy.KEEP_LAST,
+    )
+
+    result = {}
+
+    def callback_function(msg: String) -> None:
+        """Callback function to handle messages from the state topic.
+
+        Args:
+            msg (String): The message received from the state topic.
+        """
+        result["state"] = msg.data
+
+    node.create_subscription(
+        msg_type=String,
+        topic=state_topic,
+        callback=callback_function,
+        qos_profile=qos,
+    )
+
+    pub = node.create_publisher(Joy, "/joy", 10)
+    wait_for_subscriber(pub, timeout)
+
+    msg = Joy()
+    msg.buttons = button_config
+    publish_for_duration(
+        node=node, publisher=pub, msg=msg, publish_duration=1, rate_sec=0.1
+    )
+
+    start_time = time.monotonic()
+    while (
+        result.get("state") != expected_topic
+        and time.monotonic() - start_time < timeout
+    ):
+        rclpy.spin_once(node, timeout_sec=1)
+        time.sleep(0.1)
+
+    assert result.get("state") == expected_topic, (
+        f"Expected state '{expected_topic}', but got '{result.get('state')}'"
+    )
+
+
 def assert_movements_with_joy(  # noqa: PLR0913
     node: Node,
     joy_axes: list[float],

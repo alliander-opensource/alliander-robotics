@@ -7,6 +7,7 @@ import pytest
 from geometry_msgs.msg import Pose
 from rcdt_utilities.launch_utils import assert_for_message
 from rcdt_utilities.test_utils import (
+    assert_joy_topic_switch,
     assert_movements_with_joy,
     publish_for_duration,
     wait_for_register,
@@ -44,6 +45,23 @@ def get_tests(namespace: str) -> dict:
             timeout (int): The timeout in seconds to wait for the joint states to be published.
         """
         assert_for_message(JointState, f"/{namespace}/joint_states", timeout=timeout)
+
+    def test_switch_joy_to_franka_topic(
+        _self: object, test_node: Node, timeout: int
+    ) -> None:
+        """Test to see if the switch to Franka mode is correct.
+
+        Args:
+            _self (object): The test class instance.
+            test_node (Node): The test node to use for the test.
+            timeout (int): The timeout in seconds to wait for the joy topic to switch.
+        """
+        assert_joy_topic_switch(
+            node=test_node,
+            expected_topic=f"/{namespace}/joy",
+            button_config=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            timeout=timeout,
+        )
 
     @pytest.mark.parametrize(
         "buttons, expected_value",

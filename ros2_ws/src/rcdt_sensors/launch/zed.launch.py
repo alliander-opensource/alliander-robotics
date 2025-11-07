@@ -52,15 +52,9 @@ def launch_setup(context: LaunchContext) -> list:
             executable="convert_32FC1_to_16UC1.py",
             namespace=namespace,
         )
-        combine_camera_topics_node = Node(
-            package="rcdt_sensors",
-            executable="combine_camera_topics.py",
-            namespace=namespace,
-        )
         zed = LaunchDescription(
             [
                 Register.on_start(convert_32FC1_to_16UC1_node, context),
-                Register.on_start(combine_camera_topics_node, context),
             ]
         )
     else:

@@ -5,11 +5,11 @@
 #include "convert_32FC1_to_16UC1.hpp"
 
 Convert32FC1to16UC1::Convert32FC1to16UC1() : Node("convert_32FC1_to_16UC1") {
+  std::string ns = this->get_namespace();
   subscription = this->create_subscription<Image>(
-      "/franka/realsense/depth/image_rect_raw_float", 10,
+      ns + "/depth/image_rect_raw_float", 10,
       std::bind(&Convert32FC1to16UC1::subscription_callback, this, _1));
-  publisher = this->create_publisher<Image>(
-      "/franka/realsense/depth/image_rect_raw", 10);
+  publisher = this->create_publisher<Image>(ns + "/depth/image_rect_raw", 10);
 };
 
 void Convert32FC1to16UC1::subscription_callback(Image msg) {
