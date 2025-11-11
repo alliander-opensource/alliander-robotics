@@ -49,7 +49,7 @@ def launch_setup(context: LaunchContext) -> list:
     if use_sim:
         convert_32FC1_to_16UC1_node = Node(  # noqa: N806
             package="rcdt_sensors",
-            executable="convert_32FC1_to_16UC1.py",
+            executable="convert_32FC1_to_16UC1",
             namespace=namespace,
         )
         zed = LaunchDescription(
