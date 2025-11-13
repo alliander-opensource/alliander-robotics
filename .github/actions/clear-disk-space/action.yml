@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# Our own action to clear disk space.
+
 name: clear-disk-space
 description: Clear as much disk space as possible.
 runs:
