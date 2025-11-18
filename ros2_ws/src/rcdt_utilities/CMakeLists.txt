@@ -17,7 +17,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 
 find_package(geometry_msgs REQUIRED)
-find_package(rcdt_messages REQUIRED)
+find_package(rcdt_interfaces REQUIRED)
 
 # Python package:
 ament_python_install_package(${PROJECT_NAME})
@@ -37,7 +37,7 @@ add_executable(manipulate_pose
 )
 ament_target_dependencies(manipulate_pose
   geometry_msgs
-  rcdt_messages
+  rcdt_interfaces
   rclcpp
   tf2
   tf2_geometry_msgs
@@ -68,7 +68,7 @@ if(BUILD_TESTING)
   )
   ament_target_dependencies(manipulate_pose_test
     geometry_msgs
-    rcdt_messages
+    rcdt_interfaces
     rclcpp
     tf2
     tf2_geometry_msgs

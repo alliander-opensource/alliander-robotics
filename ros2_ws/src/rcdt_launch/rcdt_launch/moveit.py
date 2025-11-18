@@ -4,7 +4,7 @@
 
 import xmltodict
 from moveit_configs_utils import MoveItConfigs, MoveItConfigsBuilder
-from rcdt_utilities.launch_utils import get_file_path, get_robot_description, get_yaml
+from rcdt_utilities.ros_utils import get_file_path, get_robot_description, get_yaml
 
 
 class Moveit:

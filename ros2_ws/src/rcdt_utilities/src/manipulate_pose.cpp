@@ -8,36 +8,38 @@ PoseManipulator::PoseManipulator() : rclcpp::Node("pose_manipulator") {
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
-  express_pose_in_other_frame_service_ = this->create_service<
-      rcdt_messages::srv::ExpressPoseInOtherFrame>(
-      "~/express_pose_in_other_frame",
-      [this](
-          std::shared_ptr<rcdt_messages::srv::ExpressPoseInOtherFrame::Request>
-              req,
-          std::shared_ptr<rcdt_messages::srv::ExpressPoseInOtherFrame::Response>
-              resp) { this->expressPoseInOtherFrame(req, resp); });
+  express_pose_in_other_frame_service_ =
+      this->create_service<rcdt_interfaces::srv::ExpressPoseInOtherFrame>(
+          "~/express_pose_in_other_frame",
+          [this](std::shared_ptr<
+                     rcdt_interfaces::srv::ExpressPoseInOtherFrame::Request>
+                     req,
+                 std::shared_ptr<
+                     rcdt_interfaces::srv::ExpressPoseInOtherFrame::Response>
+                     resp) { this->expressPoseInOtherFrame(req, resp); });
 
   transform_pose_service_ =
-      this->create_service<rcdt_messages::srv::TransformPose>(
+      this->create_service<rcdt_interfaces::srv::TransformPose>(
           "~/transform_pose",
           [this](
-              std::shared_ptr<rcdt_messages::srv::TransformPose::Request> req,
-              std::shared_ptr<rcdt_messages::srv::TransformPose::Response>
+              std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
+              std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response>
                   resp) { this->transformPose(req, resp); });
 
   transform_pose_relative_service_ =
-      this->create_service<rcdt_messages::srv::TransformPose>(
+      this->create_service<rcdt_interfaces::srv::TransformPose>(
           "~/transform_pose_relative",
           [this](
-              std::shared_ptr<rcdt_messages::srv::TransformPose::Request> req,
-              std::shared_ptr<rcdt_messages::srv::TransformPose::Response>
+              std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
+              std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response>
                   resp) { this->transformPoseRelative(req, resp); });
 }
 
 void PoseManipulator::expressPoseInOtherFrame(
-    const std::shared_ptr<rcdt_messages::srv::ExpressPoseInOtherFrame::Request>
+    const std::shared_ptr<
+        rcdt_interfaces::srv::ExpressPoseInOtherFrame::Request>
         req,
-    std::shared_ptr<rcdt_messages::srv::ExpressPoseInOtherFrame::Response>
+    std::shared_ptr<rcdt_interfaces::srv::ExpressPoseInOtherFrame::Response>
         resp) {
   std::string source_frame = req->pose.header.frame_id;
   std::string target_frame = req->target_frame;
@@ -72,8 +74,8 @@ void PoseManipulator::expressPoseInOtherFrame(
 }
 
 void PoseManipulator::transformPose(
-    const std::shared_ptr<rcdt_messages::srv::TransformPose::Request> req,
-    std::shared_ptr<rcdt_messages::srv::TransformPose::Response> resp) {
+    const std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
+    std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response> resp) {
   geometry_msgs::msg::TransformStamped tf_stamped;
   tf_stamped.transform = req->transform;
   tf2::doTransform(req->pose, resp->pose, tf_stamped);
@@ -82,8 +84,8 @@ void PoseManipulator::transformPose(
 }
 
 void PoseManipulator::transformPoseRelative(
-    const std::shared_ptr<rcdt_messages::srv::TransformPose::Request> req,
-    std::shared_ptr<rcdt_messages::srv::TransformPose::Response> resp) {
+    const std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
+    std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response> resp) {
   geometry_msgs::msg::TransformStamped tf_stamped;
   tf_stamped.transform = req->transform;
   tf2::doTransform(req->pose, resp->pose, tf_stamped);

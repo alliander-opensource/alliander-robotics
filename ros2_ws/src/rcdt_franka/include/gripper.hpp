@@ -4,7 +4,7 @@
 
 #include <franka_msgs/action/grasp.hpp>
 #include <franka_msgs/action/move.hpp>
-#include <rcdt_messages/action/trigger.hpp>
+#include <rcdt_interfaces/action/trigger.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/executors.hpp>
 #include <rclcpp/node.hpp>
@@ -15,7 +15,7 @@
 #include <std_srvs/srv/trigger.hpp>
 #include <string>
 
-typedef rcdt_messages::action::Trigger Trigger;
+typedef rcdt_interfaces::action::Trigger Trigger;
 typedef franka_msgs::action::Move Move;
 typedef franka_msgs::action::Grasp Grasp;
 

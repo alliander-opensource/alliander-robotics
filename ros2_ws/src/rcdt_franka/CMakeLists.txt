@@ -13,7 +13,7 @@ find_package(rclcpp_action REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(franka_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
-find_package(rcdt_messages REQUIRED)
+find_package(rcdt_interfaces REQUIRED)
 
 # C++ executables:
 include_directories(include)
@@ -31,7 +31,7 @@ ament_target_dependencies(gripper
   rclcpp_action
   std_srvs
   franka_msgs
-  rcdt_messages
+  rcdt_interfaces
 )
 
 install(

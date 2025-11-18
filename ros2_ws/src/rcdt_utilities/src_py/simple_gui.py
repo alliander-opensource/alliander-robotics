@@ -9,8 +9,8 @@ import threading
 import rclpy
 from geometry_msgs.msg import PoseStamped
 from nicegui import app, ui
-from rcdt_messages.srv import MoveToConfiguration, PoseStampedSrv
-from rcdt_utilities.launch_utils import spin_node
+from rcdt_interfaces.srv import MoveToConfiguration, PoseStampedSrv
+from rcdt_utilities.ros_utils import spin_node
 from rclpy.node import Node
 from std_srvs.srv import Empty, SetBool, Trigger
 

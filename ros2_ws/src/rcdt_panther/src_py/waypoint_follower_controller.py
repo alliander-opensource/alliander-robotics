@@ -8,7 +8,7 @@ from action_msgs.msg import GoalStatus
 from action_msgs.srv import CancelGoal
 from nav2_msgs.action import FollowWaypoints
 from nav_msgs.msg import Path
-from rcdt_utilities.launch_utils import spin_executor
+from rcdt_utilities.ros_utils import spin_executor
 from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup

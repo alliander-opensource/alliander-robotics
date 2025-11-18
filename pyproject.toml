@@ -79,7 +79,7 @@ extra-paths = [
     "/opt/ros/jazzy/lib/python3.12/site-packages/",
     "/home/rcdt/franka_ws/install/franka_msgs/lib/python3.12/site-packages/",
     "/home/rcdt/realsense_ws/install/realsense2_camera_msgs/lib/python3.12/site-packages/",
-    "ros2_ws/install/rcdt_messages/lib/python3.12/site-packages/",
+    "ros2_ws/install/rcdt_interfaces/lib/python3.12/site-packages/",
     "ros2_ws/src/rcdt_franka/",
     "ros2_ws/src/rcdt_panther/",
     "ros2_ws/src/rcdt_utilities/",

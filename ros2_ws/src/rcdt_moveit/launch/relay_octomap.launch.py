@@ -5,7 +5,7 @@
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
-from rcdt_utilities.launch_utils import LaunchArgument
+from rcdt_utilities.launch_argument import LaunchArgument
 
 namespace_arm_arg = LaunchArgument("namespace_arm", "")
 namespace_camera_arg = LaunchArgument("namespace_camera", "")

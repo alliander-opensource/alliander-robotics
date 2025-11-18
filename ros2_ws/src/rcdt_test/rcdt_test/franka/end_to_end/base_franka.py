@@ -5,8 +5,8 @@
 
 import pytest
 from geometry_msgs.msg import Pose
-from rcdt_utilities.launch_utils import assert_for_message
 from rcdt_utilities.test_utils import (
+    assert_for_message,
     assert_joy_topic_switch,
     assert_movements_with_joy,
     publish_for_duration,

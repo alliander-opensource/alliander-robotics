@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import yaml
-from rcdt_utilities.launch_utils import get_file_path, get_yaml
+from rcdt_utilities.ros_utils import get_file_path, get_yaml
 
 
 class Rviz:
@@ -48,7 +48,7 @@ class Rviz:
         Rviz.displays[0]["Offset"]["Z"] = height
 
     @staticmethod
-    def add_robot_model(namespace: str) -> None:
+    def add_platform_model(namespace: str) -> None:
         """Add a robot model to the RViz configuration.
 
         Args:

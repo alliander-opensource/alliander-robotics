@@ -6,8 +6,9 @@ from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
-from rcdt_utilities.launch_utils import LaunchArgument, get_file_path
+from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
+from rcdt_utilities.ros_utils import get_file_path
 
 namespace_arg = LaunchArgument("namespace", "zed")
 use_sim_arg = LaunchArgument("simulation", True, [True, False])

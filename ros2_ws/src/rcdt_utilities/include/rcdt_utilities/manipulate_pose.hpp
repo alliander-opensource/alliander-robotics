@@ -10,8 +10,8 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/transform.hpp"
-#include "rcdt_messages/srv/express_pose_in_other_frame.hpp"
-#include "rcdt_messages/srv/transform_pose.hpp"
+#include "rcdt_interfaces/srv/express_pose_in_other_frame.hpp"
+#include "rcdt_interfaces/srv/transform_pose.hpp"
 #include "tf2_ros/buffer.hpp"
 
 /**
@@ -27,7 +27,7 @@ class PoseManipulator : public rclcpp::Node {
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_; /**< TF2 Transform Buffer */
 
   // Services
-  rclcpp::Service<rcdt_messages::srv::ExpressPoseInOtherFrame>::SharedPtr
+  rclcpp::Service<rcdt_interfaces::srv::ExpressPoseInOtherFrame>::SharedPtr
       express_pose_in_other_frame_service_; /**< Service for
                                                ExpressPoseInOtherFrame */
   /** @brief Callback for the ExpressPoseInOtherFrame service
@@ -36,22 +36,22 @@ class PoseManipulator : public rclcpp::Node {
    */
   void expressPoseInOtherFrame(
       const std::shared_ptr<
-          rcdt_messages::srv::ExpressPoseInOtherFrame::Request>
+          rcdt_interfaces::srv::ExpressPoseInOtherFrame::Request>
           req,
-      std::shared_ptr<rcdt_messages::srv::ExpressPoseInOtherFrame::Response>
+      std::shared_ptr<rcdt_interfaces::srv::ExpressPoseInOtherFrame::Response>
           resp);
 
-  rclcpp::Service<rcdt_messages::srv::TransformPose>::SharedPtr
+  rclcpp::Service<rcdt_interfaces::srv::TransformPose>::SharedPtr
       transform_pose_service_; /**< Service for TransformPose */
   /** @brief Callback for the TransformPose service
    * @param req The request message
    * @param resp The response message
    */
   void transformPose(
-      const std::shared_ptr<rcdt_messages::srv::TransformPose::Request> req,
-      std::shared_ptr<rcdt_messages::srv::TransformPose::Response> resp);
+      const std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
+      std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response> resp);
 
-  rclcpp::Service<rcdt_messages::srv::TransformPose>::SharedPtr
+  rclcpp::Service<rcdt_interfaces::srv::TransformPose>::SharedPtr
       transform_pose_relative_service_; /**< Service for TransformPoseRelative
                                          */
   /** @brief Callback for the TransformPoseRelative service
@@ -59,8 +59,8 @@ class PoseManipulator : public rclcpp::Node {
    * @param resp The response message
    */
   void transformPoseRelative(
-      const std::shared_ptr<rcdt_messages::srv::TransformPose::Request> req,
-      std::shared_ptr<rcdt_messages::srv::TransformPose::Response> resp);
+      const std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
+      std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response> resp);
 
   /** @brief Transforms a pose using a given transform
    * @param pose_in The input pose

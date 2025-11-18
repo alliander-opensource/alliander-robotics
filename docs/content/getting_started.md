@@ -97,7 +97,7 @@ From now on, when you open a new terminal, this alias is available and you can s
 You can now launch our system using:
 
 ```bash
-ros2 launch rcdt_launch robots.launch.py
+ros2 launch rcdt_launch bringup.launch.py
 ```
 
 Note that the system won't start if no configuration is provided. The possible launch arguments can be acquired by adding the `-s` flag. More information about launching the system and selecting a configuration can be found on the [](system) page.

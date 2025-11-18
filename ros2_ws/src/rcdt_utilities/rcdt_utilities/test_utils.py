@@ -10,8 +10,8 @@ import pytest
 import rclpy
 from geometry_msgs.msg import Pose, PoseStamped
 from launch_testing_ros.wait_for_topics import WaitForTopics
-from rcdt_messages.action import Trigger as TriggerAction
-from rcdt_messages.srv import ExpressPoseInOtherFrame
+from rcdt_interfaces.action import Trigger as TriggerAction
+from rcdt_interfaces.srv import ExpressPoseInOtherFrame
 from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle
 from rclpy.client import Client
@@ -84,7 +84,7 @@ def get_joint_position(namespace: str, joint: str, timeout: int) -> float:
     """Get the position of a joint from the joint states topic.
 
     Args:
-        namespace (str): The name space of the robot.
+        namespace (str): The name space of the platform.
         joint (str): The name of the joint.
         timeout (int): Timeout in seconds to wait for the joint states topic.
 
@@ -241,6 +241,22 @@ def call_express_pose_in_other_frame(
     return response
 
 
+def assert_for_message(message_type: type, topic: str, timeout: int) -> None:
+    """Assert that a message of a specific type is received on a given topic within a timeout period.
+
+    Args:
+        message_type (type): The type of the message to wait for.
+        topic (str): The topic to listen to.
+        timeout (int): The maximum time in seconds to wait for the message.
+    """
+    wait_for_topics = WaitForTopics([(topic, message_type)], timeout)
+    received = wait_for_topics.wait()
+    wait_for_topics.shutdown()
+    assert received, (
+        f"No message received of type {message_type.__name__} on topic {topic} within {timeout} seconds."
+    )
+
+
 def assert_joy_topic_switch(
     node: Node,
     expected_topic: str,
@@ -321,7 +337,7 @@ def assert_movements_with_joy(  # noqa: PLR0913
         compare_fn (Callable[[Pose, Pose], float]): Function to compare poses.
         threshold (float): Minimum change in pose to assert movement.
         description (str): Description of the pose change being tested.
-        frame_base (str): Base frame of the robot.
+        frame_base (str): Base frame of the platform.
         frame_target (str): Target frame to express the pose in.
         timeout (int): Max time to wait for the result.
     """
@@ -362,7 +378,7 @@ def wait_until_reached_joint(
     """Wait until a joint reaches the expected value within a tolerance.
 
     Args:
-        namespace (str): Namespace of the robot (e.g., 'franka').
+        namespace (str): Namespace of the platform (e.g., 'franka').
         joint (str): Name of the joint to check.
         expected_value (float): Target joint value in radians.
         timeout_sec (int): Timeout duration in seconds.

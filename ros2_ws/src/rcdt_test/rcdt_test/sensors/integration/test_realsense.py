@@ -7,10 +7,10 @@ import launch_pytest
 import pytest
 from _pytest.fixtures import SubRequest
 from launch import LaunchDescription
-from rcdt_launch.robot import Camera
-from rcdt_utilities.launch_utils import assert_for_message, get_file_path
+from rcdt_launch.platforms.camera import Camera
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
-from rcdt_utilities.test_utils import wait_for_register
+from rcdt_utilities.ros_utils import get_file_path
+from rcdt_utilities.test_utils import assert_for_message, wait_for_register
 from sensor_msgs.msg import CameraInfo, Image
 
 namespace = "realsense"
@@ -28,7 +28,7 @@ def launch(request: SubRequest) -> LaunchDescription:
     """
     Camera(platform="realsense", position=[0, 0, 0.5], namespace=namespace)
     launch = RegisteredLaunchDescription(
-        get_file_path("rcdt_launch", ["launch"], "robots.launch.py"),
+        get_file_path("rcdt_launch", ["launch"], "bringup.launch.py"),
         launch_arguments={
             "rviz": "False",
             "simulation": request.config.getoption("simulation"),
@@ -39,7 +39,7 @@ def launch(request: SubRequest) -> LaunchDescription:
 
 @pytest.mark.launch(fixture=launch)
 def test_wait_for_register(timeout: int) -> None:
-    """Test that the robot is registered in the system to start the tests.
+    """Test that the platform is registered in the system to start the tests.
 
     Args:
         timeout (int): The timeout in seconds before stopping the test.

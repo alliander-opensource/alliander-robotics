@@ -101,7 +101,7 @@ SPDX-License-Identifier: Apache-2.0
       </gazebo>
     </xacro:if>
   </xacro:macro>
-  <xacro:arg name="namespace" default="realsense" />
+  <xacro:arg name="namespace" default="zed" />
   <xacro:arg name="parent" default="" />
   <xacro:rcdt_zed2i namespace="$(arg namespace)" parent="$(arg parent)" />
 </robot>

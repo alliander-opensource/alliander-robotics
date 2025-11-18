@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 import rclpy
 import rclpy.client
-from rcdt_utilities.launch_utils import spin_node
+from rcdt_utilities.ros_utils import spin_node
 from rclpy.node import Node, Publisher
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile
 from sensor_msgs.msg import Joy

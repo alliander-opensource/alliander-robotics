@@ -7,10 +7,10 @@ import launch_pytest
 import pytest
 from _pytest.fixtures import SubRequest
 from launch import LaunchDescription
-from rcdt_launch.robot import Arm
+from rcdt_launch.platforms.arm import Arm
 from rcdt_test.franka.end_to_end.base_franka import get_tests
-from rcdt_utilities.launch_utils import get_file_path
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
+from rcdt_utilities.ros_utils import get_file_path
 from rcdt_utilities.test_utils import add_tests_to_class
 
 namespace = "franka"
@@ -38,7 +38,7 @@ def franka(request: SubRequest) -> LaunchDescription:
         moveit=True,
     )
     franka_launch = RegisteredLaunchDescription(
-        get_file_path("rcdt_launch", ["launch"], "robots.launch.py"),
+        get_file_path("rcdt_launch", ["launch"], "bringup.launch.py"),
         launch_arguments={
             "rviz": "False",
             "simulation": request.config.getoption("simulation"),

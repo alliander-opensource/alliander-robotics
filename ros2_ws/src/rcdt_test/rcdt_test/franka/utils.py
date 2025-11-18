@@ -6,7 +6,7 @@
 import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
-from rcdt_messages.srv import MoveToConfiguration
+from rcdt_interfaces.srv import MoveToConfiguration
 from rcdt_utilities.test_utils import (
     create_ready_action_client,
     create_ready_service_client,
@@ -24,7 +24,7 @@ def call_move_to_configuration_service(
 
     Args:
         node (Node): The ROS 2 node to use for the service call.
-        namespace (str): The namespace of the robot.
+        namespace (str): The namespace of the platform.
         configuration (str): The configuration to move to.
         timeout (int): The timeout in seconds for the service call.
 

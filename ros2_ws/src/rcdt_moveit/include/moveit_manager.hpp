@@ -13,14 +13,14 @@
 #include <moveit/robot_model/joint_model_group.hpp>
 #include <moveit/robot_state/robot_state.hpp>
 #include <moveit_msgs/srv/servo_command_type.hpp>
-#include <rcdt_messages/srv/add_marker.hpp>
-#include <rcdt_messages/srv/add_object.hpp>
-#include <rcdt_messages/srv/define_goal_pose.hpp>
-#include <rcdt_messages/srv/express_pose_in_other_frame.hpp>
-#include <rcdt_messages/srv/move_hand_to_pose.hpp>
-#include <rcdt_messages/srv/move_to_configuration.hpp>
-#include <rcdt_messages/srv/pose_stamped_srv.hpp>
-#include <rcdt_messages/srv/transform_goal_pose.hpp>
+#include <rcdt_interfaces/srv/add_marker.hpp>
+#include <rcdt_interfaces/srv/add_object.hpp>
+#include <rcdt_interfaces/srv/define_goal_pose.hpp>
+#include <rcdt_interfaces/srv/express_pose_in_other_frame.hpp>
+#include <rcdt_interfaces/srv/move_hand_to_pose.hpp>
+#include <rcdt_interfaces/srv/move_to_configuration.hpp>
+#include <rcdt_interfaces/srv/pose_stamped_srv.hpp>
+#include <rcdt_interfaces/srv/transform_goal_pose.hpp>
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/node.hpp>
@@ -38,14 +38,14 @@
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-typedef rcdt_messages::srv::AddObject AddObject;
-typedef rcdt_messages::srv::AddMarker AddMarker;
-typedef rcdt_messages::srv::DefineGoalPose DefineGoalPose;
-typedef rcdt_messages::srv::ExpressPoseInOtherFrame ExpressPoseInOtherFrame;
-typedef rcdt_messages::srv::TransformGoalPose TransformGoalPose;
-typedef rcdt_messages::srv::MoveToConfiguration MoveToConf;
-typedef rcdt_messages::srv::MoveHandToPose MoveHandToPose;
-typedef rcdt_messages::srv::PoseStampedSrv PoseStampedSrv;
+typedef rcdt_interfaces::srv::AddObject AddObject;
+typedef rcdt_interfaces::srv::AddMarker AddMarker;
+typedef rcdt_interfaces::srv::DefineGoalPose DefineGoalPose;
+typedef rcdt_interfaces::srv::ExpressPoseInOtherFrame ExpressPoseInOtherFrame;
+typedef rcdt_interfaces::srv::TransformGoalPose TransformGoalPose;
+typedef rcdt_interfaces::srv::MoveToConfiguration MoveToConf;
+typedef rcdt_interfaces::srv::MoveHandToPose MoveHandToPose;
+typedef rcdt_interfaces::srv::PoseStampedSrv PoseStampedSrv;
 typedef moveit_msgs::srv::ServoCommandType ServoCommandType;
 typedef std_srvs::srv::Trigger Trigger;
 typedef std_srvs::srv::SetBool SetBool;

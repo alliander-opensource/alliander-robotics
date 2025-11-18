@@ -22,7 +22,7 @@ SPDX-License-Identifier: Apache-2.0
   <depend>std_srvs</depend>
   <depend>franka_msgs</depend>
   <depend>control_msgs</depend>
-  <depend>rcdt_messages</depend>
+  <depend>rcdt_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>
 

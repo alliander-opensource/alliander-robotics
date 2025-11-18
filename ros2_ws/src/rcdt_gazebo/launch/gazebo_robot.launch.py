@@ -9,8 +9,9 @@ from launch import LaunchContext, LaunchDescription
 from launch.actions import ExecuteProcess, OpaqueFunction
 from launch_ros.actions import Node
 from rcdt_gazebo.gazebo_ros_paths import GazeboRosPaths
-from rcdt_utilities.launch_utils import LaunchArgument, get_file_path
+from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
+from rcdt_utilities.ros_utils import get_file_path
 
 load_gazebo_ui_arg = LaunchArgument("load_gazebo_ui", False, [True, False])
 world_arg = LaunchArgument("world", "walls.sdf")

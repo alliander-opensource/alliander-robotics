@@ -4,7 +4,7 @@
 
 import json
 
-from rcdt_utilities.launch_utils import get_file_path
+from rcdt_utilities.ros_utils import get_file_path
 
 
 class Vizanti:
@@ -29,7 +29,7 @@ class Vizanti:
             json.dump(Vizanti.config, outfile)
 
     @staticmethod
-    def add_robot_model(namespace: str) -> None:
+    def add_platform_model(namespace: str) -> None:
         """Add a robot model to the Vizanti configuration.
 
         Args:

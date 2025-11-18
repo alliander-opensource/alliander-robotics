@@ -6,7 +6,7 @@
 
 import rclpy
 from geometry_msgs.msg import Twist, TwistStamped
-from rcdt_utilities.launch_utils import get_file_path, get_yaml, spin_node
+from rcdt_utilities.ros_utils import get_file_path, get_yaml, spin_node
 from rclpy import logging
 from rclpy.node import Node
 from sensor_msgs.msg import Joy

@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 
   <depend>rclcpp</depend>
   <depend>std_srvs</depend>
-  <depend>rcdt_messages</depend>
+  <depend>rcdt_interfaces</depend>
   <depend>rviz_visual_tools</depend>
   <depend>tf2_eigen</depend>
 

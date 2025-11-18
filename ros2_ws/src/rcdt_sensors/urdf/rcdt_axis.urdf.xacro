@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
   <xacro:macro name="rcdt_axis"
     params="
     namespace
-    parent
+    parent:=world
     ">
     <!-- Gazebo requires a joint to a link called "world" for statically mounted robots -->
     <xacro:if value="${parent == 'world'}">
@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0
       </joint>
     </xacro:if>
 
-    <!-- Include realsense xacro: -->
+    <!-- Create basic axis xacro: -->
     <link name="base_link" />
 
     <link name="x_link">
@@ -90,7 +90,7 @@ SPDX-License-Identifier: Apache-2.0
     </joint>
 
   </xacro:macro>
-  <xacro:arg name="namespace" default="realsense" />
+  <xacro:arg name="namespace" default="axis" />
   <xacro:arg name="parent" default="" />
   <xacro:rcdt_axis namespace="$(arg namespace)" parent="$(arg parent)" />
 </robot>
