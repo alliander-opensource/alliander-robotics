@@ -16,6 +16,7 @@ class EnvironmentConfiguration:
         platforms (list[Platform]): A list of all the platforms.
         names (list[str]): A list of all platform names.
         simulation (bool): Whether the platforms are in simulation mode or not.
+        use_vizanti (bool): Whether to use Vizanti for visualization.
         use_joystick (bool): Whether to enable joystick input.
         world (str): The world file to be used in Gazebo.
     """
@@ -25,5 +26,6 @@ class EnvironmentConfiguration:
     platforms: list["Platform"] = []
     names: list[str] = []
     simulation: bool = True
+    use_vizanti: bool = False
     use_joystick: bool = True
     world: str = "walls.sdf"

@@ -156,3 +156,22 @@ class Vizanti:
             {"type": "path", "id": "path", "container_id": "icon_container"}
         )
         Vizanti.config["path"] = {"topic": topic, "color": "#54db67", "throttle": "100"}
+
+    @staticmethod
+    def add_satellite(topic: str) -> None:
+        """Add a satellite view to the Vizanti configuration.
+
+        Args:
+            topic (str): The topic of the satellite view.
+        """
+        Vizanti.config["navbar"].append(
+            {"type": "satelite", "id": "satelite", "container_id": "icon_container"}
+        )
+        Vizanti.config["uid"] = 1
+        Vizanti.config["satelite"] = {
+            "topic": topic,
+            "server_url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "opacity": "0.7",
+            "smoothing": True,
+            "ignore_rotation": True,
+        }

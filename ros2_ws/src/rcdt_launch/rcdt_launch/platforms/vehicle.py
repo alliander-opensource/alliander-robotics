@@ -9,6 +9,7 @@ from typing import Literal
 from launch_ros.actions import Node
 from rcdt_launch.environment_configuration import EnvironmentConfiguration
 from rcdt_launch.platforms.camera import Camera
+from rcdt_launch.platforms.gps import GPS
 from rcdt_launch.platforms.lidar import Lidar
 from rcdt_launch.platforms.platform import Platform
 from rcdt_launch.rviz import Rviz
@@ -29,8 +30,10 @@ class Vehicle(Platform):
         parent: Platform | None = None,
         parent_link: str = "",
         navigation: bool = False,
+        use_gps: bool = False,
         slam: bool = False,
         collision_monitor: bool = False,
+        window_size: int = 10,
     ):
         """Initialize the Vehicle platform.
 
@@ -42,8 +45,10 @@ class Vehicle(Platform):
             parent (Platform | None): The parent platform.
             parent_link (str): The link of the parent to which the platform is attached. If empty, the base_link of the parent is used.
             navigation (bool): Whether to start navigation for the vehicle.
+            use_gps (bool): Whether to use GPS to navigate the vehicle.
             slam (bool): Whether to start SLAM for the vehicle.
             collision_monitor (bool): Whether to start the collision monitor for the vehicle.
+            window_size (int): The window size for navigation.
         """
         super().__init__(
             platform, position, orientation, namespace, parent, parent_link
@@ -51,11 +56,14 @@ class Vehicle(Platform):
         self.platform_type = platform
         self.namespace = self.namespace
         self.navigation = navigation
+        self.use_gps = use_gps
         self.slam = slam
         self.collision_monitor = collision_monitor
+        self.window_size = window_size
 
         self.lidar: Lidar | None = None
         self.camera: Camera | None = None
+        self.gps: GPS | None = None
 
         if platform == "panther":
             Vizanti.add_platform_model(self.namespace)
@@ -67,7 +75,7 @@ class Vehicle(Platform):
                 "std_msgs/msg/Bool",
             )
 
-        if self.navigation or self.slam:
+        if (self.navigation or self.slam) and not self.use_gps:
             Rviz.add_map(f"/{self.namespace}/map")
 
         if self.navigation:
@@ -83,6 +91,10 @@ class Vehicle(Platform):
                 "global_costmap", f"/{self.namespace}/global_costmap/costmap"
             )
             Vizanti.add_path(f"/{self.namespace}/plan")
+
+        if self.use_gps:
+            Rviz.set_grid_size(self.window_size)
+            Rviz.set_grid_frame(f"/{self.namespace}/base_footprint")
 
         if self.collision_monitor:
             Rviz.add_polygon(f"/{self.namespace}/polygon_slower")
@@ -170,7 +182,7 @@ class Vehicle(Platform):
         Returns:
             Node | None: A static_transform_publisher node that links the platform with the world or None if not applicable.
         """
-        if self.navigation or self.slam:
+        if self.navigation or self.slam or self.use_gps:
             return None
         child_frame = f"{self.namespace}/odom"
 
@@ -219,6 +231,9 @@ class Vehicle(Platform):
                 "navigation": str(self.navigation),
                 "namespace_vehicle": self.namespace,
                 "namespace_lidar": self.lidar.namespace,
+                "namespace_gps": self.gps.namespace if self.gps else "",
+                "use_gps": str(self.use_gps),
+                "window_size": str(self.window_size),
             },
         )
 

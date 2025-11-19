@@ -4,35 +4,19 @@ SPDX-FileCopyrightText: Alliander N. V.
 
 SPDX-License-Identifier: Apache-2.0
 -->
-<!DOCTYPE foods [
-  <!ENTITY thickness "1.0">
-  <!-- .... -->
-]>
 <sdf version="1.6">
   <world name="walls">
     <physics name="1ms" type="ignored">
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
     </physics>
-    <plugin
-      filename="gz-sim-physics-system"
-      name="gz::sim::systems::Physics">
-    </plugin>
-    <plugin
-      filename="gz-sim-user-commands-system"
-      name="gz::sim::systems::UserCommands">
-    </plugin>
-    <plugin
-      filename="gz-sim-scene-broadcaster-system"
-      name="gz::sim::systems::SceneBroadcaster">
-    </plugin>
-    <plugin
-      filename="gz-sim-contact-system"
-      name="gz::sim::systems::Contact">
-    </plugin>
-    <plugin
-      filename="gz-sim-sensors-system"
-      name="gz::sim::systems::Sensors">
+
+    <plugin filename="ignition-gazebo-imu-system" name="gz::sim::systems::Imu" />
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics" />
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands" />
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster" />
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact" />
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
       <render_engine>ogre2</render_engine>
     </plugin>
 
@@ -225,15 +209,6 @@ SPDX-License-Identifier: Apache-2.0
         </collision>
       </link>
     </model>
-
-    <spherical_coordinates>
-      <surface_model>EARTH_WGS84</surface_model>
-      <world_frame_orientation>ENU</world_frame_orientation>
-      <latitude_deg>53.1978</latitude_deg>
-      <longitude_deg>18.3732</longitude_deg>
-      <elevation>0</elevation>
-      <heading_deg>0</heading_deg>
-  </spherical_coordinates>
 
   </world>
 </sdf>

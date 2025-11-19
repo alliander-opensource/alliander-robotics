@@ -4,8 +4,13 @@
 
 # Based on: https://docs.nav2.org/configuration/packages/configuring-costmaps.html
 
-local_costmap:
-  local_costmap:
-    ros__parameters:
-      global_frame: substitute_me
-      robot_base_frame: substitute_me
+global_frame: substitute_me
+robot_base_frame: substitute_me
+rolling_window: substitute_me
+plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+static_layer:
+  plugin: "nav2_costmap_2d::StaticLayer"
+obstacle_layer:
+  plugin: "nav2_costmap_2d::ObstacleLayer"
+inflation_layer:
+  plugin: "nav2_costmap_2d::InflationLayer"

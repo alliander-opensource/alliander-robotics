@@ -4,36 +4,36 @@
 
 # Based on: https://docs.nav2.org/configuration/packages/configuring-costmaps.html
 
-global_costmap:
-  global_costmap:
-    ros__parameters:
-      always_send_full_costmap: true
-      update_frequency: 30.0
-      publish_frequency: 30.0
-      robot_base_frame: substitute_me
-      footprint: "[[0.4045, 0.424], [0.4045, -0.424], [-0.4045, -0.424], [-0.4045, 0.424]]"
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        observation_sources: scan
-        footprint_clearing_enabled: true
-        max_obstacle_height: 2.0
-        combination_method: 1
-        scan:
-          topic: substitute_me
-          obstacle_max_range: 5.0
-          obstacle_min_range: 0.0
-          raytrace_max_range: 10.0
-          raytrace_min_range: 0.0
-          max_obstacle_height: 2.0
-          min_obstacle_height: 0.0
-          clearing: True
-          marking: True
-          data_type: "LaserScan"
-          inf_is_valid: false
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 1.0
+always_send_full_costmap: true
+rolling_window: substitute_me
+width: substitute_me
+height: substitute_me
+update_frequency: 30.0
+publish_frequency: 30.0
+robot_base_frame: substitute_me
+footprint: "[[0.4045, 0.424], [0.4045, -0.424], [-0.4045, -0.424], [-0.4045, 0.424]]"
+plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+static_layer:
+  plugin: "nav2_costmap_2d::StaticLayer"
+obstacle_layer:
+  plugin: "nav2_costmap_2d::ObstacleLayer"
+  enabled: True
+  observation_sources: scan
+  footprint_clearing_enabled: true
+  max_obstacle_height: 2.0
+  combination_method: 1
+  scan:
+    topic: substitute_me
+    obstacle_max_range: substitute_me
+    obstacle_min_range: 0.0
+    raytrace_max_range: substitute_me
+    raytrace_min_range: 0.0
+    max_obstacle_height: 2.0
+    min_obstacle_height: 0.0
+    clearing: True
+    marking: True
+    data_type: "LaserScan"
+    inf_is_valid: false
+inflation_layer:
+  plugin: "nav2_costmap_2d::InflationLayer"
+  inflation_radius: 1.0

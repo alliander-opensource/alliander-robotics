@@ -41,6 +41,9 @@ RUN ./vizanti.sh
 COPY ./install_scripts/franka_lock_unlock.sh .
 RUN ./franka_lock_unlock.sh
 
+COPY ./install_scripts/osm2world.sh .
+RUN ./osm2world.sh
+
 COPY ./install_scripts/dev_packages.sh .
 RUN ./dev_packages.sh
 

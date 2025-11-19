@@ -8,13 +8,14 @@ import xml.etree.ElementTree as ET
 from launch import LaunchContext, LaunchDescription
 from launch.actions import ExecuteProcess, OpaqueFunction
 from launch_ros.actions import Node
+from rcdt_gazebo.create_sdf import create_map_world
 from rcdt_gazebo.gazebo_ros_paths import GazeboRosPaths
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
 
 load_gazebo_ui_arg = LaunchArgument("load_gazebo_ui", False, [True, False])
-world_arg = LaunchArgument("world", "walls.sdf")
+world_arg = LaunchArgument("world", "empty.sdf")
 platforms_arg = LaunchArgument("platforms", "")
 positions_arg = LaunchArgument("positions", "")
 orientations_arg = LaunchArgument("orientations", "")
@@ -44,7 +45,24 @@ def launch_setup(context: LaunchContext) -> list:
     parent_links = parent_links_arg.string_value(context)
     bridge_topics = bridge_topics_arg.string_value(context).split()
 
-    sdf_file = get_file_path("rcdt_gazebo", ["worlds"], world)
+    if world.startswith("map"):
+        try:
+            _, lon_str, lat_str = world.split("_")
+        except ValueError as exc:
+            raise ValueError(
+                "Cannot generate world SDF. Use the format 'map_<lon>_<lat>' to create a map world."
+            ) from exc
+        try:
+            lon = float(lon_str)
+            lat = float(lat_str)
+        except ValueError as exc:
+            raise ValueError(
+                "Cannot generate world SDF. Longitude and latitude must be valid float values."
+            ) from exc
+        create_map_world(lon, lat)
+        sdf_file = "/tmp/world.sdf"
+    else:
+        sdf_file = get_file_path("rcdt_gazebo", ["worlds"], world)
     sdf = ET.parse(sdf_file)
     world_attribute = sdf.getroot().find("world")
     if world_attribute is None:

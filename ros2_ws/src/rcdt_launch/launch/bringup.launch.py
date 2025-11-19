@@ -40,8 +40,7 @@ def launch_setup(context: LaunchContext) -> list:
     config_name = configuration_arg.string_value(context)
     load_gazebo_ui = load_gazebo_ui_arg.bool_value(context)
     use_rviz = use_rviz_arg.bool_value(context)
-    use_vizanti = use_vizanti_arg.bool_value(context)
-
+    EnvironmentConfiguration.use_vizanti = use_vizanti_arg.bool_value(context)
     EnvironmentConfiguration.simulation = use_sim_arg.bool_value(context)
     Rviz.load_motion_planning_plugin = False
     Rviz.load_point_cloud = False
@@ -94,7 +93,9 @@ def launch_setup(context: LaunchContext) -> list:
         Register.group(utilities, context),
         *[Register.on_start(node, context) for node in joystick_nodes],
         *[Register.group(group, context) for group in launch_descriptions],
-        Register.group(vizanti, context) if use_vizanti else launch_utils.SKIP,
+        Register.group(vizanti, context)
+        if EnvironmentConfiguration.use_vizanti
+        else launch_utils.SKIP,
     ]
 
 

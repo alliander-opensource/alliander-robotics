@@ -2,7 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Based on: https://github.com/husarion/panther_ros/blob/ros2/panther_controller/config/WH01_controller.yaml
+# Based on: 
+# https://github.com/husarion/husarion_ugv_ros/blob/ros2/husarion_ugv_controller/config/WH01_controller.yaml
+# https://github.com/frankarobotics/franka_ros2/blob/humble/franka_fr3_moveit_config/config/fr3_ros_controllers.yaml
 
 /**:
   controller_manager:
@@ -20,6 +22,9 @@
 
       drive_controller:
         type: diff_drive_controller/DiffDriveController
+
+      imu_broadcaster:
+        type: imu_sensor_broadcaster/IMUSensorBroadcaster
 
   fr3_arm_controller:
     ros__parameters:
@@ -47,6 +52,21 @@
       max_effort: 0.0
       stall_timeout: 1.0
       stall_velocity_threshold: 0.001
+
+  # IMU specification: https://www.phidgets.com/?tier=3&catid=10&pcid=8&prodid=1025#Tab_Specifications
+  imu_broadcaster:
+    ros__parameters:
+      sensor_name: substitute_me
+      frame_id: substitute_me
+      # orientation_stddev: 4.3e-2 rad determined experimentally
+      static_covariance_orientation:
+        [1.8e-3, 0.0, 0.0, 0.0, 1.8e-3, 0.0, 0.0, 0.0, 1.8e-3]
+      # angular_velocity_stdev: 0.59 deg/s (0.01 rad/s) gyroscope white noise sigma, according to the manual
+      static_covariance_angular_velocity:
+        [1.0e-4, 0.0, 0.0, 0.0, 1.0e-4, 0.0, 0.0, 0.0, 1.0e-4]
+      # linear_acceleration_stdev: 2.8 mg (0.0275 m/s^2) accelerometer white noise sigma, according to the manual
+      static_covariance_linear_acceleration:
+        [7.6e-4, 0.0, 0.0, 0.0, 7.6e-4, 0.0, 0.0, 0.0, 7.6e-4]
 
   drive_controller:
     ros__parameters:

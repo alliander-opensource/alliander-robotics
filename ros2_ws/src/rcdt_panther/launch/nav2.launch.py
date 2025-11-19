@@ -2,22 +2,27 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import yaml
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node, SetRemap
 from nav2_common.launch import RewrittenYaml
+from pydantic.v1.utils import deep_update
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.launch_utils import SKIP
 from rcdt_utilities.register import Register
-from rcdt_utilities.ros_utils import get_file_path
+from rcdt_utilities.ros_utils import get_file_path, get_yaml
 
 autostart_arg = LaunchArgument("autostart", True, [True, False])
 use_respawn_arg = LaunchArgument("use_respawn", False, [True, False])
 use_slam_arg = LaunchArgument("slam", False, [True, False])
 namespace_vehicle_arg = LaunchArgument("namespace_vehicle", "")
 namespace_lidar_arg = LaunchArgument("namespace_lidar", "")
+namespace_gps_arg = LaunchArgument("namespace_gps", "")
 use_collision_monitor_arg = LaunchArgument("collision_monitor", False, [True, False])
 use_navigation_arg = LaunchArgument("navigation", False, [True, False])
+use_gps_arg = LaunchArgument("use_gps", False, [True, False])
+window_size_arg = LaunchArgument("window_size", 10)
 controller_arg = LaunchArgument(
     "controller",
     "vector_pursuit",
@@ -35,11 +40,44 @@ global_map_arg = LaunchArgument(
 )
 
 
+class AdaptedYaml:
+    """Class to adapt a YAML file with parameter substitutions."""
+
+    def __init__(self, namespaces: list[str], file: str, substitutions: dict) -> None:
+        """Update parameters with substitutions and write to a namespaced YAML file.
+
+        Args:
+            namespaces (list[str]): List of namespaces to wrap the parameters.
+            file (str): Path to the original YAML file.
+            substitutions (dict): Dictionary of parameter substitutions.
+        """
+        self.namespaces = namespaces
+        self.params = deep_update(get_yaml(file), substitutions)
+        self.file: str
+        self.write_yaml()
+
+    def write_yaml(self) -> None:
+        """Write parameters to a namespaced YAML file."""
+        self.namespaces.append("ros__parameters")
+        self.namespaces.reverse()
+        file = "params.yml"
+        for namespace in self.namespaces:
+            self.params = {namespace: self.params}
+            if namespace != "ros__parameters":
+                file = namespace + "_" + file
+        self.file = "/tmp/" + file
+        with open(self.file, "w", encoding="utf-8") as outfile:
+            yaml.dump(self.params, outfile, default_flow_style=False)
+
+
 def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     """Setup the launch description for the navigation stack.
 
     Args:
         context (LaunchContext): The launch context.
+
+    Raises:
+        ValueError: If GPS is enabled but no namespace is provided.
 
     Returns:
         list: A list of actions to be executed in the launch description.
@@ -49,8 +87,11 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     use_slam = use_slam_arg.bool_value(context)
     namespace_vehicle = namespace_vehicle_arg.string_value(context)
     namespace_lidar = namespace_lidar_arg.string_value(context)
+    namespace_gps = namespace_gps_arg.string_value(context)
     use_collision_monitor = use_collision_monitor_arg.bool_value(context)
     use_navigation = use_navigation_arg.bool_value(context)
+    use_gps = use_gps_arg.bool_value(context)
+    window_size = window_size_arg.int_value(context)
     controller = controller_arg.string_value(context)
     global_map = global_map_arg.string_value(context)
 
@@ -58,10 +99,15 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     if use_collision_monitor:
         lifecycle_nodes.append("collision_monitor")
+    use_map_localization = False
 
-    if use_slam:
+    if use_gps:
+        if not namespace_gps:
+            raise ValueError("Namespace for GPS must be provided when using GPS.")
+    elif use_slam:
         lifecycle_nodes.append("slam_toolbox")
     elif use_navigation:
+        use_map_localization = True
         lifecycle_nodes.append("map_server")
         lifecycle_nodes.append("amcl")
 
@@ -96,22 +142,38 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         root_key=namespace_vehicle,
     )
 
-    local_costmap_params = RewrittenYaml(
+    plugins = ["obstacle_layer", "inflation_layer"]
+    if not use_gps:
+        plugins.append("static_layer")
+
+    local_costmap_params = AdaptedYaml(
+        [namespace_vehicle, "local_costmap", "local_costmap"],
         get_file_path("rcdt_panther", ["config", "nav2"], "local_costmap.yaml"),
         {
             "global_frame": f"{namespace_vehicle}/odom",
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
+            "rolling_window": use_gps,
+            "plugins": plugins,
         },
-        root_key=namespace_vehicle,
     )
 
-    global_costmap_params = RewrittenYaml(
+    global_costmap_params = AdaptedYaml(
+        [namespace_vehicle, "global_costmap", "global_costmap"],
         get_file_path("rcdt_panther", ["config", "nav2"], "global_costmap.yaml"),
         {
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
-            "topic": f"/{namespace_lidar}/scan",
+            "rolling_window": use_gps,
+            "width": window_size,
+            "height": window_size,
+            "plugins": plugins,
+            "obstacle_layer": {
+                "scan": {
+                    "topic": f"/{namespace_lidar}/scan",
+                    "obstacle_max_range": float(window_size),
+                    "raytrace_max_range": float(window_size),
+                }
+            },
         },
-        root_key=namespace_vehicle,
     )
 
     controller_server_params = RewrittenYaml(
@@ -208,7 +270,11 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         output="screen",
         respawn=use_respawn,
         respawn_delay=2.0,
-        parameters=[local_costmap_params, controller_server_params, follow_path_params],
+        parameters=[
+            local_costmap_params.file,
+            controller_server_params,
+            follow_path_params,
+        ],
         namespace=namespace_vehicle,
     )
 
@@ -219,7 +285,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         output="screen",
         respawn=use_respawn,
         respawn_delay=2.0,
-        parameters=[global_costmap_params, planner_server_params],
+        parameters=[global_costmap_params.file, planner_server_params],
         namespace=namespace_vehicle,
     )
 
@@ -266,10 +332,14 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         namespace=namespace_vehicle,
     )
 
+    remappings = []
+    if use_gps:
+        remappings.append(("/gps/fix", f"/{namespace_gps}/fix"))
     waypoint_follower = Node(
         package="nav2_waypoint_follower",
         executable="waypoint_follower",
         namespace=namespace_vehicle,
+        remappings=remappings,
     )
 
     waypoint_follower_controller = Node(
@@ -287,8 +357,8 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     return [
         SetRemap(src="/cmd_vel", dst=pub_topic),
         Register.on_start(slam, context) if use_slam else SKIP,
-        Register.on_start(map_server, context) if not use_slam else SKIP,
-        Register.on_start(amcl, context) if not use_slam else SKIP,
+        Register.on_start(map_server, context) if use_map_localization else SKIP,
+        Register.on_start(amcl, context) if use_map_localization else SKIP,
         Register.on_start(controller_server, context) if use_navigation else SKIP,
         Register.on_start(planner_server, context) if use_navigation else SKIP,
         Register.on_start(behavior_server, context) if use_navigation else SKIP,
@@ -320,6 +390,10 @@ def generate_launch_description() -> LaunchDescription:
             use_slam_arg.declaration,
             namespace_vehicle_arg.declaration,
             namespace_lidar_arg.declaration,
+            namespace_gps_arg.declaration,
+            use_navigation_arg.declaration,
+            use_gps_arg.declaration,
+            window_size_arg.declaration,
             controller_arg.declaration,
             global_map_arg.declaration,
             OpaqueFunction(function=launch_setup),

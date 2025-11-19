@@ -152,8 +152,13 @@ def config_panther_axis() -> None:  # noqa: D103
 
 @register_configuration("panther_gps")
 def config_panther_gps() -> None:  # noqa: D103
-    panther = Vehicle("panther", [0, 0, 0.2])
+    EnvironmentConfiguration.world = "map_5.940906_51.966960"
+    EnvironmentConfiguration.use_vizanti = True
+    panther = Vehicle(
+        "panther", [0, 0, 0.2], navigation=True, use_gps=True, window_size=50
+    )
     GPS("nmea", [0, 0, 0.2], parent=panther)
+    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
 
 
 @register_configuration("panther_realsense")

@@ -25,7 +25,28 @@ def launch_setup(context: LaunchContext) -> list:
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster"],
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-ros-args",
+            "--remap joint_state_broadcaster/transition_event:=joint_state_broadcaster/_transition_event",
+        ],
+        namespace=namespace,
+    )
+
+    imu_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "imu_broadcaster",
+            "--controller-ros-args",
+            f"--ros-args -p sensor_name:={namespace}/imu",
+            "--controller-ros-args",
+            f"--ros-args -p frame_id:={namespace}/imu_link",
+            "--controller-ros-args",
+            "--remap imu_broadcaster/imu:=imu/data",
+            "--controller-ros-args",
+            "--remap imu_broadcaster/transition_event:=imu_broadcaster/_transition_event",
+        ],
         namespace=namespace,
     )
 
@@ -42,18 +63,13 @@ def launch_setup(context: LaunchContext) -> list:
             "--remap drive_controller/odom:=odometry/wheels",
             "--controller-ros-args",
             "--remap drive_controller/transition_event:=drive_controller/_transition_event",
-            "--controller-ros-args",
-            "--remap imu_broadcaster/imu:=imu/data",
-            "--controller-ros-args",
-            "--remap imu_broadcaster/transition_event:=imu_broadcaster/_transition_event",
-            "--controller-ros-args",
-            "--remap joint_state_broadcaster/transition_event:=joint_state_broadcaster/_transition_event",
         ],
         namespace=namespace,
     )
 
     return [
         Register.on_exit(joint_state_broadcaster_spawner, context),
+        Register.on_exit(imu_broadcaster_spawner, context),
         Register.on_exit(drive_controller_spawner, context),
     ]
 

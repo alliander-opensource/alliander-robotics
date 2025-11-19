@@ -4,12 +4,17 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from rcdt_launch.environment_configuration import EnvironmentConfiguration
 from rcdt_launch.platforms.platform import Platform
+from rcdt_launch.rviz import Rviz
+from rcdt_launch.vizanti import Vizanti
 from rcdt_utilities.register import RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
+
+if TYPE_CHECKING:
+    from rcdt_launch.platforms.vehicle import Vehicle
 
 
 class GPS(Platform):
@@ -21,7 +26,7 @@ class GPS(Platform):
         position: list,
         orientation: list | None = None,
         namespace: str | None = None,
-        parent: Platform | None = None,
+        parent: Vehicle | None = None,
         ip_address: str = "",
     ):
         """Initialize the GPS platform.
@@ -31,7 +36,7 @@ class GPS(Platform):
             position (list): The position of the platform.
             orientation (list | None): The orientation of the platform.
             namespace (str | None): The namespace of the platform.
-            parent (Platform | None): The parent platform.
+            parent (Vehicle | None): The parent platform.
             ip_address (str): The IP address of the platform.
         """
         super().__init__(platform, position, orientation, namespace, parent)
@@ -39,9 +44,15 @@ class GPS(Platform):
         self.namespace = self.namespace
         self.ip_address = ip_address
 
+        if parent:
+            parent.gps = self
+
         EnvironmentConfiguration.bridge_topics.append(
             f"/{self.namespace}/gps/fix@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat"
         )
+
+        Rviz.add_satellite(f"/{self.namespace}/gps/filtered")
+        Vizanti.add_satellite(f"/{self.namespace}/gps/filtered")
 
     @property
     def base_link(self) -> str:  # noqa: PLR0911
@@ -91,7 +102,8 @@ class GPS(Platform):
             get_file_path("rcdt_sensors", ["launch"], "nmea_navsat.launch.py"),
             launch_arguments={
                 "simulation": str(EnvironmentConfiguration.simulation),
-                "namespace": self.namespace,
+                "namespace_vehicle": self.parent.namespace if self.parent else "",
+                "namespace_gps": self.namespace,
                 "ip_address": self.ip_address,
             },
         )
