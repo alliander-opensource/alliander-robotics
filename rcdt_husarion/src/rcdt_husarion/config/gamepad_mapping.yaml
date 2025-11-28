@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+axes:
+  1:
+    linear:
+      direction: "x"
+  2:
+    angular:
+      direction: "z"

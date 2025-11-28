@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+vision_msgs/Point2D pixel
+sensor_msgs/Image depth_image
+sensor_msgs/CameraInfo camera_info
+---
+geometry_msgs/PoseStamped pose
+bool success

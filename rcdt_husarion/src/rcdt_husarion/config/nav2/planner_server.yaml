@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Based on: https://github.com/ros-navigation/navigation2/tree/main/nav2_smac_planner
+
+planner_server:
+  ros__parameters:
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_smac_planner::SmacPlannerHybrid"
+      minimum_turning_radius: 0.0
+

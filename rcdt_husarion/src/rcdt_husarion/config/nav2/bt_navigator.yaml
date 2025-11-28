@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Based on: https://docs.nav2.org/configuration/packages/configuring-bt-navigator.html
+
+bt_navigator:
+  ros__parameters:
+    default_nav_to_pose_bt_xml: substitute_me
+    robot_base_frame: substitute_me
+    odom_topic: substitute_me
+    error_code_names:
+      - compute_path_error_code
+      - follow_path_error_code

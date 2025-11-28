@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+geometry_msgs/PoseStamped pose
+string target_frame
+---
+geometry_msgs/PoseStamped pose
+bool success

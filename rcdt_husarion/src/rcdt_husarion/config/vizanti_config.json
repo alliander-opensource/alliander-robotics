@@ -1,0 +1,32 @@
+{
+  "navbar": [
+    {
+      "type": "settings",
+      "id": "settings_default"
+    },
+    {
+      "type": "rosbridge",
+      "id": "rosbridge_default"
+    },
+    {
+      "type": "grid",
+      "id": "grid_default"
+    }
+  ],
+  "view": {
+    "center": {
+      "x": 0,
+      "y": 0
+    },
+    "scale": 100
+  },
+  "settings_default": {
+    "fixed_frame": "map"
+  },
+  "grid_default": {
+    "size": 2,
+    "thickness": 1,
+    "autoscale": "Coarse",
+    "subdivisions": 2
+  }
+}

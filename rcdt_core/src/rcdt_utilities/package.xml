@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<package format="3">
+  <name>rcdt_utilities</name>
+  <version>0.1.0</version>
+  <description>Contains the RCDT ros2 utilities.</description>
+  <maintainer email="researchcenter@alliander.com">RCDT</maintainer>
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>std_srvs</depend>
+  <depend>rcdt_interfaces</depend>
+  <depend>rviz_visual_tools</depend>
+  <depend>tf2_eigen</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

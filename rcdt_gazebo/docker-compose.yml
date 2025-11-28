@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+services:
+  rcdt_gazebo:
+    image: rcdt/robotics:gazebo-${IMAGE_TAG}
+    container_name: rcdt_gazebo
+    runtime: nvidia
+    network_mode: host
+    privileged: true
+    mem_limit: 6gb
+    tty: true
+    group_add:
+      - "video" # Allows camera access on all platforms, no matter the allocated user rights
+    env_file:
+      - .env
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "/dev:/dev"
+    environment:
+      - "DISPLAY"
+      - "RCUTILS_COLORIZED_OUTPUT=1"
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json

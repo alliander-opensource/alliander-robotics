@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Based on: https://docs.nav2.org/configuration/packages/configuring-behavior-server.html
+
+behavior_server:
+  ros__parameters:
+    enable_stamped_cmd_vel: true
+    local_frame: substitute_me
+    robot_base_frame: substitute_me
