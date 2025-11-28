@@ -37,7 +37,8 @@ Maintainers are responsible for maintaining parts of the code-base. Maintainers 
 
 The current maintainers of this project are:
  1. Jelmer de Wolde - Team RCDT
- 1. Yuri van Warmerdam - Team RCDT
+ 1. Peter Geurts - Team RCDT
+ 1. Rosalie van Ark - Team RCDT
 
  ## Contributors
 
