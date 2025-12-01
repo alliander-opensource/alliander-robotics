@@ -18,11 +18,17 @@ if TYPE_CHECKING:
 
 
 class Camera(Platform):
-    """Extension on Platform with camera specific functionalities."""
+    """Extension on Platform with camera specific functionalities.
+
+    Attributes:
+        SUPPORTED_PLATFORMS: The supported platforms.
+    """
+
+    SUPPORTED_PLATFORMS = Literal["realsense", "zed"]
 
     def __init__(  # noqa: PLR0913
         self,
-        platform: Literal["realsense", "zed"],
+        platform: SUPPORTED_PLATFORMS,
         position: list,
         orientation: list | None = None,
         namespace: str | None = None,
@@ -32,7 +38,7 @@ class Camera(Platform):
         """Initialize the Camera platform.
 
         Args:
-            platform (Literal["realsense", "zed"]): The platform type.
+            platform (SUPPORTED_PLATFORMS): The platform type.
             position (list): The position of the camera.
             orientation (list | None): The initial orientation of the camera.
             namespace (str | None): The namespace of the camera.

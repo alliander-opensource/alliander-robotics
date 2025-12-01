@@ -18,11 +18,17 @@ if TYPE_CHECKING:
 
 
 class Lidar(Platform):
-    """Extension on Platform with lidar specific functionalities."""
+    """Extension on Platform with lidar specific functionalities.
+
+    Attributes:
+        SUPPORTED_PLATFORMS: The supported platforms.
+    """
+
+    SUPPORTED_PLATFORMS = Literal["velodyne", "ouster"]
 
     def __init__(  # noqa: PLR0913
         self,
-        platform: Literal["velodyne", "ouster"],
+        platform: SUPPORTED_PLATFORMS,
         position: list,
         orientation: list | None = None,
         namespace: str | None = None,
@@ -32,7 +38,7 @@ class Lidar(Platform):
         """Initialize the Lidar platform.
 
         Args:
-            platform (Literal["velodyne", "ouster"]): The platform type.
+            platform (SUPPORTED_PLATFORMS): The platform type.
             position (list): The position of the lidar.
             orientation (list | None): The initial orientation of the lidar.
             namespace (str | None): The namespace of the lidar.

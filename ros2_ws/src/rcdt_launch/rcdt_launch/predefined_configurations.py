@@ -110,6 +110,20 @@ def config_franka() -> None:  # noqa: D103
 
 @register_configuration("franka_axis")
 def config_franka_axis() -> None:  # noqa: D103
+    franka = Arm("franka", [0, 0, 0], [0, 0, 20])
+    Platform("axis", [0, 0, 0.1], [0, 20, 0], parent=franka)
+
+
+@register_configuration("franka_double")
+def config_franka_double() -> None:  # noqa: D103
+    EnvironmentConfiguration.use_joystick = False
+    Rviz.load_motion_planning_plugin = True
+    Arm("franka", [1.0, 0, 0], gripper=True, moveit=True)
+    Arm("franka", [-1.0, 0, 0], gripper=True, moveit=True)
+
+
+@register_configuration("franka_planning")
+def config_franka_planning() -> None:  # noqa: D103
     EnvironmentConfiguration.world = "table_with_1_brick.sdf"
     Rviz.add_markers()
     Rviz.load_robot_state = True
@@ -117,20 +131,6 @@ def config_franka_axis() -> None:  # noqa: D103
     Rviz.load_planning_scene = True
     arm = Arm("franka", [0, 0, 0], moveit=True)
     Camera("realsense", [0.05, 0, 0], [0, -90, 180], parent=arm)
-
-
-@register_configuration("franka_double")
-def config_franka_double() -> None:  # noqa: D103
-    franka = Arm("franka", [0, 0, 0], [0, 0, 20])
-    Platform("axis", [0, 0, 0.1], [0, 20, 0], parent=franka)
-
-
-@register_configuration("franka_planning")
-def config_franka_planning() -> None:  # noqa: D103
-    EnvironmentConfiguration.use_joystick = False
-    Rviz.load_motion_planning_plugin = True
-    Arm("franka", [1.0, 0, 0], gripper=True, moveit=True)
-    Arm("franka", [-1.0, 0, 0], gripper=True, moveit=True)
 
 
 @register_configuration("franka_realsense")
@@ -175,6 +175,7 @@ def config_panther_zed() -> None:  # noqa: D103
 
 @register_configuration("panther_velodyne")
 def config_panther_velodyne() -> None:  # noqa: D103
+    EnvironmentConfiguration.use_vizanti = True
     panther = Vehicle("panther", [0, 0, 0.2], navigation=True)
     Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
 
@@ -203,6 +204,17 @@ def config_mm_ouster() -> None:  # noqa: D103
     panther = Vehicle("panther", [0, 0, 0.2], navigation=True)
     Arm("franka", [0, 0, 0.14], gripper=True, parent=panther, moveit=True)
     Lidar("ouster", [0.13, -0.13, 0.35], parent=panther)
+
+
+@register_configuration("mm_gps")
+def config_mm_gps() -> None:  # noqa: D103
+    EnvironmentConfiguration.world = "map_5.940906_51.966960"
+    panther = Vehicle(
+        "panther", [0, 0, 0.2], navigation=True, use_gps=True, window_size=50
+    )
+    Arm("franka", [0, 0, 0.14], gripper=True, parent=panther, moveit=True)
+    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
+    GPS("nmea", [0, 0, 0.2], parent=panther)
 
 
 @register_configuration("panther_and_franka")

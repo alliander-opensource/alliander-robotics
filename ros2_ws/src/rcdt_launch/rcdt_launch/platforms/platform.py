@@ -15,11 +15,17 @@ from rcdt_utilities.ros_utils import get_file_path, get_robot_description
 
 
 class Platform:  # noqa: PLR0904
-    """A class used to dynamically create all the required nodes for a platform."""
+    """A class used to dynamically create all the required nodes for a platform.
+
+    Attributes:
+        SUPPORTED_PLATFORMS: The supported platforms.
+    """
+
+    SUPPORTED_PLATFORMS = Literal["axis"]
 
     def __init__(  # noqa: PLR0913
         self,
-        platform: Literal["axis"],
+        platform: SUPPORTED_PLATFORMS,
         position: list,
         orientation: list | None = None,
         namespace: str | None = None,
@@ -29,7 +35,7 @@ class Platform:  # noqa: PLR0904
         """Initialize a platform instance.
 
         Args:
-            platform (Literal["axis"]): The platform type of the platform.
+            platform (SUPPORTED_PLATFORMS): The platform type of the platform.
             position (list): The initial position of the platform.
             orientation (list | None): The initial orientation of the platform.
             namespace (str | None): The namespace of the platform. If None, a unique namespace will be generated.

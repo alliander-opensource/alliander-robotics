@@ -4,7 +4,7 @@
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import SetParameter
+from launch_ros.actions import Node, SetParameter
 from rcdt_launch.environment_configuration import EnvironmentConfiguration
 from rcdt_launch.predefined_configurations import PredefinedConfigurations
 from rcdt_launch.rviz import Rviz
@@ -79,8 +79,19 @@ def launch_setup(context: LaunchContext) -> list:
         get_file_path("rcdt_panther", ["launch"], "vizanti.launch.py")
     )
 
+    platforms_dict = {
+        platform.namespace: type(platform).__name__
+        for platform in EnvironmentConfiguration.platforms
+    }
+    rcdt_gui = Node(
+        package="rcdt_utilities",
+        executable="rcdt_gui.py",
+        parameters=[{"platforms": str(platforms_dict)}],
+    )
+    start_rcdt_gui = not set(platforms_dict.values()).isdisjoint(["Arm", "Vehicle"])
     return [
         SetParameter(name="use_sim_time", value=EnvironmentConfiguration.simulation),
+        Register.on_start(rcdt_gui, context) if start_rcdt_gui else launch_utils.SKIP,
         Register.group(rviz, context) if use_rviz else launch_utils.SKIP,
         *[Register.on_start(node, context) for node in state_publishers],
         Register.group(gazebo, context)

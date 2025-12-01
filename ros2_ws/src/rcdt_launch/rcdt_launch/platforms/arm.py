@@ -17,11 +17,17 @@ from rcdt_utilities.ros_utils import get_file_path, get_robot_description
 
 
 class Arm(Platform):
-    """Extension on Platform with arm specific functionalities."""
+    """Extension on Platform with arm specific functionalities.
+
+    Attributes:
+        SUPPORTED_PLATFORMS: The supported platforms.
+    """
+
+    SUPPORTED_PLATFORMS = Literal["franka"]
 
     def __init__(  # noqa: PLR0913
         self,
-        platform: Literal["franka"],
+        platform: SUPPORTED_PLATFORMS,
         position: list,
         orientation: list | None = None,
         namespace: str | None = None,
@@ -34,7 +40,7 @@ class Arm(Platform):
         """Initialize the Arm platform.
 
         Args:
-            platform (Literal["franka"]): The platform type.
+            platform (SUPPORTED_PLATFORMS): The platform type.
             position (list): The position of the arm.
             orientation (list | None): The initial orientation of the arm.
             namespace (str | None): The namespace of the arm.

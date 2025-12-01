@@ -19,11 +19,17 @@ from rcdt_utilities.ros_utils import get_file_path
 
 
 class Vehicle(Platform):
-    """Extension on Platform with vehicle specific functionalities."""
+    """Extension on Platform with vehicle specific functionalities.
+
+    Attributes:
+        SUPPORTED_PLATFORMS: The supported platforms.
+    """
+
+    SUPPORTED_PLATFORMS = Literal["panther"]
 
     def __init__(  # noqa: PLR0913
         self,
-        platform: Literal["panther"],
+        platform: SUPPORTED_PLATFORMS,
         position: list,
         orientation: list | None = None,
         namespace: str | None = None,
@@ -38,7 +44,7 @@ class Vehicle(Platform):
         """Initialize the Vehicle platform.
 
         Args:
-            platform (Literal["panther"]): The platform type.
+            platform (SUPPORTED_PLATFORMS): The platform type.
             position (list): The position of the vehicle.
             orientation (list | None): The initial orientation of the vehicle.
             namespace (str | None): The namespace of the vehicle.

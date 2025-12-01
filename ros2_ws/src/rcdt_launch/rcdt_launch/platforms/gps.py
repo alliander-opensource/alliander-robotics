@@ -18,11 +18,17 @@ if TYPE_CHECKING:
 
 
 class GPS(Platform):
-    """Extension on Platform with GPS specific functionalities."""
+    """Extension on Platform with GPS specific functionalities.
+
+    Attributes:
+        SUPPORTED_PLATFORMS: The supported platforms.
+    """
+
+    SUPPORTED_PLATFORMS = Literal["nmea"]
 
     def __init__(  # noqa: PLR0913
         self,
-        platform: Literal["nmea"],
+        platform: SUPPORTED_PLATFORMS,
         position: list,
         orientation: list | None = None,
         namespace: str | None = None,
@@ -32,7 +38,7 @@ class GPS(Platform):
         """Initialize the GPS platform.
 
         Args:
-            platform (Literal["nmea"]): The platform type.
+            platform (SUPPORTED_PLATFORMS): The platform type.
             position (list): The position of the platform.
             orientation (list | None): The orientation of the platform.
             namespace (str | None): The namespace of the platform.
