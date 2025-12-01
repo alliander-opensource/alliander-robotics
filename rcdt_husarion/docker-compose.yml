@@ -23,4 +23,5 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
       - __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
+    command: ["/bin/bash", "-c", "ros2 launch rcdt_husarion husarion.launch.py"]
 

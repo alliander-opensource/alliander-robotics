@@ -92,7 +92,9 @@ RUN cd /rcdt/ros \
   && colcon build --symlink-install \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
   --event-handlers console_direct+ \
+  && echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc \
   && echo "source /rcdt/ros/install/setup.bash" >> /root/.bashrc
+
 
 COPY entrypoint.sh /entrypoint.sh
 

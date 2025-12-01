@@ -61,7 +61,5 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription(
         [
             utils_launch,
-            controller_launch,
-            nav2_launch,
         ]
     )

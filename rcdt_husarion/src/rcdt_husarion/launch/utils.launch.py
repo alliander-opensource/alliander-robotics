@@ -2,65 +2,36 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from launch import LaunchDescription
+from launch import LaunchContext, LaunchDescription
 from launch_ros.actions import Node
-from rcdt_launch.environment_configuration import EnvironmentConfiguration
-from rcdt_utilities.register import Register, RegisteredLaunchDescription
+from launch.actions import OpaqueFunction
+from rcdt_utilities.launch_argument import LaunchArgument
+from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
 from launch_ros.actions import Node
+import xacro
+
+namespace_arg = LaunchArgument("namespace", "panther")
 
 
-def create_map_link(self) -> Node | None:
-    """Create a static_transform_publisher node that links the platform to the map.
+def get_robot_description(
+    xacro_path: str, xacro_arguments: dict | None = None, semantic: bool = False
+) -> dict:
+    """Process a Xacro file to generate the robot description.
 
-    If the platform is a Vehicle that is using SLAM or navigation, None is returned.
-    In this case, a localization node will make the link to the 'map' frame.
-    If a vehicle is not using SLAM or navigation, the 'odom' frame is directly linked to the 'map' frame.
-
-    Returns:
-        Node | None: A static_transform_publisher node that links the platform with the world or None if not applicable.
-    """
-    if self.navigation or self.slam or self.use_gps:
-        return None
-    child_frame = f"{self.namespace}/odom"
-
-    return Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="static_tf_world",
-        arguments=[
-            "--frame-id",
-            "map",
-            "--child-frame-id",
-            child_frame,
-            "--x",
-            f"{self.position[0]}",
-            "--y",
-            f"{self.position[1]}",
-            "--z",
-            f"{self.position[2]}",
-            "--roll",
-            f"{self.orientation[0]}",
-            "--pitch",
-            f"{self.orientation[1]}",
-            "--yaw",
-            f"{self.orientation[2]}",
-        ],
-    )
-
-
-def create_nav2_launch(self) -> RegisteredLaunchDescription:
-    """Create the Nav2 launch description.
+    Args:
+        xacro_path (str): The path to the Xacro file.
+        xacro_arguments (dict | None): A dictionary of arguments to pass to the Xacro processor.
+        semantic (bool): Whether to return the semantic robot description.
 
     Returns:
-        RegisteredLaunchDescription: The launch description for the Nav2.
-
-    Raises:
-        ValueError: If no lidar is attached to the vehicle.
+        dict: A dictionary containing the robot description in XML format.
     """
-    return RegisteredLaunchDescription(
-        get_file_path("rcdt_panther", ["launch"], "nav2.launch.py"),
-    )
+    if xacro_arguments is None:
+        xacro_arguments = {}
+    robot_description_config = xacro.process_file(xacro_path, mappings=xacro_arguments)
+    name = "robot_description_semantic" if semantic else "robot_description"
+    return {name: robot_description_config.toxml()}
 
 
 def create_state_publisher() -> Node | None:
@@ -69,48 +40,33 @@ def create_state_publisher() -> Node | None:
     Returns:
         Node | None: The state publisher node for the robot or None if not applicable.
     """
-    if not EnvironmentConfiguration.simulation:
-        return None
-
+    xacro_path = get_file_path("rcdt_husarion", ["urdf"], "panther.urdf.xacro")
+    robot_description = get_robot_description(xacro_path)
     return Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
-        namespace=self.namespace,
+        namespace="panther",
         parameters=[
-            self.robot_description,
-            {"frame_prefix": self.frame_prefix},
+            robot_description,
+            {"frame_prefix": ""},
             {"publish_frequency": 1000.0},
         ],
     )
 
 
-def joystick_nodes(self) -> list[Node]:
-    """Return the required nodes to control the platform with a joystick.
-
-    Returns:
-        list[Node]: The joystick nodes for the platform.
-    """
-    nodes: list[Node] = []
-
-    pub_topic = f"/{self.namespace}/cmd_vel"
-    if self.collision_monitor:
-        pub_topic += "_raw"
-    if self.platform_type == "panther":
-        nodes.append(
-            Node(
-                package="rcdt_joystick",
-                executable="joy_to_twist.py",
-                parameters=[
-                    {"sub_topic": f"/{self.namespace}/joy"},
-                    {"pub_topic": pub_topic},
-                    {"config_pkg": "rcdt_panther"},
-                ],
-                namespace=self.namespace,
-            )
-        )
+def launch_setup(context: LaunchContext) -> list:
+    nodes = []
+    state_publisher_node = create_state_publisher()
+    if isinstance(state_publisher_node, Node):
+        nodes.append(Register.on_start(state_publisher_node, context))
 
     return nodes
 
 
 def generate_launch_description() -> LaunchDescription:
-    return LaunchDescription([Register.on_start(create_state_publisher(), context)])
+    return LaunchDescription(
+        [
+            namespace_arg.declaration,
+            OpaqueFunction(function=launch_setup),
+        ]
+    )
