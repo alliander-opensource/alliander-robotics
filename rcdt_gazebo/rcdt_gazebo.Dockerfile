@@ -28,6 +28,17 @@ RUN mkdir -p /rcdt/osm2world \
   && unzip OSM2World-latest-bin.zip \
   && rm OSM2World-latest-bin.zip
 
+# Get all necessary models
+WORKDIR /rcdt/ros/src
+RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git \
+  && git clone -b ros2 https://github.com/husarion/husarion_ugv_ros.git \
+  && cd /rcdt/ros \
+  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
+  && colcon build --symlink-install --packages-up-to \
+  franka_description \
+  husarion_ugv_description \
+  rcdt_gazebo
+ 
 # Install dev packages
 COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt
 RUN apt update && apt install -y -qq --no-install-recommends  \
