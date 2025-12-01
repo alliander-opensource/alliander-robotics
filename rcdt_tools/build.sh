@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 ARCH=$1
-PACKAGE=husarion
+PACKAGE=tools
 BASE_PACKAGE=base
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)

@@ -16,6 +16,7 @@ RUN mkdir /rcdt \
 # Install basic packages & add ROS2 to apt sources
 RUN apt update && apt install -y -qq --no-install-recommends \
   bash \
+  build-essential \
   curl \
   flake8 \
   git \
@@ -31,11 +32,10 @@ RUN apt update && apt install -y -qq --no-install-recommends \
 && dpkg -i /tmp/ros2-apt-source.deb
 
 # Install ROS2
-# two-stage install is because otherwise it can't find dependencies in ARM build
 RUN apt update && apt install -y --no-install-recommends \
-  ros-dev-tools \
-  && apt install -y --no-install-recommends \
   ros-$ROS_DISTRO-desktop \
+  python3-rosdep \
+  python3-colcon-common-extensions \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \
   && apt clean
@@ -47,10 +47,7 @@ RUN rosdep init \
 # Install ROS dependencies 
 RUN apt update && apt install -y --no-install-recommends \
     ros-$ROS_DISTRO-launch-pytest \
-    ros-$ROS_DISTRO-plotjuggler-ros \
     ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
-    ros-$ROS_DISTRO-rqt-tf-tree \
-    ros-$ROS_DISTRO-rviz-satellite \
     ros-$ROS_DISTRO-vision-msgs \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \
@@ -77,15 +74,7 @@ RUN mkdir -p /rcdt/ros/
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY pyproject.toml /rcdt/pyproject.toml
 
-# Get vizanti and install its dependencies
-RUN apt update \
-  && cd /rcdt/ros/src \
-  && git clone -b ros2 https://github.com/MoffKalast/vizanti.git \
-  && git clone -b jazzy https://github.com/alliander-opensource/rws.git \
-  && cd /rcdt/ros \
-  && rosdep update --rosdistro $ROS_DISTRO \
-  && rosdep install --from-paths src -y -i
-  
+# Build basic packages 
 RUN cd /rcdt/ros \
   && uv sync \
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 
@@ -94,7 +83,6 @@ RUN cd /rcdt/ros \
   --event-handlers console_direct+ \
   && echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc \
   && echo "source /rcdt/ros/install/setup.bash" >> /root/.bashrc
-
 
 COPY entrypoint.sh /entrypoint.sh
 

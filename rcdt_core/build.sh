@@ -4,7 +4,20 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 ARCH=$1
-PACKAGE=core
+TYPE=$2
+
+if [ "$TYPE" == "base" ] ; then
+  PACKAGE=base
+  BASE_IMAGE=ubuntu:noble
+  IMAGE_BASE_TAG=rcdt/robotics:base
+elif [ "$TYPE" == "cuda" ] ; then
+  PACKAGE=cuda
+  BASE_IMAGE=nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04
+  IMAGE_BASE_TAG=rcdt/robotics:cuda
+else 
+  echo "Invalid build type '$TYPE'. Please choose either 'base' or 'cuda."
+  exit 1
+fi
 
 export DOCKER_BUILDKIT=1
 
@@ -12,18 +25,18 @@ export DOCKER_BUILDKIT=1
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 GIT_BRANCH=$(git branch --show-current)
 if [ "$GIT_BRANCH" != "main" ] ; then
-  IMAGE_TAG=rcdt/robotics:$PACKAGE-$ARCH-$GIT_BRANCH
+  IMAGE_TAG=$IMAGE_BASE_TAG-$ARCH-$GIT_BRANCH
 else
-  IMAGE_TAG=rcdt/robotics:$PACKAGE-$ARCH
+  IMAGE_TAG=$IMAGE_BASE_TAG-$ARCH
 fi
 
 source $SCRIPT_DIR/../common/checks.sh $ARCH
 
 # Build the Docker image
-BASE_IMAGE=nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04-$ARCH
+BASE_IMAGE=$BASE_IMAGE-$ARCH
 (
   cd $SCRIPT_DIR/.. && \
-  docker build -f rcdt_$PACKAGE/rcdt_$PACKAGE.Dockerfile \
+  docker build -f rcdt_core/rcdt_core.Dockerfile \
   --build-arg BASE_IMAGE=$BASE_IMAGE \
   --platform $PLATFORM \
   -t $IMAGE_TAG \
