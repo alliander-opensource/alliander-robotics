@@ -14,7 +14,7 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Shared folders:
 install(
-  DIRECTORY launch
+  DIRECTORY config launch rviz
   DESTINATION share/${PROJECT_NAME}
 )
 

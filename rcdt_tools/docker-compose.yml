@@ -18,6 +18,9 @@ services:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
     environment:
+      - USE_RVIZ=true
+      - USE_VIZANTI=false
+      - PLATFORMS=panther
       - "DISPLAY"
       - "RCUTILS_COLORIZED_OUTPUT=1"
       - NVIDIA_VISIBLE_DEVICES=all

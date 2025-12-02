@@ -17,7 +17,7 @@ class Vizanti:
     config: dict
 
     with open(
-        get_file_path("rcdt_husarion", ["config"], "vizanti_config.json"),
+        get_file_path("rcdt_tools", ["config"], "vizanti_config.json"),
         encoding="utf-8",
     ) as json_file:
         config = json.load(json_file)

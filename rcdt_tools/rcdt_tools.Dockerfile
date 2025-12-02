@@ -10,6 +10,7 @@ ENV ROS_DISTRO=jazzy
 
 # Add custom packages
 WORKDIR /rcdt/ros
+COPY rcdt_tools/src/ /rcdt/ros/src
 COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
