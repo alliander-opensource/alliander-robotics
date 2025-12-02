@@ -30,3 +30,8 @@ clangd/
 # for LSP in neovim
 .clangd-build/
 **/compile_commands.json
+
+# generated compose files
+platforms.yml
+simulator.yml
+tools.yml
