@@ -1,0 +1,20 @@
+flowchart BT
+    create_point_cloud -- "point_cloud" --> generate_graps
+    generate_graps -- "grasps" --> collision_filtering
+    
+    generate_graps["generate_grasps(model)"]
+    generate_graps -- "point_cloud" --> get_grasps
+    get_grasps -- "grasps" --> generate_graps 
+    generate_graps -- "point_cloud" --> GraspGenSampler.run_inference
+    GraspGenSampler.run_inference -- "grasps" --> generate_graps 
+    
+    subgraph GraspModelWrapper
+        direction TB
+        generate_graps
+        subgraph GraspNet
+            get_grasps
+        end
+        subgraph GraspGen
+            GraspGenSampler.run_inference
+        end
+    end

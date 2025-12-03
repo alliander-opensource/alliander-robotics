@@ -1,0 +1,14 @@
+flowchart BT
+    input["`depth_image
+            rgb_image
+            mask`"] 
+    input --> get_and_process_data
+    subgraph GraspNet
+        get_and_process_data -- "point_cloud" --> get_grasps
+        get_grasps -- "grasps" --> collision_detection
+    end
+    input --> depth_and_segmentation_to_point_clouds
+    subgraph GraspGen
+        depth_and_segmentation_to_point_clouds -- "point_cloud" --> GraspGenSampler.run_inference
+        GraspGenSampler.run_inference -- "grasps" --> filter_colliding_grasps
+    end
