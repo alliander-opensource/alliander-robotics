@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="panther">
+
+  <!-- Set use_sim argument to let panther xacro load gazebo plugin: -->
+  <xacro:arg name="simulation" default="true" />
+  <xacro:arg name="namespace" default="panther" />
+  <xacro:arg name="childs" default="${[]}" />
+
+  <!-- Load panther: -->
+  <xacro:include filename="$(find rcdt_husarion)/urdf/adapted/panther_macro.urdf.xacro"
+    ns="husarion" />
+  <xacro:husarion.panther_robot
+    use_sim="$(arg simulation)"
+    wheel_config_file="$(find husarion_ugv_description)/config/WH01.yaml"
+    battery_config_file=""
+    namespace="$(arg namespace)" />
+
+  <!-- Create detachable joints with given childs: -->
+  <xacro:include filename="$(find rcdt_utilities)/urdf/detachable_joints.urdf.xacro" />
+  <xacro:detachable_joints childs="${$(arg childs)}" />
+</robot>

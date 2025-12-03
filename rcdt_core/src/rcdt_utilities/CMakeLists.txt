@@ -51,7 +51,7 @@ install(
 
 # Shared folders:
 install(
-  DIRECTORY launch rviz urdf
+  DIRECTORY launch urdf
   DESTINATION share/${PROJECT_NAME}
 )
 

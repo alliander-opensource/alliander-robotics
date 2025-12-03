@@ -12,20 +12,61 @@ from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.launch_utils import SKIP
 from rcdt_utilities.ros_utils import get_file_path, get_yaml
 from rcdt_utilities.register import Register
+import os
 
-autostart_arg = LaunchArgument("autostart", True, [True, False])
-use_respawn_arg = LaunchArgument("use_respawn", False, [True, False])
-use_slam_arg = LaunchArgument("slam", False, [True, False])
-namespace_vehicle_arg = LaunchArgument("namespace_vehicle", "")
-namespace_lidar_arg = LaunchArgument("namespace_lidar", "")
-namespace_gps_arg = LaunchArgument("namespace_gps", "")
-use_collision_monitor_arg = LaunchArgument("collision_monitor", False, [True, False])
-use_navigation_arg = LaunchArgument("navigation", False, [True, False])
-use_gps_arg = LaunchArgument("use_gps", False, [True, False])
-window_size_arg = LaunchArgument("window_size", 10)
+autostart_arg = LaunchArgument(
+    "autostart",  
+    os.environ.get("AUTOSTART", default="True").lower() == "true", 
+    [True, False]
+)
+
+use_respawn_arg = LaunchArgument(
+    "use_respawn", 
+    os.environ.get("USE_RESPAWN", default="True").lower() == "true", 
+    [True, False]
+)
+
+use_slam_arg = LaunchArgument(
+    "slam", 
+    os.environ.get("USE_SLAM", default="False").lower() == "true",
+    [True, False]
+)
+
+namespace_vehicle_arg = LaunchArgument(
+    "namespace_vehicle",
+    os.environ.get("NAMESPACE_VEHICLE", default="panther")
+)
+namespace_lidar_arg = LaunchArgument(
+    "namespace_lidar", 
+    os.environ.get("NAMESPACE_LIDAR", default="")
+)
+namespace_gps_arg = LaunchArgument(
+    "namespace_gps", 
+    os.environ.get("NAMESPACE_GPS", default="")
+)
+use_collision_monitor_arg = LaunchArgument(
+    "collision_monitor", 
+    os.environ.get("USE_COLLISION_MONITOR", default="False").lower() == "true", 
+    [True, False]
+)
+use_navigation_arg = LaunchArgument(
+    "navigation",  
+    os.environ.get("USE_NAVIGATION", default="False").lower() == "true", 
+    [True, False]
+)
+use_gps_arg = LaunchArgument(
+    "use_gps", 
+    os.environ.get("USE_GPS", default="False").lower() == "true", 
+    [True, False]
+)
+
+window_size_arg = LaunchArgument(
+    "window_size", 
+    os.environ.get("WINDOW_SIZE", default="10")
+)
 controller_arg = LaunchArgument(
     "controller",
-    "vector_pursuit",
+    os.environ.get("CONTROLLER", default="vector_pursuit"),
     [
         "dwb",
         "graceful_motion",
@@ -36,9 +77,10 @@ controller_arg = LaunchArgument(
     ],
 )
 global_map_arg = LaunchArgument(
-    "map", "simulation_map", ["simulation_map", "ipkw", "ipkw_buiten"]
+    "map", 
+    os.environ.get("GLOBAL_MAP", default="simulation_map"), 
+    ["simulation_map", "ipkw", "ipkw_buiten"]
 )
-
 
 class AdaptedYaml:
     """Class to adapt a YAML file with parameter substitutions."""
@@ -99,7 +141,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     if use_collision_monitor:
         lifecycle_nodes.append("collision_monitor")
-    use_map_localization = False
 
     if use_gps:
         if not namespace_gps:
@@ -107,7 +148,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     elif use_slam:
         lifecycle_nodes.append("slam_toolbox")
     elif use_navigation:
-        use_map_localization = True
         lifecycle_nodes.append("map_server")
         lifecycle_nodes.append("amcl")
 
@@ -123,7 +163,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         )
 
     slam_params = RewrittenYaml(
-        get_file_path("rcdt_husarion", ["config"], "slam_params.yaml"),
+        get_file_path("rcdt_nav2", ["config"], "slam_params.yaml"),
         {
             "odom_frame": f"{namespace_vehicle}/odom",
             "base_frame": f"{namespace_vehicle}/base_footprint",
@@ -133,7 +173,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     )
 
     amcl_params = RewrittenYaml(
-        get_file_path("rcdt_husarion", ["config", "nav2"], "amcl.yaml"),
+        get_file_path("rcdt_nav2", ["config", "nav2"], "amcl.yaml"),
         {
             "base_frame_id": f"{namespace_vehicle}/base_footprint",
             "odom_frame_id": f"{namespace_vehicle}/odom",
@@ -148,7 +188,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     local_costmap_params = AdaptedYaml(
         [namespace_vehicle, "local_costmap", "local_costmap"],
-        get_file_path("rcdt_husarion", ["config", "nav2"], "local_costmap.yaml"),
+        get_file_path("rcdt_nav2", ["config", "nav2"], "local_costmap.yaml"),
         {
             "global_frame": f"{namespace_vehicle}/odom",
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
@@ -159,7 +199,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     global_costmap_params = AdaptedYaml(
         [namespace_vehicle, "global_costmap", "global_costmap"],
-        get_file_path("rcdt_husarion", ["config", "nav2"], "global_costmap.yaml"),
+        get_file_path("rcdt_nav2", ["config", "nav2"], "global_costmap.yaml"),
         {
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
             "rolling_window": use_gps,
@@ -177,13 +217,13 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     )
 
     controller_server_params = RewrittenYaml(
-        get_file_path("rcdt_husarion", ["config", "nav2"], "controller_server.yaml"),
+        get_file_path("rcdt_nav2", ["config", "nav2"], "controller_server.yaml"),
         {"odom_topic": f"/{namespace_vehicle}/odom"},
         root_key=namespace_vehicle,
     )
 
     behavior_server_params = RewrittenYaml(
-        get_file_path("rcdt_husarion", ["config", "nav2"], "behavior_server.yaml"),
+        get_file_path("rcdt_nav2", ["config", "nav2"], "behavior_server.yaml"),
         {
             "local_frame": f"{namespace_vehicle}/odom",
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
@@ -193,17 +233,17 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     follow_path_params = RewrittenYaml(
         get_file_path(
-            "rcdt_husarion", ["config", "nav2", "controllers"], f"{controller}.yaml"
+            "rcdt_nav2", ["config", "nav2", "controllers"], f"{controller}.yaml"
         ),
         {},
         root_key=namespace_vehicle,
     )
 
     bt_navigator_params = RewrittenYaml(
-        get_file_path("rcdt_husarion", ["config", "nav2"], "bt_navigator.yaml"),
+        get_file_path("rcdt_nav2", ["config", "nav2"], "bt_navigator.yaml"),
         {
             "default_nav_to_pose_bt_xml": get_file_path(
-                "rcdt_husarion", ["config", "nav2"], "behavior_tree.xml"
+                "rcdt_nav2", ["config", "nav2"], "behavior_tree.xml"
             ),
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
             "odom_topic": f"/{namespace_vehicle}/odom",
@@ -212,13 +252,13 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     )
 
     planner_server_params = RewrittenYaml(
-        get_file_path("rcdt_husarion", ["config", "nav2"], "planner_server.yaml"),
+        get_file_path("rcdt_nav2", ["config", "nav2"], "planner_server.yaml"),
         {},
         root_key=namespace_vehicle,
     )
 
     collision_monitor_params = RewrittenYaml(
-        get_file_path("rcdt_husarion", ["config", "nav2"], "collision_monitor.yaml"),
+        get_file_path("rcdt_nav2", ["config", "nav2"], "collision_monitor.yaml"),
         {
             "base_frame_id": f"{namespace_vehicle}/base_footprint",
             "odom_frame_id": f"{namespace_vehicle}/odom",
@@ -242,27 +282,29 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         remappings=[("/map", f"/{namespace_vehicle}/map")],
     )
 
-    map_server = Node(
-        package="nav2_map_server",
-        executable="map_server",
-        parameters=[
-            {
-                "yaml_filename": get_file_path(
-                    "rcdt_husarion", ["config", "maps"], str(global_map) + ".yaml"
-                ),
-                "topic_name": f"/{namespace_vehicle}/map",
-            }
-        ],
-        namespace=namespace_vehicle,
-    )
+    map_server, amcl = None, None
+    if global_map:
+        map_server = Node(
+            package="nav2_map_server",
+            executable="map_server",
+            parameters=[
+                {
+                    "yaml_filename": get_file_path(
+                        "rcdt_nav2", ["config", "maps"], str(global_map) + ".yaml"
+                    ),
+                    "topic_name": f"/{namespace_vehicle}/map",
+                }
+            ],
+            namespace=namespace_vehicle,
+        )
 
-    amcl = Node(
-        package="nav2_amcl",
-        executable="amcl",
-        parameters=[amcl_params],
-        namespace=namespace_vehicle,
-        remappings=[(f"/{namespace_vehicle}/initialpose", "/initialpose")],
-    )
+        amcl = Node(
+            package="nav2_amcl",
+            executable="amcl",
+            parameters=[amcl_params],
+            namespace=namespace_vehicle,
+            remappings=[(f"/{namespace_vehicle}/initialpose", "/initialpose")],
+        )
 
     controller_server = Node(
         package="nav2_controller",
@@ -343,7 +385,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     )
 
     waypoint_follower_controller = Node(
-        package="rcdt_husarion",
+        package="rcdt_nav2",
         executable="waypoint_follower_controller.py",
         namespace=namespace_vehicle,
     )
@@ -357,8 +399,8 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     return [
         SetRemap(src="/cmd_vel", dst=pub_topic),
         Register.on_start(slam, context) if use_slam else SKIP,
-        Register.on_start(map_server, context) if use_map_localization else SKIP,
-        Register.on_start(amcl, context) if use_map_localization else SKIP,
+        Register.on_start(map_server, context) if map_server is not None else SKIP,
+        Register.on_start(amcl, context) if amcl is not None else SKIP,
         Register.on_start(controller_server, context) if use_navigation else SKIP,
         Register.on_start(planner_server, context) if use_navigation else SKIP,
         Register.on_start(behavior_server, context) if use_navigation else SKIP,

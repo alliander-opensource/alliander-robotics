@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 services:
-  rcdt_husarion:
-    image: rcdt/robotics:husarion-${IMAGE_TAG}
-    container_name: rcdt_husarion
+  rcdt_nav2:
+    image: rcdt/robotics:nav2-${IMAGE_TAG}
+    container_name: rcdt_nav2
     runtime: nvidia
     network_mode: host
     privileged: true
@@ -18,11 +18,20 @@ services:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
     environment:
+      - USE_GPS=True
+      - USE_SLAM=False
+      - USE_COLLISION_MONITOR=True
+      - USE_NAVIGATION=True
       - WINDOW_SIZE=10
+      - CONTROLLER=vector_pursuit
+      - GLOBAL_MAP=
+      - NAMESPACE_VEHICLE=
+      - NAMESPACE_LIDAR=lidar
+      - NAMESPACE_GPS=gps
       - "DISPLAY"
       - "RCUTILS_COLORIZED_OUTPUT=1"
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
       - __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
-    command: ["/bin/bash", "-c", "ros2 launch rcdt_husarion husarion.launch.py"]
+    command: ["/bin/bash", "-c", "ros2 launch rcdt_nav2 nav2.launch.py"]
 

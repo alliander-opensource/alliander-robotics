@@ -34,8 +34,9 @@ RUN apt update && apt install -y -qq --no-install-recommends \
 # Install ROS2
 RUN apt update && apt install -y --no-install-recommends \
   ros-$ROS_DISTRO-desktop \
-  python3-rosdep \
   python3-colcon-common-extensions \
+  python3-rosdep \
+  python3-vcstool \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \
   && apt clean

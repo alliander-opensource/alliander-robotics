@@ -46,10 +46,11 @@ def get_image_tag():
 
 
 def compose_and_write(arch: str, platforms: list, dev: bool = False, output_file: str = "platforms.yml"):
+    print("----- CREATING PLATFORMS.YML COMPOSE -----")
     merged_compose = {}
     image_tag = get_image_tag()
 
-    print(f"--- Using image tag {image_tag} ---")
+    print(f"Image tag: {image_tag}")
     print(f"Dev mode: {dev}")
 
     for platform in platforms:
@@ -100,6 +101,7 @@ def compose_and_write(arch: str, platforms: list, dev: bool = False, output_file
 
 
 def compose_simulator(arch: str, platforms: list[str], dev: bool = False, output_file: str = "simulator.yml"):
+    print("----- CREATING SIMULATOR.YML COMPOSE -----")
     filename = "rcdt_gazebo/docker-compose.yml"
 
     if not os.path.exists(filename):
@@ -109,11 +111,13 @@ def compose_simulator(arch: str, platforms: list[str], dev: bool = False, output
     with open(filename, 'r') as f:
         content = yaml.safe_load(f)
         service = content['services']['rcdt_gazebo']
+
         image_tag = get_image_tag()
+        print(f"Image tag: {image_tag}")
+        
         original_image = service['image']
         service['image'] = original_image.replace('${IMAGE_TAG}', f"{arch}-{image_tag}")
 
-        print(service['environment'])
         service['environment'].append(f"PLATFORMS={",".join(platforms)}")
 
         if dev:
@@ -127,7 +131,33 @@ def compose_simulator(arch: str, platforms: list[str], dev: bool = False, output
 
 
 def compose_tools(arch: str, platforms: list[str], dev: bool = False, output_file: str = "tools.yml"):
-    pass
+    print("----- CREATING TOOLS.YML COMPOSE -----")
+    filename = "rcdt_tools/docker-compose.yml"
+
+    if not os.path.exists(filename):
+        print("Warning: did not find docker-compose.yml file in rcdt_tools. Exiting...")
+        sys.exit(1)
+
+    with open(filename, 'r') as f:
+        content = yaml.safe_load(f)
+        service = content['services']['rcdt_tools']
+
+        image_tag = get_image_tag()
+        print(f"Image tag: {image_tag}")
+
+        original_image = service['image']
+        service['image'] = original_image.replace('${IMAGE_TAG}', f"{arch}-{image_tag}")
+
+        service['environment'].append(f"PLATFORMS={",".join(platforms)}")
+
+        if dev:
+            src_mounts = get_src_mounts('rcdt_tools')
+            service['volumes'] = service['volumes'] + dev_settings['volumes'] + src_mounts
+
+        print(f"\nWriting final compose file to {output_file}")
+
+        with open(output_file, 'w') as f:
+            yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
 
 if __name__ == '__main__':
@@ -135,7 +165,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--arch', required=True, choices=['amd64', 'arm64'], help="Target architecture (amd64 or arm64).")
 
-    parser.add_argument('--platforms', required=True, nargs='+', help="List of platform components to include (e.g. husarion franka) in a platforms.yaml compose file. Names need to match with the rcdt_ directories in the repository root.")
+    parser.add_argument('--platforms', required=True, nargs='+', help="List of platform components to include (e.g. panther franka) in a platforms.yaml compose file.")
 
     parser.add_argument('--simulator', required=False, action='store_true', help="Add this flag to build a simulator.yml compose file, indicating which platforms are present in the simulation with the '--platforms' tag.") 
 
