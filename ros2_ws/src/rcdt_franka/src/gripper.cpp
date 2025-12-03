@@ -60,14 +60,14 @@ void Gripper::open(
   goal.width = 0.08;
   goal.speed = 0.03;
   auto future_goal_handle = client_move->async_send_goal(goal);
-  if (future_goal_handle.wait_for(std::chrono::seconds(5)) ==
+  if (future_goal_handle.wait_for(std::chrono::seconds(timeout)) ==
       std::future_status::timeout) {
     RCLCPP_ERROR(this->get_logger(), "Failed to obtain goal_handle. Timeout.");
     return;
   }
 
   auto future_result = client_move->async_get_result(future_goal_handle.get());
-  if (future_result.wait_for(std::chrono::seconds(5)) ==
+  if (future_result.wait_for(std::chrono::seconds(timeout)) ==
       std::future_status::timeout) {
     RCLCPP_ERROR(this->get_logger(), "Failed to obtain result. Timeout.");
     return;
@@ -94,14 +94,14 @@ void Gripper::close(
   goal.force = 100.0;
   goal.speed = 0.03;
   auto future_goal_handle = client_grasp->async_send_goal(goal);
-  if (future_goal_handle.wait_for(std::chrono::seconds(5)) ==
+  if (future_goal_handle.wait_for(std::chrono::seconds(timeout)) ==
       std::future_status::timeout) {
     RCLCPP_ERROR(this->get_logger(), "Failed to obtain goal_handle. Timeout.");
     return;
   }
 
   auto future_result = client_grasp->async_get_result(future_goal_handle.get());
-  if (future_result.wait_for(std::chrono::seconds(5)) ==
+  if (future_result.wait_for(std::chrono::seconds(timeout)) ==
       std::future_status::timeout) {
     RCLCPP_ERROR(this->get_logger(), "Failed to obtain result. Timeout.");
     return;

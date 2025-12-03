@@ -37,6 +37,7 @@ class Nav2Manager(Node):
         Args:
             msg (PoseStamped): The received PoseStamped message.
         """
+        self.get_logger().info("Received new goal pose for navigation.")
         self.basic_navigator.goToPose(msg)
 
     def cb_waypoints(self, msg: Path) -> None:
@@ -45,6 +46,7 @@ class Nav2Manager(Node):
         Args:
             msg (Path): The received Path message.
         """
+        self.get_logger().info("Received new waypoints for navigation.")
         self.basic_navigator.followWaypoints(msg.poses)
 
     def cb_gps_waypoints(self, msg: GeoPath) -> None:
@@ -53,6 +55,7 @@ class Nav2Manager(Node):
         Args:
             msg (GeoPath): The received GeoPath message.
         """
+        self.get_logger().info("Received new GPS waypoints for navigation.")
         geo_poses = []
         for geo_pose_stamped in msg.poses:
             geo_pose_stamped: GeoPoseStamped

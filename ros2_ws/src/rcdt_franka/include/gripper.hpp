@@ -33,6 +33,8 @@ class Gripper : public rclcpp::Node {
   rclcpp_action::Client<Move>::SharedPtr client_move;
   /** The action client to grasp with the gripper. */
   rclcpp_action::Client<Grasp>::SharedPtr client_grasp;
+  /** Timeout for future objects in seconds. */
+  int timeout = 5;
 
   /**
    * @brief Handle goal requests

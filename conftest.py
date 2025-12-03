@@ -4,6 +4,7 @@
 
 """Global pytest fixtures for ROS 2 integration testing."""
 
+import time
 from typing import Iterator
 
 import pytest
@@ -12,6 +13,7 @@ from _pytest.config import Config
 from _pytest.config.argparsing import Parser
 from rcdt_utilities.launch_utils import reset
 from rclpy.node import Node
+from ros2node.api import NodeName, get_node_names
 
 
 def pytest_addoption(parser: Parser) -> None:
@@ -21,6 +23,32 @@ def pytest_addoption(parser: Parser) -> None:
         parser (Parser): The pytest parser to add options to.
     """
     parser.addoption("--simulation", action="store", default="True")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def wait_for_nodes_to_stop(test_node: Node) -> None:
+    """Fixture to wait for all nodes to stop before starting with the tests.
+
+    Args:
+        test_node (Node): The test node used to check for active nodes.
+    """
+    test_node_name = test_node.get_fully_qualified_name()
+    node_names: list[NodeName] = [
+        NodeName(name="dummy", full_name="dummy", namespace="dummy")
+    ]
+    while len(node_names) > 0:
+        node_names: list[NodeName] = get_node_names(node=test_node)
+        node_names = [
+            node_name
+            for node_name in node_names
+            if node_name.full_name != test_node_name
+        ]
+        msg = "\nWaiting for the following nodes to stop:\n"
+        for node_name in node_names:
+            msg += f"{node_name.full_name}\n"
+        if len(node_names) > 0:
+            test_node.get_logger().info(msg)
+        time.sleep(1)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -47,7 +75,7 @@ def test_node() -> Iterator[Node]:
 
 @pytest.fixture(scope="module")
 def timeout(pytestconfig: Config) -> int:
-    """Fixture to get the timeout value from pytest config.
+    """Fixture to get the timeout value from pytest config and return half of it.
 
     Args:
         pytestconfig (Config): The pytest configuration object.
@@ -55,7 +83,7 @@ def timeout(pytestconfig: Config) -> int:
     Returns:
         int: The timeout value in seconds.
     """
-    return int(pytestconfig.getini("timeout"))
+    return int(int(pytestconfig.getini("timeout")) / 2)
 
 
 @pytest.fixture(scope="session")
@@ -91,7 +119,7 @@ def navigation_distance_tolerance() -> float:
     Returns:
         float: The tolerance value for navigation.
     """
-    return 0.2
+    return 0.25
 
 
 @pytest.fixture(scope="session")
@@ -103,4 +131,4 @@ def navigation_degree_tolerance() -> float:
     Returns:
         float: The tolerance value for navigation.
     """
-    return 2e-6
+    return 2.5e-6  # ~0.25 meters

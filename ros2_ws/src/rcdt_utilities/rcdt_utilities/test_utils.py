@@ -119,8 +119,11 @@ def create_ready_service_client(
         RuntimeError: If the service is not available within timeout.
     """
     client = node.create_client(srv_type, service_name)
-    if not client.wait_for_service(timeout_sec=timeout_sec):
-        raise RuntimeError(f"Service {service_name} not available")
+    start_time = time.time()
+    while not client.service_is_ready():
+        rclpy.spin_once(node, timeout_sec=0)
+        if time.time() > (start_time + timeout_sec):
+            raise RuntimeError(f"Service {service_name} not available")
     return client
 
 
@@ -272,6 +275,9 @@ def assert_joy_topic_switch(
         button_config (list[int]): Joy message buttons to trigger the topic change.
         timeout (int): Max time to wait for the result.
         state_topic (str): Topic to listen for state updates from joy_topic_manager.
+
+    Raises:
+        AssertionError: When a timeout occurs.
     """
     logger.info("Starting to assert joy topic switch")
     qos = QoSProfile(
@@ -306,13 +312,13 @@ def assert_joy_topic_switch(
         node=node, publisher=pub, msg=msg, publish_duration=1, rate_sec=0.1
     )
 
-    start_time = time.monotonic()
-    while (
-        result.get("state") != expected_topic
-        and time.monotonic() - start_time < timeout
-    ):
-        rclpy.spin_once(node, timeout_sec=1)
-        time.sleep(0.1)
+    start_time = time.time()
+    while result.get("state") != expected_topic:
+        rclpy.spin_once(node, timeout_sec=0)
+        if time.time() > (start_time + timeout):
+            raise AssertionError(
+                f"Timeout. Did not receive {expected_topic} on {state_topic}."
+            )
 
     assert result.get("state") == expected_topic, (
         f"Expected state '{expected_topic}', but got '{result.get('state')}'"

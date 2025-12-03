@@ -5,6 +5,8 @@
 import contextlib
 import copy
 import itertools
+import sys
+import time
 from functools import partial
 from typing import Callable
 
@@ -27,11 +29,11 @@ from rcdt_utilities.test_utils import (
     assert_for_message,
     call_trigger_service,
     wait_for_register,
+    wait_for_subscriber,
 )
 from rclpy.node import Node
 from rclpy.time import Time
 from sensor_msgs.msg import JointState, NavSatFix
-from std_srvs.srv import Trigger
 from tf2_ros import TransformException  # ty: ignore[unresolved-import]
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
@@ -39,38 +41,39 @@ from tf2_ros.transform_listener import TransformListener
 launch_fixtures = []
 
 
-def get_tests(namespace_vehicle: str, namespace_gps: str, timeout: int) -> dict:  # noqa: PLR0915
+def get_tests(namespace_vehicle: str, namespace_gps: str) -> dict:  # noqa: PLR0915
     """Get the Nav2 tests.
 
     Args:
         namespace_vehicle (str): The namespace of the vehicle.
         namespace_gps (str): The namespace of the GPS.
-        timeout (int): The timeout in seconds.
 
     Returns:
         dict: A dictionary containing the tests.
     """
 
-    def test_wait_for_register(_self: object) -> None:
+    def test_wait_for_register(_self: object, timeout: int) -> None:
         """Test that the panther core is registered in the RCDT.
 
         Args:
             _self (object): The test class instance.
+            timeout (int): The timeout in seconds.
         """
         wait_for_register(timeout=timeout)
 
-    def test_joint_states_published(_self: object) -> None:
+    def test_joint_states_published(_self: object, timeout: int) -> None:
         """Test that the joint states are published.
 
         Args:
             _self (object): The test class instance.
+            timeout (int): The timeout in seconds.
         """
         assert_for_message(
             JointState, f"/{namespace_vehicle}/joint_states", timeout=timeout
         )
 
     def test_e_stop_request_reset(
-        _self: object, request: SubRequest, test_node: Node
+        _self: object, request: SubRequest, test_node: Node, timeout: int
     ) -> None:
         """Test that the E-Stop request service can be called to unlock the Panther.
 
@@ -78,6 +81,7 @@ def get_tests(namespace_vehicle: str, namespace_gps: str, timeout: int) -> dict:
             _self (object): The test class instance.
             request (SubRequest): The pytest request object, used to access command line options
             test_node (Node): The ROS 2 node to use for the test.
+            timeout (int): The timeout in seconds.
         """
         if request.config.getoption("simulation"):
             pytest.skip("E-Stop is not available.")  # ty: ignore[call-non-callable]
@@ -91,7 +95,10 @@ def get_tests(namespace_vehicle: str, namespace_gps: str, timeout: int) -> dict:
         )
 
     def test_goal_pose(
-        _self: object, test_node: Node, navigation_distance_tolerance: float
+        _self: object,
+        test_node: Node,
+        navigation_distance_tolerance: float,
+        timeout: int,
     ) -> None:
         """Test that navigation to a goal pose is successful.
 
@@ -99,18 +106,25 @@ def get_tests(namespace_vehicle: str, namespace_gps: str, timeout: int) -> dict:
             _self (object): The test class instance.
             test_node (Node): The ROS 2 node to use for the test.
             navigation_distance_tolerance (float): The tolerance for navigation.
+            timeout (int): The timeout in seconds.
+
+        Raises:
+            AssertionError: When a timeout occurs.
         """
         # 1) Obtain current pose in map frame:
         tf_buffer = Buffer()
         TransformListener(tf_buffer, test_node)
         current_pose = TransformStamped()
 
+        start_time = time.time()
         while current_pose == TransformStamped():
             rclpy.spin_once(test_node, timeout_sec=0)
             with contextlib.suppress(TransformException):
                 current_pose = tf_buffer.lookup_transform(
                     "map", f"{namespace_vehicle}/base_link", Time()
                 )
+            if time.time() - start_time > timeout:
+                raise AssertionError("Timeout while waiting for current pose.")
 
         # 2) Publish goal pose 1 meter in front of current position:
         goal_pose = PoseStamped()
@@ -120,32 +134,34 @@ def get_tests(namespace_vehicle: str, namespace_gps: str, timeout: int) -> dict:
         goal_pose.pose.position.z = current_pose.transform.translation.z
 
         publisher = test_node.create_publisher(PoseStamped, "/goal_pose", 10)
+        wait_for_subscriber(publisher, timeout)
         publisher.publish(goal_pose)
+        test_node.get_logger().info("Published goal pose for navigation.")
 
         # 3) Wait until goal is reached within tolerance:
-        while (
-            abs(current_pose.transform.translation.x - goal_pose.pose.position.x)
-            > navigation_distance_tolerance
-        ):
+        start_time = time.time()
+        distance: float = sys.float_info.max
+        while distance > navigation_distance_tolerance:
             rclpy.spin_once(test_node, timeout_sec=0)
             with contextlib.suppress(TransformException):
                 current_pose = tf_buffer.lookup_transform(
                     "map", f"{namespace_vehicle}/base_link", Time()
                 )
+            distance = abs(
+                current_pose.transform.translation.x - goal_pose.pose.position.x
+            )
+            if time.time() - start_time > timeout:
+                raise AssertionError(
+                    f"Timeout. Distance is {distance} while tolerance is {navigation_distance_tolerance}."
+                )
 
-        # 4) Stop the navigation, since the test can finish before the goal is reached due to the tolerance:
-        stop_navigation_client = test_node.create_client(
-            Trigger, f"/{namespace_vehicle}/nav2_manager/stop"
-        )
-        future = stop_navigation_client.call_async(Trigger.Request())
-        rclpy.spin_until_future_complete(test_node, future, timeout_sec=timeout)
-        service_response: Trigger.Response = future.result()
-        assert False if not service_response else service_response.success, (
-            "Failed to stop navigation."
+        # 4) Stop navigation, since the goal can be reached before the navigation is finished due to tolerance:
+        assert call_trigger_service(
+            test_node, f"/{namespace_vehicle}/nav2_manager/stop", timeout
         )
 
     def test_gps_navigation(
-        _self: object, test_node: Node, navigation_degree_tolerance: float
+        _self: object, test_node: Node, navigation_degree_tolerance: float, timeout: int
     ) -> None:
         """Test that GPS navigation to a goal pose is successful.
 
@@ -153,6 +169,10 @@ def get_tests(namespace_vehicle: str, namespace_gps: str, timeout: int) -> dict:
             _self (object): The test class instance.
             test_node (Node): The ROS 2 node to use for the test.
             navigation_degree_tolerance (float): The tolerance for navigation.
+            timeout (int): The timeout in seconds.
+
+        Raises:
+            AssertionError: When a timeout occurs.
         """
         # 1) Obtain current GPS location:
         current_nav_sat = NavSatFix()
@@ -165,14 +185,18 @@ def get_tests(namespace_vehicle: str, namespace_gps: str, timeout: int) -> dict:
             NavSatFix, f"/{namespace_gps}/gps/fix", callback, 10
         )
 
+        start_time = time.time()
         while current_nav_sat == NavSatFix():
             rclpy.spin_once(test_node, timeout_sec=0)
+            if time.time() - start_time > timeout:
+                raise AssertionError("Timeout while waiting for current GPS location.")
 
         # 2) Publish goal GPS location 1e-5 degrees north of current location:
         goal_nav_sat = copy.deepcopy(current_nav_sat)
         goal_nav_sat.latitude += 1e-5
 
         publisher = test_node.create_publisher(GeoPath, "/gps_waypoints", 10)
+        wait_for_subscriber(publisher, timeout)
         goal_msg = GeoPath()
         goal_pose = GeoPoseStamped()
         goal_pose.pose.position.latitude = goal_nav_sat.latitude
@@ -181,21 +205,19 @@ def get_tests(namespace_vehicle: str, namespace_gps: str, timeout: int) -> dict:
         publisher.publish(goal_msg)
 
         # 3) Wait until goal is reached within tolerance:
-        while (
-            abs(goal_nav_sat.latitude - current_nav_sat.latitude)
-            > navigation_degree_tolerance
-        ):
+        start_time = time.time()
+        distance: float = sys.float_info.max
+        while distance > navigation_degree_tolerance:
             rclpy.spin_once(test_node, timeout_sec=0)
+            distance = abs(current_nav_sat.latitude - goal_nav_sat.latitude)
+            if time.time() - start_time > timeout:
+                raise AssertionError(
+                    f"Timeout. Distance is {distance} while tolerance is {navigation_degree_tolerance}."
+                )
 
-        # 4) Stop the navigation, since the test can finish before the goal is reached due to the tolerance:
-        stop_navigation_client = test_node.create_client(
-            Trigger, f"/{namespace_vehicle}/nav2_manager/stop"
-        )
-        future = stop_navigation_client.call_async(Trigger.Request())
-        rclpy.spin_until_future_complete(test_node, future, timeout_sec=timeout)
-        service_response: Trigger.Response = future.result()
-        assert False if not service_response else service_response.success, (
-            "Failed to stop navigation."
+        # 4) Stop navigation, since the goal can be reached before the navigation is finished due to tolerance:
+        assert call_trigger_service(
+            test_node, f"/{namespace_vehicle}/nav2_manager/stop", timeout
         )
 
     # Collect all test methods defined above
@@ -280,7 +302,7 @@ for platforms in itertools.product(vehicle_list, lidar_list, gps_list):
     test_class = type(
         f"TestNav2_{vehicle_platform}_{lidar_platform}_{gps_platform}",
         (object,),
-        get_tests(vehicle_platform, gps_platform, timeout=150),
+        get_tests(vehicle_platform, gps_platform),
     )
     pytest.mark.launch(fixture=launch_fixture_wrapper)(test_class)
     globals()[test_class.__name__] = test_class

@@ -60,7 +60,7 @@ jobs:
             --entrypoint /bin/bash "${{ inputs.container-image }}" -i -c "
               source /home/rcdt/.bashrc &&
               source install/setup.bash &&
-              uv run xvfb-run pytest -s -rsxf src/
+              uv run xvfb-run pytest -s -v -rsxf src/
             "
 
       - name: Show disk usage after job
