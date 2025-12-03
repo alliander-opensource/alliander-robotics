@@ -386,7 +386,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     waypoint_follower_controller = Node(
         package="rcdt_nav2",
-        executable="waypoint_follower_controller.py",
+        executable="nav2_manager.py",
         namespace=namespace_vehicle,
     )
 
