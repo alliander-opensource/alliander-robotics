@@ -75,12 +75,9 @@ def test_move_to_drop_configuration(
         joint_movement_tolerance (float): The tolerance for joint movement.
         timeout (int): The timeout in seconds before stopping the test.
     """
-    assert (
-        call_move_to_configuration_service(
-            test_node, namespace, "drop", timeout=timeout
-        )
-        is True
-    )
+    assert call_move_to_configuration_service(
+        test_node, namespace, "drop", timeout=timeout
+    ), "Failed to call move_to_configuration service."
     drop_values = [-1.57079632679, -0.65, 0, -2.4, 0, 1.75, 0.78539816339]
     for i in range(7):
         joint_value = get_joint_position(

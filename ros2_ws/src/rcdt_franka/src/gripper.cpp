@@ -59,6 +59,14 @@ void Gripper::open(
   auto goal = Move::Goal();
   goal.width = 0.08;
   goal.speed = 0.03;
+
+  auto server_ready =
+      client_move->wait_for_action_server(std::chrono::seconds(timeout));
+  if (!server_ready) {
+    RCLCPP_ERROR(this->get_logger(), "Action server not available. Timeout");
+    return;
+  }
+
   auto future_goal_handle = client_move->async_send_goal(goal);
   if (future_goal_handle.wait_for(std::chrono::seconds(timeout)) ==
       std::future_status::timeout) {
@@ -93,6 +101,14 @@ void Gripper::close(
   goal.width = 0.0;
   goal.force = 100.0;
   goal.speed = 0.03;
+
+  auto server_ready =
+      client_move->wait_for_action_server(std::chrono::seconds(timeout));
+  if (!server_ready) {
+    RCLCPP_ERROR(this->get_logger(), "Action server not available. Timeout");
+    return;
+  }
+
   auto future_goal_handle = client_grasp->async_send_goal(goal);
   if (future_goal_handle.wait_for(std::chrono::seconds(timeout)) ==
       std::future_status::timeout) {

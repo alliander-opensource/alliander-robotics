@@ -74,9 +74,14 @@ def wait_for_subscriber(pub: Publisher, timeout: int) -> None:
         pub (Publisher): The publisher to wait for.
         timeout (int): The maximum time to wait for a subscriber in seconds.
 
+    Raises:
+        TimeoutError: If no subscriber is found within the timeout period.
+
     """
-    start_time = time.monotonic()
-    while pub.get_subscription_count() == 0 and time.monotonic() - start_time < timeout:
+    start_time = time.time()
+    while pub.get_subscription_count() == 0:
+        if time.time() > (start_time + timeout):
+            raise TimeoutError()
         time.sleep(0.1)
 
 
@@ -93,7 +98,7 @@ def get_joint_position(namespace: str, joint: str, timeout: int) -> float:
     """
     topic_list = [(f"{namespace}/joint_states", JointState)]
     wait_for_topics = WaitForTopics(topic_list, timeout=timeout)
-    assert wait_for_topics.wait()
+    assert wait_for_topics.wait(), "Did not receive JointState."
     msg: JointState = wait_for_topics.received_messages(f"{namespace}/joint_states")[0]
     idx = msg.name.index(joint)
     position = msg.position[idx]
@@ -277,7 +282,7 @@ def assert_joy_topic_switch(
         state_topic (str): Topic to listen for state updates from joy_topic_manager.
 
     Raises:
-        AssertionError: When a timeout occurs.
+        TimeoutError: When a timeout occurs.
     """
     logger.info("Starting to assert joy topic switch")
     qos = QoSProfile(
@@ -316,9 +321,7 @@ def assert_joy_topic_switch(
     while result.get("state") != expected_topic:
         rclpy.spin_once(node, timeout_sec=0)
         if time.time() > (start_time + timeout):
-            raise AssertionError(
-                f"Timeout. Did not receive {expected_topic} on {state_topic}."
-            )
+            raise TimeoutError(f"Did not receive {expected_topic} on {state_topic}.")
 
     assert result.get("state") == expected_topic, (
         f"Expected state '{expected_topic}', but got '{result.get('state')}'"

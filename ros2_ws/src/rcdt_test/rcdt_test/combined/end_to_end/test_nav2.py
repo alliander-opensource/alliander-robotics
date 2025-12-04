@@ -109,7 +109,7 @@ def get_tests(namespace_vehicle: str, namespace_gps: str) -> dict:  # noqa: PLR0
             timeout (int): The timeout in seconds.
 
         Raises:
-            AssertionError: When a timeout occurs.
+            TimeoutError: When a timeout occurs.
         """
         # 1) Obtain current pose in map frame:
         tf_buffer = Buffer()
@@ -124,7 +124,7 @@ def get_tests(namespace_vehicle: str, namespace_gps: str) -> dict:  # noqa: PLR0
                     "map", f"{namespace_vehicle}/base_link", Time()
                 )
             if time.time() - start_time > timeout:
-                raise AssertionError("Timeout while waiting for current pose.")
+                raise TimeoutError()
 
         # 2) Publish goal pose 1 meter in front of current position:
         goal_pose = PoseStamped()
@@ -151,8 +151,8 @@ def get_tests(namespace_vehicle: str, namespace_gps: str) -> dict:  # noqa: PLR0
                 current_pose.transform.translation.x - goal_pose.pose.position.x
             )
             if time.time() - start_time > timeout:
-                raise AssertionError(
-                    f"Timeout. Distance is {distance} while tolerance is {navigation_distance_tolerance}."
+                raise TimeoutError(
+                    f"Distance is {distance} while tolerance is {navigation_distance_tolerance}."
                 )
 
         # 4) Stop navigation, since the goal can be reached before the navigation is finished due to tolerance:
@@ -172,7 +172,7 @@ def get_tests(namespace_vehicle: str, namespace_gps: str) -> dict:  # noqa: PLR0
             timeout (int): The timeout in seconds.
 
         Raises:
-            AssertionError: When a timeout occurs.
+            TimeoutError: When a timeout occurs.
         """
         # 1) Obtain current GPS location:
         current_nav_sat = NavSatFix()
@@ -189,7 +189,7 @@ def get_tests(namespace_vehicle: str, namespace_gps: str) -> dict:  # noqa: PLR0
         while current_nav_sat == NavSatFix():
             rclpy.spin_once(test_node, timeout_sec=0)
             if time.time() - start_time > timeout:
-                raise AssertionError("Timeout while waiting for current GPS location.")
+                raise TimeoutError("Timeout while waiting for current GPS location.")
 
         # 2) Publish goal GPS location 1e-5 degrees north of current location:
         goal_nav_sat = copy.deepcopy(current_nav_sat)
@@ -211,8 +211,8 @@ def get_tests(namespace_vehicle: str, namespace_gps: str) -> dict:  # noqa: PLR0
             rclpy.spin_once(test_node, timeout_sec=0)
             distance = abs(current_nav_sat.latitude - goal_nav_sat.latitude)
             if time.time() - start_time > timeout:
-                raise AssertionError(
-                    f"Timeout. Distance is {distance} while tolerance is {navigation_degree_tolerance}."
+                raise TimeoutError(
+                    f"Distance is {distance} while tolerance is {navigation_degree_tolerance}."
                 )
 
         # 4) Stop navigation, since the goal can be reached before the navigation is finished due to tolerance:
