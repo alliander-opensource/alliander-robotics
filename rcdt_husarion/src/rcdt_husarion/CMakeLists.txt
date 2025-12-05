@@ -11,7 +11,7 @@ find_package(ament_cmake_python REQUIRED)
 
 # Shared folders:
 install(
-  DIRECTORY launch urdf
+  DIRECTORY launch 
   DESTINATION share/${PROJECT_NAME}
 )
 

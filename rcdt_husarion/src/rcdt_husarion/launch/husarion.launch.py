@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from rcdt_utilities.register import RegisteredLaunchDescription
+from rcdt_utilities.launch_argument import LaunchArgument
+from rcdt_utilities.ros_utils import get_file_path
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
@@ -13,53 +15,28 @@ import os
 
 
 def generate_launch_description() -> LaunchDescription:
-    """Generate the launch description for the Panther robot.
+    """Generate the launch description for the navigation stack.
 
     Returns:
-        LaunchDescription: The launch description for the Panther robot.
+        LaunchDescription: The launch description containing the actions to be executed.
     """
+    simulation = os.environ.get("SIMULATION", default="False").lower() == "true"
 
-    namespace = os.environ.get("NAMESPACE", default="panther")
-    simulation = os.environ.get("SIMULATION", default="False")
-    slam = os.environ.get("SLAM", default="False")
-    collision_monitor = os.environ.get("COLLISION_MONITOR", default="False")
-    navigation = os.environ.get("NAVIGATION", default="False")
-    use_gps = os.environ.get("USE_GPS", default="False")
-    window_size = os.environ.get("WINDOW_SIZE", default="10")
+    nodes = []
 
-    pkg_dir = get_package_share_directory("rcdt_husarion")
-
-    controller_launch = IncludeLaunchDescription(
+    controller = IncludeLaunchDescription(
         PathJoinSubstitution(
-            [FindPackageShare("rcdt_husarion"), "launch", "controllers.launch.py"]
+                [FindPackageShare("rcdt_husarion"), "launch", "controllers.launch.py"]
         ),
     )
+    nodes.append(controller)
 
-    nav2_launch = IncludeLaunchDescription(
-        PathJoinSubstitution(
-            [FindPackageShare("rcdt_husarion"), "launch", "nav2.launch.py"]
-        ),
-        launch_arguments={
-            "simulation": simulation,
-            "slam": slam,
-            "collision_monitor": collision_monitor,
-            "navigation": navigation,
-            "namespace_vehicle": namespace,
-            "namespace_lidar": namespace,
-            "namespace_gps": namespace,
-            "use_gps": use_gps,
-            "window_size": window_size,
-        }.items(),
-    )
-
-    utils_launch = IncludeLaunchDescription(
-        PathJoinSubstitution(
-            [FindPackageShare("rcdt_husarion"), "launch", "utils.launch.py"]
+    if simulation:
+        description = IncludeLaunchDescription(
+            PathJoinSubstitution(
+                [FindPackageShare("rcdt_husarion"), "launch", "description.launch.py"]
+            ),
         )
-    )
+        nodes.append(description)
 
-    return LaunchDescription(
-        [
-            utils_launch,
-        ]
-    )
+    return LaunchDescription(nodes)

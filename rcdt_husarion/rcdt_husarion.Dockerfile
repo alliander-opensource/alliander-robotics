@@ -26,7 +26,10 @@ RUN apt update \
 RUN uv sync \
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 
   && colcon build --symlink-install \
-  --packages-up-to husarion_ugv husarion_ugv_description rcdt_husarion \
+  --packages-up-to \
+  husarion_ugv \
+  husarion_ugv_description \
+  rcdt_husarion \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
   --event-handlers console_direct+
 

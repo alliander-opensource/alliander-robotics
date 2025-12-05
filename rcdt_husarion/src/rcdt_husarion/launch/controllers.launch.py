@@ -22,13 +22,14 @@ def launch_setup(context: LaunchContext) -> list:
     """
     namespace = namespace_arg.string_value(context)
 
-    control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        namespace=namespace,
-        remappings=[],
-        emulate_tty=True,
-    )
+    # control_node = Node(
+    #     package="controller_manager",
+    #     executable="ros2_control_node",
+    #     name="ros2_control_node",
+    #     namespace=namespace,
+    #     remappings=[],
+    #     emulate_tty=True,
+    # )
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
@@ -38,6 +39,7 @@ def launch_setup(context: LaunchContext) -> list:
             "--controller-ros-args",
             "--remap joint_state_broadcaster/transition_event:=joint_state_broadcaster/_transition_event",
         ],
+        name="joint_state_broadcaster",
         namespace=namespace,
     )
 
@@ -55,6 +57,7 @@ def launch_setup(context: LaunchContext) -> list:
             "--controller-ros-args",
             "--remap imu_broadcaster/transition_event:=imu_broadcaster/_transition_event",
         ],
+        name="imu_broadcaster",
         namespace=namespace,
     )
 
@@ -72,11 +75,12 @@ def launch_setup(context: LaunchContext) -> list:
             "--controller-ros-args",
             "--remap drive_controller/transition_event:=drive_controller/_transition_event",
         ],
+        name="drive_controller",
         namespace=namespace,
     )
 
     return [
-        Register.on_start(control_node, context),
+        # Register.on_start(control_node, context),
         Register.on_exit(joint_state_broadcaster_spawner, context),
         Register.on_exit(imu_broadcaster_spawner, context),
         Register.on_exit(drive_controller_spawner, context),

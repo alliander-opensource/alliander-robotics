@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+Based on:
+https://github.com/husarion/husarion_ugv_ros/blob/2.3.1/husarion_ugv_description/urdf/panther/panther_macro.urdf.xacro
+A copy of the original file is located in the /original directory.
+To compare the two files in VSCode, see:
+https://code.visualstudio.com/docs/editing/codebasics#_compare-files
+-->
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
 
   <xacro:macro
     name="panther_robot"
     params="wheel_config_file
+            controller_config_file
             battery_config_file
             use_sim:=false
             imu_xyz:='0.169 0.025 0.092'
@@ -23,7 +31,7 @@
 
     <!-- INCLUDE ROBOT PARTS DEFINITIONS -->
     <xacro:include filename="$(find husarion_ugv_description)/urdf/panther/base.urdf.xacro" ns="body" />
-    <xacro:include filename="$(find husarion_ugv_description)/urdf/common/gazebo.urdf.xacro" ns="gazebo" />
+    <xacro:include filename="$(find rcdt_gazebo)/urdf/husarion/adapted/gazebo.urdf.xacro" ns="gazebo" />
     <xacro:include filename="$(find husarion_ugv_description)/urdf/common/wheel.urdf.xacro" ns="wheel" />
 
     <!-- BODY DECLARATION -->
@@ -60,8 +68,7 @@
     <ros2_control name="${ns}panther_system" type="system">
       <hardware>
         <xacro:if value="${use_sim}">
-          <plugin>husarion_ugv_gazebo/EStopSystem</plugin>
-          <param name="e_stop_initial_state">true</param>
+          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
         </xacro:if>
 
         <xacro:unless value="${use_sim}">
@@ -184,6 +191,7 @@
       <xacro:if value="${battery_config_file != ''}">
         <xacro:gazebo.battery config_file="${battery_config_file}" namespace="${namespace}" />
       </xacro:if>
+      <xacro:gazebo.controller config_file="${controller_config_file}" namespace="${namespace}" />
       <xacro:gazebo.imu reference_frame="imu_link" namespace="${namespace}" />
       <xacro:gazebo.light reference_frame="lights_channel_1_link" name="lights_channel_1" topic="lights/channel_1_frame" namespace="${namespace}" />
       <xacro:gazebo.light reference_frame="lights_channel_2_link" name="lights_channel_2" topic="lights/channel_2_frame" namespace="${namespace}" />

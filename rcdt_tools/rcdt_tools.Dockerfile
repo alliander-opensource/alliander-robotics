@@ -35,12 +35,16 @@ RUN apt update \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
 
-RUN cd /rcdt/ros \
-  && uv sync \
+# Get all necessary models
+WORKDIR /rcdt/ros/src
+RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git \
+  && git clone -b ros2 https://github.com/husarion/husarion_ugv_ros.git \
+  && cd /rcdt/ros \
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
-  --event-handlers console_direct+
+  && colcon build --symlink-install --packages-up-to \
+  franka_description \
+  husarion_ugv_description \
+  rcdt_tools
 
 # Install dev packages
 COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt

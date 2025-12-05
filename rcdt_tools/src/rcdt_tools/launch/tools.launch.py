@@ -74,11 +74,11 @@ def generate_launch_description() -> LaunchDescription:
     for platform in platforms:
         match platform.lower():
             case "franka": 
-                add_arm("franka1", use_moveit)
+                add_arm("franka", use_moveit)
             case "panther":
-                add_vehicle("panther1", use_gps, window_size)
+                add_vehicle("panther", use_gps, window_size)
             case "lynx":
-                add_vehicle("lynx1", use_gps, window_size)
+                add_vehicle("lynx", use_gps, window_size)
 
     nodes = []
 

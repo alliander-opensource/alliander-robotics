@@ -12,11 +12,12 @@ SPDX-License-Identifier: Apache-2.0
   <xacro:arg name="childs" default="${[]}" />
 
   <!-- Load panther: -->
-  <xacro:include filename="$(find rcdt_husarion)/urdf/adapted/panther_macro.urdf.xacro"
+  <xacro:include filename="$(find rcdt_gazebo)/urdf/husarion/adapted/panther_macro.urdf.xacro"
     ns="husarion" />
   <xacro:husarion.panther_robot
     use_sim="$(arg simulation)"
     wheel_config_file="$(find husarion_ugv_description)/config/WH01.yaml"
+    controller_config_file="$(find rcdt_gazebo)/config/controllers.yaml"
     battery_config_file=""
     namespace="$(arg namespace)" />
 

@@ -20,7 +20,7 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Shared folders:
 install(
-  DIRECTORY config launch models worlds
+  DIRECTORY config launch models urdf worlds
   DESTINATION share/${PROJECT_NAME}
 )
 

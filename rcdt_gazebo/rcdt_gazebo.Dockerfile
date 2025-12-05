@@ -17,6 +17,7 @@ COPY pyproject.toml /rcdt/pyproject.toml
 RUN apt update && apt install -y --no-install-recommends \
   unzip \
   ros-$ROS_DISTRO-ros-gz \
+  ros-$ROS_DISTRO-gz-ros2-control \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \
   && apt clean
@@ -37,6 +38,7 @@ RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git 
   && colcon build --symlink-install --packages-up-to \
   franka_description \
   husarion_ugv_description \
+  husarion_ugv_gazebo \
   rcdt_gazebo
  
 # Install dev packages

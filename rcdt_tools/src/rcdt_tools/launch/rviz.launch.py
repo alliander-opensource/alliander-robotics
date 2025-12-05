@@ -7,8 +7,6 @@ import os.path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
-from rcdt_launch.rviz import Rviz
-from rcdt_utilities.register import Register
 
 
 def launch_setup(context: LaunchContext) -> list:

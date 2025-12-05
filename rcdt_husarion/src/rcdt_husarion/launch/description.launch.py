@@ -45,6 +45,7 @@ def create_state_publisher() -> Node | None:
     return Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
+        name="state_publisher",
         namespace="panther",
         parameters=[
             robot_description,
@@ -58,8 +59,10 @@ def launch_setup(context: LaunchContext) -> list:
     nodes = []
     state_publisher_node = create_state_publisher()
     if isinstance(state_publisher_node, Node):
-        nodes.append(Register.on_start(state_publisher_node, context))
-
+        print("Created state publisher node!")
+        nodes.append(state_publisher_node)
+    else:
+        print("create_state_publisher() returned None")
     return nodes
 
 

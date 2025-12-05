@@ -13,6 +13,7 @@ from rcdt_gazebo.gazebo_ros_paths import GazeboRosPaths
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
+import xacro
 
 load_gazebo_ui_arg = LaunchArgument("load_gazebo_ui", False, [True, False])
 world_arg = LaunchArgument("world", "empty.sdf")
@@ -22,6 +23,26 @@ orientations_arg = LaunchArgument("orientations", "")
 parents_arg = LaunchArgument("parents", "")
 parent_links_arg = LaunchArgument("parent_links", "")
 bridge_topics_arg = LaunchArgument("bridge_topics", "")
+
+
+def get_robot_description(
+    xacro_path: str, xacro_arguments: dict | None = None, semantic: bool = False
+) -> dict:
+    """Process a Xacro file to generate the robot description.
+
+    Args:
+        xacro_path (str): The path to the Xacro file.
+        xacro_arguments (dict | None): A dictionary of arguments to pass to the Xacro processor.
+        semantic (bool): Whether to return the semantic robot description.
+
+    Returns:
+        dict: A dictionary containing the robot description in XML format.
+    """
+    if xacro_arguments is None:
+        xacro_arguments = {}
+    robot_description_config = xacro.process_file(xacro_path, mappings=xacro_arguments)
+    name = "robot_description_semantic" if semantic else "robot_description"
+    return {name: robot_description_config.toxml()}
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -78,6 +99,43 @@ def launch_setup(context: LaunchContext) -> list:
         additional_env=GazeboRosPaths.get_env(),
     )
 
+    platforms = platforms.replace(" ", "").split(",")
+    state_publishers = []
+    controllers = []
+    for platform in platforms:
+        print(f"Platform {platform}")
+        namespace, xacro_path = "", ""
+
+        if platform.lower() in ["panther", "lynx"]:
+            namespace = platform.lower()
+            xacro_path = get_file_path(
+                "rcdt_gazebo", ["urdf", "husarion"], f"{platform.lower()}.urdf.xacro"
+            )
+            robot_description = get_robot_description(xacro_path)
+            state_publishers.append(
+                Node(
+                    package="robot_state_publisher",
+                    executable="robot_state_publisher",
+                    name="state_publisher",
+                    namespace=namespace,
+                    parameters=[
+                        robot_description,
+                        {"frame_prefix": ""},
+                        {"publish_frequency": 1000.0},
+                    ],
+                )
+            )
+            controllers.append(
+                Node(
+                    package="controller_manager",
+                    executable="ros2_control_node",
+                    name="ros2_control_node",
+                    namespace=namespace,
+                    remappings=[],
+                    emulate_tty=True,
+                )
+            )
+
     bridge_topics.append("/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock")
     bridge = Node(
         package="ros_gz_bridge",
@@ -90,7 +148,7 @@ def launch_setup(context: LaunchContext) -> list:
         executable="spawn_platforms.py",
         parameters=[
             {
-                "platforms": platforms,
+                "platforms": ",".join(platforms),  # todo make this nicer
                 "positions": positions,
                 "orientations": orientations,
                 "parents": parents,
@@ -120,6 +178,8 @@ def launch_setup(context: LaunchContext) -> list:
 
     return [
         Register.on_start(gazebo, context),
+        *[Register.on_start(node, context) for node in state_publishers],
+        *[Register.on_start(node, context) for node in controllers],
         Register.on_log(
             bridge,
             "Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)]",

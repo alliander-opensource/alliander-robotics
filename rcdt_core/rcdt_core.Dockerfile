@@ -24,6 +24,7 @@ RUN apt update && apt install -y -qq --no-install-recommends \
   nano \
   python3-pip \
   software-properties-common \
+  wget \
   zstd \
   && add-apt-repository universe \
   && export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}') \

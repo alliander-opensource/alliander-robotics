@@ -17,6 +17,9 @@ def generate_launch_description() -> LaunchDescription:
     """
 
     world_file = os.environ.get("WORLD_FILE", default="walls.sdf")
+    platforms = os.environ.get("PLATFORMS", default="")
+
+    platforms = platforms.replace(" ", "").split(",")
 
     gazebo_launch = IncludeLaunchDescription(
         PathJoinSubstitution(
@@ -25,7 +28,7 @@ def generate_launch_description() -> LaunchDescription:
         launch_arguments={
             "load_gazebo_ui": "True",
             "world": world_file,
-            "platforms": "panther",
+            "platforms": platforms,
             "positions": "0,0,0.2",
             "orientations": "0,0,90",
             "parents": "none",
@@ -34,8 +37,4 @@ def generate_launch_description() -> LaunchDescription:
         }.items(),
     )
 
-    return LaunchDescription(
-        [
-            gazebo_launch,
-        ]
-    )
+    return LaunchDescription([gazebo_launch])
