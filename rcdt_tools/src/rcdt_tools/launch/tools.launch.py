@@ -20,6 +20,7 @@ def add_arm(namespace: str, use_moveit: bool):
         Rviz.add_robot_state(namespace)
         Rviz.add_trajectory(namespace)
 
+
 def add_vehicle(namespace: str, use_gps: bool, window_size: int):
     print(f"Adding vehicle with namespace {namespace}")
     if not use_gps:
@@ -34,6 +35,8 @@ def add_vehicle(namespace: str, use_gps: bool, window_size: int):
     Rviz.add_polygon(f"/{namespace}/polygon_slower")
     Rviz.add_polygon(f"/{namespace}/velocity_polygon_stop")
 
+    Rviz.add_platform_model(namespace)
+
     Vizanti.add_platform_model(namespace)
     Vizanti.add_button("Trigger", f"/{namespace}/hardware/e_stop_trigger")
     Vizanti.add_button("Reset", f"/{namespace}/hardware/e_stop_reset")
@@ -42,16 +45,13 @@ def add_vehicle(namespace: str, use_gps: bool, window_size: int):
         f"/{namespace}/hardware/e_stop",
         "std_msgs/msg/Bool",
     )
-    Vizanti.add_button(
-        "Stop", f"/{namespace}/waypoint_follower_controller/stop"
-    )
+    Vizanti.add_button("Stop", f"/{namespace}/waypoint_follower_controller/stop")
     Vizanti.add_initial_pose()
     Vizanti.add_goal_pose()
     Vizanti.add_waypoints(namespace)
-    Vizanti.add_map(
-        "global_costmap", f"/{namespace}/global_costmap/costmap"
-    )
+    Vizanti.add_map("global_costmap", f"/{namespace}/global_costmap/costmap")
     Vizanti.add_path(f"/{namespace}/plan")
+
 
 def generate_launch_description() -> LaunchDescription:
     """Generate the launch description for the Panther robot.
@@ -60,20 +60,20 @@ def generate_launch_description() -> LaunchDescription:
         LaunchDescription: The launch description for the Panther robot.
     """
 
-    use_rviz = os.environ.get("USE_RVIZ", default="false").lower() == "true" 
-    use_vizanti = os.environ.get("USE_VIZANTI", default="false").lower() == "true" 
+    use_rviz = os.environ.get("USE_RVIZ", default="false").lower() == "true"
+    use_vizanti = os.environ.get("USE_VIZANTI", default="false").lower() == "true"
 
-    use_moveit = os.environ.get("USE_MOVEIT", default="false").lower() == "true" 
+    use_moveit = os.environ.get("USE_MOVEIT", default="false").lower() == "true"
     use_gps = os.environ.get("USE_GPS", default="false").lower() == "true"
     window_size = int(os.environ.get("WINDOW_SIZE", default="10"))
-    
+
     platforms = os.environ.get("PLATFORMS", default="")
 
     platforms = platforms.replace(" ", "").split(",")
 
     for platform in platforms:
         match platform.lower():
-            case "franka": 
+            case "franka":
                 add_arm("franka", use_moveit)
             case "panther":
                 add_vehicle("panther", use_gps, window_size)
@@ -81,7 +81,6 @@ def generate_launch_description() -> LaunchDescription:
                 add_vehicle("lynx", use_gps, window_size)
 
     nodes = []
-
 
     if use_rviz:
         Rviz.set_fixed_frame("map")
@@ -97,6 +96,4 @@ def generate_launch_description() -> LaunchDescription:
         )
         nodes.append(vizanti)
 
-    return LaunchDescription(
-        nodes
-    )
+    return LaunchDescription(nodes)

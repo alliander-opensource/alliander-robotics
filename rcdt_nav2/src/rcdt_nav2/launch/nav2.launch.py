@@ -15,54 +15,48 @@ from rcdt_utilities.register import Register
 import os
 
 autostart_arg = LaunchArgument(
-    "autostart",  
-    os.environ.get("AUTOSTART", default="True").lower() == "true", 
-    [True, False]
+    "autostart",
+    os.environ.get("AUTOSTART", default="True").lower() == "true",
+    [True, False],
 )
 
 use_respawn_arg = LaunchArgument(
-    "use_respawn", 
-    os.environ.get("USE_RESPAWN", default="True").lower() == "true", 
-    [True, False]
+    "use_respawn",
+    os.environ.get("USE_RESPAWN", default="True").lower() == "true",
+    [True, False],
 )
 
 use_slam_arg = LaunchArgument(
-    "slam", 
-    os.environ.get("USE_SLAM", default="False").lower() == "true",
-    [True, False]
+    "slam", os.environ.get("USE_SLAM", default="False").lower() == "true", [True, False]
 )
 
 namespace_vehicle_arg = LaunchArgument(
-    "namespace_vehicle",
-    os.environ.get("NAMESPACE_VEHICLE", default="panther")
+    "namespace_vehicle", os.environ.get("NAMESPACE_VEHICLE", default="panther")
 )
 namespace_lidar_arg = LaunchArgument(
-    "namespace_lidar", 
-    os.environ.get("NAMESPACE_LIDAR", default="")
+    "namespace_lidar", os.environ.get("NAMESPACE_LIDAR", default="")
 )
 namespace_gps_arg = LaunchArgument(
-    "namespace_gps", 
-    os.environ.get("NAMESPACE_GPS", default="")
+    "namespace_gps", os.environ.get("NAMESPACE_GPS", default="")
 )
 use_collision_monitor_arg = LaunchArgument(
-    "collision_monitor", 
-    os.environ.get("USE_COLLISION_MONITOR", default="False").lower() == "true", 
-    [True, False]
+    "collision_monitor",
+    os.environ.get("USE_COLLISION_MONITOR", default="False").lower() == "true",
+    [True, False],
 )
 use_navigation_arg = LaunchArgument(
-    "navigation",  
-    os.environ.get("USE_NAVIGATION", default="False").lower() == "true", 
-    [True, False]
+    "navigation",
+    os.environ.get("USE_NAVIGATION", default="False").lower() == "true",
+    [True, False],
 )
 use_gps_arg = LaunchArgument(
-    "use_gps", 
-    os.environ.get("USE_GPS", default="False").lower() == "true", 
-    [True, False]
+    "use_gps",
+    os.environ.get("USE_GPS", default="False").lower() == "true",
+    [True, False],
 )
 
 window_size_arg = LaunchArgument(
-    "window_size", 
-    os.environ.get("WINDOW_SIZE", default="10")
+    "window_size", os.environ.get("WINDOW_SIZE", default="10")
 )
 controller_arg = LaunchArgument(
     "controller",
@@ -77,10 +71,11 @@ controller_arg = LaunchArgument(
     ],
 )
 global_map_arg = LaunchArgument(
-    "map", 
-    os.environ.get("GLOBAL_MAP", default="simulation_map"), 
-    ["simulation_map", "ipkw", "ipkw_buiten"]
+    "map",
+    os.environ.get("GLOBAL_MAP", default=""),
+    ["", "simulation_map", "ipkw", "ipkw_buiten"],
 )
+
 
 class AdaptedYaml:
     """Class to adapt a YAML file with parameter substitutions."""
@@ -269,6 +264,30 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         root_key=namespace_vehicle,
     )
 
+    map_tf_publisher = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_tf_world",
+        arguments=[
+            "--frame-id",
+            "map",
+            "--child-frame-id",
+            f"{namespace_vehicle}/odom",
+            "--x",
+            "0",
+            "--y",
+            "0",
+            "--z",
+            "0",
+            "--roll",
+            "0",
+            "--pitch",
+            "0",
+            "--yaw",
+            "0",
+        ],
+    )
+
     slam = Node(
         package="slam_toolbox",
         executable="async_slam_toolbox_node",
@@ -399,6 +418,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     return [
         SetRemap(src="/cmd_vel", dst=pub_topic),
         Register.on_start(slam, context) if use_slam else SKIP,
+        Register.on_start(map_tf_publisher, context) if not use_gps else SKIP,
         Register.on_start(map_server, context) if map_server is not None else SKIP,
         Register.on_start(amcl, context) if amcl is not None else SKIP,
         Register.on_start(controller_server, context) if use_navigation else SKIP,

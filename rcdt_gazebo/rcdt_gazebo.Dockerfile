@@ -11,6 +11,7 @@ ENV ROS_DISTRO=jazzy
 # Add custom packages
 WORKDIR /rcdt/ros
 COPY rcdt_gazebo/src/ /rcdt/ros/src
+COPY rcdt_husarion/src/ /rcdt/ros/src
 COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
@@ -30,7 +31,7 @@ RUN mkdir -p /rcdt/osm2world \
   && unzip OSM2World-latest-bin.zip \
   && rm OSM2World-latest-bin.zip
 
-# Get all necessary models
+# Get all necessary models - rcdt_husarion added so that Gazebo can find the URDF
 WORKDIR /rcdt/ros/src
 RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git \
   && git clone -b ros2 https://github.com/husarion/husarion_ugv_ros.git \
@@ -39,7 +40,9 @@ RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git 
   && colcon build --symlink-install --packages-up-to \
   franka_description \
   husarion_ugv_description \
-  rcdt_gazebo
+  rcdt_gazebo \
+  rcdt_husarion
+
  
 # Install dev packages
 COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt

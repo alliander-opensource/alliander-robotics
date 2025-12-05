@@ -100,30 +100,6 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     platforms = platforms.replace(" ", "").split(",")
-    state_publishers = []
-    for platform in platforms:
-        print(f"Platform {platform}")
-        namespace, xacro_path = "", ""
-
-        if platform.lower() in ["panther", "lynx"]:
-            namespace = platform.lower()
-            xacro_path = get_file_path(
-                "rcdt_gazebo", ["urdf", "husarion"], f"{platform.lower()}.urdf.xacro"
-            )
-            robot_description = get_robot_description(xacro_path)
-            state_publishers.append(
-                Node(
-                    package="robot_state_publisher",
-                    executable="robot_state_publisher",
-                    name="state_publisher",
-                    namespace=namespace,
-                    parameters=[
-                        robot_description,
-                        {"frame_prefix": ""},
-                        {"publish_frequency": 1000.0},
-                    ],
-                )
-            )
 
     bridge_topics.append("/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock")
     bridge = Node(
@@ -167,7 +143,6 @@ def launch_setup(context: LaunchContext) -> list:
 
     return [
         Register.on_start(gazebo, context),
-        *[Register.on_start(node, context) for node in state_publishers],
         Register.on_log(
             bridge,
             "Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)]",

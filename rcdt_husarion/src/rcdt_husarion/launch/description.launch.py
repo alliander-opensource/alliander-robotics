@@ -34,7 +34,7 @@ def get_robot_description(
     return {name: robot_description_config.toxml()}
 
 
-def create_state_publisher() -> Node | None:
+def create_state_publisher(context: LaunchContext) -> Node | None:
     """Create a state publisher node for the robot.
 
     Returns:
@@ -42,14 +42,15 @@ def create_state_publisher() -> Node | None:
     """
     xacro_path = get_file_path("rcdt_husarion", ["urdf"], "panther.urdf.xacro")
     robot_description = get_robot_description(xacro_path)
+    namespace = namespace_arg.string_value(context)
     return Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         name="state_publisher",
-        namespace="panther",
+        namespace=namespace,
         parameters=[
             robot_description,
-            {"frame_prefix": ""},
+            {"frame_prefix": f"{namespace}/"},
             {"publish_frequency": 1000.0},
         ],
     )
@@ -57,7 +58,7 @@ def create_state_publisher() -> Node | None:
 
 def launch_setup(context: LaunchContext) -> list:
     nodes = []
-    state_publisher_node = create_state_publisher()
+    state_publisher_node = create_state_publisher(context)
     if isinstance(state_publisher_node, Node):
         print("Created state publisher node!")
         nodes.append(state_publisher_node)
