@@ -38,7 +38,6 @@ RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git 
   && colcon build --symlink-install --packages-up-to \
   franka_description \
   husarion_ugv_description \
-  husarion_ugv_gazebo \
   rcdt_gazebo
  
 # Install dev packages

@@ -36,10 +36,10 @@ RUN uv sync \
 # Install dev packages
 COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt
 RUN apt update && apt install -y -qq --no-install-recommends  \
-    `cat /rcdt/dev-pkgs.txt`\
-    && rm -rf /var/lib/apt/lists/* \
-    && apt autoremove \
-    && apt clean
+  `cat /rcdt/dev-pkgs.txt`\
+  && rm -rf /var/lib/apt/lists/* \
+  && apt autoremove \
+  && apt clean
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]

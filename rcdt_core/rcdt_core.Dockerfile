@@ -32,7 +32,7 @@ RUN apt update && apt install -y -qq --no-install-recommends \
 && echo $VERSION_CODENAME)_all.deb" \
 && dpkg -i /tmp/ros2-apt-source.deb
 
-# Install ROS2
+# Install ROS2 - maybe ros-base or ROS base image
 RUN apt update && apt install -y --no-install-recommends \
   ros-$ROS_DISTRO-desktop \
   python3-colcon-common-extensions \

@@ -101,7 +101,6 @@ def launch_setup(context: LaunchContext) -> list:
 
     platforms = platforms.replace(" ", "").split(",")
     state_publishers = []
-    controllers = []
     for platform in platforms:
         print(f"Platform {platform}")
         namespace, xacro_path = "", ""
@@ -123,16 +122,6 @@ def launch_setup(context: LaunchContext) -> list:
                         {"frame_prefix": ""},
                         {"publish_frequency": 1000.0},
                     ],
-                )
-            )
-            controllers.append(
-                Node(
-                    package="controller_manager",
-                    executable="ros2_control_node",
-                    name="ros2_control_node",
-                    namespace=namespace,
-                    remappings=[],
-                    emulate_tty=True,
                 )
             )
 
@@ -179,7 +168,6 @@ def launch_setup(context: LaunchContext) -> list:
     return [
         Register.on_start(gazebo, context),
         *[Register.on_start(node, context) for node in state_publishers],
-        *[Register.on_start(node, context) for node in controllers],
         Register.on_log(
             bridge,
             "Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)]",
