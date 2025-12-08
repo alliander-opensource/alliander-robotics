@@ -34,6 +34,7 @@ class Lidar(Platform):
         namespace: str | None = None,
         parent: Vehicle | None = None,
         parent_link: str = "",
+        ip_address: str = "",
     ):
         """Initialize the Lidar platform.
 
@@ -44,10 +45,12 @@ class Lidar(Platform):
             namespace (str | None): The namespace of the lidar.
             parent (Vehicle | None): The parent platform.
             parent_link (str): The link of the parent to which the platform is attached. If empty, the base_link of the parent is used.
+            ip_address (str): The IP address of the platform.
         """
         super().__init__(
             platform, position, orientation, namespace, parent, parent_link
         )
+        self.ip_address = ip_address
 
         if parent:
             parent.lidar = self
@@ -120,6 +123,7 @@ class Lidar(Platform):
                 "simulation": str(EnvironmentConfiguration.simulation),
                 "namespace": self.namespace,
                 "target_frame": target_frame,
+                "ip_address": self.ip_address,
             },
         )
 
@@ -140,5 +144,7 @@ class Lidar(Platform):
                 "simulation": str(EnvironmentConfiguration.simulation),
                 "namespace": self.namespace,
                 "target_frame": target_frame,
+                "ip_device": self.ip_address,
+                "ip_udp_destination": "10.15.20.3",
             },
         )

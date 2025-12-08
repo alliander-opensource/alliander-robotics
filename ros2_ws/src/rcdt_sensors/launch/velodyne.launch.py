@@ -14,6 +14,7 @@ from rcdt_utilities.ros_utils import get_file_path
 use_sim_arg = LaunchArgument("simulation", True, [True, False])
 namespace_arg = LaunchArgument("namespace", "velodyne")
 target_frame_arg = LaunchArgument("target_frame", "")
+ip_address_arg = LaunchArgument("ip_address", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -28,6 +29,7 @@ def launch_setup(context: LaunchContext) -> list:
     use_sim = use_sim_arg.bool_value(context)
     namespace = namespace_arg.string_value(context)
     target_frame = target_frame_arg.string_value(context)
+    ip_address = ip_address_arg.string_value(context)
 
     frame_prefix = namespace + "/" if namespace else ""
 
@@ -38,7 +40,7 @@ def launch_setup(context: LaunchContext) -> list:
         parameters=[
             {
                 "model": "VLP16",
-                "device_ip": "10.15.20.5",
+                "device_ip": ip_address,
                 "frame_id": frame_prefix + "velodyne",
             }
         ],
@@ -99,6 +101,8 @@ def generate_launch_description() -> LaunchDescription:
         [
             use_sim_arg.declaration,
             namespace_arg.declaration,
+            target_frame_arg.declaration,
+            ip_address_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

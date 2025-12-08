@@ -84,12 +84,12 @@ def config_gps() -> None:  # noqa: D103
 
 @register_configuration("ouster")
 def config_ouster() -> None:  # noqa: D103
-    Lidar("ouster", [0, 0, 0.5])
+    Lidar("ouster", [0, 0, 0.5], ip_address="10.15.20.5")
 
 
 @register_configuration("velodyne")
 def config_velodyne() -> None:  # noqa: D103
-    Lidar("velodyne", [0, 0, 0.5])
+    Lidar("velodyne", [0, 0, 0.5], ip_address="10.15.20.5")
 
 
 @register_configuration("realsense")
@@ -156,31 +156,31 @@ def config_panther_zed() -> None:  # noqa: D103
 @register_configuration("panther_velodyne")
 def config_panther_velodyne() -> None:  # noqa: D103
     panther = Vehicle("panther", [0, 0, 0.2])
-    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
+    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
 
 
 @register_configuration("panther_ouster")
 def config_panther_ouster() -> None:  # noqa: D103
     panther = Vehicle("panther", [0, 0, 0.2])
-    Lidar("ouster", [0.13, -0.13, 0.35], parent=panther)
+    Lidar("ouster", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
 
 
 @register_configuration("panther_collision_monitor")
 def config_panther_collision_monitor() -> None:  # noqa: D103
     panther = Vehicle("panther", [0, 0, 0.2], collision_monitor=True)
-    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
+    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
 
 
 @register_configuration("panther_slam")
 def config_panther_slam() -> None:  # noqa: D103
     panther = Vehicle("panther", [0, 0, 0.2], slam=True)
-    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
+    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
 
 
 @register_configuration("panther_lidar_navigation")
 def config_panther_lidar_navigation() -> None:  # noqa: D103
     panther = Vehicle("panther", [0, 0, 0.2], navigation=True)
-    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
+    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
 
 
 @register_configuration("panther_gps_navigation")
@@ -190,7 +190,7 @@ def config_panther_gps() -> None:  # noqa: D103
     panther = Vehicle(
         "panther", [0, 0, 0.2], navigation=True, use_gps=True, window_size=50
     )
-    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
+    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
     GPS("nmea", [0, 0, 0.2], parent=panther)
 
 
@@ -205,14 +205,14 @@ def config_mm() -> None:  # noqa: D103
 def config_mm_velodyne() -> None:  # noqa: D103
     panther = Vehicle("panther", [0, 0, 0.2], navigation=True)
     Arm("franka", [0, 0, 0.14], gripper=True, parent=panther, moveit=True)
-    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
+    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
 
 
 @register_configuration("mm_ouster")
 def config_mm_ouster() -> None:  # noqa: D103
     panther = Vehicle("panther", [0, 0, 0.2], navigation=True)
     Arm("franka", [0, 0, 0.14], gripper=True, parent=panther, moveit=True)
-    Lidar("ouster", [0.13, -0.13, 0.35], parent=panther)
+    Lidar("ouster", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
 
 
 @register_configuration("mm_gps")
@@ -222,7 +222,7 @@ def config_mm_gps() -> None:  # noqa: D103
         "panther", [0, 0, 0.2], navigation=True, use_gps=True, window_size=50
     )
     Arm("franka", [0, 0, 0.14], gripper=True, parent=panther, moveit=True)
-    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther)
+    Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
     GPS("nmea", [0, 0, 0.2], parent=panther)
 
 
