@@ -84,7 +84,7 @@ extra-paths = [
     "/home/rcdt/realsense_ws/install/realsense2_camera_msgs/lib/python3.12/site-packages/",
     "ros2_ws/install/rcdt_interfaces/lib/python3.12/site-packages/",
     "ros2_ws/src/rcdt_franka/",
-    "ros2_ws/src/rcdt_panther/",
+    "ros2_ws/src/rcdt_husarion/",
     "ros2_ws/src/rcdt_utilities/",
     "ros2_ws/src/rcdt_gazebo/",
     "ros2_ws/src/rcdt_launch/",

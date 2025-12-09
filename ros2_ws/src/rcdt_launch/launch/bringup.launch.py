@@ -76,7 +76,7 @@ def launch_setup(context: LaunchContext) -> list:
 
     Vizanti.create_config_file()
     vizanti = RegisteredLaunchDescription(
-        get_file_path("rcdt_panther", ["launch"], "vizanti.launch.py")
+        get_file_path("rcdt_husarion", ["launch"], "vizanti.launch.py")
     )
 
     platforms_dict = {

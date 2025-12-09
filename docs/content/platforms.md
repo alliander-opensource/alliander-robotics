@@ -49,7 +49,7 @@ Regarding all vehicles, the general rule we apply for assigning IP addresses fol
 
 ### Simulation Panther
 
-A Panther vehicle can be launched in simulation by creating a configuration with an *Vehicle* of type *Panther*. Note that the E-Stop is triggered by default and needs to be released before driving is possible. This can be done by a service call:
+A Panther vehicle can be launched in simulation by creating a configuration with a `Vehicle` of type `Panther`. Note that the E-Stop is triggered by default and needs to be released before driving is possible. This can be done by a service call:
 
 ```bash
 ros2 service call /panther/hardware/e_stop_reset std_srvs/srv/Trigger {}
@@ -82,7 +82,7 @@ The robot can be shut down as follows:
 - Wait until all lights are off.
 - Disable the battery (switch at the front of the robot)
 
-### Configuration
+### Configuration Panther
 
 When the Panther is started, two WiFi networks (*Panther_<serial_number>* and *Panther_5G_<serial_number>*) should be available. One can connect with one of the WiFi networks or connect using a ethernet cable directly to the Teltonika. After connecting, it should be possible to ssh into all three computers.
 
@@ -99,6 +99,18 @@ We have also cloned the [nmea-gps-docker](https://github.com/husarion/nmea-gps-d
 **Lenovo ThinkStation P360**
 \
 The *Lenovo ThinkStation P360* is a powerful computer, used to handle the camera stream. We can run our docker image on this built in computer.
+
+## Lynx
+
+![Lynx](../img/lynx/lynx.png)
+
+### Simulation Lynx
+
+A Lynx vehicle can be launched in simulation by creating a configuration with a `Vehicle` of type `Lynx`.
+
+### Hardware & Configuration Lynx
+
+This section is equivalent to the [Hardware Panther](#hardware-panther) and [Configuration Panther](#configuration-panther) sections, except for the namespace here being `lynx` and the _Lenovo ThinkStation P360_ will be replaced with a different computer.
 
 ## Realsense
 

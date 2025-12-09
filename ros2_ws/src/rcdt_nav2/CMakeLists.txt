@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.5)
-project(rcdt_panther)
+project(rcdt_nav2)
 
 # CMake dependencies:
 find_package(ament_cmake REQUIRED)
@@ -17,7 +17,7 @@ install(
 
 # Shared folders:
 install(
-  DIRECTORY launch config urdf
+  DIRECTORY launch config 
   DESTINATION share/${PROJECT_NAME}
 )
 

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot name="lynx" xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <!-- Set use_sim argument to let lynx xacro load gazebo plugin: -->
+  <xacro:arg name="use_sim" default="true" />
+  <xacro:arg name="namespace" default="lynx" />
+  <xacro:arg name="imu_xyz" default="0.052 0.073 -0.006" />
+  <xacro:arg name="imu_rpy" default="0.0 0.0 -1.57" />
+  <xacro:arg name="childs" default="${[]}" />
+
+  <!-- Load lynx: -->
+  <xacro:include filename="$(find rcdt_husarion)/urdf/lynx/adapted/lynx_macro.urdf.xacro" ns="husarion" />
+  <xacro:husarion.lynx_robot
+    use_sim="$(arg use_sim)"
+    imu_xyz="$(arg imu_xyz)"
+    imu_rpy="$(arg imu_rpy)"
+    wheel_config_file="$(find husarion_ugv_description)/config/WH05.yaml"
+    controller_config_file="$(find rcdt_husarion)/config/lynx_controllers.yaml"
+    battery_config_file=""
+    namespace="$(arg namespace)" />
+
+  <!-- Create detachable joints with given childs: -->
+  <xacro:include filename="$(find rcdt_utilities)/urdf/detachable_joints.urdf.xacro" />
+  <xacro:detachable_joints childs="${$(arg childs)}" />
+</robot>

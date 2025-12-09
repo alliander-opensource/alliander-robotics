@@ -289,7 +289,7 @@ def launch_fixture(
     return Register.connect_context([launch])
 
 
-vehicle_list = ["panther"]
+vehicle_list = ["panther", "lynx"]
 lidar_list = ["velodyne", "ouster"]
 gps_list = ["nmea"]
 
