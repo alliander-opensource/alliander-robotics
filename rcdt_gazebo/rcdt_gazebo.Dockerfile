@@ -12,6 +12,7 @@ ENV ROS_DISTRO=jazzy
 WORKDIR /rcdt/ros
 COPY rcdt_gazebo/src/ /rcdt/ros/src
 COPY rcdt_husarion/src/ /rcdt/ros/src
+COPY rcdt_franka/src/ /rcdt/ros/src
 COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
@@ -41,7 +42,8 @@ RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git 
   franka_description \
   husarion_ugv_description \
   rcdt_gazebo \
-  rcdt_husarion
+  rcdt_husarion \
+  rcdt_franka
 
  
 # Install dev packages

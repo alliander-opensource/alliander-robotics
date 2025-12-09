@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="franka">
+
+  <!-- Arguments from Franka, based on: -->
+  <!-- https://github.com/frankarobotics/franka_description/blob/1.0.1/robots/fr3/fr3.urdf.xacro -->
+  <xacro:arg name="xyz_ee" default="0 0 0" />
+  <xacro:arg name="rpy_ee" default="0 0 ${-pi/4}" />
+  <xacro:arg name="tcp_xyz" default="0 0 0.1034" />
+  <xacro:arg name="tcp_rpy" default="0 0 0" />
+
+  <!-- Custom arguments: -->
+  <xacro:arg name="namespace" default="" />
+  <xacro:arg name="simulation" default="false" />
+  <xacro:arg name="parent" default="world" />
+  <xacro:arg name="childs" default="${[]}" />
+  <xacro:arg name="ip_address" default="" />
+
+  <!-- robot: -->
+  <xacro:include filename="$(find rcdt_franka)/urdf/adapted/franka_robot.xacro" />
+  <xacro:franka_robot
+    arm_id="fr3"
+    joint_limits="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}"
+    inertials="${xacro.load_yaml('$(find franka_description)/robots/fr3/inertials.yaml')}"
+    kinematics="${xacro.load_yaml('$(find franka_description)/robots/fr3/kinematics.yaml')}"
+    dynamics="${xacro.load_yaml('$(find franka_description)/robots/fr3/dynamics.yaml')}"
+    gazebo="$(arg simulation)"
+    ee_id="franka_hand"
+    xyz_ee="$(arg xyz_ee)"
+    rpy_ee="$(arg rpy_ee)"
+    tcp_xyz="$(arg tcp_xyz)"
+    tcp_rpy="$(arg tcp_rpy)"
+    ros2_control="true"
+    robot_ip="$(arg ip_address)"
+    namespace="$(arg namespace)"
+    parent="$(arg parent)"
+  />
+
+  <!-- Preserve joint so that child link can be used for detachable joints: -->
+  <gazebo reference="fr3_hand_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+  <!-- Create detachable joints with given childs: -->
+  <xacro:include filename="$(find rcdt_utilities)/urdf/detachable_joints.urdf.xacro" />
+  <xacro:detachable_joints childs="${$(arg childs)}" />
+
+</robot>

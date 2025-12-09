@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 services:
-  rcdt_gazebo:
-    image: rcdt/robotics:gazebo-${IMAGE_TAG}
-    container_name: rcdt_gazebo
+  rcdt_franka:
+    image: rcdt/robotics:franka-${IMAGE_TAG}
+    container_name: rcdt_franka
     runtime: nvidia
     network_mode: host
     privileged: true
@@ -18,10 +18,11 @@ services:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
     environment:
-      - GZ_SIM_RESOURCE_PATH=/rcdt/ros/src
+      - WINDOW_SIZE=10
+      - SIMULATION=true
       - "DISPLAY"
       - "RCUTILS_COLORIZED_OUTPUT=1"
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
       - __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
-    command: ["/bin/bash", "-c", "ros2 launch rcdt_gazebo gazebo.launch.py"]
+    command: ["/bin/bash", "-c", "ros2 launch rcdt_franka franka.launch.py"]
