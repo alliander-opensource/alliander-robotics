@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  dev:
+    image: rcdt/robotics:base-amd64-321-split-docker-image-structure
+    container_name: rcdt_dev
+    runtime: nvidia
+    network_mode: host
+    privileged: true
+    mem_limit: 6gb
+    tty: true
+    group_add:
+      - video
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /dev:/dev
+      - "./:/rcdt_robotics/"
+    environment:
+      - DISPLAY
+      - RCUTILS_COLORIZED_OUTPUT=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json

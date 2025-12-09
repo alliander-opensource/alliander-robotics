@@ -1,0 +1,7 @@
+{
+  "name": "husarion",
+  "dockerComposeFile": "../../platforms.yml",
+  "service": "rcdt_husarion",
+  "workspaceFolder": "/rcdt/ros",
+  "overrideCommand": true
+}

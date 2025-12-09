@@ -1,0 +1,7 @@
+{
+  "name": "franka",
+  "dockerComposeFile": "../../platforms.yml",
+  "service": "rcdt_franka",
+  "workspaceFolder": "/rcdt/ros",
+  "overrideCommand": true
+}
