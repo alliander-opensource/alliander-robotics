@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "platforms",
-        nargs="+",
+        nargs="?",
         help="List of platform components to include (e.g. panther franka) in a platforms.yaml compose file.",
     )
 
@@ -25,18 +25,21 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if len(args.platforms) != 1:
-        print("Error: Exactly one platform must be specified.")
-        sys.exit(1)
-    platform = args.platforms[0]
+    if isinstance(args.platforms, list):
+        if len(args.platforms) > 1:
+            print("Error: Only one platform can be specified.")
+            sys.exit(1)
+        platform = args.platforms[0]
 
-    # Create platforms compose file:
-    cmd = [f"python3 compose.py --arch amd64 --platforms {platform} --dev"]
-    subprocess.run(cmd, shell=True, check=True)
+        # Create platforms compose file:
+        cmd = [f"python3 compose.py --arch amd64 --platforms {platform} --dev"]
+        subprocess.run(cmd, shell=True, check=True)
 
-    # Create simulator compose file:
-    cmd = [f"python3 compose.py --arch amd64 --platforms {platform} --simulator --dev"]
-    subprocess.run(cmd, shell=True, check=True)
+        # Create simulator compose file:
+        cmd = [
+            f"python3 compose.py --arch amd64 --platforms {platform} --simulator --dev"
+        ]
+        subprocess.run(cmd, shell=True, check=True)
 
     # Spin up containers:
     cmd = "docker compose -f platforms.yml -f simulator.yml up"
