@@ -62,7 +62,7 @@ def launch_setup(context: LaunchContext) -> list:
     state_publisher_node = create_state_publisher(context)
     if isinstance(state_publisher_node, Node):
         print("Created state publisher node!")
-        nodes.append(state_publisher_node)
+        nodes.append(Register.on_start(state_publisher_node, context))
     else:
         print("create_state_publisher() returned None")
     return nodes
