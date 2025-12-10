@@ -13,6 +13,10 @@ from rcdt_utilities.ros_utils import get_file_path
 def launch_setup(context: LaunchContext) -> list:
     simulation = os.environ.get("SIMULATION", default="False").lower() == "true"
 
+    description = RegisteredLaunchDescription(
+        get_file_path("rcdt_franka", ["launch"], "description.launch.py")
+    )
+
     controllers = RegisteredLaunchDescription(
         get_file_path("rcdt_franka", ["launch"], "controllers.launch.py")
     )
@@ -20,10 +24,6 @@ def launch_setup(context: LaunchContext) -> list:
     gripper = RegisteredLaunchDescription(
         get_file_path("rcdt_franka", ["launch"], "gripper_services.launch.py"),
         launch_arguments={"namespace": "franka"},
-    )
-
-    description = RegisteredLaunchDescription(
-        get_file_path("rcdt_franka", ["launch"], "description.launch.py")
     )
 
     return [

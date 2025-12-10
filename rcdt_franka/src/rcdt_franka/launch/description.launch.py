@@ -33,7 +33,7 @@ def get_robot_description(
     return {name: robot_description_config.toxml()}
 
 
-def create_state_publisher(context: LaunchContext) -> Node | None:
+def create_state_publisher(context: LaunchContext) -> Node:
     """Create a state publisher node for the robot.
 
     Returns:
@@ -58,14 +58,10 @@ def create_state_publisher(context: LaunchContext) -> Node | None:
 
 
 def launch_setup(context: LaunchContext) -> list:
-    nodes = []
     state_publisher_node = create_state_publisher(context)
-    if isinstance(state_publisher_node, Node):
-        print("Created state publisher node!")
-        nodes.append(Register.on_start(state_publisher_node, context))
-    else:
-        print("create_state_publisher() returned None")
-    return nodes
+    return [
+        Register.on_start(state_publisher_node, context),
+    ]
 
 
 def generate_launch_description() -> LaunchDescription:
