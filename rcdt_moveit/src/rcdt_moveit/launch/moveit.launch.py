@@ -2,9 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import subprocess
+
+import xmltodict
 from launch import LaunchContext, LaunchDescription
 from launch.actions import ExecuteProcess, OpaqueFunction
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 from rcdt_launch.moveit import Moveit
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
@@ -27,6 +30,24 @@ def launch_setup(context: LaunchContext) -> list:
     """
     namespace_arm = namespace_arm_arg.string_value(context)
     namespace_camera = namespace_camera_arg.string_value(context)
+
+    # Wait for robot description on topic:
+    namespace_arm = "franka"
+    cmd = (
+        f"ros2 param get /{namespace_arm}/state_publisher robot_description --hide-type"
+    )
+    robot_description = {}
+    while robot_description == {}:
+        try:
+            proc = subprocess.run([cmd], shell=True, check=False, capture_output=True)
+            stdout = proc.stdout.decode("utf-8").rstrip()
+            stderr = proc.stderr.decode("utf-8").rstrip()
+            xml_dict = xmltodict.parse(stdout)
+            robot_description = {"robot_description": xmltodict.unparse(xml_dict)}
+        except xmltodict.expat.ExpatError:
+            print(f"Failed to obtain robot description: '{stderr}'. Retrying...")
+
+    Moveit.add(namespace_arm, robot_description, namespace_arm)
 
     if namespace_arm not in Moveit.configurations:
         raise ValueError(
@@ -94,11 +115,12 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
+        SetParameter(name="use_sim_time", value=True),
         Register.on_log(
             move_group, "MoveGroup context initialization complete", context
         ),
         Register.on_log(
-            moveit_manager, "Ready to take commands for planning group", context
+            moveit_manager, "Moveit Manager initialized.", context
         ),
         Register.on_log(moveit_servo, "Servo initialized successfully", context),
         Register.on_exit(switch_servo_type_to_twist, context),

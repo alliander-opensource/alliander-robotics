@@ -41,8 +41,12 @@ if __name__ == "__main__":
         ]
         subprocess.run(cmd, shell=True, check=True)
 
+        # Create tools compose file:
+        cmd = [f"python3 compose.py --arch amd64 --platforms {platform} --tools --dev"]
+        subprocess.run(cmd, shell=True, check=True)
+
     # Spin up containers:
-    cmd = "docker compose -f platforms.yml -f simulator.yml up"
+    cmd = "docker compose -f platforms.yml -f simulator.yml -f tools.yml up"
     if args.d:
         cmd += " -d"
 

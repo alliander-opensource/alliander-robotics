@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+sensors:
+  - depth_image
+depth_image:
+  sensor_plugin: occupancy_map_monitor/DepthImageOctomapUpdater
+  image_topic: ""
+  queue_size: 5
+  near_clipping_plane_distance: 0.3
+  far_clipping_plane_distance: 5.0
+  shadow_threshold: 0.2
+  padding_scale: 1.0
+  max_update_rate: 10.0
+  filtered_cloud_topic: ""

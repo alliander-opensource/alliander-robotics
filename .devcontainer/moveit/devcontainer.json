@@ -1,0 +1,7 @@
+{
+  "name": "moveit",
+  "dockerComposeFile": "../../platforms.yml",
+  "service": "rcdt_moveit",
+  "workspaceFolder": "/rcdt/ros",
+  "overrideCommand": true
+}

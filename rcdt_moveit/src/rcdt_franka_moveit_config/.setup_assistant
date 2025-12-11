@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+moveit_setup_assistant_config:
+  urdf:
+    package: franka_description
+    relative_path: robots/fr3/fr3.urdf.xacro
+  srdf:
+    relative_path: config/fr3.srdf
+  package_settings:
+    author_name: RCDT
+    author_email: researchcenter@alliander.com
+    generated_timestamp: 1725443639

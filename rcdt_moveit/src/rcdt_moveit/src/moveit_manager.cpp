@@ -5,8 +5,7 @@
 #include "moveit_manager.hpp"
 
 MoveitManager::MoveitManager(rclcpp::Node::SharedPtr node_)
-    : node(node_),
-      tf_broadcaster(node),
+    : node(node_), tf_broadcaster(node),
       move_group(
           node,
           moveit::planning_interface::MoveGroupInterface::Options(
@@ -37,6 +36,7 @@ MoveitManager::MoveitManager(rclcpp::Node::SharedPtr node_)
   arm_end_in_tcp_frame = change_frame(arm_end_in_arm_frame, link_tcp);
 
   initialize_services();
+  RCLCPP_INFO(node->get_logger(), "Moveit Manager initialized.");
 };
 
 void MoveitManager::initialize_clients() {
@@ -146,10 +146,9 @@ void MoveitManager::toggle_octomap_scan(
                  "Namespace of camera is not set. Cannot toggle octomap scan.");
     return;
   }
-  auto cmd = fmt::format(
-      "ros2 launch rcdt_moveit relay_octomap.launch.py "
-      "namespace_arm:={} namespace_camera:={}",
-      namespace_arm, namespace_camera);
+  auto cmd = fmt::format("ros2 launch rcdt_moveit relay_octomap.launch.py "
+                         "namespace_arm:={} namespace_camera:={}",
+                         namespace_arm, namespace_camera);
   if (request->data) {
     if (process.running()) {
       RCLCPP_WARN(node->get_logger(),
@@ -243,6 +242,12 @@ PoseStamped MoveitManager::change_frame(PoseStamped pose,
   auto request = std::make_shared<ExpressPoseInOtherFrame::Request>();
   request->pose = pose;
   request->target_frame = target_frame;
+  while (!express_pose_in_other_frame_client->service_is_ready()) {
+    RCLCPP_WARN(
+        node->get_logger(),
+        "Waiting for express_pose_in_other_frame service to be available...");
+    rclcpp::sleep_for(std::chrono::seconds(1));
+  }
   auto future = express_pose_in_other_frame_client->async_send_request(request);
   rclcpp::spin_until_future_complete(client_node, future);
   auto response = future.get();
@@ -329,7 +334,7 @@ void MoveitManager::clear_markers(
   response->success = true;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
   node_options.automatically_declare_parameters_from_overrides(true);

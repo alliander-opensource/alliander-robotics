@@ -18,6 +18,10 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt autoremove -y \
   && apt clean
 
+# Get required descriptions:
+WORKDIR /rcdt/ros/src
+RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git
+
 # Install dev packages
 COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt
 RUN apt update && apt install -y -qq --no-install-recommends  \
@@ -27,11 +31,13 @@ RUN apt update && apt install -y -qq --no-install-recommends  \
     && apt clean
 
 # Install repo packages
+WORKDIR /rcdt/ros
 COPY rcdt_moveit/src/ /rcdt/ros/src
 RUN uv sync \
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 
   && colcon build --symlink-install \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
+  --cmake-args=-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
   --event-handlers console_direct+
 
 # Finalize
