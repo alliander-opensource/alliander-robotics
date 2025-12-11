@@ -22,15 +22,6 @@ def launch_setup(context: LaunchContext) -> list:
     """
     namespace = namespace_arg.string_value(context)
 
-    # control_node = Node(
-    #     package="controller_manager",
-    #     executable="ros2_control_node",
-    #     name="ros2_control_node",
-    #     namespace=namespace,
-    #     remappings=[],
-    #     emulate_tty=True,
-    # )
-
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -80,7 +71,6 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
-        # Register.on_start(control_node, context),
         Register.on_exit(joint_state_broadcaster_spawner, context),
         Register.on_exit(imu_broadcaster_spawner, context),
         Register.on_exit(drive_controller_spawner, context),

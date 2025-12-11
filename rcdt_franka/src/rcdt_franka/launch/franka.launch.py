@@ -6,6 +6,7 @@ import os
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
+from rcdt_franka.arm import Arm
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 
@@ -26,8 +27,12 @@ def launch_setup(context: LaunchContext) -> list:
         launch_arguments={"namespace": "franka"},
     )
 
+    arm = Arm("franka", simulation=simulation)
+    map_link = arm.create_map_link()
+
     return [
         Register.group(description, context),
+        Register.on_start(map_link, context),
         Register.group(controllers, context),
         Register.group(gripper, context),
     ]

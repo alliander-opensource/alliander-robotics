@@ -2,14 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import xacro
 from launch import LaunchContext, LaunchDescription
-from launch_ros.actions import Node
 from launch.actions import OpaqueFunction
+from launch_ros.actions import Node
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
-from launch_ros.actions import Node
-import xacro
 
 namespace_arg = LaunchArgument("namespace", "panther")
 
@@ -57,14 +56,10 @@ def create_state_publisher(context: LaunchContext) -> Node | None:
 
 
 def launch_setup(context: LaunchContext) -> list:
-    nodes = []
     state_publisher_node = create_state_publisher(context)
-    if isinstance(state_publisher_node, Node):
-        print("Created state publisher node!")
-        nodes.append(state_publisher_node)
-    else:
-        print("create_state_publisher() returned None")
-    return nodes
+    return [
+        Register.on_start(state_publisher_node, context),
+    ]
 
 
 def generate_launch_description() -> LaunchDescription:

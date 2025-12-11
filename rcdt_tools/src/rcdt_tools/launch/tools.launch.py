@@ -37,8 +37,6 @@ def add_vehicle(namespace: str, use_gps: bool, window_size: int):
     Rviz.add_polygon(f"/{namespace}/polygon_slower")
     Rviz.add_polygon(f"/{namespace}/velocity_polygon_stop")
 
-    Rviz.add_platform_model(namespace)
-
     Vizanti.add_platform_model(namespace)
     Vizanti.add_button("Trigger", f"/{namespace}/hardware/e_stop_trigger")
     Vizanti.add_button("Reset", f"/{namespace}/hardware/e_stop_reset")
@@ -68,6 +66,7 @@ def launch_setup(context: LaunchContext) -> list:
     platforms = platforms.replace(" ", "").split(",")
 
     for platform in platforms:
+        Rviz.add_platform_model(platform)
         match platform.lower():
             case "franka":
                 add_arm("franka", use_moveit)

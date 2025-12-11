@@ -7,10 +7,7 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-
-# Add custom packages
 WORKDIR /rcdt/ros
-COPY rcdt_husarion/src/ /rcdt/ros/src
 COPY pyproject.toml /rcdt/pyproject.toml
 
 # Add Husarion packages
@@ -29,7 +26,6 @@ RUN uv sync \
   --packages-up-to \
   husarion_ugv \
   husarion_ugv_description \
-  rcdt_husarion \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
   --event-handlers console_direct+
 
@@ -40,6 +36,16 @@ RUN apt update && apt install -y -qq --no-install-recommends  \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove \
   && apt clean
+
+# Install repo packages:
+COPY rcdt_husarion/src/ /rcdt/ros/src
+RUN uv sync \
+  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
+  && colcon build --symlink-install \
+  --packages-up-to \
+  rcdt_husarion \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
+  --event-handlers console_direct+
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]

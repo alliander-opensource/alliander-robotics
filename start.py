@@ -11,8 +11,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Spin up the docker containers.")
 
     parser.add_argument(
-        "platforms",
-        nargs="?",
+        "-p",
+        required=False,
+        nargs="+",
         help="List of platform components to include (e.g. panther franka) in a platforms.yaml compose file.",
     )
 
@@ -25,11 +26,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if isinstance(args.platforms, list):
-        if len(args.platforms) > 1:
+    if isinstance(args.p, list):
+        if len(args.p) > 1:
             print("Error: Only one platform can be specified.")
             sys.exit(1)
-        platform = args.platforms[0]
+        platform = args.p[0]
 
         # Create platforms compose file:
         cmd = [f"python3 compose.py --arch amd64 --platforms {platform} --dev"]

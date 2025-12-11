@@ -34,7 +34,6 @@ RUN apt update && apt install -y -qq --no-install-recommends  \
 
 # Install repo packages:
 COPY rcdt_franka/src/ /rcdt/ros/src
-
 RUN uv sync \
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 
   && colcon build --symlink-install \

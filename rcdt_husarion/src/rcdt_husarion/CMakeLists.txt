@@ -9,6 +9,9 @@ project(rcdt_husarion)
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
+# Python package:
+ament_python_install_package(${PROJECT_NAME})
+
 # Shared folders:
 install(
   DIRECTORY config launch urdf 
