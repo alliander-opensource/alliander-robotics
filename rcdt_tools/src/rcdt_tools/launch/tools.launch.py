@@ -2,13 +2,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from launch import LaunchDescription
+import os
+
+from launch import LaunchContext, LaunchDescription
+from launch.actions import OpaqueFunction
 from rcdt_tools.rviz import Rviz
 from rcdt_tools.vizanti import Vizanti
-from rcdt_utilities.register import RegisteredLaunchDescription
+from rcdt_utilities import launch_utils
+from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
-
-import os
 
 
 def add_arm(namespace: str, use_moveit: bool):
@@ -53,13 +55,7 @@ def add_vehicle(namespace: str, use_gps: bool, window_size: int):
     Vizanti.add_path(f"/{namespace}/plan")
 
 
-def generate_launch_description() -> LaunchDescription:
-    """Generate the launch description for the Panther robot.
-
-    Returns:
-        LaunchDescription: The launch description for the Panther robot.
-    """
-
+def launch_setup(context: LaunchContext) -> list:
     use_rviz = os.environ.get("USE_RVIZ", default="false").lower() == "true"
     use_vizanti = os.environ.get("USE_VIZANTI", default="false").lower() == "true"
 
@@ -96,4 +92,26 @@ def generate_launch_description() -> LaunchDescription:
         )
         nodes.append(vizanti)
 
-    return LaunchDescription(nodes)
+    utilities = RegisteredLaunchDescription(
+        get_file_path("rcdt_utilities", ["launch"], "utils.launch.py")
+    )
+    nodes.append(utilities)
+
+    return [
+        Register.group(utilities, context),
+        Register.group(rviz, context) if use_rviz else launch_utils.SKIP,
+        Register.group(vizanti, context) if use_vizanti else launch_utils.SKIP,
+    ]
+
+
+def generate_launch_description() -> LaunchDescription:
+    """Generate the launch description for the Panther robot.
+
+    Returns:
+        LaunchDescription: The launch description for the Panther robot.
+    """
+    return LaunchDescription(
+        [
+            OpaqueFunction(function=launch_setup),
+        ]
+    )

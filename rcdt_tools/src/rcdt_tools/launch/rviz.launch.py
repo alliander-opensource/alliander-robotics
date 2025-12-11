@@ -7,6 +7,7 @@ import os.path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
+from rcdt_utilities.register import Register
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -34,10 +35,7 @@ def launch_setup(context: LaunchContext) -> list:
         remappings=remappings,
     )
 
-    return [
-        # Register.on_log(rviz, "OpenGl version:", context),
-        rviz
-    ]
+    return [Register.on_log(rviz, "OpenGl version:", context)]
 
 
 def generate_launch_description() -> LaunchDescription:

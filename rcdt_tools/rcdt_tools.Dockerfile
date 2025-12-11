@@ -1,4 +1,3 @@
-# syntax = devthefuture/dockerfile-x
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -7,21 +6,18 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-
-# Add custom packages
 WORKDIR /rcdt/ros
-COPY rcdt_tools/src/ /rcdt/ros/src
 COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
 RUN apt update && apt install -y --no-install-recommends \
-    ros-dev-tools \
-    ros-$ROS_DISTRO-launch-pytest \
-    ros-$ROS_DISTRO-plotjuggler-ros \
-    ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
-    ros-$ROS_DISTRO-rqt-tf-tree \
-    ros-$ROS_DISTRO-rviz-satellite \
-    ros-$ROS_DISTRO-vision-msgs \
+  ros-dev-tools \
+  ros-$ROS_DISTRO-launch-pytest \
+  ros-$ROS_DISTRO-plotjuggler-ros \
+  ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
+  ros-$ROS_DISTRO-rqt-tf-tree \
+  ros-$ROS_DISTRO-rviz-satellite \
+  ros-$ROS_DISTRO-vision-msgs \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \
   && apt clean
@@ -43,16 +39,22 @@ RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git 
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 
   && colcon build --symlink-install --packages-up-to \
   franka_description \
-  husarion_ugv_description \
-  rcdt_tools
+  husarion_ugv_description
 
 # Install dev packages
 COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt
 RUN apt update && apt install -y -qq --no-install-recommends  \
-    `cat /rcdt/dev-pkgs.txt`\
-    && rm -rf /var/lib/apt/lists/* \
-    && apt autoremove \
-    && apt clean
+  `cat /rcdt/dev-pkgs.txt`\
+  && rm -rf /var/lib/apt/lists/* \
+  && apt autoremove \
+  && apt clean
+
+# Install rcdt_tools:
+COPY rcdt_tools/src/ /rcdt/ros/src
+RUN cd /rcdt/ros \
+  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
+  && colcon build --symlink-install --packages-up-to \
+  rcdt_tools
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]
