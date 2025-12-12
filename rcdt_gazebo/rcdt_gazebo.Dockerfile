@@ -29,7 +29,9 @@ RUN mkdir -p /rcdt/osm2world \
 
 # Install vendor descriptions:
 WORKDIR /rcdt/ros/src
-RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git \
+RUN apt update && apt install -y --no-install-recommends \
+  ros-$ROS_DISTRO-velodyne-description \
+  && git clone -b jazzy https://github.com/frankarobotics/franka_description.git \
   && git clone -b ros2 https://github.com/husarion/husarion_ugv_ros.git \
   && cd /rcdt/ros \
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 

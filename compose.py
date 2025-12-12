@@ -81,7 +81,11 @@ def create_couplings(content: dict, platforms: list[str]) -> dict:
         content,
         "PLATFORMS",
         ",".join(
-            [p for p in platforms if p in ["panther", "lynx", "franka", "ouster"]]
+            [
+                p
+                for p in platforms
+                if p in ["panther", "lynx", "franka", "ouster", "velodyne"]
+            ]
         ),
     )
     if "gps" in platforms:
@@ -188,9 +192,12 @@ def compose_simulator(
         service["image"] = original_image.replace("${IMAGE_TAG}", f"{arch}-{image_tag}")
 
         service["environment"].append(f"PLATFORMS={','.join(platforms)}")
-        service["environment"].append(
-            "BRIDGE_TOPICS=/ouster/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
-        )
+
+        for platform in platforms:
+            if platform in {"ouster", "velodyne"}:
+                service["environment"].append(
+                    f"BRIDGE_TOPICS=/{platform}/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
+                )
 
         if dev:
             src_mounts_gazebo = get_src_mounts("rcdt_gazebo")

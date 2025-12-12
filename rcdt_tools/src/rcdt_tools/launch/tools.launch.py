@@ -80,6 +80,8 @@ def launch_setup(context: LaunchContext) -> list:
                 add_vehicle("lynx", use_gps, window_size)
             case "ouster":
                 add_lidar("ouster")
+            case "velodyne":
+                add_lidar("velodyne")
 
     nodes = []
 
