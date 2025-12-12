@@ -49,11 +49,13 @@ RUN apt update && apt install -y -qq --no-install-recommends  \
   && apt autoremove \
   && apt clean
 
-# Install rcdt_tools:
+# Install repo packages:
+COPY rcdt_description/src/ /rcdt/ros/src
 COPY rcdt_tools/src/ /rcdt/ros/src
 RUN cd /rcdt/ros \
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 
   && colcon build --symlink-install --packages-up-to \
+  rcdt_description \
   rcdt_tools
 
 WORKDIR /rcdt

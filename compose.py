@@ -1,10 +1,10 @@
 import argparse
 import os
-from pathlib import Path
 import subprocess
 import sys
-import yaml
+from pathlib import Path
 
+import yaml
 
 dev_settings = {
     "volumes": [
@@ -80,7 +80,9 @@ def create_couplings(content: dict, platforms: list[str]) -> dict:
     replace_env_var(
         content,
         "PLATFORMS",
-        ",".join([p for p in platforms if p in ["panther", "lynx", "franka"]]),
+        ",".join(
+            [p for p in platforms if p in ["panther", "lynx", "franka", "ouster"]]
+        ),
     )
     if "gps" in platforms:
         replace_env_var(content, "USE_GPS", "true")
@@ -186,6 +188,9 @@ def compose_simulator(
         service["image"] = original_image.replace("${IMAGE_TAG}", f"{arch}-{image_tag}")
 
         service["environment"].append(f"PLATFORMS={','.join(platforms)}")
+        service["environment"].append(
+            "BRIDGE_TOPICS=/ouster/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
+        )
 
         if dev:
             src_mounts_gazebo = get_src_mounts("rcdt_gazebo")

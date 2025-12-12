@@ -53,6 +53,10 @@ def add_vehicle(namespace: str, use_gps: bool, window_size: int):
     Vizanti.add_path(f"/{namespace}/plan")
 
 
+def add_lidar(namespace: str):
+    Rviz.add_laser_scan(namespace)
+
+
 def launch_setup(context: LaunchContext) -> list:
     use_rviz = os.environ.get("USE_RVIZ", default="false").lower() == "true"
     use_vizanti = os.environ.get("USE_VIZANTI", default="false").lower() == "true"
@@ -74,6 +78,8 @@ def launch_setup(context: LaunchContext) -> list:
                 add_vehicle("panther", use_gps, window_size)
             case "lynx":
                 add_vehicle("lynx", use_gps, window_size)
+            case "ouster":
+                add_lidar("ouster")
 
     nodes = []
 

@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<!-- 
+Based on:
+1. https://data.ouster.io/downloads/datasheets/datasheet-rev7p1-os1.pdf
+-->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="OS1-128">
+  <xacro:property name="mesh_file" value="package://rcdt_description/ouster/meshes/os1_128.dae"/>
+  <xacro:property name="mass" value="0.502"/>
+  <xacro:property name="radius" value="0.04325"/>
+  <xacro:property name="height" value="0.0742"/>
+  <xacro:property name="M_PI" value="3.1415926535897931" />
+  <xacro:macro name="OS1-128"
+    params="
+    *origin 
+    namespace
+    parent
+    name:=ouster
+    update_rate:=10 
+    lasers:=12 
+    samples:=1024 
+    min_range:=0.5
+    max_range:=90.0
+    min_angle:=-${M_PI} 
+    max_angle:=${M_PI}
+    ">
+
+
+  <!-- Base link -->
+  <link name="base_link">
+    <inertial>
+      <mass value="${mass}" />
+      <origin xyz="0 0 0.0371" />
+      <inertia ixx="${(mass * (3.0*radius*radius + height*height)) / 12.0}" ixy="0" ixz="0"
+        iyy="${(mass * (3.0*radius*radius + height*height)) / 12.0}" iyz="0"
+        izz="${0.5 * mass * (radius*radius)}" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="${mesh_file}" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.0371" />
+      <geometry>
+        <cylinder radius="${radius}" length="${height}" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Laser sensor link -->
+  <joint name="base_scan_joint" type="fixed">
+    <origin xyz="0 0 0.038195" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="${name}"/>
+  </joint>
+
+  <link name="${name}">
+    <inertial>
+      <mass value="0.00" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="1e-7" ixy="0" ixz="0" iyy="1e-7" iyz="0" izz="1e-7" />
+    </inertial>
+  </link>
+
+    <!-- Gazebo requires a joint to a link called "world" for statically mounted robots -->
+    <xacro:if value="${parent == 'world'}">
+      <link name="${parent}" />
+      <joint name="${parent}_joint" type="fixed">
+        <parent link="${parent}" />
+        <child link="base_link" />
+      </joint>
+    </xacro:if>
+
+    <gazebo reference="${name}">
+      <sensor type="gpu_lidar" name="${namespace}">
+        <always_on>true</always_on>
+        <update_rate>${update_rate}</update_rate>
+
+        <topic>${namespace}/scan</topic>
+        <visualize>false</visualize>
+
+        <gz_frame_id>${namespace}/${name}</gz_frame_id>
+        <frame_id>${namespace}/${name}</frame_id>
+
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>${samples}</samples>
+              <resolution>1</resolution>
+              <min_angle>${min_angle}</min_angle>
+              <max_angle>${max_angle}</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>${lasers}</samples>
+              <resolution>1</resolution>
+              <min_angle>-${21.2*M_PI/180.0}</min_angle>
+              <max_angle> ${21.2*M_PI/180.0}</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>${min_range}</min>
+            <max>${max_range}</max>
+            <resolution>0.001</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.0</stddev>
+          </noise>
+        </ray>
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+
+  <xacro:arg name="namespace" default="ouster" />
+  <xacro:arg name="parent" default="" />
+  <xacro:OS1-128 namespace="$(arg namespace)" parent="$(arg parent)">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </xacro:OS1-128>
+</robot>

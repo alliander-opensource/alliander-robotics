@@ -2,11 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-import os
 
 
 def generate_launch_description() -> LaunchDescription:
@@ -18,6 +19,7 @@ def generate_launch_description() -> LaunchDescription:
 
     world_file = os.environ.get("WORLD_FILE", default="walls.sdf")
     platforms = os.environ.get("PLATFORMS", default="")
+    bridge_topics = os.environ.get("BRIDGE_TOPICS", default="")
 
     platforms = platforms.replace(" ", "").split(",")
 
@@ -33,7 +35,7 @@ def generate_launch_description() -> LaunchDescription:
             "orientations": "0,0,90",
             "parents": "none",
             "parent_links": "none",
-            "bridge_topics": "",
+            "bridge_topics": bridge_topics,
         }.items(),
     )
 
