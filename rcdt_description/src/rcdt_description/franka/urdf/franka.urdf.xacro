@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
   <xacro:arg name="ip_address" default="" />
 
   <!-- robot: -->
-  <xacro:include filename="$(find rcdt_franka)/urdf/adapted/franka_robot.xacro" />
+  <xacro:include filename="$(find rcdt_description)/franka/urdf/adapted/franka_robot.xacro" />
   <xacro:franka_robot
     arm_id="fr3"
     joint_limits="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}"

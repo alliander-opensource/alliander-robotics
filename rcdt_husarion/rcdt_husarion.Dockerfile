@@ -38,14 +38,13 @@ RUN apt update && apt install -y -qq --no-install-recommends  \
   && apt clean
 
 # Install repo packages:
+COPY rcdt_description/src/ /rcdt/ros/src
 COPY rcdt_husarion/src/ /rcdt/ros/src
-RUN uv sync \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
+RUN . /opt/ros/$ROS_DISTRO/setup.sh \ 
   && colcon build --symlink-install \
   --packages-up-to \
-  rcdt_husarion \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
-  --event-handlers console_direct+
+  rcdt_description \
+  rcdt_husarion
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]

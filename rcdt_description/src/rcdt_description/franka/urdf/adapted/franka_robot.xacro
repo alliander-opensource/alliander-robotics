@@ -162,7 +162,7 @@ https://code.visualstudio.com/docs/editing/codebasics#_compare-files
     </xacro:if>
 
     <xacro:if value="${ros2_control}">
-      <xacro:include filename="$(find rcdt_franka)/urdf/adapted/franka_arm.ros2_control.xacro"/>
+      <xacro:include filename="$(find rcdt_description)/franka/urdf/adapted/franka_arm.ros2_control.xacro"/>
       <xacro:franka_arm_ros2_control
           arm_id="${arm_id}"
           robot_ip="${robot_ip}"

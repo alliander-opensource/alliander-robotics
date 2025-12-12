@@ -3,18 +3,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.5)
-project(rcdt_husarion)
+project(rcdt_description)
 
 # CMake dependencies:
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
-# Python package:
-ament_python_install_package(${PROJECT_NAME})
-
 # Shared folders:
 install(
-  DIRECTORY launch
+  DIRECTORY franka panther
   DESTINATION share/${PROJECT_NAME}
 )
 

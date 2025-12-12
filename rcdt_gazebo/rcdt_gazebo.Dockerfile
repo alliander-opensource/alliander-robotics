@@ -7,12 +7,7 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-
-# Add custom packages
 WORKDIR /rcdt/ros
-COPY rcdt_gazebo/src/ /rcdt/ros/src
-COPY rcdt_husarion/src/ /rcdt/ros/src
-COPY rcdt_franka/src/ /rcdt/ros/src
 COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
@@ -32,7 +27,7 @@ RUN mkdir -p /rcdt/osm2world \
   && unzip OSM2World-latest-bin.zip \
   && rm OSM2World-latest-bin.zip
 
-# Get all necessary models - rcdt_husarion added so that Gazebo can find the URDF
+# Install vendor descriptions:
 WORKDIR /rcdt/ros/src
 RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git \
   && git clone -b ros2 https://github.com/husarion/husarion_ugv_ros.git \
@@ -40,19 +35,23 @@ RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git 
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 
   && colcon build --symlink-install --packages-up-to \
   franka_description \
-  husarion_ugv_description \
-  rcdt_gazebo \
-  rcdt_husarion \
-  rcdt_franka
+  husarion_ugv_description
 
- 
 # Install dev packages
 COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt
 RUN apt update && apt install -y -qq --no-install-recommends  \
-    `cat /rcdt/dev-pkgs.txt`\
-    && rm -rf /var/lib/apt/lists/* \
-    && apt autoremove \
-    && apt clean
+  `cat /rcdt/dev-pkgs.txt`\
+  && rm -rf /var/lib/apt/lists/* \
+  && apt autoremove \
+  && apt clean
+
+# Install repo packages:
+COPY rcdt_description/src/ /rcdt/ros/src
+COPY rcdt_gazebo/src/ /rcdt/ros/src
+RUN cd /rcdt/ros && . /opt/ros/$ROS_DISTRO/setup.sh \ 
+  && colcon build --symlink-install --packages-up-to \
+  rcdt_description \
+  rcdt_gazebo
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]

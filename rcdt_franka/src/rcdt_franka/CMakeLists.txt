@@ -44,7 +44,7 @@ install(
 
 # Shared folders:
 install(
-  DIRECTORY config launch urdf
+  DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
 

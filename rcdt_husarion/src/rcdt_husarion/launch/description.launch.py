@@ -39,7 +39,9 @@ def create_state_publisher(context: LaunchContext) -> Node | None:
     Returns:
         Node | None: The state publisher node for the robot or None if not applicable.
     """
-    xacro_path = get_file_path("rcdt_husarion", ["urdf"], "panther.urdf.xacro")
+    xacro_path = get_file_path(
+        "rcdt_description", ["panther", "urdf"], "panther.urdf.xacro"
+    )
     robot_description = get_robot_description(xacro_path)
     namespace = namespace_arg.string_value(context)
     return Node(

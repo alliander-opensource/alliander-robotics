@@ -39,7 +39,9 @@ def create_state_publisher(context: LaunchContext) -> Node:
     Returns:
         Node | None: The state publisher node for the robot or None if not applicable.
     """
-    xacro_path = get_file_path("rcdt_franka", ["urdf"], "franka.urdf.xacro")
+    xacro_path = get_file_path(
+        "rcdt_description", ["franka", "urdf"], "franka.urdf.xacro"
+    )
     robot_description = get_robot_description(
         xacro_path, {"simulation": str(True), "namespace": "franka"}
     )

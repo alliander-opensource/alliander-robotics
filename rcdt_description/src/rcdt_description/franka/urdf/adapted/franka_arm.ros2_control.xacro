@@ -117,7 +117,7 @@ https://code.visualstudio.com/docs/editing/codebasics#_compare-files
     <xacro:if value="${gazebo}">
       <gazebo>
         <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-          <parameters>$(find rcdt_franka)/config/controllers.yaml</parameters>
+          <parameters>$(find rcdt_description)/franka/config/controllers.yaml</parameters>
           <ros>
             <namespace>$(arg namespace)</namespace>
           </ros>

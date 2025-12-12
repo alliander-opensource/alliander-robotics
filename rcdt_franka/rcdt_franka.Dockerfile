@@ -33,12 +33,12 @@ RUN apt update && apt install -y -qq --no-install-recommends  \
   && apt clean
 
 # Install repo packages:
+COPY rcdt_description/src/ /rcdt/ros/src
 COPY rcdt_franka/src/ /rcdt/ros/src
-RUN uv sync \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
-  --event-handlers console_direct+
+RUN . /opt/ros/$ROS_DISTRO/setup.sh \ 
+  && colcon build --symlink-install --packages-up-to \
+  rcdt_description \
+  rcdt_franka
 
 # Finalize
 WORKDIR /rcdt
