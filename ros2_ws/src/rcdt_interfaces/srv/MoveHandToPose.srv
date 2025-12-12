@@ -6,3 +6,4 @@
 string planning_type
 ---
 bool success
+string message

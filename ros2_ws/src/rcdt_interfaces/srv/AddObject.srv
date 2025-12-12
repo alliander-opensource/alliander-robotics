@@ -9,3 +9,4 @@ float32 d2
 float32 d3
 ---
 bool success
+string message

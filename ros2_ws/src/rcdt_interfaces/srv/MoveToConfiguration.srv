@@ -6,3 +6,4 @@
 string configuration
 ---
 bool success
+string message

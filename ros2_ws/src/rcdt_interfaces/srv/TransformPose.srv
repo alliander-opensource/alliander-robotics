@@ -8,3 +8,4 @@ geometry_msgs/Transform transform
 ---
 geometry_msgs/PoseStamped pose
 bool success
+string message

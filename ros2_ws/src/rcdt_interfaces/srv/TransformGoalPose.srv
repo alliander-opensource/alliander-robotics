@@ -7,3 +7,4 @@ string axis
 float32 value
 ---
 bool success
+string message

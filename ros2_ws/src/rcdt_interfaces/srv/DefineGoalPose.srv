@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
 geometry_msgs/PoseStamped pose
 ---
 bool success
+string message
