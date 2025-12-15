@@ -57,6 +57,15 @@ def add_lidar(namespace: str):
     Rviz.add_laser_scan(namespace)
 
 
+def add_depth_camera(namespace: str):
+    Rviz.add_image(f"/{namespace}/color/image_raw")
+    Rviz.add_image(f"/{namespace}/depth/image_rect_raw")
+    Rviz.add_depth_cloud(
+        f"/{namespace}/color/image_raw",
+        f"/{namespace}/depth/image_rect_raw",
+    )
+
+
 def launch_setup(context: LaunchContext) -> list:
     use_rviz = os.environ.get("USE_RVIZ", default="false").lower() == "true"
     use_vizanti = os.environ.get("USE_VIZANTI", default="false").lower() == "true"
@@ -82,6 +91,8 @@ def launch_setup(context: LaunchContext) -> list:
                 add_lidar("ouster")
             case "velodyne":
                 add_lidar("velodyne")
+            case "realsense":
+                add_depth_camera("realsense")
 
     nodes = []
 
