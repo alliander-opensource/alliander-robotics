@@ -19,19 +19,16 @@ find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rcdt_interfaces REQUIRED)
 
+find_package(cv_bridge REQUIRED)
+find_package(OpenCV REQUIRED)
+
 # Python package:
 ament_python_install_package(${PROJECT_NAME})
-
-# Python executables:
-install(
-  DIRECTORY src_py/
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 # C++ executables:
 include_directories(include)
 
-add_executable(manipulate_pose 
+add_executable(manipulate_pose
   src/manipulate_pose.cpp
   src/node.cpp
 )
@@ -44,8 +41,16 @@ ament_target_dependencies(manipulate_pose
   tf2_ros
 )
 
+add_executable(convert_32FC1_to_16UC1
+  src/convert_32FC1_to_16UC1.cpp)
+ament_target_dependencies(convert_32FC1_to_16UC1
+  rclcpp
+  cv_bridge
+  OpenCV
+)
+
 install(
-  TARGETS manipulate_pose
+  TARGETS manipulate_pose convert_32FC1_to_16UC1
   DESTINATION lib/${PROJECT_NAME}
 )
 

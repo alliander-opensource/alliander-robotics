@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rcdt_realsense_d435">
+  <xacro:macro name="rcdt_realsense_d435"
+    params="
+    namespace
+    parent
+    name:=camera
+    gazebo:=true
+    align:=color
+    ">
+
+    <!-- Gazebo requires a joint to a link called "world" for statically mounted robots -->
+    <xacro:if value="${parent == 'world'}">
+      <link name="${parent}" />
+      <joint name="${parent}_joint" type="fixed">
+        <parent link="${parent}" />
+        <child link="base_link" />
+      </joint>
+    </xacro:if>
+
+    <!-- Include realsense xacro: -->
+    <link name="base_link" />
+    <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro" />
+    <xacro:sensor_d435
+      name="${name}"
+      parent="base_link"
+      use_nominal_extrinsics="true">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </xacro:sensor_d435>
+
+    <!-- Add gazebo plugin: -->
+    <xacro:if value="${gazebo}">
+      <gazebo reference="${name}_${align}_frame">
+
+        <!-- rgb_camera: -->
+        <sensor type="camera" name="intel_realsense_d435_color">
+          <always_on>true</always_on>
+          <update_rate>30.0</update_rate>
+
+          <topic>${namespace}/color/image_raw</topic>
+          <visualize>false</visualize>
+
+          <gz_frame_id>${namespace}/${name}_${align}_optical_frame</gz_frame_id>
+          <camera>
+            <horizontal_fov>${69.0/180.0*pi}</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>480</height>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>300.0</far>
+            </clip>
+          </camera>
+        </sensor>
+
+        <!-- depth camera -->
+        <sensor type="depth_camera" name="intel_realsense_d435_depth">
+          <always_on>true</always_on>
+          <update_rate>30.0</update_rate>
+
+          <topic>${namespace}/depth/image_rect_raw_float</topic>
+          <visualize>false</visualize>
+
+          <gz_frame_id>${namespace}/${name}_${align}_optical_frame</gz_frame_id>
+          <camera>
+            <horizontal_fov>${69.0/180.0*pi}</horizontal_fov> <!-- Using color FOV, to avoid align. -->
+            <image>
+              <width>640</width>
+              <height>480</height>
+            </image>
+            <clip>
+              <near>0.2</near>
+              <far>65.536</far>
+            </clip>
+          </camera>
+        </sensor>
+
+      </gazebo>
+    </xacro:if>
+  </xacro:macro>
+  <xacro:arg name="namespace" default="realsense" />
+  <xacro:arg name="parent" default="" />
+  <xacro:rcdt_realsense_d435 namespace="$(arg namespace)" parent="$(arg parent)" />
+</robot>
