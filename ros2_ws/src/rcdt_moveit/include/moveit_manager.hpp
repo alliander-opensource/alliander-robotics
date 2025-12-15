@@ -13,7 +13,6 @@
 #include <moveit/robot_model/joint_model_group.hpp>
 #include <moveit/robot_state/robot_state.hpp>
 #include <moveit_msgs/srv/servo_command_type.hpp>
-#include <rcdt_interfaces/srv/add_marker.hpp>
 #include <rcdt_interfaces/srv/add_object.hpp>
 #include <rcdt_interfaces/srv/define_goal_pose.hpp>
 #include <rcdt_interfaces/srv/express_pose_in_other_frame.hpp>
@@ -38,7 +37,6 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 
 typedef rcdt_interfaces::srv::AddObject AddObject;
-typedef rcdt_interfaces::srv::AddMarker AddMarker;
 typedef rcdt_interfaces::srv::DefineGoalPose DefineGoalPose;
 typedef rcdt_interfaces::srv::ExpressPoseInOtherFrame ExpressPoseInOtherFrame;
 typedef rcdt_interfaces::srv::MoveToConfiguration MoveToConf;
@@ -121,7 +119,7 @@ class MoveitManager {
   /// Service to move hand to a specified goal Pose
   rclcpp::Service<MoveHandToPose>::SharedPtr move_hand_to_pose_service;
   /// Service to add a visual marker at a specified Pose
-  rclcpp::Service<AddMarker>::SharedPtr add_marker_service;
+  rclcpp::Service<PoseStampedSrv>::SharedPtr add_marker_service;
   /// Service to clear visual markers
   rclcpp::Service<Trigger>::SharedPtr clear_markers_service;
   /// Service to visualize a specified grasp Pose
@@ -178,12 +176,12 @@ class MoveitManager {
                          std::shared_ptr<MoveHandToPose::Response> response);
   /**
    * @brief Callback to add a visual marker at a specified location.
-   * @param request The AddMarker request containing the Pose to add the visual
+   * @param request The PoseStampedSrv request containing the Pose to add the visual
    * marker.
    * @param response Response indicating whether the service call succeeded.
    */
-  void add_marker(const std::shared_ptr<AddMarker::Request> request,
-                  std::shared_ptr<AddMarker::Response> response);
+  void add_marker(const std::shared_ptr<PoseStampedSrv::Request> request,
+                  std::shared_ptr<PoseStampedSrv::Response> response);
   /**
    * @brief Callback to clear visual markers.
    * @param request The Trigger request.

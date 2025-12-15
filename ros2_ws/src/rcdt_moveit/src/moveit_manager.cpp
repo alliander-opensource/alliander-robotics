@@ -70,7 +70,7 @@ void MoveitManager::initialize_services() {
       "~/move_hand_to_pose",
       std::bind(&MoveitManager::move_hand_to_pose, this, _1, _2));
 
-  add_marker_service = node->create_service<AddMarker>(
+  add_marker_service = node->create_service<PoseStampedSrv>(
       "~/add_marker", std::bind(&MoveitManager::add_marker, this, _1, _2));
 
   visualize_grasp_pose_service = node->create_service<PoseStampedSrv>(
@@ -229,9 +229,9 @@ PoseStamped MoveitManager::change_frame(PoseStamped pose,
 };
 
 void MoveitManager::add_marker(
-    const std::shared_ptr<AddMarker::Request> request,
-    std::shared_ptr<AddMarker::Response> response) {
-  auto pose = change_frame(request->marker_pose);
+    const std::shared_ptr<PoseStampedSrv::Request> request,
+    std::shared_ptr<PoseStampedSrv::Response> response) {
+  auto pose = change_frame(request->pose);
   moveit_visual_tools.publishAxis(pose.pose);
   moveit_visual_tools.trigger();
   response->success = true;
