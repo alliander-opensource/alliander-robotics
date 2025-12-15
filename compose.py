@@ -84,7 +84,7 @@ def create_couplings(content: dict, platforms: list[str]) -> dict:
             [
                 p
                 for p in platforms
-                if p in ["panther", "lynx", "franka", "ouster", "velodyne", "realsense"]
+                if p in ["panther", "lynx", "franka", "ouster", "velodyne", "realsense", "zed"]
             ]
         ),
     )
@@ -199,7 +199,7 @@ def compose_simulator(
                 bridge_topics.append(
                     f"/{platform}/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
                 )
-            if platform in {"realsense"}:
+            if platform in {"realsense", "zed"}:
                 bridge_topics.extend(
                     [
                         f"/{platform}/color/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",

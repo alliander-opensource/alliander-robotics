@@ -35,6 +35,7 @@ RUN apt update \
 WORKDIR /rcdt/ros/src
 RUN apt update && apt install -y --no-install-recommends \
   ros-$ROS_DISTRO-velodyne-description \
+  ros-$ROS_DISTRO-zed-msgs \
   && git clone -b 4.57.2 https://github.com/IntelRealSense/realsense-ros.git \
   && git clone -b jazzy https://github.com/frankarobotics/franka_description.git \
   && git clone -b ros2 https://github.com/husarion/husarion_ugv_ros.git \
