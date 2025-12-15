@@ -17,22 +17,6 @@ PoseManipulator::PoseManipulator() : rclcpp::Node("pose_manipulator") {
                  std::shared_ptr<
                      rcdt_interfaces::srv::ExpressPoseInOtherFrame::Response>
                      resp) { this->expressPoseInOtherFrame(req, resp); });
-
-  transform_pose_service_ =
-      this->create_service<rcdt_interfaces::srv::TransformPose>(
-          "~/transform_pose",
-          [this](
-              std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
-              std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response>
-                  resp) { this->transformPose(req, resp); });
-
-  transform_pose_relative_service_ =
-      this->create_service<rcdt_interfaces::srv::TransformPose>(
-          "~/transform_pose_relative",
-          [this](
-              std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
-              std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response>
-                  resp) { this->transformPoseRelative(req, resp); });
 }
 
 void PoseManipulator::expressPoseInOtherFrame(
@@ -71,35 +55,4 @@ void PoseManipulator::expressPoseInOtherFrame(
                  target_frame.c_str(), e.what());
   }
   resp->success = true;
-}
-
-void PoseManipulator::transformPose(
-    const std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
-    std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response> resp) {
-  geometry_msgs::msg::TransformStamped tf_stamped;
-  tf_stamped.transform = req->transform;
-  tf2::doTransform(req->pose, resp->pose, tf_stamped);
-
-  resp->success = true;
-}
-
-void PoseManipulator::transformPoseRelative(
-    const std::shared_ptr<rcdt_interfaces::srv::TransformPose::Request> req,
-    std::shared_ptr<rcdt_interfaces::srv::TransformPose::Response> resp) {
-  geometry_msgs::msg::TransformStamped tf_stamped;
-  tf_stamped.transform = req->transform;
-  tf2::doTransform(req->pose, resp->pose, tf_stamped);
-
-  resp->pose.pose.position.x += req->pose.pose.position.x;
-  resp->pose.pose.position.y += req->pose.pose.position.y;
-  resp->pose.pose.position.z += req->pose.pose.position.z;
-
-  resp->success = true;
-}
-
-geometry_msgs::msg::PoseStamped PoseManipulator::doTransform(
-    const geometry_msgs::msg::PoseStamped pose_in,
-    const geometry_msgs::msg::Transform tf) {
-  geometry_msgs::msg::PoseStamped pose_out;
-  return pose_out;
 }

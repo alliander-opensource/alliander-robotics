@@ -58,17 +58,13 @@ void MoveitManager::initialize_services() {
       "~/toggle_octomap_scan",
       std::bind(&MoveitManager::toggle_octomap_scan, this, _1, _2));
 
-  define_goal_pose_service = node->create_service<DefineGoalPose>(
-      "~/define_goal_pose",
-      std::bind(&MoveitManager::define_goal_pose, this, _1, _2));
-
-  transform_goal_pose_service = node->create_service<TransformGoalPose>(
-      "~/transform_goal_pose",
-      std::bind(&MoveitManager::transform_goal_pose, this, _1, _2));
-
   move_to_configuration_service = node->create_service<MoveToConf>(
       "~/move_to_configuration",
       std::bind(&MoveitManager::move_to_configuration, this, _1, _2));
+
+  define_goal_pose_service = node->create_service<DefineGoalPose>(
+      "~/define_goal_pose",
+      std::bind(&MoveitManager::define_goal_pose, this, _1, _2));
 
   move_hand_to_pose_service = node->create_service<MoveHandToPose>(
       "~/move_hand_to_pose",
@@ -174,23 +170,6 @@ void MoveitManager::define_goal_pose(
     std::shared_ptr<DefineGoalPose::Response> response) {
   auto pose = change_frame(request->pose);
   goal_pose = pose;
-  response->success = true;
-};
-
-void MoveitManager::transform_goal_pose(
-    const std::shared_ptr<TransformGoalPose::Request> request,
-    std::shared_ptr<TransformGoalPose::Response> response) {
-  if (request->axis == "x") {
-    goal_pose.pose.position.x += request->value;
-  } else if (request->axis == "y") {
-    goal_pose.pose.position.y += request->value;
-  } else if (request->axis == "z") {
-    goal_pose.pose.position.z += request->value;
-  } else {
-    RCLCPP_ERROR(node->get_logger(), "Axis must be one of 'x', 'y', 'z'.");
-    response->success = false;
-    return;
-  }
   response->success = true;
 };
 

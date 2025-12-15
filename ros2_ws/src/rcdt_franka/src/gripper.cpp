@@ -15,12 +15,12 @@ Gripper::Gripper() : Node("gripper") {
       rclcpp_action::create_client<Move>(this, ns + "/fr3_gripper/move");
   client_grasp =
       rclcpp_action::create_client<Grasp>(this, ns + "/fr3_gripper/grasp");
-  service_open = rclcpp_action::create_server<Trigger>(
+  server_open = rclcpp_action::create_server<Trigger>(
       this, ns + "/" + node_name + "/open",
       std::bind(&Gripper::handle_goal, this, _1, _2),
       std::bind(&Gripper::handle_cancel, this, _1),
       std::bind(&Gripper::handle_accepted, this, _1, "open"));
-  service_close = rclcpp_action::create_server<Trigger>(
+  server_close = rclcpp_action::create_server<Trigger>(
       this, ns + "/" + node_name + "/close",
       std::bind(&Gripper::handle_goal, this, _1, _2),
       std::bind(&Gripper::handle_cancel, this, _1),

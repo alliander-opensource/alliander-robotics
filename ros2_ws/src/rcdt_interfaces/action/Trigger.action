@@ -6,5 +6,4 @@
 bool success
 string message
 ---
-bool success
-string message
+string status

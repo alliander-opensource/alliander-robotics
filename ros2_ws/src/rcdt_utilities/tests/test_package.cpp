@@ -74,58 +74,6 @@ TEST_F(PackageTesterFixture, TestServiceInitialization) {
   ASSERT_TRUE(tester_node_->waitForServices(std::chrono::seconds(1)));
 }
 
-TEST_F(PackageTesterFixture, TestTransformPoseTranslation) {
-  geometry_msgs::msg::PoseStamped pose_in;
-  pose_in.pose.position.y = 1;
-  pose_in.pose.position.z = 2;
-
-  geometry_msgs::msg::Transform tf;
-  tf.translation.x = 5;
-  tf.translation.y = 5;
-  tf.translation.z = 5;
-
-  auto req = std::make_shared<rcdt_interfaces::srv::TransformPose::Request>();
-  req->pose = pose_in;
-  req->transform = tf;
-
-  auto future_and_id = tester_node_->sendTransformPoseRequest(req);
-  auto result_code = executor_->spin_until_future_complete(
-      future_and_id.future, std::chrono::milliseconds(500));
-
-  ASSERT_EQ(result_code, rclcpp::FutureReturnCode::SUCCESS);
-  auto response = future_and_id.future.get();
-  ASSERT_NE(response, nullptr);
-
-  ASSERT_EQ(response->pose.pose.position.x, 5);
-  ASSERT_EQ(response->pose.pose.position.y, 6);
-  ASSERT_EQ(response->pose.pose.position.z, 7);
-}
-
-TEST_F(PackageTesterFixture, TestTransformPoseRotation) {
-  geometry_msgs::msg::PoseStamped pose_in;
-  pose_in.pose.position.x = 5;
-
-  // apply rotation of +PI/2 around Z-axis, which shifts pose to Y-axis
-  geometry_msgs::msg::Transform tf;
-  tf.rotation.w = 0.7071068;
-  tf.rotation.z = 0.7071068;
-
-  auto req = std::make_shared<rcdt_interfaces::srv::TransformPose::Request>();
-  req->pose = pose_in;
-  req->transform = tf;
-
-  auto future_and_id = tester_node_->sendTransformPoseRequest(req);
-  auto result_code = executor_->spin_until_future_complete(
-      future_and_id.future, std::chrono::milliseconds(500));
-
-  ASSERT_EQ(result_code, rclcpp::FutureReturnCode::SUCCESS);
-  auto response = future_and_id.future.get();
-  ASSERT_NE(response, nullptr);
-
-  ASSERT_EQ(response->pose.pose.position.x, 0);
-  ASSERT_NEAR(response->pose.pose.position.y, 5, 1e-4);
-}
-
 // MAIN
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

@@ -12,7 +12,6 @@
 #include <rclcpp_action/client.hpp>
 #include <rclcpp_action/client_goal_handle.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <std_srvs/srv/trigger.hpp>
 #include <string>
 
 typedef rcdt_interfaces::action::Trigger Trigger;
@@ -26,9 +25,9 @@ class Gripper : public rclcpp::Node {
 
  private:
   /** The action server to open the gripper. */
-  rclcpp_action::Server<Trigger>::SharedPtr service_open;
+  rclcpp_action::Server<Trigger>::SharedPtr server_open;
   /** The action server to close the gripper. */
-  rclcpp_action::Server<Trigger>::SharedPtr service_close;
+  rclcpp_action::Server<Trigger>::SharedPtr server_close;
   /** The action client to move the gripper. */
   rclcpp_action::Client<Move>::SharedPtr client_move;
   /** The action client to grasp with the gripper. */
