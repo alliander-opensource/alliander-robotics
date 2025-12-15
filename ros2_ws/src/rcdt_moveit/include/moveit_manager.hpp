@@ -14,7 +14,6 @@
 #include <moveit/robot_state/robot_state.hpp>
 #include <moveit_msgs/srv/servo_command_type.hpp>
 #include <rcdt_interfaces/srv/add_object.hpp>
-#include <rcdt_interfaces/srv/define_goal_pose.hpp>
 #include <rcdt_interfaces/srv/express_pose_in_other_frame.hpp>
 #include <rcdt_interfaces/srv/move_hand_to_pose.hpp>
 #include <rcdt_interfaces/srv/move_to_configuration.hpp>
@@ -37,7 +36,6 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 
 typedef rcdt_interfaces::srv::AddObject AddObject;
-typedef rcdt_interfaces::srv::DefineGoalPose DefineGoalPose;
 typedef rcdt_interfaces::srv::ExpressPoseInOtherFrame ExpressPoseInOtherFrame;
 typedef rcdt_interfaces::srv::MoveToConfiguration MoveToConf;
 typedef rcdt_interfaces::srv::MoveHandToPose MoveHandToPose;
@@ -113,7 +111,7 @@ class MoveitManager {
   /// Service to toggle octomap scan
   rclcpp::Service<SetBool>::SharedPtr toggle_octomap_scan_service;
   /// Service to define the goal_pose
-  rclcpp::Service<DefineGoalPose>::SharedPtr define_goal_pose_service;
+  rclcpp::Service<PoseStampedSrv>::SharedPtr define_goal_pose_service;
   /// Service to move to a specified configuration
   rclcpp::Service<MoveToConf>::SharedPtr move_to_configuration_service;
   /// Service to move hand to a specified goal Pose
@@ -154,11 +152,11 @@ class MoveitManager {
                            std::shared_ptr<SetBool::Response> response);
   /**
    * @brief Callback to define the goal_pose in the base frame.
-   * @param request The DefineGoalPose request containing the desired pose.
+   * @param request The PoseStampedSrv request containing the desired pose.
    * @param response Response indicating whether the service call succeeded.
    */
-  void define_goal_pose(const std::shared_ptr<DefineGoalPose::Request> request,
-                        std::shared_ptr<DefineGoalPose::Response> response);
+  void define_goal_pose(const std::shared_ptr<PoseStampedSrv::Request> request,
+                        std::shared_ptr<PoseStampedSrv::Response> response);
   /**
    * @brief Callback to move arm to a specified configuration (e.g. home).
    * @param request The MoveToConf request containing the configuration.

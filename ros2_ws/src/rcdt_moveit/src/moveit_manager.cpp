@@ -62,7 +62,7 @@ void MoveitManager::initialize_services() {
       "~/move_to_configuration",
       std::bind(&MoveitManager::move_to_configuration, this, _1, _2));
 
-  define_goal_pose_service = node->create_service<DefineGoalPose>(
+  define_goal_pose_service = node->create_service<PoseStampedSrv>(
       "~/define_goal_pose",
       std::bind(&MoveitManager::define_goal_pose, this, _1, _2));
 
@@ -166,8 +166,8 @@ void MoveitManager::toggle_octomap_scan(
 };
 
 void MoveitManager::define_goal_pose(
-    const std::shared_ptr<DefineGoalPose::Request> request,
-    std::shared_ptr<DefineGoalPose::Response> response) {
+    const std::shared_ptr<PoseStampedSrv::Request> request,
+    std::shared_ptr<PoseStampedSrv::Response> response) {
   auto pose = change_frame(request->pose);
   goal_pose = pose;
   response->success = true;
