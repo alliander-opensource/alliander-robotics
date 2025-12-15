@@ -43,6 +43,12 @@ class SpawnPlatform(Node):
             .string_value.split()
         )
 
+        print(platforms)
+        print(positions)
+        print(orientations)
+        print(parents)
+        print(parent_links)
+
         self.get_logger().info(f"Spawning platforms {platforms}...")
         self.spawn_platforms(platforms, positions, orientations, parents, parent_links)
         self.get_logger().info("All platforms spawned!")

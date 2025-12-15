@@ -2,8 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
@@ -21,7 +19,7 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    simulation = os.environ.get("SIMULATION", default="False").lower() == "true"
+    simulation = True
     namespace = "velodyne"
 
     state_publisher = state_publisher_node(
