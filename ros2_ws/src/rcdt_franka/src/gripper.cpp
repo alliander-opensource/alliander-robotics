@@ -15,12 +15,12 @@ Gripper::Gripper() : Node("gripper") {
       rclcpp_action::create_client<Move>(this, ns + "/fr3_gripper/move");
   client_grasp =
       rclcpp_action::create_client<Grasp>(this, ns + "/fr3_gripper/grasp");
-  server_open = rclcpp_action::create_server<Trigger>(
+  server_open = rclcpp_action::create_server<TriggerAction>(
       this, ns + "/" + node_name + "/open",
       std::bind(&Gripper::handle_goal, this, _1, _2),
       std::bind(&Gripper::handle_cancel, this, _1),
       std::bind(&Gripper::handle_accepted, this, _1, "open"));
-  server_close = rclcpp_action::create_server<Trigger>(
+  server_close = rclcpp_action::create_server<TriggerAction>(
       this, ns + "/" + node_name + "/close",
       std::bind(&Gripper::handle_goal, this, _1, _2),
       std::bind(&Gripper::handle_cancel, this, _1),
@@ -29,14 +29,14 @@ Gripper::Gripper() : Node("gripper") {
 
 rclcpp_action::GoalResponse Gripper::handle_goal(
     const rclcpp_action::GoalUUID& uuid,
-    std::shared_ptr<const Trigger::Goal> goal) {
+    std::shared_ptr<const TriggerAction::Goal> goal) {
   RCLCPP_INFO(this->get_logger(), "Received goal request");
   (void)uuid;
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
 rclcpp_action::CancelResponse Gripper::handle_cancel(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<Trigger>>
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
         goal_handle) {
   RCLCPP_INFO(this->get_logger(), "Received request to cancel goal");
   (void)goal_handle;
@@ -44,9 +44,9 @@ rclcpp_action::CancelResponse Gripper::handle_cancel(
 }
 
 void Gripper::handle_accepted(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<Trigger>> goal_handle,
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>> goal_handle,
     std::string action_name) {
-  auto result = std::make_shared<typename Trigger::Result>();
+  auto result = std::make_shared<typename TriggerAction::Result>();
   if (action_name == "open") {
     std::thread{std::bind(&Gripper::open, this, goal_handle)}.detach();
   } else if (action_name == "close") {
@@ -55,7 +55,7 @@ void Gripper::handle_accepted(
 }
 
 void Gripper::open(
-    std::shared_ptr<rclcpp_action::ServerGoalHandle<Trigger>> goal_handle) {
+    std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>> goal_handle) {
   auto goal = Move::Goal();
   goal.width = 0.08;
   goal.speed = 0.03;
@@ -81,7 +81,7 @@ void Gripper::open(
     return;
   }
 
-  auto result = std::make_shared<typename Trigger::Result>();
+  auto result = std::make_shared<typename TriggerAction::Result>();
   auto success =
       future_result.get().code == rclcpp_action::ResultCode::SUCCEEDED;
 
@@ -96,7 +96,7 @@ void Gripper::open(
 };
 
 void Gripper::close(
-    std::shared_ptr<rclcpp_action::ServerGoalHandle<Trigger>> goal_handle) {
+    std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>> goal_handle) {
   auto goal = Grasp::Goal();
   goal.width = 0.0;
   goal.force = 100.0;
@@ -123,7 +123,7 @@ void Gripper::close(
     return;
   }
 
-  auto result = std::make_shared<typename Trigger::Result>();
+  auto result = std::make_shared<typename TriggerAction::Result>();
   auto success =
       future_result.get().code == rclcpp_action::ResultCode::SUCCEEDED;
 
