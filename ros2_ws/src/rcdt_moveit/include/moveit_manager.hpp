@@ -15,9 +15,8 @@
 #include <moveit_msgs/srv/servo_command_type.hpp>
 #include <rcdt_interfaces/srv/add_object.hpp>
 #include <rcdt_interfaces/srv/express_pose_in_other_frame.hpp>
-#include <rcdt_interfaces/srv/move_hand_to_pose.hpp>
-#include <rcdt_interfaces/srv/move_to_configuration.hpp>
 #include <rcdt_interfaces/srv/pose_stamped_srv.hpp>
+#include <rcdt_interfaces/srv/string_srv.hpp>
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/node.hpp>
@@ -37,8 +36,7 @@ using std::placeholders::_2;
 
 typedef rcdt_interfaces::srv::AddObject AddObject;
 typedef rcdt_interfaces::srv::ExpressPoseInOtherFrame ExpressPoseInOtherFrame;
-typedef rcdt_interfaces::srv::MoveToConfiguration MoveToConf;
-typedef rcdt_interfaces::srv::MoveHandToPose MoveHandToPose;
+typedef rcdt_interfaces::srv::StringSrv StringSrv;
 typedef rcdt_interfaces::srv::PoseStampedSrv PoseStampedSrv;
 typedef moveit_msgs::srv::ServoCommandType ServoCommandType;
 typedef std_srvs::srv::Trigger Trigger;
@@ -113,9 +111,9 @@ class MoveitManager {
   /// Service to define the goal_pose
   rclcpp::Service<PoseStampedSrv>::SharedPtr define_goal_pose_service;
   /// Service to move to a specified configuration
-  rclcpp::Service<MoveToConf>::SharedPtr move_to_configuration_service;
+  rclcpp::Service<StringSrv>::SharedPtr move_to_configuration_service;
   /// Service to move hand to a specified goal Pose
-  rclcpp::Service<MoveHandToPose>::SharedPtr move_hand_to_pose_service;
+  rclcpp::Service<StringSrv>::SharedPtr move_hand_to_pose_service;
   /// Service to add a visual marker at a specified Pose
   rclcpp::Service<PoseStampedSrv>::SharedPtr add_marker_service;
   /// Service to clear visual markers
@@ -159,19 +157,19 @@ class MoveitManager {
                         std::shared_ptr<PoseStampedSrv::Response> response);
   /**
    * @brief Callback to move arm to a specified configuration (e.g. home).
-   * @param request The MoveToConf request containing the configuration.
+   * @param request The StringSrv request containing the configuration.
    * @param response Response indicating whether the service call succeeded.
    */
-  void move_to_configuration(const std::shared_ptr<MoveToConf::Request> request,
-                             std::shared_ptr<MoveToConf::Response> response);
+  void move_to_configuration(const std::shared_ptr<StringSrv::Request> request,
+                             std::shared_ptr<StringSrv::Response> response);
   /**
    * @brief Callback to move arm to a specified goal Pose.
-   * @param request The MoveHandToPose request containing the goal Pose and Pilz
+   * @param request The StringSrv request containing the goal Pose and Pilz
    * planning type.
    * @param response Response indicating whether the service call succeeded.
    */
-  void move_hand_to_pose(const std::shared_ptr<MoveHandToPose::Request> request,
-                         std::shared_ptr<MoveHandToPose::Response> response);
+  void move_hand_to_pose(const std::shared_ptr<StringSrv::Request> request,
+                         std::shared_ptr<StringSrv::Response> response);
   /**
    * @brief Callback to add a visual marker at a specified location.
    * @param request The PoseStampedSrv request containing the Pose to add the visual

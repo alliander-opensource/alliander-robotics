@@ -58,7 +58,7 @@ void MoveitManager::initialize_services() {
       "~/toggle_octomap_scan",
       std::bind(&MoveitManager::toggle_octomap_scan, this, _1, _2));
 
-  move_to_configuration_service = node->create_service<MoveToConf>(
+  move_to_configuration_service = node->create_service<StringSrv>(
       "~/move_to_configuration",
       std::bind(&MoveitManager::move_to_configuration, this, _1, _2));
 
@@ -66,7 +66,7 @@ void MoveitManager::initialize_services() {
       "~/define_goal_pose",
       std::bind(&MoveitManager::define_goal_pose, this, _1, _2));
 
-  move_hand_to_pose_service = node->create_service<MoveHandToPose>(
+  move_hand_to_pose_service = node->create_service<StringSrv>(
       "~/move_hand_to_pose",
       std::bind(&MoveitManager::move_hand_to_pose, this, _1, _2));
 
@@ -174,17 +174,17 @@ void MoveitManager::define_goal_pose(
 };
 
 void MoveitManager::move_to_configuration(
-    const std::shared_ptr<MoveToConf::Request> request,
-    std::shared_ptr<MoveToConf::Response> response) {
-  move_group.setNamedTarget(request->configuration);
+    const std::shared_ptr<StringSrv::Request> request,
+    std::shared_ptr<StringSrv::Response> response) {
+  move_group.setNamedTarget(request->text);
   response->success = plan_and_execute();
 };
 
 void MoveitManager::move_hand_to_pose(
-    const std::shared_ptr<MoveHandToPose::Request> request,
-    std::shared_ptr<MoveHandToPose::Response> response) {
+    const std::shared_ptr<StringSrv::Request> request,
+    std::shared_ptr<StringSrv::Response> response) {
   move_group.setPoseTarget(goal_pose);
-  response->success = plan_and_execute(request->planning_type);
+  response->success = plan_and_execute(request->text);
 };
 
 bool MoveitManager::plan_and_execute(std::string planning_type) {
