@@ -2,8 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from rcdt_utilities import launch_utils
@@ -20,7 +18,7 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    simulation = os.environ.get("SIMULATION", default="False").lower() == "true"
+    simulation = True
     namespace = "panther"
 
     state_publisher = launch_utils.state_publisher_node(

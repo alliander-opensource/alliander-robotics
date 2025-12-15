@@ -2,15 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from rcdt_tools.rviz import Rviz
 from rcdt_tools.vizanti import Vizanti
 from rcdt_utilities import launch_utils
+from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
+
+platforms_arg = LaunchArgument("platforms", "")
 
 
 def add_arm(namespace: str, use_moveit: bool):
@@ -67,16 +68,23 @@ def add_depth_camera(namespace: str):
 
 
 def launch_setup(context: LaunchContext) -> list:
-    use_rviz = os.environ.get("USE_RVIZ", default="false").lower() == "true"
-    use_vizanti = os.environ.get("USE_VIZANTI", default="false").lower() == "true"
+    """The launch setup.
 
-    use_moveit = os.environ.get("USE_MOVEIT", default="false").lower() == "true"
-    use_gps = os.environ.get("USE_GPS", default="false").lower() == "true"
-    window_size = int(os.environ.get("WINDOW_SIZE", default="10"))
+    Args:
+        context (LaunchContext): The launch context.
 
-    platforms = os.environ.get("PLATFORMS", default="")
+    Returns:
+        list: The actions to start.
+    """
+    use_rviz = True
+    use_vizanti = False
 
-    platforms = platforms.replace(" ", "").split(",")
+    use_moveit = False
+    use_gps = False
+    window_size = 10
+
+    platforms = platforms_arg.string_value(context).split(",")
+    print(f"Platforms to launch: {platforms}")
 
     for platform in platforms:
         Rviz.add_platform_model(platform)
@@ -125,13 +133,14 @@ def launch_setup(context: LaunchContext) -> list:
 
 
 def generate_launch_description() -> LaunchDescription:
-    """Generate the launch description for the Panther robot.
+    """Generate the launch description.
 
     Returns:
-        LaunchDescription: The launch description for the Panther robot.
+        LaunchDescription: The launch description.
     """
     return LaunchDescription(
         [
+            platforms_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

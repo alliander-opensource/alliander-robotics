@@ -84,7 +84,16 @@ def create_couplings(content: dict, platforms: list[str]) -> dict:
             [
                 p
                 for p in platforms
-                if p in ["panther", "lynx", "franka", "ouster", "velodyne", "realsense", "zed"]
+                if p
+                in [
+                    "panther",
+                    "lynx",
+                    "franka",
+                    "ouster",
+                    "velodyne",
+                    "realsense",
+                    "zed",
+                ]
             ]
         ),
     )
@@ -191,9 +200,18 @@ def compose_simulator(
         original_image = service["image"]
         service["image"] = original_image.replace("${IMAGE_TAG}", f"{arch}-{image_tag}")
 
-        service["environment"].append(f"PLATFORMS={','.join(platforms)}")
+        positions = ["0,0,0" for _ in platforms]
+        orientations = ["0,0,0" for _ in platforms]
+        parents = ["none" for _ in platforms]
+        parent_links = ["none" for _ in platforms]
 
-        bridge_topics = []
+        service["command"][-1] += f" platforms:='{' '.join(platforms)}'"
+        service["command"][-1] += f" positions:='{' '.join(positions)}'"
+        service["command"][-1] += f" orientations:='{' '.join(orientations)}'"
+        service["command"][-1] += f" parents:='{' '.join(parents)}'"
+        service["command"][-1] += f" parent_links:='{' '.join(parent_links)}'"
+
+        bridge_topics = ["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"]
         for platform in platforms:
             if platform in {"ouster", "velodyne"}:
                 bridge_topics.append(
@@ -208,7 +226,7 @@ def compose_simulator(
                         f"/{platform}/depth/image_rect_raw_float@sensor_msgs/msg/Image@gz.msgs.Image",
                     ]
                 )
-        service["environment"].append(f"BRIDGE_TOPICS={' '.join(bridge_topics)}")
+        service["command"][-1] += f" bridge_topics:='{' '.join(bridge_topics)}'"
 
         if dev:
             src_mounts_gazebo = get_src_mounts("rcdt_gazebo")
@@ -248,7 +266,7 @@ def compose_tools(
         original_image = service["image"]
         service["image"] = original_image.replace("${IMAGE_TAG}", f"{arch}-{image_tag}")
 
-        service["environment"].append(f"PLATFORMS={','.join(platforms)}")
+        service["command"][-1] += f" platforms:={','.join(platforms)}"
 
         if dev:
             src_mounts = get_src_mounts("rcdt_tools")

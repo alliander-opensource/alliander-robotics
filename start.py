@@ -26,24 +26,24 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if isinstance(args.p, list):
-        if len(args.p) > 1:
-            print("Error: Only one platform can be specified.")
-            sys.exit(1)
-        platform = args.p[0]
-
+    platforms: list | None = args.p
+    if isinstance(platforms, list):
         # Create platforms compose file:
-        cmd = [f"python3 compose.py --arch amd64 --platforms {platform} --dev"]
+        cmd = [
+            f"python3 compose.py --arch amd64 --platforms {' '.join(platforms)} --dev"
+        ]
         subprocess.run(cmd, shell=True, check=True)
 
         # Create simulator compose file:
         cmd = [
-            f"python3 compose.py --arch amd64 --platforms {platform} --simulator --dev"
+            f"python3 compose.py --arch amd64 --platforms {' '.join(platforms)} --simulator --dev"
         ]
         subprocess.run(cmd, shell=True, check=True)
 
         # Create tools compose file:
-        cmd = [f"python3 compose.py --arch amd64 --platforms {platform} --tools --dev"]
+        cmd = [
+            f"python3 compose.py --arch amd64 --platforms {' '.join(platforms)} --tools --dev"
+        ]
         subprocess.run(cmd, shell=True, check=True)
 
     # Spin up containers:
