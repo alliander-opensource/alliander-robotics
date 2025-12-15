@@ -6,43 +6,50 @@ import os
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from rcdt_husarion.vehicle import Vehicle
 from rcdt_utilities import launch_utils
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 
 
 def launch_setup(context: LaunchContext) -> list:
-    """Generate the launch description for the navigation stack.
+    """The launch setup.
+
+    Args:
+        context (LaunchContext): The launch context.
 
     Returns:
-        LaunchDescription: The launch description containing the actions to be executed.
+        list: The actions to start.
     """
     simulation = os.environ.get("SIMULATION", default="False").lower() == "true"
+    namespace = "panther"
 
-    description = RegisteredLaunchDescription(
-        get_file_path("rcdt_husarion", ["launch"], "description.launch.py")
+    state_publisher = launch_utils.state_publisher_node(
+        namespace=namespace,
+        platform="panther",
+        xacro="panther.urdf.xacro",
+    )
+
+    map_link = launch_utils.static_tf_node(
+        parent_frame="map",
+        child_frame=f"{namespace}/odom",
     )
 
     controllers = RegisteredLaunchDescription(
         get_file_path("rcdt_husarion", ["launch"], "controllers.launch.py")
     )
 
-    vehicle = Vehicle("panther", simulation=simulation)
-    map_link = vehicle.create_map_link()
-
     return [
-        Register.group(description, context) if simulation else launch_utils.SKIP,
+        Register.on_start(state_publisher, context),
         Register.on_start(map_link, context),
         Register.group(controllers, context) if simulation else launch_utils.SKIP,
     ]
 
 
 def generate_launch_description() -> LaunchDescription:
-    """Generate the launch description for the Panther robot.
+    """Generate the launch description.
 
     Returns:
-        LaunchDescription: The launch description for the Panther robot.
+        LaunchDescription: The launch description.
     """
     return LaunchDescription(
         [

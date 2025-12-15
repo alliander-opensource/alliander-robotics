@@ -15,9 +15,6 @@ find_package(franka_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(rcdt_interfaces REQUIRED)
 
-# Python package:
-ament_python_install_package(${PROJECT_NAME})
-
 # C++ executables:
 include_directories(include)
 add_executable(fr3_gripper_simulation src/fr3_gripper_simulation.cpp)
