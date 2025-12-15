@@ -93,6 +93,8 @@ def launch_setup(context: LaunchContext) -> list:
                 add_lidar("velodyne")
             case "realsense":
                 add_depth_camera("realsense")
+            case "zed":
+                add_depth_camera("zed")
 
     nodes = []
 
