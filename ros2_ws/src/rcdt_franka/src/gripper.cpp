@@ -44,7 +44,8 @@ rclcpp_action::CancelResponse Gripper::handle_cancel(
 }
 
 void Gripper::handle_accepted(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>> goal_handle,
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
+        goal_handle,
     std::string action_name) {
   auto result = std::make_shared<typename TriggerAction::Result>();
   if (action_name == "open") {
@@ -55,7 +56,8 @@ void Gripper::handle_accepted(
 }
 
 void Gripper::open(
-    std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>> goal_handle) {
+    std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
+        goal_handle) {
   auto goal = Move::Goal();
   goal.width = 0.08;
   goal.speed = 0.03;
@@ -96,7 +98,8 @@ void Gripper::open(
 };
 
 void Gripper::close(
-    std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>> goal_handle) {
+    std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
+        goal_handle) {
   auto goal = Grasp::Goal();
   goal.width = 0.0;
   goal.force = 100.0;

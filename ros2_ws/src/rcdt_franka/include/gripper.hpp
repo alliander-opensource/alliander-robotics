@@ -74,23 +74,26 @@ class Gripper : public rclcpp::Node {
    * @param action_name
    * @return bool
    */
-  bool execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
-                   goal_handle,
-               std::string action_name);
+  bool execute(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
+          goal_handle,
+      std::string action_name);
 
   /**
    * @brief Open the gripper
    *
    * @param goal_handle
    */
-  void open(const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
-                goal_handle);
+  void open(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
+          goal_handle);
 
   /**
    * @brief Close the gripper
    *
    * @param goal_handle
    */
-  void close(const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
-                 goal_handle);
+  void close(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
+          goal_handle);
 };

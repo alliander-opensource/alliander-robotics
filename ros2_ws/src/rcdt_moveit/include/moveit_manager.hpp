@@ -172,8 +172,8 @@ class MoveitManager {
                          std::shared_ptr<StringSrv::Response> response);
   /**
    * @brief Callback to add a visual marker at a specified location.
-   * @param request The PoseStampedSrv request containing the Pose to add the visual
-   * marker.
+   * @param request The PoseStampedSrv request containing the Pose to add the
+   * visual marker.
    * @param response Response indicating whether the service call succeeded.
    */
   void add_marker(const std::shared_ptr<PoseStampedSrv::Request> request,
