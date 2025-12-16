@@ -16,6 +16,8 @@ ip_address_arg = LaunchArgument("ip_address", "")
 
 gripper_config = get_file_path("franka_gripper", ["config"], "franka_gripper_node.yaml")
 
+TIMEOUT = 100
+
 
 def launch_setup(context: LaunchContext) -> list:
     """Setup the launch description for the Franka controllers.
@@ -33,14 +35,22 @@ def launch_setup(context: LaunchContext) -> list:
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster"],
+        arguments=[
+            "joint_state_broadcaster",
+            "--switch-timeout",
+            str(TIMEOUT),
+        ],
         namespace=namespace,
     )
 
     fr3_arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["fr3_arm_controller"],
+        arguments=[
+            "fr3_arm_controller",
+            "--switch-timeout",
+            str(TIMEOUT),
+        ],
         namespace=namespace,
     )
 
