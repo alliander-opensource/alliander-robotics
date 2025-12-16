@@ -10,6 +10,8 @@ from rcdt_utilities.register import Register
 
 namespace_arg = LaunchArgument("namespace", "panther")
 
+TIMEOUT = 100
+
 
 def launch_setup(context: LaunchContext) -> list:
     """Setup the launch description for the Panther controllers.
@@ -27,6 +29,8 @@ def launch_setup(context: LaunchContext) -> list:
         executable="spawner",
         arguments=[
             "joint_state_broadcaster",
+            "--switch-timeout",
+            str(TIMEOUT),
             "--controller-ros-args",
             "--remap joint_state_broadcaster/transition_event:=joint_state_broadcaster/_transition_event",
         ],
@@ -39,6 +43,8 @@ def launch_setup(context: LaunchContext) -> list:
         executable="spawner",
         arguments=[
             "imu_broadcaster",
+            "--switch-timeout",
+            str(TIMEOUT),
             "--controller-ros-args",
             f"--ros-args -p sensor_name:={namespace}/imu",
             "--controller-ros-args",
@@ -57,6 +63,8 @@ def launch_setup(context: LaunchContext) -> list:
         executable="spawner",
         arguments=[
             "drive_controller",
+            "--switch-timeout",
+            str(TIMEOUT),
             "--controller-manager",
             "controller_manager",
             "--controller-ros-args",
