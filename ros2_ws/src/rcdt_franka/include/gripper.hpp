@@ -4,7 +4,7 @@
 
 #include <franka_msgs/action/grasp.hpp>
 #include <franka_msgs/action/move.hpp>
-#include <rcdt_interfaces/action/trigger.hpp>
+#include <rcdt_interfaces/action/trigger_action.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/executors.hpp>
 #include <rclcpp/node.hpp>
@@ -12,10 +12,9 @@
 #include <rclcpp_action/client.hpp>
 #include <rclcpp_action/client_goal_handle.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <std_srvs/srv/trigger.hpp>
 #include <string>
 
-typedef rcdt_interfaces::action::Trigger Trigger;
+typedef rcdt_interfaces::action::TriggerAction TriggerAction;
 typedef franka_msgs::action::Move Move;
 typedef franka_msgs::action::Grasp Grasp;
 
@@ -26,9 +25,9 @@ class Gripper : public rclcpp::Node {
 
  private:
   /** The action server to open the gripper. */
-  rclcpp_action::Server<Trigger>::SharedPtr service_open;
+  rclcpp_action::Server<TriggerAction>::SharedPtr server_open;
   /** The action server to close the gripper. */
-  rclcpp_action::Server<Trigger>::SharedPtr service_close;
+  rclcpp_action::Server<TriggerAction>::SharedPtr server_close;
   /** The action client to move the gripper. */
   rclcpp_action::Client<Move>::SharedPtr client_move;
   /** The action client to grasp with the gripper. */
@@ -45,7 +44,7 @@ class Gripper : public rclcpp::Node {
    */
   rclcpp_action::GoalResponse handle_goal(
       const rclcpp_action::GoalUUID& uuid,
-      std::shared_ptr<const Trigger::Goal> goal);
+      std::shared_ptr<const TriggerAction::Goal> goal);
 
   /**
    * @brief Handle cancel requests
@@ -54,7 +53,7 @@ class Gripper : public rclcpp::Node {
    * @return rclcpp_action::CancelResponse
    */
   rclcpp_action::CancelResponse handle_cancel(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<Trigger>>
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
           goal_handle);
 
   /**
@@ -64,7 +63,7 @@ class Gripper : public rclcpp::Node {
    * @param action_name
    */
   void handle_accepted(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<Trigger>>
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
           goal_handle,
       std::string action_name);
 
@@ -75,23 +74,26 @@ class Gripper : public rclcpp::Node {
    * @param action_name
    * @return bool
    */
-  bool execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<Trigger>>
-                   goal_handle,
-               std::string action_name);
+  bool execute(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
+          goal_handle,
+      std::string action_name);
 
   /**
    * @brief Open the gripper
    *
    * @param goal_handle
    */
-  void open(const std::shared_ptr<rclcpp_action::ServerGoalHandle<Trigger>>
-                goal_handle);
+  void open(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
+          goal_handle);
 
   /**
    * @brief Close the gripper
    *
    * @param goal_handle
    */
-  void close(const std::shared_ptr<rclcpp_action::ServerGoalHandle<Trigger>>
-                 goal_handle);
+  void close(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TriggerAction>>
+          goal_handle);
 };

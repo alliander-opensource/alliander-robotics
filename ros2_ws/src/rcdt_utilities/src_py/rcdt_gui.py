@@ -12,7 +12,7 @@ import rclpy
 from geographic_msgs.msg import GeoPath, GeoPoseStamped
 from geometry_msgs.msg import PoseStamped
 from nicegui import app, events, ui
-from rcdt_interfaces.srv import MoveToConfiguration, PoseStampedSrv
+from rcdt_interfaces.srv import PoseStampedSrv, StringSrv
 from rcdt_utilities.ros_utils import spin_node
 from rclpy.node import Node
 from std_srvs.srv import Empty, SetBool, Trigger
@@ -87,7 +87,7 @@ class ArmControl:
             namespace (str): The namespace of the arm platform.
         """
         self.move_to_configuration_client = self.node.create_client(
-            MoveToConfiguration, f"/{namespace}/moveit_manager/move_to_configuration"
+            StringSrv, f"/{namespace}/moveit_manager/move_to_configuration"
         )
         self.toggle_octomap_scan_client = self.node.create_client(
             SetBool, f"/{namespace}/moveit_manager/toggle_octomap_scan"
@@ -114,8 +114,8 @@ class ArmControl:
         Args:
             configuration (str): The target configuration.
         """
-        request = MoveToConfiguration.Request()
-        request.configuration = configuration
+        request = StringSrv.Request()
+        request.text = configuration
         if self.move_to_configuration_client.call(request, TIMEOUT) is None:
             self.node.get_logger().error(
                 "Failed to call move to configuration service."
