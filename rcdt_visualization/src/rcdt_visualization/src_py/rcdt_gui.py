@@ -190,7 +190,19 @@ class VehicleControl:
         """
         self.node = node
         self.namespace = namespace
+        self.waypoints = GeoPath()
         self.connect_vehicle(namespace)
+
+    def add_waypoint(self, latlng: tuple[float, float]) -> None:
+        """Add currently selected waypoint to the waypoint list.
+
+        Args:
+            latlng (tuple[float, float]): Latitude and longitude to navigate to.
+        """
+        geo_pose_stamped = GeoPoseStamped()
+        geo_pose_stamped.pose.position.latitude = latlng[0]
+        geo_pose_stamped.pose.position.longitude = latlng[1]
+        self.waypoints.poses.append(geo_pose_stamped)
 
     def connect_vehicle(self, namespace: str) -> None:
         """Connected with vehicle-related topics, services, and actions.
@@ -306,9 +318,11 @@ class UserInterface:
         """
         with ui.card().classes("items-center bg-gray-100 h-full w-full"):
             ui.label(f"/{vehicle_control.namespace}").classes("text-xl")
+
             with ui.scroll_area().classes("h-full"):  # noqa: SIM117
                 with ui.card().classes("items-center w-full"):
                     ui.label("Navigation").classes("text-lg")
+
                     with ui.row():
                         ui.button(
                             "Start",
@@ -317,6 +331,55 @@ class UserInterface:
                             ),
                         )
                         ui.button("Stop", on_click=vehicle_control.stop_navigation)
+
+                    ui.label("Waypoints").classes("text-lg")
+
+                    grid = ui.aggrid({
+                        "columnDefs": [
+                            {"headerName": "Entry Order", "field": "order", "width": 80},
+                            {"headerName": "GeoPose", "field": "geopose", "rowDrag": True}
+                        ],
+                        "rowData": [],
+                        "rowDragManaged": True,
+                        "animateRows": True,
+                        "rowSelection": {"mode": "multiRow"},
+                    })
+
+                    def add_waypoint() -> None:
+                        waypoint = self.marker.latlng
+                        vehicle_control.add_waypoint(waypoint)
+                        grid.options["rowData"].append({
+                            "order": len(vehicle_control.waypoints.poses),
+                            "geopose": f"[{round(waypoint[0], 5)}, {round(waypoint[1], 5)}]"
+                        })
+                        grid.run_grid_method("ensureIndexVisible", len(grid.options["rowData"]) - 1)
+
+                    async def on_row_drag_end(e) -> None:
+                        row_count = await grid.run_grid_method("getDisplayedRowCount")
+                        row = await grid.run_grid_method("g => g.getDisplayedRowAtIndex(0).data")
+                        ui.notify(row)
+
+                        # new_row_order = []
+                        # for row_id in range(0, row_count):
+                        #     row_data = await grid.run_grid_method(f"g => g.getDisplayedRowAtIndex({row_id}).data")
+                        #     new_row_order.append(row_data["order"])
+                        # ui.notify(f"{new_row_order}, type: {type(new_row_order[0])}")
+
+                        counter = 1
+                        new_rows = []
+                        for row_id in range(0, row_count):
+                            row_data = await grid.run_grid_method(f"g => g.getDisplayedRowAtIndex({row_id}).data")
+                            new_rows.append({"order": counter, "geopose": row_data["geopose"]})
+                            counter += 1
+                        ui.notify(new_rows)
+
+                        grid.options["rowData"] = new_rows
+                        grid.update()
+
+                    grid.on("rowDragEnd", on_row_drag_end)
+
+                    with ui.row():
+                        ui.button("Add", on_click=add_waypoint)
 
     def map_ui(self) -> None:
         """Setup the map control UI."""
