@@ -6,7 +6,7 @@
 import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
-from rcdt_interfaces.srv import MoveToConfiguration
+from rcdt_interfaces.srv import StringSrv
 from rcdt_utilities.test_utils import (
     create_ready_action_client,
     create_ready_service_client,
@@ -33,12 +33,12 @@ def call_move_to_configuration_service(
     """
     client = create_ready_service_client(
         node,
-        MoveToConfiguration,
+        StringSrv,
         f"/{namespace}/moveit_manager/move_to_configuration",
         timeout_sec=timeout,
     )
-    request = MoveToConfiguration.Request()
-    request.configuration = configuration
+    request = StringSrv.Request()
+    request.text = configuration
     future = client.call_async(request)
     rclpy.spin_until_future_complete(node, future=future, timeout_sec=timeout)
     return future.result() is not None
