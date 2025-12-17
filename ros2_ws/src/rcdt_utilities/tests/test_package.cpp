@@ -3,8 +3,9 @@
 // # SPDX-License-Identifier: Apache-2.0
 
 #include "tests/test_package.hpp"
-#include <tf2_ros/transform_broadcaster.h>
+
 #include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 #define PI 3.14159265
 
@@ -41,11 +42,12 @@ class PackageTesterFixture : public testing::Test {
   void SetUp() override {
     pose_manipulator_node_ = std::make_shared<PoseManipulator>();
     tester_node_ = std::make_shared<PackageTester>();
-    
+
     executor_->add_node(pose_manipulator_node_);
     executor_->add_node(tester_node_);
 
-    tf_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(tester_node_);
+    tf_broadcaster_ =
+        std::make_shared<tf2_ros::StaticTransformBroadcaster>(tester_node_);
   }
 
   /**
@@ -62,7 +64,8 @@ class PackageTesterFixture : public testing::Test {
   std::shared_ptr<PoseManipulator>
       pose_manipulator_node_;                  /**< Node to manipulate poses */
   std::shared_ptr<PackageTester> tester_node_; /**< Node to test the package */
-  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_broadcaster_;
+  std::shared_ptr<tf2_ros::StaticTransformBroadcaster>
+      tf_broadcaster_; /**< TF broadcaster to publish transformations */
   static std::shared_ptr<rclcpp::executors::MultiThreadedExecutor>
       executor_; /**< Executor to spin nodes */
 };
@@ -99,7 +102,8 @@ TEST_F(PackageTesterFixture, TestTransformPoseToFrameTranslation) {
   tf_broadcaster_->sendTransform(tf);
 
   // Build request
-  auto req = std::make_shared<rcdt_interfaces::srv::TransformPoseToFrame::Request>();
+  auto req =
+      std::make_shared<rcdt_interfaces::srv::TransformPoseToFrame::Request>();
   req->pose = pose_in;
   req->target_frame = "target_frame";
 
@@ -139,7 +143,8 @@ TEST_F(PackageTesterFixture, TestTransformPoseToFrameRotation) {
   tf_broadcaster_->sendTransform(tf);
 
   // Build request
-  auto req = std::make_shared<rcdt_interfaces::srv::TransformPoseToFrame::Request>();
+  auto req =
+      std::make_shared<rcdt_interfaces::srv::TransformPoseToFrame::Request>();
   req->pose = pose_in;
   req->target_frame = "target_frame";
 

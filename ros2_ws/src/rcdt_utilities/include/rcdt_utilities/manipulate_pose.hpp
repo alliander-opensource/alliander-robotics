@@ -34,8 +34,7 @@ class PoseManipulator : public rclcpp::Node {
    * @param resp The response message
    */
   void TransformPoseToFrame(
-      const std::shared_ptr<
-          rcdt_interfaces::srv::TransformPoseToFrame::Request>
+      const std::shared_ptr<rcdt_interfaces::srv::TransformPoseToFrame::Request>
           req,
       std::shared_ptr<rcdt_interfaces::srv::TransformPoseToFrame::Response>
           resp);

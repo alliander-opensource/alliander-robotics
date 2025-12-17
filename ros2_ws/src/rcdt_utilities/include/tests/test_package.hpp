@@ -49,8 +49,7 @@ class PackageTester : public rclcpp::Node {
    * @param req The TransformPoseToFrame request message.
    * @return A future and request ID for the service call.
    */
-  rclcpp::Client<
-      rcdt_interfaces::srv::TransformPoseToFrame>::FutureAndRequestId
+  rclcpp::Client<rcdt_interfaces::srv::TransformPoseToFrame>::FutureAndRequestId
   sendTransformPoseToFrameRequest(
       std::shared_ptr<rcdt_interfaces::srv::TransformPoseToFrame::Request>
           req) {
