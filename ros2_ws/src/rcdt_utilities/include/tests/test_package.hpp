@@ -12,7 +12,7 @@
 #include <rclcpp/future_return_code.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include "rcdt_interfaces/srv/express_pose_in_other_frame.hpp"
+#include "rcdt_interfaces/srv/transform_pose_to_frame.hpp"
 #include "rcdt_utilities/manipulate_pose.hpp"
 
 /**
@@ -21,9 +21,9 @@
 class PackageTester : public rclcpp::Node {
  public:
   PackageTester() : Node("manipulate_pose_tester") {
-    express_pose_in_other_frame_client_ =
-        this->create_client<rcdt_interfaces::srv::ExpressPoseInOtherFrame>(
-            "pose_manipulator/express_pose_in_other_frame");
+    transform_pose_to_frame_client_ =
+        this->create_client<rcdt_interfaces::srv::TransformPoseToFrame>(
+            "pose_manipulator/transform_pose_to_frame");
   }
 
   /**
@@ -32,11 +32,11 @@ class PackageTester : public rclcpp::Node {
    * @return True if all services are available, false otherwise.
    */
   bool waitForServices(std::chrono::seconds timeout) {
-    bool express_pose_in_other_frame_available =
-        express_pose_in_other_frame_client_->wait_for_service(timeout);
-    if (!express_pose_in_other_frame_available) {
+    bool transform_pose_to_frame_available =
+        transform_pose_to_frame_client_->wait_for_service(timeout);
+    if (!transform_pose_to_frame_available) {
       RCLCPP_ERROR(this->get_logger(),
-                   "Service 'express_pose_in_other_frame' "
+                   "Service 'transform_pose_to_frame' "
                    "not available within timeout.");
       return false;
     }
@@ -45,20 +45,20 @@ class PackageTester : public rclcpp::Node {
   }
 
   /**
-   * @brief Sends an ExpressPoseInOtherFrame service request.
-   * @param req The ExpressPoseInOtherFrame request message.
+   * @brief Sends an TransformPoseToFrame service request.
+   * @param req The TransformPoseToFrame request message.
    * @return A future and request ID for the service call.
    */
   rclcpp::Client<
-      rcdt_interfaces::srv::ExpressPoseInOtherFrame>::FutureAndRequestId
-  sendExpressPoseInOtherFrameRequest(
-      std::shared_ptr<rcdt_interfaces::srv::ExpressPoseInOtherFrame::Request>
+      rcdt_interfaces::srv::TransformPoseToFrame>::FutureAndRequestId
+  sendTransformPoseToFrameRequest(
+      std::shared_ptr<rcdt_interfaces::srv::TransformPoseToFrame::Request>
           req) {
-    return express_pose_in_other_frame_client_->async_send_request(req);
+    return transform_pose_to_frame_client_->async_send_request(req);
   }
 
  private:
-  rclcpp::Client<rcdt_interfaces::srv::ExpressPoseInOtherFrame>::SharedPtr
-      express_pose_in_other_frame_client_; /**< Client to express pose in
+  rclcpp::Client<rcdt_interfaces::srv::TransformPoseToFrame>::SharedPtr
+      transform_pose_to_frame_client_; /**< Client to express pose in
                                              another coordinate frame */
 };

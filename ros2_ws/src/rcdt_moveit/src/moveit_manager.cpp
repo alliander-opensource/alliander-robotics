@@ -41,9 +41,9 @@ MoveitManager::MoveitManager(rclcpp::Node::SharedPtr node_)
 
 void MoveitManager::initialize_clients() {
   client_node = std::make_shared<rclcpp::Node>("moveit_manager_client");
-  express_pose_in_other_frame_client =
-      client_node->create_client<ExpressPoseInOtherFrame>(
-          "/pose_manipulator/express_pose_in_other_frame");
+  transform_pose_to_frame_client =
+      client_node->create_client<TransformPoseToFrame>(
+          "/pose_manipulator/transform_pose_to_frame");
 };
 
 void MoveitManager::initialize_services() {
@@ -219,10 +219,10 @@ PoseStamped MoveitManager::change_frame(PoseStamped pose,
   if (target_frame == "") {
     target_frame = base_frame;
   }
-  auto request = std::make_shared<ExpressPoseInOtherFrame::Request>();
+  auto request = std::make_shared<TransformPoseToFrame::Request>();
   request->pose = pose;
   request->target_frame = target_frame;
-  auto future = express_pose_in_other_frame_client->async_send_request(request);
+  auto future = transform_pose_to_frame_client->async_send_request(request);
   rclcpp::spin_until_future_complete(client_node, future);
   auto response = future.get();
   return response->pose;

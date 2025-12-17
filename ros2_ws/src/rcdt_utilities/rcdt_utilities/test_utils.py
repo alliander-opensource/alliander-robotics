@@ -11,7 +11,7 @@ import rclpy
 from geometry_msgs.msg import Pose, PoseStamped
 from launch_testing_ros.wait_for_topics import WaitForTopics
 from rcdt_interfaces.action import TriggerAction
-from rcdt_interfaces.srv import ExpressPoseInOtherFrame
+from rcdt_interfaces.srv import TransformPoseToFrame
 from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle
 from rclpy.client import Client
@@ -211,10 +211,10 @@ def create_ready_action_client(
     return client
 
 
-def call_express_pose_in_other_frame(
+def call_transform_pose_to_frame(
     node: Node, pose: PoseStamped, target_frame: str, timeout: int
-) -> ExpressPoseInOtherFrame.Response:
-    """Calls the /pose_manipulator/express_pose_in_other_frame service.
+) -> TransformPoseToFrame.Response:
+    """Calls the /pose_manipulator/transform_pose_to_frame service.
 
     Args:
         node (Node): An active rclpy Node.
@@ -226,16 +226,16 @@ def call_express_pose_in_other_frame(
         RuntimeError: If the service call fails or times out.
 
     Returns:
-        ExpressPoseInOtherFrame.Response: The response containing the transformed pose.
+        TransformPoseToFrame.Response: The response containing the transformed pose.
     """
     client = create_ready_service_client(
         node,
-        ExpressPoseInOtherFrame,
-        "/pose_manipulator/express_pose_in_other_frame",
+        TransformPoseToFrame,
+        "/pose_manipulator/transform_pose_to_frame",
         timeout_sec=timeout,
     )
 
-    request = ExpressPoseInOtherFrame.Request()
+    request = TransformPoseToFrame.Request()
     request.pose = pose
     request.target_frame = target_frame
 
@@ -352,7 +352,7 @@ def assert_movements_with_joy(  # noqa: PLR0913
     """
     pose = PoseStamped()
     pose.header.frame_id = frame_base
-    first_pose = call_express_pose_in_other_frame(
+    first_pose = call_transform_pose_to_frame(
         node=node, pose=pose, target_frame=frame_target, timeout=timeout
     ).pose.pose
 
@@ -367,7 +367,7 @@ def assert_movements_with_joy(  # noqa: PLR0913
 
     pose = PoseStamped()
     pose.header.frame_id = frame_base
-    moved_pose = call_express_pose_in_other_frame(
+    moved_pose = call_transform_pose_to_frame(
         node=node, pose=pose, target_frame=frame_target, timeout=timeout
     ).pose.pose
     delta = compare_fn(first_pose, moved_pose)

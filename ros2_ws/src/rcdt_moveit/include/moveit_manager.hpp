@@ -14,9 +14,9 @@
 #include <moveit/robot_state/robot_state.hpp>
 #include <moveit_msgs/srv/servo_command_type.hpp>
 #include <rcdt_interfaces/srv/add_object.hpp>
-#include <rcdt_interfaces/srv/express_pose_in_other_frame.hpp>
 #include <rcdt_interfaces/srv/pose_stamped_srv.hpp>
 #include <rcdt_interfaces/srv/string_srv.hpp>
+#include <rcdt_interfaces/srv/transform_pose_to_frame.hpp>
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/node.hpp>
@@ -35,7 +35,7 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 
 typedef rcdt_interfaces::srv::AddObject AddObject;
-typedef rcdt_interfaces::srv::ExpressPoseInOtherFrame ExpressPoseInOtherFrame;
+typedef rcdt_interfaces::srv::TransformPoseToFrame TransformPoseToFrame;
 typedef rcdt_interfaces::srv::StringSrv StringSrv;
 typedef rcdt_interfaces::srv::PoseStampedSrv PoseStampedSrv;
 typedef moveit_msgs::srv::ServoCommandType ServoCommandType;
@@ -99,8 +99,8 @@ class MoveitManager {
   std::set<std::string> pilz_types = {"PTP", "LIN", "CIRC"};
 
   /// Client to transform a Pose in another coordinate frame
-  rclcpp::Client<ExpressPoseInOtherFrame>::SharedPtr
-      express_pose_in_other_frame_client;
+  rclcpp::Client<TransformPoseToFrame>::SharedPtr
+      transform_pose_to_frame_client;
 
   /// Service to add collision object
   rclcpp::Service<AddObject>::SharedPtr add_object_service;

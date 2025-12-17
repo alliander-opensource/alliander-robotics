@@ -10,7 +10,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/transform.hpp"
-#include "rcdt_interfaces/srv/express_pose_in_other_frame.hpp"
+#include "rcdt_interfaces/srv/transform_pose_to_frame.hpp"
 #include "tf2_ros/buffer.hpp"
 
 /**
@@ -26,17 +26,17 @@ class PoseManipulator : public rclcpp::Node {
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_; /**< TF2 Transform Buffer */
 
   // Services
-  rclcpp::Service<rcdt_interfaces::srv::ExpressPoseInOtherFrame>::SharedPtr
-      express_pose_in_other_frame_service_; /**< Service for
-                                               ExpressPoseInOtherFrame */
-  /** @brief Callback for the ExpressPoseInOtherFrame service
+  rclcpp::Service<rcdt_interfaces::srv::TransformPoseToFrame>::SharedPtr
+      transform_pose_to_frame_service_; /**< Service for
+                                               TransformPoseToFrame */
+  /** @brief Callback for the TransformPoseToFrame service
    * @param req The request message
    * @param resp The response message
    */
-  void expressPoseInOtherFrame(
+  void TransformPoseToFrame(
       const std::shared_ptr<
-          rcdt_interfaces::srv::ExpressPoseInOtherFrame::Request>
+          rcdt_interfaces::srv::TransformPoseToFrame::Request>
           req,
-      std::shared_ptr<rcdt_interfaces::srv::ExpressPoseInOtherFrame::Response>
+      std::shared_ptr<rcdt_interfaces::srv::TransformPoseToFrame::Response>
           resp);
 };
