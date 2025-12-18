@@ -26,18 +26,6 @@ def add_arm(namespace: str, use_moveit: bool):
 
 def add_vehicle(namespace: str, use_gps: bool, window_size: int):
     print(f"Adding vehicle with namespace {namespace}")
-    if not use_gps:
-        Rviz.add_map(f"/{namespace}/map")
-
-    Rviz.add_map(f"/{namespace}/global_costmap/costmap")
-    Rviz.add_path(f"/{namespace}/plan")
-
-    Rviz.set_grid_size(window_size)
-    Rviz.set_grid_frame(f"/{namespace}/base_footprint")
-
-    Rviz.add_polygon(f"/{namespace}/polygon_slower")
-    Rviz.add_polygon(f"/{namespace}/velocity_polygon_stop")
-
     Vizanti.add_platform_model(namespace)
     Vizanti.add_button("Trigger", f"/{namespace}/hardware/e_stop_trigger")
     Vizanti.add_button("Reset", f"/{namespace}/hardware/e_stop_reset")
