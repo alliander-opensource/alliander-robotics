@@ -5,16 +5,13 @@
 import argparse
 import contextlib
 import subprocess
-import sys
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Spin up the docker containers.")
 
     parser.add_argument(
-        "-p",
-        required=False,
-        nargs="+",
-        help="List of platform components to include (e.g. panther franka) in a platforms.yaml compose file.",
+        "configuration",
+        help="Configuration name to launch.",
     )
 
     parser.add_argument(
@@ -26,25 +23,17 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    platforms: list | None = args.p
-    if isinstance(platforms, list):
-        # Create platforms compose file:
-        cmd = [
-            f"python3 compose.py --arch amd64 --platforms {' '.join(platforms)} --dev"
-        ]
-        subprocess.run(cmd, shell=True, check=True)
+    # Create platforms compose file:
+    cmd = [f"python3 compose.py --arch amd64 -c {args.configuration} --dev"]
+    subprocess.run(cmd, shell=True, check=True)
 
-        # Create simulator compose file:
-        cmd = [
-            f"python3 compose.py --arch amd64 --platforms {' '.join(platforms)} --simulator --dev"
-        ]
-        subprocess.run(cmd, shell=True, check=True)
+    # Create simulator compose file:
+    cmd = [f"python3 compose.py --arch amd64 -c {args.configuration} --simulator --dev"]
+    subprocess.run(cmd, shell=True, check=True)
 
-        # Create tools compose file:
-        cmd = [
-            f"python3 compose.py --arch amd64 --platforms {' '.join(platforms)} --tools --dev"
-        ]
-        subprocess.run(cmd, shell=True, check=True)
+    # Create tools compose file:
+    cmd = [f"python3 compose.py --arch amd64 -c {args.configuration} --tools --dev"]
+    subprocess.run(cmd, shell=True, check=True)
 
     # Spin up containers:
     cmd = "docker compose -f platforms.yml -f simulator.yml -f tools.yml up"

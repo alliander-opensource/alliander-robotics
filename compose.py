@@ -6,6 +6,15 @@ from pathlib import Path
 
 import yaml
 
+from configurations.environment_configuration import EnvironmentConfiguration
+from configurations.predefined_configurations import Platform, PredefinedConfigurations
+from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
+    PlatformConfig,
+    SimulatorConfig,
+)
+
+predefined_configurations = PredefinedConfigurations.get_names()
+
 dev_settings = {
     "volumes": [
         "${HOME}/.vscode-server:/root/.vscode-server",
@@ -49,70 +58,11 @@ def get_image_tag():
     return branch_name
 
 
-def replace_env_var(content: dict, var: str, value: str):
-    """
-    Iterate through all platforms' environment variables, and replace var with var=value.
-    The value has to be a string because that is how it is stored in docker-compose.yml files.
-    """
-    for service in content["services"]:
-        environment = content["services"][service]["environment"]
-        indices = [idx for idx, s in enumerate(environment) if var in s]
-        if len(indices) < 1:
-            print(
-                f"[{service.upper()}] Could not find variable {var} in environment variables {environment}"
-            )
-            continue
-        if len(indices) > 1:
-            print(
-                f"Found {len(indices)} variables named {var} in environment variables {environment}. This should be only one."
-            )
-            continue
-
-        idx = indices[0]
-        environment[idx] = f"{var}={value}"
-
-
-def create_couplings(content: dict, platforms: list[str]) -> dict:
-    """
-    This function is responsible for updating environment variables based on which platforms are being launched.
-    For example, if gps is part of the platforms, USE_GPS should be True. Otherwise, it should be False.
-    """
-    replace_env_var(
-        content,
-        "PLATFORMS",
-        ",".join(
-            [
-                p
-                for p in platforms
-                if p
-                in [
-                    "panther",
-                    "lynx",
-                    "franka",
-                    "ouster",
-                    "velodyne",
-                    "realsense",
-                    "zed",
-                ]
-            ]
-        ),
-    )
-    if "gps" in platforms:
-        replace_env_var(content, "USE_GPS", "true")
-    else:
-        replace_env_var(content, "USE_GPS", "false")
-    if "nav2" in platforms:
-        vehicle_type = ""
-        if "panther" in platforms:
-            vehicle_type = "panther"
-        elif "lynx" in platforms:
-            vehicle_type = "lynx"
-        replace_env_var(content, "NAMESPACE_VEHICLE", vehicle_type)
-    return content
-
-
 def compose_platforms(
-    arch: str, platforms: list, dev: bool = False, output_file: str = "platforms.yml"
+    arch: str,
+    platforms: list[Platform],
+    dev: bool = False,
+    output_file: str = "platforms.yml",
 ):
     print("----- CREATING PLATFORMS.YML COMPOSE -----")
     merged_compose = {}
@@ -122,22 +72,40 @@ def compose_platforms(
     print(f"Dev mode: {dev}")
 
     for platform in platforms:
-        if platform in ["panther", "lynx"]:
-            filename = "rcdt_husarion/docker-compose.yml"
+        if platform.name in {"panther", "lynx"}:
+            service_name = "rcdt_husarion"
         else:
-            filename = f"rcdt_{platform}/docker-compose.yml"
+            service_name = f"rcdt_{platform.name}"
 
+        filename = f"{service_name}/docker-compose.yml"
         if not os.path.exists(filename):
             print(f"Warning: file {filename} not found. Skipping.")
             continue
 
         print(f"Merging {filename}")
 
+        childs = []
+        for child in platform.childs:
+            childs.append(
+                f"{platform.link_to_child},{child.name},{child.link_to_parent}"
+            )
+
         with open(filename, "r") as f:
             content = yaml.safe_load(f)
 
             if not content:
                 continue
+
+            command: list = content["services"][service_name]["command"]
+            command[-1] += f" namespace:={platform.name}"
+            command[-1] += f" position:='{' '.join(map(str, platform.position))}'"
+            command[-1] += f" orientation:='{' '.join(map(str, platform.orientation))}'"
+            command[-1] += f" link_to_parent:={platform.link_to_parent}"
+            if platform.parent:
+                command[-1] += f" parent:={platform.parent.name}"
+                command[-1] += f" parent_link:={platform.parent.link_to_child}"
+            if len(childs) > 0:
+                command[-1] += f" childs:='{' '.join(childs)}'"
 
             if "services" in content:
                 if "services" not in merged_compose:
@@ -165,7 +133,6 @@ def compose_platforms(
                 service_config["volumes"] = (
                     service_config["volumes"] + dev_settings["volumes"] + src_mounts
                 )
-    create_couplings(merged_compose, platforms)
 
     print(f"\nWriting final compose file to {output_file}")
 
@@ -177,12 +144,15 @@ def compose_platforms(
 
 def compose_simulator(
     arch: str,
-    platforms: list[str],
+    platforms: list[Platform],
     dev: bool = False,
     output_file: str = "simulator.yml",
 ):
     print("----- CREATING SIMULATOR.YML COMPOSE -----")
     filename = "rcdt_gazebo/docker-compose.yml"
+
+    simulator_config = SimulatorConfig()
+    simulator_config.load_ui = True
 
     if not os.path.exists(filename):
         print(
@@ -200,33 +170,17 @@ def compose_simulator(
         original_image = service["image"]
         service["image"] = original_image.replace("${IMAGE_TAG}", f"{arch}-{image_tag}")
 
-        positions = ["0,0,0" for _ in platforms]
-        orientations = ["0,0,0" for _ in platforms]
-        parents = ["none" for _ in platforms]
-        parent_links = ["none" for _ in platforms]
-
-        service["command"][-1] += f" platforms:='{' '.join(platforms)}'"
-        service["command"][-1] += f" positions:='{' '.join(positions)}'"
-        service["command"][-1] += f" orientations:='{' '.join(orientations)}'"
-        service["command"][-1] += f" parents:='{' '.join(parents)}'"
-        service["command"][-1] += f" parent_links:='{' '.join(parent_links)}'"
-
-        bridge_topics = ["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"]
         for platform in platforms:
-            if platform in {"ouster", "velodyne"}:
-                bridge_topics.append(
-                    f"/{platform}/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
-                )
-            if platform in {"realsense", "zed"}:
-                bridge_topics.extend(
-                    [
-                        f"/{platform}/color/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
-                        f"/{platform}/color/image_raw@sensor_msgs/msg/Image@gz.msgs.Image",
-                        f"/{platform}/depth/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
-                        f"/{platform}/depth/image_rect_raw_float@sensor_msgs/msg/Image@gz.msgs.Image",
-                    ]
-                )
-        service["command"][-1] += f" bridge_topics:='{' '.join(bridge_topics)}'"
+            platform_config = PlatformConfig()
+            platform_config.name = platform.name
+            platform_config.platform_type = type(platform).__name__
+            platform_config.position = platform.position
+            platform_config.orientation = platform.orientation
+            if platform.parent is not None:
+                platform_config.parent = platform.parent.name
+                platform_config.parent_link = f"{platform.parent.link_to_child}"
+            simulator_config.platforms.append(platform_config)
+        service["command"][-1] += f" config:='{simulator_config.to_str()}'"
 
         if dev:
             src_mounts_gazebo = get_src_mounts("rcdt_gazebo")
@@ -238,8 +192,6 @@ def compose_simulator(
                 + src_mounts_husarion
             )
 
-        create_couplings(content, platforms)
-
         print(f"\nWriting final compose file to {output_file}")
 
         with open(output_file, "w") as f:
@@ -247,7 +199,10 @@ def compose_simulator(
 
 
 def compose_tools(
-    arch: str, platforms: list[str], dev: bool = False, output_file: str = "tools.yml"
+    arch: str,
+    platforms: list[Platform],
+    dev: bool = False,
+    output_file: str = "tools.yml",
 ):
     print("----- CREATING TOOLS.YML COMPOSE -----")
     filename = "rcdt_tools/docker-compose.yml"
@@ -266,15 +221,14 @@ def compose_tools(
         original_image = service["image"]
         service["image"] = original_image.replace("${IMAGE_TAG}", f"{arch}-{image_tag}")
 
-        service["command"][-1] += f" platforms:={','.join(platforms)}"
+        names = [platform.name for platform in platforms]
+        service["command"][-1] += f" platforms:={','.join(names)}"
 
         if dev:
             src_mounts = get_src_mounts("rcdt_tools")
             service["volumes"] = (
                 service["volumes"] + dev_settings["volumes"] + src_mounts
             )
-
-        create_couplings(content, platforms)
 
         print(f"\nWriting final compose file to {output_file}")
 
@@ -296,16 +250,25 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--arch",
-        required=True,
+        required=False,
         choices=["amd64", "arm64"],
+        default="amd64",
         help="Target architecture (amd64 or arm64).",
     )
 
     parser.add_argument(
+        "-p",
         "--platforms",
-        required=True,
+        required=False,
         nargs="+",
         help="List of platform components to include (e.g. panther franka) in a platforms.yaml compose file.",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--configuration",
+        required=False,
+        help="Select a predefined configuration.",
     )
 
     parser.add_argument(
@@ -331,13 +294,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if "husarion" in args.platforms:
-        print("ERROR: instead of 'husarion', please specify 'panther' or 'lynx'.")
-        sys.exit(1)
+    if args.configuration:
+        PredefinedConfigurations.apply_configuration(args.configuration)
+        platforms = EnvironmentConfiguration.platforms
 
     if args.simulator:
-        compose_simulator(args.arch, args.platforms, args.dev)
+        compose_simulator(args.arch, platforms, args.dev)
     if args.tools:
-        compose_tools(args.arch, args.platforms, args.dev)
+        compose_tools(args.arch, platforms, args.dev)
     if not args.simulator and not args.tools:
-        compose_platforms(args.arch, args.platforms, args.dev)
+        compose_platforms(args.arch, platforms, args.dev)

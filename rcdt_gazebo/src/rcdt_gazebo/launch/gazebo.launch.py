@@ -10,18 +10,12 @@ from launch.actions import ExecuteProcess, OpaqueFunction
 from launch_ros.actions import Node
 from rcdt_gazebo.create_sdf import create_map_world
 from rcdt_gazebo.gazebo_ros_paths import GazeboRosPaths
+from rcdt_utilities.config_objects import PlatformConfig, SimulatorConfig
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
 
-load_gazebo_ui_arg = LaunchArgument("load_gazebo_ui", True, [True, False])
-world_arg = LaunchArgument("world", "walls.sdf")
-platforms_arg = LaunchArgument("platforms", "")
-positions_arg = LaunchArgument("positions", "")
-orientations_arg = LaunchArgument("orientations", "")
-parents_arg = LaunchArgument("parents", "")
-parent_links_arg = LaunchArgument("parent_links", "")
-bridge_topics_arg = LaunchArgument("bridge_topics", "")
+config_arg = LaunchArgument("config", "")
 
 
 def get_sdf_file(world: str) -> str:
@@ -56,6 +50,25 @@ def get_sdf_file(world: str) -> str:
         return get_file_path("rcdt_gazebo", ["worlds"], world)
 
 
+def get_bridge_topics(platforms: list[PlatformConfig]) -> list[str]:
+    bridge_topics = ["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"]
+    for platform in platforms:
+        if platform.platform_type == "Lidar":
+            bridge_topics.append(
+                f"/{platform.name}/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
+            )
+        if platform.platform_type == "Camera":
+            bridge_topics.extend(
+                [
+                    f"/{platform.name}/color/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
+                    f"/{platform.name}/color/image_raw@sensor_msgs/msg/Image@gz.msgs.Image",
+                    f"/{platform.name}/depth/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
+                    f"/{platform.name}/depth/image_rect_raw_float@sensor_msgs/msg/Image@gz.msgs.Image",
+                ]
+            )
+    return bridge_topics
+
+
 def launch_setup(context: LaunchContext) -> list:
     """The launch setup.
 
@@ -68,17 +81,9 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    load_gazebo_ui = load_gazebo_ui_arg.bool_value(context)
-    world = world_arg.string_value(context)
+    config = SimulatorConfig.from_str(config_arg.string_value(context))
 
-    platforms = platforms_arg.string_value(context)
-    positions = positions_arg.string_value(context)
-    orientations = orientations_arg.string_value(context)
-    parents = parents_arg.string_value(context)
-    parent_links = parent_links_arg.string_value(context)
-    bridge_topics = bridge_topics_arg.string_value(context).split()
-
-    sdf_file = get_sdf_file(world)
+    sdf_file = get_sdf_file(config.world)
     sdf = ET.parse(sdf_file)
     world_attribute = sdf.getroot().find("world")
     if world_attribute is None:
@@ -87,7 +92,7 @@ def launch_setup(context: LaunchContext) -> list:
         world_name = world_attribute.attrib.get("name")
 
     cmd = ["gz", "sim", sdf_file]
-    if not load_gazebo_ui:
+    if not config.load_ui:
         cmd.append("-s")
     gazebo = ExecuteProcess(
         cmd=cmd,
@@ -98,21 +103,13 @@ def launch_setup(context: LaunchContext) -> list:
     bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=bridge_topics,
+        arguments=get_bridge_topics(config.platforms),
     )
 
     spawn_platforms = Node(
         package="rcdt_gazebo",
         executable="spawn_platforms.py",
-        parameters=[
-            {
-                "platforms": platforms,  # todo make this nicer
-                "positions": positions,
-                "orientations": orientations,
-                "parents": parents,
-                "parent_links": parent_links,
-            },
-        ],
+        parameters=[{"config": config.to_str()}],
         output="screen",
     )
 
@@ -154,14 +151,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            load_gazebo_ui_arg.declaration,
-            world_arg.declaration,
-            platforms_arg.declaration,
-            positions_arg.declaration,
-            orientations_arg.declaration,
-            parents_arg.declaration,
-            parent_links_arg.declaration,
-            bridge_topics_arg.declaration,
+            config_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

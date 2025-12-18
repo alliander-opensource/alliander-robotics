@@ -8,6 +8,7 @@ import subprocess
 
 import numpy as np
 import rclpy
+from rcdt_utilities.config_objects import PlatformConfig, SimulatorConfig
 from rclpy.node import Node
 from scipy.spatial.transform import RigidTransform, Rotation
 
@@ -18,76 +19,38 @@ class SpawnPlatform(Node):
     def __init__(self):
         """Initialize the node."""
         super().__init__("spawn_platforms")
-        self.declare_parameter("platforms", "")
-        self.declare_parameter("positions", "")
-        self.declare_parameter("orientations", "")
-        self.declare_parameter("parents", "")
-        self.declare_parameter("parent_links", "")
-        platforms = (
-            self.get_parameter("platforms").get_parameter_value().string_value.split()
-        )
-        positions = (
-            self.get_parameter("positions").get_parameter_value().string_value.split()
-        )
-        orientations = (
-            self.get_parameter("orientations")
-            .get_parameter_value()
-            .string_value.split()
-        )
-        parents = (
-            self.get_parameter("parents").get_parameter_value().string_value.split()
-        )
-        parent_links = (
-            self.get_parameter("parent_links")
-            .get_parameter_value()
-            .string_value.split()
+        self.declare_parameter("config", "")
+        config = SimulatorConfig.from_str(
+            self.get_parameter("config").get_parameter_value().string_value
         )
 
-        print(platforms)
-        print(positions)
-        print(orientations)
-        print(parents)
-        print(parent_links)
-
-        self.get_logger().info(f"Spawning platforms {platforms}...")
-        self.spawn_platforms(platforms, positions, orientations, parents, parent_links)
+        self.get_logger().info(
+            f"Spawning platforms {[platform.name for platform in config.platforms]}..."
+        )
+        self.spawn_platforms(config.platforms)
         self.get_logger().info("All platforms spawned!")
 
-    def spawn_platforms(
-        self,
-        platforms: list[str],
-        positions: list[str],
-        orientations: list[str],
-        parents: list[str],
-        parent_links: list[str],
-    ) -> None:
+    def spawn_platforms(self, platforms: list[PlatformConfig]) -> None:
         """Spawn platforms in the Gazebo simulation at specified positions.
 
         Args:
-            platforms (list[str]): List of the platforms.
-            positions (list[str]): List of positions in the format "x,y,z".
-            orientations (list[str]): List of orientations in the format "roll,pitch,yaw".
-            parents (list[str]): List of parent names or "none" when the platform has no parent.
-            parent_links (list[str]): List of parent link names or "none" when the platform has no parent.
+            platforms (list[PlatformConfig]): List of the platforms.
 
         """
-        for n in range(len(platforms)):
-            platform = platforms[n]
-            position = np.array(list(map(float, positions[n].split(","))))
-            orientation = np.array(list(map(float, orientations[n].split(","))))
-            parent = parents[n]
-            parent_link = parent_links[n]
+        for platform in platforms:
+            position = np.array(platform.position)
+            orientation = np.array(platform.orientation)
 
-            if parent != "none":
+            if platform.parent != "none":
                 # First define the transform from world to model:
-                model_pose = get_pose(parent)
+                model_pose = get_pose(platform.parent)
                 model_tf = RigidTransform.from_components(
                     model_pose["position"],
                     Rotation.from_euler("xyz", model_pose["orientation"]),
                 )
 
                 # Next define the transform from model to link:
-                link_pose = get_pose(parent, parent_link)
+                link_pose = get_pose(platform.parent, platform.parent_link)
                 link_tf = RigidTransform.from_components(
                     link_pose["position"],
                     Rotation.from_euler("xyz", link_pose["orientation"]),
@@ -99,7 +62,7 @@ class SpawnPlatform(Node):
                 rotation = tf.rotation * Rotation.from_euler("xyz", orientation)
                 orientation = rotation.as_euler("xyz")
 
-            self.spawn_platform(platform, position, orientation)
+            self.spawn_platform(platform.name, position, orientation)
 
     def spawn_platform(
         self, namespace: str, position: np.ndarray, orientation: np.ndarray
