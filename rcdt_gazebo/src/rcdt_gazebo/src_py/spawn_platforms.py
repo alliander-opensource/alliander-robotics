@@ -25,7 +25,7 @@ class SpawnPlatform(Node):
         )
 
         self.get_logger().info(
-            f"Spawning platforms {[platform.name for platform in config.platforms]}..."
+            f"Spawning platforms {[platform.namespace for platform in config.platforms]}..."
         )
         self.spawn_platforms(config.platforms)
         self.get_logger().info("All platforms spawned!")
@@ -62,7 +62,7 @@ class SpawnPlatform(Node):
                 rotation = tf.rotation * Rotation.from_euler("xyz", orientation)
                 orientation = rotation.as_euler("xyz")
 
-            self.spawn_platform(platform.name, position, orientation)
+            self.spawn_platform(platform.namespace, position, orientation)
 
     def spawn_platform(
         self, namespace: str, position: np.ndarray, orientation: np.ndarray

@@ -172,12 +172,12 @@ def compose_simulator(
 
         for platform in platforms:
             platform_config = PlatformConfig()
-            platform_config.name = platform.name
+            platform_config.namespace = platform.namespace
             platform_config.platform_type = type(platform).__name__
             platform_config.position = platform.position
             platform_config.orientation = platform.orientation
             if platform.parent is not None:
-                platform_config.parent = platform.parent.name
+                platform_config.parent = platform.parent.namespace
                 platform_config.parent_link = f"{platform.parent.link_to_child}"
             simulator_config.platforms.append(platform_config)
         service["command"][-1] += f" config:='{simulator_config.to_str()}'"
