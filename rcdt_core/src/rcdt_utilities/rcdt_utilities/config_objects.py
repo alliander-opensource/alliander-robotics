@@ -16,7 +16,7 @@ class Config(DataClassJSONMixin):
 
 @dataclass
 class PlatformConfig(Config):
-    name: str = ""
+    namespace: str = ""
     platform_type: str = ""
     position: tuple = (0, 0, 0)
     orientation: tuple = (0, 0, 0)

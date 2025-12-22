@@ -55,15 +55,15 @@ def get_bridge_topics(platforms: list[PlatformConfig]) -> list[str]:
     for platform in platforms:
         if platform.platform_type == "Lidar":
             bridge_topics.append(
-                f"/{platform.name}/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
+                f"/{platform.namespace}/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
             )
         if platform.platform_type == "Camera":
             bridge_topics.extend(
                 [
-                    f"/{platform.name}/color/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
-                    f"/{platform.name}/color/image_raw@sensor_msgs/msg/Image@gz.msgs.Image",
-                    f"/{platform.name}/depth/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
-                    f"/{platform.name}/depth/image_rect_raw_float@sensor_msgs/msg/Image@gz.msgs.Image",
+                    f"/{platform.namespace}/color/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
+                    f"/{platform.namespace}/color/image_raw@sensor_msgs/msg/Image@gz.msgs.Image",
+                    f"/{platform.namespace}/depth/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
+                    f"/{platform.namespace}/depth/image_rect_raw_float@sensor_msgs/msg/Image@gz.msgs.Image",
                 ]
             )
     return bridge_topics
