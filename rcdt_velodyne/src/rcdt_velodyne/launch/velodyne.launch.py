@@ -5,19 +5,13 @@
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
+from rcdt_utilities.config_objects import Lidar
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 
-simulation_arg = LaunchArgument("simulation", True)
-namespace_arg = LaunchArgument("namespace", "")
-position_arg = LaunchArgument("position", "")
-orientation_arg = LaunchArgument("orientation", "")
-link_to_parent_arg = LaunchArgument("link_to_parent", "")
-parent_arg = LaunchArgument("parent", "")
-parent_link_arg = LaunchArgument("parent_link", "")
-childs_arg = LaunchArgument("childs", "")
+config_arg = LaunchArgument("config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -29,34 +23,28 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    simulation = simulation_arg.bool_value(context)
-    namespace = namespace_arg.string_value(context)
-    position = position_arg.string_value(context).split()
-    orientation = orientation_arg.string_value(context).split()
-    link_to_parent = link_to_parent_arg.string_value(context)
-    parent = parent_arg.string_value(context)
-    parent_link = parent_link_arg.string_value(context)
-    childs = childs_arg.string_value(context).split()
+    configuration = Lidar.from_str(config_arg.string_value(context))
 
     state_publisher = state_publisher_node(
-        namespace=namespace,
+        namespace=configuration.namespace,
         platform="velodyne",
         xacro="rcdt_velodyne.urdf.xacro",
         xacro_arguments={
-            "parent": parent if parent else "world",
+            "parent": "" if configuration.parent.link else "world",
         },
     )
 
+    parent = configuration.parent
     static_tf = static_tf_node(
-        parent_frame=f"{parent}/{parent_link}" if parent else "map",
-        child_frame=f"{namespace}/{link_to_parent}",
-        position=position,
-        orientation=orientation,
+        parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
+        child_frame=f"{configuration.namespace}/{parent.connects_to}",
+        position=configuration.position,
+        orientation=configuration.orientation,
     )
 
     hardware = RegisteredLaunchDescription(
         get_file_path("rcdt_velodyne", ["launch"], "hardware.launch.py"),
-        {"namespace": namespace},
+        {"namespace": configuration.namespace},
     )
 
     target_frame = ""
@@ -64,8 +52,8 @@ def launch_setup(context: LaunchContext) -> list:
         package="pointcloud_to_laserscan",
         executable="pointcloud_to_laserscan_node",
         remappings=[
-            ("cloud_in", f"/{namespace}/scan/points"),
-            ("scan", f"/{namespace}/scan"),
+            ("cloud_in", f"/{configuration.namespace}/scan/points"),
+            ("scan", f"/{configuration.namespace}/scan"),
         ],
         parameters=[
             {
@@ -76,13 +64,13 @@ def launch_setup(context: LaunchContext) -> list:
                 "range_max": 100.0,
             }
         ],
-        namespace=namespace,
+        namespace=configuration.namespace,
     )
 
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.on_start(hardware, context) if not simulation else SKIP,
+        Register.group(hardware, context) if not configuration.simulation else SKIP,
         Register.on_start(pointcloud_to_laserscan_node, context),
     ]
 
@@ -95,14 +83,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            simulation_arg.declaration,
-            namespace_arg.declaration,
-            position_arg.declaration,
-            orientation_arg.declaration,
-            link_to_parent_arg.declaration,
-            parent_arg.declaration,
-            parent_link_arg.declaration,
-            childs_arg.declaration,
+            config_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

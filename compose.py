@@ -6,11 +6,12 @@ from pathlib import Path
 
 import yaml
 
-from configurations.environment_configuration import EnvironmentConfiguration
-from configurations.predefined_configurations import Platform, PredefinedConfigurations
+from predefined_configurations import PredefinedConfigurations
 from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
-    PlatformConfig,
+    EnvironmentConfiguration,
+    Platform,
     SimulatorConfig,
+    ToolsConfig,
 )
 
 predefined_configurations = PredefinedConfigurations.get_names()
@@ -29,211 +30,205 @@ dev_settings = {
 }
 
 
-def get_src_mounts(package: str) -> list[str]:
-    cwd = Path.cwd()
-    src_dir = cwd.joinpath(f"{package}", "src")
-    return [
-        f"./{str(p.relative_to(cwd))}:/rcdt/ros/src/{p.name}"
-        for p in src_dir.iterdir()
-        if p.is_dir()
-    ]
+class Compose:
+    def __init__(
+        self,
+        platforms: list[Platform],
+        arch: str = "amd64",
+        dev: bool = False,
+        simulator: bool = False,
+        tools: bool = False,
+    ) -> None:
+        self.platforms = platforms
+        self.arch = arch
+        self.dev = dev
 
+        if simulator:
+            self.compose_simulator()
+        if tools:
+            self.compose_tools()
+        if not simulator and not tools:
+            self.compose_platforms()
 
-def get_image_tag():
-    try:
-        branch_name = subprocess.check_output(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-            universal_newlines=True,
-            stderr=subprocess.PIPE,
-        ).strip()
-    except subprocess.CalledProcessError:
-        print("Warning: not in a Git repository. Defaulting to 'latest'.")
-        return "latest"
-    except FileNotFoundError:
-        print("Warning: 'git' command not found. Defaulting to 'latest'.")
-        return "latest"
+    @staticmethod
+    def get_src_mounts(package: str) -> list[str]:
+        cwd = Path.cwd()
+        src_dir = cwd.joinpath(f"{package}", "src")
+        return [
+            f"./{str(p.relative_to(cwd))}:/rcdt/ros/src/{p.name}"
+            for p in src_dir.iterdir()
+            if p.is_dir()
+        ]
 
-    if branch_name == "main":
-        return "latest"
-    return branch_name
+    @staticmethod
+    def get_image_tag():
+        try:
+            branch_name = subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                universal_newlines=True,
+                stderr=subprocess.PIPE,
+            ).strip()
+        except subprocess.CalledProcessError:
+            print("Warning: not in a Git repository. Defaulting to 'latest'.")
+            return "latest"
+        except FileNotFoundError:
+            print("Warning: 'git' command not found. Defaulting to 'latest'.")
+            return "latest"
 
+        if branch_name == "main":
+            return "latest"
+        return branch_name
 
-def compose_platforms(
-    arch: str,
-    platforms: list[Platform],
-    dev: bool = False,
-    output_file: str = "platforms.yml",
-):
-    print("----- CREATING PLATFORMS.YML COMPOSE -----")
-    merged_compose = {}
-    image_tag = get_image_tag()
+    def compose_platforms(self, output_file: str = "platforms.yml"):
+        print("----- CREATING PLATFORMS.YML COMPOSE -----")
+        merged_compose = {}
+        image_tag = self.get_image_tag()
 
-    print(f"Image tag: {image_tag}")
-    print(f"Dev mode: {dev}")
+        print(f"Image tag: {image_tag}")
+        print(f"Dev mode: {self.dev}")
 
-    for platform in platforms:
-        if platform.name in {"panther", "lynx"}:
-            service_name = "rcdt_husarion"
-        else:
-            service_name = f"rcdt_{platform.name}"
+        for platform in self.platforms.values():
+            if platform.name in {"panther", "lynx"}:
+                service_name = "rcdt_husarion"
+            else:
+                service_name = f"rcdt_{platform.name}"
 
-        filename = f"{service_name}/docker-compose.yml"
+            filename = f"{service_name}/docker-compose.yml"
+            if not os.path.exists(filename):
+                print(f"Warning: file {filename} not found. Skipping.")
+                continue
+
+            print(f"Merging {filename}")
+
+            with open(filename, "r") as f:
+                content = yaml.safe_load(f)
+
+                if not content:
+                    continue
+
+                content["services"][service_name]["command"][-1] += (
+                    f" config:='{platform.to_str()}'"
+                )
+
+                if "services" in content:
+                    if "services" not in merged_compose:
+                        merged_compose["services"] = {}
+                    merged_compose["services"].update(content["services"])
+
+                for key, value in content.items():
+                    if key != "services" and key not in merged_compose:
+                        merged_compose[key] = value
+
+        if not merged_compose:
+            print("Error: no compose files were merged. Aborting.")
+            return
+
+        # Replace image tag
+        if "services" in merged_compose:
+            for service_name, service_config in merged_compose["services"].items():
+                if (
+                    "image" in service_config
+                    and "${IMAGE_TAG}" in service_config["image"]
+                ):
+                    original_image = service_config["image"]
+                    service_config["image"] = original_image.replace(
+                        "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+                    )
+                if self.dev:
+                    src_mounts = self.get_src_mounts(service_name)
+                    service_config["volumes"] = (
+                        service_config["volumes"] + dev_settings["volumes"] + src_mounts
+                    )
+
+        print(f"\nWriting final compose file to {output_file}")
+
+        with open(output_file, "w") as f:
+            yaml.safe_dump(merged_compose, f, default_flow_style=False, sort_keys=False)
+
+        print("Done!")
+
+    def compose_simulator(self, output_file: str = "simulator.yml"):
+        print("----- CREATING SIMULATOR.YML COMPOSE -----")
+        filename = "rcdt_gazebo/docker-compose.yml"
+
+        simulator_config = SimulatorConfig()
+        simulator_config.load_ui = True
+        simulator_config.platforms = list(self.platforms.values())
+
         if not os.path.exists(filename):
-            print(f"Warning: file {filename} not found. Skipping.")
-            continue
-
-        print(f"Merging {filename}")
-
-        childs = []
-        for child in platform.childs:
-            childs.append(
-                f"{platform.link_to_child},{child.name},{child.link_to_parent}"
+            print(
+                "Warning: did not find docker-compose.yml file in rcdt_gazebo. Exiting..."
             )
+            sys.exit(1)
 
         with open(filename, "r") as f:
             content = yaml.safe_load(f)
+            service = content["services"]["rcdt_gazebo"]
 
-            if not content:
-                continue
+            image_tag = self.get_image_tag()
+            print(f"Image tag: {image_tag}")
 
-            command: list = content["services"][service_name]["command"]
-            command[-1] += f" namespace:={platform.name}"
-            command[-1] += f" position:='{' '.join(map(str, platform.position))}'"
-            command[-1] += f" orientation:='{' '.join(map(str, platform.orientation))}'"
-            command[-1] += f" link_to_parent:={platform.link_to_parent}"
-            if platform.parent:
-                command[-1] += f" parent:={platform.parent.name}"
-                command[-1] += f" parent_link:={platform.parent.link_to_child}"
-            if len(childs) > 0:
-                command[-1] += f" childs:='{' '.join(childs)}'"
-
-            if "services" in content:
-                if "services" not in merged_compose:
-                    merged_compose["services"] = {}
-                merged_compose["services"].update(content["services"])
-
-            for key, value in content.items():
-                if key != "services" and key not in merged_compose:
-                    merged_compose[key] = value
-
-    if not merged_compose:
-        print("Error: no compose files were merged. Aborting.")
-        return
-
-    # Replace image tag
-    if "services" in merged_compose:
-        for service_name, service_config in merged_compose["services"].items():
-            if "image" in service_config and "${IMAGE_TAG}" in service_config["image"]:
-                original_image = service_config["image"]
-                service_config["image"] = original_image.replace(
-                    "${IMAGE_TAG}", f"{arch}-{image_tag}"
-                )
-            if dev:
-                src_mounts = get_src_mounts(service_name)
-                service_config["volumes"] = (
-                    service_config["volumes"] + dev_settings["volumes"] + src_mounts
-                )
-
-    print(f"\nWriting final compose file to {output_file}")
-
-    with open(output_file, "w") as f:
-        yaml.safe_dump(merged_compose, f, default_flow_style=False, sort_keys=False)
-
-    print("Done!")
-
-
-def compose_simulator(
-    arch: str,
-    platforms: list[Platform],
-    dev: bool = False,
-    output_file: str = "simulator.yml",
-):
-    print("----- CREATING SIMULATOR.YML COMPOSE -----")
-    filename = "rcdt_gazebo/docker-compose.yml"
-
-    simulator_config = SimulatorConfig()
-    simulator_config.load_ui = True
-
-    if not os.path.exists(filename):
-        print(
-            "Warning: did not find docker-compose.yml file in rcdt_gazebo. Exiting..."
-        )
-        sys.exit(1)
-
-    with open(filename, "r") as f:
-        content = yaml.safe_load(f)
-        service = content["services"]["rcdt_gazebo"]
-
-        image_tag = get_image_tag()
-        print(f"Image tag: {image_tag}")
-
-        original_image = service["image"]
-        service["image"] = original_image.replace("${IMAGE_TAG}", f"{arch}-{image_tag}")
-
-        for platform in platforms:
-            platform_config = PlatformConfig()
-            platform_config.namespace = platform.namespace
-            platform_config.platform_type = type(platform).__name__
-            platform_config.position = platform.position
-            platform_config.orientation = platform.orientation
-            if platform.parent is not None:
-                platform_config.parent = platform.parent.namespace
-                platform_config.parent_link = f"{platform.parent.link_to_child}"
-            simulator_config.platforms.append(platform_config)
-        service["command"][-1] += f" config:='{simulator_config.to_str()}'"
-
-        if dev:
-            src_mounts_gazebo = get_src_mounts("rcdt_gazebo")
-            src_mounts_husarion = get_src_mounts("rcdt_husarion")
-            service["volumes"] = (
-                service["volumes"]
-                + dev_settings["volumes"]
-                + src_mounts_gazebo
-                + src_mounts_husarion
+            original_image = service["image"]
+            service["image"] = original_image.replace(
+                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
             )
 
-        print(f"\nWriting final compose file to {output_file}")
+            service["command"][-1] += f" config:='{simulator_config.to_str()}'"
 
-        with open(output_file, "w") as f:
-            yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
+            if self.dev:
+                src_mounts_gazebo = self.get_src_mounts("rcdt_gazebo")
+                src_mounts_husarion = self.get_src_mounts("rcdt_husarion")
+                service["volumes"] = (
+                    service["volumes"]
+                    + dev_settings["volumes"]
+                    + src_mounts_gazebo
+                    + src_mounts_husarion
+                )
 
+            print(f"\nWriting final compose file to {output_file}")
 
-def compose_tools(
-    arch: str,
-    platforms: list[Platform],
-    dev: bool = False,
-    output_file: str = "tools.yml",
-):
-    print("----- CREATING TOOLS.YML COMPOSE -----")
-    filename = "rcdt_tools/docker-compose.yml"
+            with open(output_file, "w") as f:
+                yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
-    if not os.path.exists(filename):
-        print("Warning: did not find docker-compose.yml file in rcdt_tools. Exiting...")
-        sys.exit(1)
+    def compose_tools(self, output_file: str = "tools.yml"):
+        print("----- CREATING TOOLS.YML COMPOSE -----")
+        filename = "rcdt_tools/docker-compose.yml"
 
-    with open(filename, "r") as f:
-        content = yaml.safe_load(f)
-        service = content["services"]["rcdt_tools"]
+        tools_config = ToolsConfig()
+        tools_config.rviz = True
+        tools_config.vizanti = False
+        tools_config.platforms = list(self.platforms.values())
 
-        image_tag = get_image_tag()
-        print(f"Image tag: {image_tag}")
+        if not os.path.exists(filename):
+            print(
+                "Warning: did not find docker-compose.yml file in rcdt_tools. Exiting..."
+            )
+            sys.exit(1)
 
-        original_image = service["image"]
-        service["image"] = original_image.replace("${IMAGE_TAG}", f"{arch}-{image_tag}")
+        with open(filename, "r") as f:
+            content = yaml.safe_load(f)
+            service = content["services"]["rcdt_tools"]
 
-        names = [platform.name for platform in platforms]
-        service["command"][-1] += f" platforms:={','.join(names)}"
+            image_tag = self.get_image_tag()
+            print(f"Image tag: {image_tag}")
 
-        if dev:
-            src_mounts = get_src_mounts("rcdt_tools")
-            service["volumes"] = (
-                service["volumes"] + dev_settings["volumes"] + src_mounts
+            original_image = service["image"]
+            service["image"] = original_image.replace(
+                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
             )
 
-        print(f"\nWriting final compose file to {output_file}")
+            service["command"][-1] += f" config:='{tools_config.to_str()}'"
 
-        with open(output_file, "w") as f:
-            yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
+            if self.dev:
+                src_mounts = self.get_src_mounts("rcdt_tools")
+                service["volumes"] = (
+                    service["volumes"] + dev_settings["volumes"] + src_mounts
+                )
+
+            print(f"\nWriting final compose file to {output_file}")
+
+            with open(output_file, "w") as f:
+                yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
 
 if __name__ == "__main__":
@@ -298,9 +293,4 @@ if __name__ == "__main__":
         PredefinedConfigurations.apply_configuration(args.configuration)
         platforms = EnvironmentConfiguration.platforms
 
-    if args.simulator:
-        compose_simulator(args.arch, platforms, args.dev)
-    if args.tools:
-        compose_tools(args.arch, platforms, args.dev)
-    if not args.simulator and not args.tools:
-        compose_platforms(args.arch, platforms, args.dev)
+    compose = Compose(platforms, args.arch, args.dev, args.simulator, args.tools)
