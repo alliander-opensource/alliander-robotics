@@ -46,14 +46,6 @@ RUN apt update && apt install -y --no-install-recommends \
   husarion_ugv_description \
   realsense2_description
 
-# Install dev packages
-COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt
-RUN apt update && apt install -y -qq --no-install-recommends  \
-  `cat /rcdt/dev-pkgs.txt`\
-  && rm -rf /var/lib/apt/lists/* \
-  && apt autoremove \
-  && apt clean
-
 # Install repo packages:
 COPY rcdt_description/src/ /rcdt/ros/src
 COPY rcdt_tools/src/ /rcdt/ros/src
