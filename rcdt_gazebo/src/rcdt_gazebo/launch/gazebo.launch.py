@@ -10,7 +10,7 @@ from launch.actions import ExecuteProcess, OpaqueFunction
 from launch_ros.actions import Node
 from rcdt_gazebo.create_sdf import create_map_world
 from rcdt_gazebo.gazebo_ros_paths import GazeboRosPaths
-from rcdt_utilities.config_objects import PlatformConfig, SimulatorConfig
+from rcdt_utilities.config_objects import Platform, SimulatorConfig
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
@@ -50,7 +50,7 @@ def get_sdf_file(world: str) -> str:
         return get_file_path("rcdt_gazebo", ["worlds"], world)
 
 
-def get_bridge_topics(platforms: list[PlatformConfig]) -> list[str]:
+def get_bridge_topics(platforms: list[Platform]) -> list[str]:
     bridge_topics = ["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"]
     for platform in platforms:
         if platform.platform_type == "Lidar":

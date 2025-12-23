@@ -8,7 +8,7 @@ import subprocess
 
 import numpy as np
 import rclpy
-from rcdt_utilities.config_objects import PlatformConfig, SimulatorConfig
+from rcdt_utilities.config_objects import Platform, SimulatorConfig
 from rclpy.node import Node
 from scipy.spatial.transform import RigidTransform, Rotation
 
@@ -30,27 +30,27 @@ class SpawnPlatform(Node):
         self.spawn_platforms(config.platforms)
         self.get_logger().info("All platforms spawned!")
 
-    def spawn_platforms(self, platforms: list[PlatformConfig]) -> None:
+    def spawn_platforms(self, platforms: list[Platform]) -> None:
         """Spawn platforms in the Gazebo simulation at specified positions.
 
         Args:
-            platforms (list[PlatformConfig]): List of the platforms.
+            platforms (list[Platform]): List of the platforms.
 
         """
         for platform in platforms:
             position = np.array(platform.position)
             orientation = np.array(platform.orientation)
 
-            if platform.parent != "none":
+            if platform.parent.link:
                 # First define the transform from world to model:
-                model_pose = get_pose(platform.parent)
+                model_pose = get_pose(platform.parent.namespace)
                 model_tf = RigidTransform.from_components(
                     model_pose["position"],
                     Rotation.from_euler("xyz", model_pose["orientation"]),
                 )
 
                 # Next define the transform from model to link:
-                link_pose = get_pose(platform.parent, platform.parent_link)
+                link_pose = get_pose(platform.parent.namespace, platform.parent.link)
                 link_tf = RigidTransform.from_components(
                     link_pose["position"],
                     Rotation.from_euler("xyz", link_pose["orientation"]),

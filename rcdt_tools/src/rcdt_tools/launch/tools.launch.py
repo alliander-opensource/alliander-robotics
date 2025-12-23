@@ -4,55 +4,14 @@
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from rcdt_tools.rviz import Rviz
-from rcdt_tools.vizanti import Vizanti
+from rcdt_tools.tool_manager import ApplyConfigurations
 from rcdt_utilities import launch_utils
+from rcdt_utilities.config_objects import ToolsConfig
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 
-platforms_arg = LaunchArgument("platforms", "")
-
-
-def add_arm(namespace: str, use_moveit: bool):
-    print(f"Adding arm with namespace {namespace}")
-    if use_moveit:
-        Rviz.moveit_namespaces.append(namespace)
-        Rviz.add_motion_planning_plugin(namespace)
-        Rviz.add_planning_scene(namespace)
-        Rviz.add_robot_state(namespace)
-        Rviz.add_trajectory(namespace)
-
-
-def add_vehicle(namespace: str, use_gps: bool, window_size: int):
-    print(f"Adding vehicle with namespace {namespace}")
-    Vizanti.add_platform_model(namespace)
-    Vizanti.add_button("Trigger", f"/{namespace}/hardware/e_stop_trigger")
-    Vizanti.add_button("Reset", f"/{namespace}/hardware/e_stop_reset")
-    Vizanti.add_button(
-        "Estop Status",
-        f"/{namespace}/hardware/e_stop",
-        "std_msgs/msg/Bool",
-    )
-    Vizanti.add_button("Stop", f"/{namespace}/waypoint_follower_controller/stop")
-    Vizanti.add_initial_pose()
-    Vizanti.add_goal_pose()
-    Vizanti.add_waypoints(namespace)
-    Vizanti.add_map("global_costmap", f"/{namespace}/global_costmap/costmap")
-    Vizanti.add_path(f"/{namespace}/plan")
-
-
-def add_lidar(namespace: str):
-    Rviz.add_laser_scan(namespace)
-
-
-def add_depth_camera(namespace: str):
-    Rviz.add_image(f"/{namespace}/color/image_raw")
-    Rviz.add_image(f"/{namespace}/depth/image_rect_raw")
-    Rviz.add_depth_cloud(
-        f"/{namespace}/color/image_raw",
-        f"/{namespace}/depth/image_rect_raw",
-    )
+config_arg = LaunchArgument("config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -64,59 +23,25 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    use_rviz = True
-    use_vizanti = False
-
-    use_moveit = False
-    use_gps = False
-    window_size = 10
-
-    platforms = platforms_arg.string_value(context).split(",")
-    print(f"Platforms to launch: {platforms}")
-
-    for platform in platforms:
-        Rviz.add_platform_model(platform)
-        match platform.lower():
-            case "franka":
-                add_arm("franka", use_moveit)
-            case "panther":
-                add_vehicle("panther", use_gps, window_size)
-            case "lynx":
-                add_vehicle("lynx", use_gps, window_size)
-            case "ouster":
-                add_lidar("ouster")
-            case "velodyne":
-                add_lidar("velodyne")
-            case "realsense":
-                add_depth_camera("realsense")
-            case "zed":
-                add_depth_camera("zed")
-
-    nodes = []
-
-    if use_rviz:
-        Rviz.set_fixed_frame("map")
-        Rviz.create_rviz_file()
-        rviz = RegisteredLaunchDescription(
-            get_file_path("rcdt_tools", ["launch"], "rviz.launch.py")
-        )
-        nodes.append(rviz)
-    if use_vizanti:
-        Vizanti.create_config_file()
-        vizanti = RegisteredLaunchDescription(
-            get_file_path("rcdt_tools", ["launch"], "vizanti.launch.py")
-        )
-        nodes.append(vizanti)
+    config = ToolsConfig.from_str(config_arg.string_value(context))
+    ApplyConfigurations(config)
 
     utilities = RegisteredLaunchDescription(
         get_file_path("rcdt_utilities", ["launch"], "utils.launch.py")
     )
-    nodes.append(utilities)
+
+    rviz = RegisteredLaunchDescription(
+        get_file_path("rcdt_tools", ["launch"], "rviz.launch.py")
+    )
+
+    vizanti = RegisteredLaunchDescription(
+        get_file_path("rcdt_tools", ["launch"], "vizanti.launch.py")
+    )
 
     return [
         Register.group(utilities, context),
-        Register.group(rviz, context) if use_rviz else launch_utils.SKIP,
-        Register.group(vizanti, context) if use_vizanti else launch_utils.SKIP,
+        Register.group(rviz, context) if config.rviz else launch_utils.SKIP,
+        Register.group(vizanti, context) if config.vizanti else launch_utils.SKIP,
     ]
 
 
@@ -128,7 +53,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            platforms_arg.declaration,
+            config_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )
