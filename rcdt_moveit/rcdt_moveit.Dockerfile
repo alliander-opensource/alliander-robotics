@@ -11,11 +11,11 @@ COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
 RUN apt update && apt install -y --no-install-recommends \
-    ros-$ROS_DISTRO-moveit \
-    ros-$ROS_DISTRO-moveit-servo \
-    ros-$ROS_DISTRO-moveit-visual-tools \
-    ros-$ROS_DISTRO-moveit-ros-perception \
-    ros-$ROS_DISTRO-topic-tools
+  ros-$ROS_DISTRO-moveit \
+  ros-$ROS_DISTRO-moveit-servo \
+  ros-$ROS_DISTRO-moveit-visual-tools \
+  ros-$ROS_DISTRO-moveit-ros-perception \
+  ros-$ROS_DISTRO-topic-tools \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \
   && apt clean
@@ -23,14 +23,6 @@ RUN apt update && apt install -y --no-install-recommends \
 # Get required descriptions:
 WORKDIR /rcdt/ros/src
 RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git
-
-# Install dev packages
-COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt
-RUN apt update && apt install -y -qq --no-install-recommends  \
-    `cat /rcdt/dev-pkgs.txt`\
-    && rm -rf /var/lib/apt/lists/* \
-    && apt autoremove \
-    && apt clean
 
 # Install repo packages
 WORKDIR /rcdt/ros

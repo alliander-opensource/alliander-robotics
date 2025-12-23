@@ -41,14 +41,6 @@ RUN uv sync \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
   --event-handlers console_direct+
 
-# Install dev packages
-COPY common/dev-pkgs.txt /rcdt/dev-pkgs.txt
-RUN apt update && apt install -y -qq --no-install-recommends  \
-  `cat /rcdt/dev-pkgs.txt`\
-  && rm -rf /var/lib/apt/lists/* \
-  && apt autoremove \
-  && apt clean
-
 # Install repo packages:
 COPY rcdt_description/src/ /rcdt/ros/src
 COPY rcdt_zed/src/ /rcdt/ros/src
