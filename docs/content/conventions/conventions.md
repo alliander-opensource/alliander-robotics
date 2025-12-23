@@ -112,7 +112,7 @@ Next, we define other packages where our package depends on.
 **23-28**:\
 The file ends with the default test dependency and an export definition.
 
-### Custom messages, services and actions
+### Custom Messages, Services and Actions
 
 We define custom messages, services and actions in our *rcdt_interfaces* package. This package has the following folder structure:
 
@@ -144,3 +144,29 @@ To generate custom messages successfully, we also need to specify the following 
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
   <member_of_group>rosidl_interface_packages</member_of_group>
 ```
+
+#### The Service Structure
+Unless more data is required, the `Response` of our services contains the following data by default:
+```text
+---
+bool success
+string message
+```
+
+When our service only requires a single request datatype, and the default response as described above, the name of the service will simply be the datatype of the request + `Srv`. So for example, when the only datatype in the request is a `string`, the service will be called `StringSrv.srv`.
+
+In case the service is more complex, the name of the service will represent its purpose. E.g., if the intention of the service is to add an object to a scene, the name of the service will be `AddObject.srv`.
+
+#### The Action Structure
+Unless more data is required, the `Response` and `Feedback` of our actions contains the following data by default:
+```text
+---
+bool success
+string message
+---
+string status
+```
+
+When our action only requires a single request datatype, and the default response & feedback as described above, the name of the action will simply be the datatype of the request + `Action`. So for example, when the only datatype in the request is a `string`, the action will be called `StringAction.action`.
+
+In case the action is more complex, the name of the action will represent its purpose. E.g., if the intention of the action is to move an object to a location in the scene, the name of the action will be `MoveObjectToLocation.action`.
