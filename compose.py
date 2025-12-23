@@ -26,6 +26,7 @@ dev_settings = {
         "./pyproject.toml:/rcdt/pyproject.toml",
         "./.config:/rcdt/.config",
         "./clangd:/rcdt/clangd",
+        "./rcdt_core/src/rcdt_utilities:/rcdt/ros/src/rcdt_utilities"
     ],
 }
 

@@ -4,7 +4,7 @@
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from rcdt_utilities.config_objects import PlatformConfig
+from rcdt_utilities.config_objects import Vehicle
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
@@ -22,7 +22,7 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    configuration = PlatformConfig.from_str(config_arg.string_value(context))
+    configuration = Vehicle.from_str(config_arg.string_value(context))
     parent = configuration.parent
 
     state_publisher = state_publisher_node(
