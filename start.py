@@ -11,7 +11,14 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "configuration",
+        nargs="?",
         help="Configuration name to launch.",
+    )
+
+    parser.add_argument(
+        "--pytest",
+        action="store_true",
+        help="Create the test container compose and start pytest inside it.",
     )
 
     parser.add_argument(
@@ -23,22 +30,23 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Create platforms compose file:
-    cmd = [f"python3 compose.py --arch amd64 -c {args.configuration} --dev"]
-    subprocess.run(cmd, shell=True, check=True)
-
-    # Create simulator compose file:
-    cmd = [f"python3 compose.py --arch amd64 -c {args.configuration} --simulator --dev"]
-    subprocess.run(cmd, shell=True, check=True)
-
-    # Create tools compose file:
-    cmd = [f"python3 compose.py --arch amd64 -c {args.configuration} --tools --dev"]
+    # Create compose file:
+    if args.pytest:
+        cmd = ["python3 compose.py --arch amd64 --pytest"]
+    else:
+        cmd = [
+            f"python3 compose.py --arch amd64 -c {args.configuration} --simulator --tools --dev"
+        ]
     subprocess.run(cmd, shell=True, check=True)
 
     # Spin up containers:
-    cmd = "docker compose -f platforms.yml -f simulator.yml -f tools.yml up"
+    cmd = "docker compose -f compose.yml up"
     if args.d:
         cmd += " -d"
 
     with contextlib.suppress(KeyboardInterrupt):
         subprocess.run([cmd], shell=True, check=False)
+
+    # Stop containers:
+    cmd = ["docker compose -f compose.yml down"]
+    subprocess.run(cmd, shell=True, check=True)

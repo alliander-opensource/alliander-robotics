@@ -106,6 +106,9 @@ class Register:
             if len(Register.register) == 1:
                 log_progress()
                 Register.all_started = True
+                LOGGER.info(colored("Startup complete.", "green"))
+                with open("/tmp/startup_complete", "a", encoding="utf-8") as f:
+                    f.write("")
                 Register.reset()
                 return LaunchDescription([])
             item = Register.register.pop(1)

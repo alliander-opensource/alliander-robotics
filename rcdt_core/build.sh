@@ -30,6 +30,9 @@ else
   IMAGE_TAG=$IMAGE_BASE_TAG-$ARCH
 fi
 
+# Set IMAGE_TAG hardcoded for now:
+IMAGE_TAG=rcdt/robotics:$PACKAGE-$ARCH
+
 source $SCRIPT_DIR/../common/checks.sh $ARCH
 
 # Build the Docker image

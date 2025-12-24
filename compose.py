@@ -26,7 +26,7 @@ dev_settings = {
         "./pyproject.toml:/rcdt/pyproject.toml",
         "./.config:/rcdt/.config",
         "./clangd:/rcdt/clangd",
-        "./rcdt_core/src/rcdt_utilities:/rcdt/ros/src/rcdt_utilities"
+        "./rcdt_core/src/rcdt_utilities:/rcdt/ros/src/rcdt_utilities",
     ],
 }
 
@@ -34,22 +34,13 @@ dev_settings = {
 class Compose:
     def __init__(
         self,
-        platforms: list[Platform],
+        platforms: dict[str, Platform],
         arch: str = "amd64",
         dev: bool = False,
-        simulator: bool = False,
-        tools: bool = False,
     ) -> None:
         self.platforms = platforms
         self.arch = arch
         self.dev = dev
-
-        if simulator:
-            self.compose_simulator()
-        if tools:
-            self.compose_tools()
-        if not simulator and not tools:
-            self.compose_platforms()
 
     @staticmethod
     def get_src_mounts(package: str) -> list[str]:
@@ -63,6 +54,8 @@ class Compose:
 
     @staticmethod
     def get_image_tag():
+        # Set image_tag harcoded for now:
+        return "latest"
         try:
             branch_name = subprocess.check_output(
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -79,6 +72,74 @@ class Compose:
         if branch_name == "main":
             return "latest"
         return branch_name
+
+    def compose_for_test_container(self, output_file: str = ""):
+        filename = "rcdt_tests/docker-compose.yml"
+
+        if not os.path.exists(filename):
+            print(
+                "Warning: did not find docker-compose.yml file in rcdt_tests. Exiting..."
+            )
+            sys.exit(1)
+
+        with open(filename, "r") as f:
+            content = yaml.safe_load(f)
+            service = content["services"]["rcdt_tests"]
+
+            image_tag = self.get_image_tag()
+            print(f"Image tag: {image_tag}")
+
+            original_image = service["image"]
+            service["image"] = original_image.replace(
+                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+            )
+
+            print(f"\nWriting final compose file to {output_file}")
+
+            with open(output_file, "w") as f:
+                yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
+
+        return content
+
+    def compose_for_test(self, simulator: bool, tools: bool, output_file: str):
+        compose: dict = self.compose_combined("", simulator, tools)
+        for service in compose["services"]:
+            del compose["services"][service]["env_file"]
+            compose["services"][service]["volumes"] = ["/dev:/dev"]
+
+        with open(output_file, "w") as f:
+            yaml.safe_dump(compose, f, default_flow_style=False, sort_keys=False)
+
+    def compose_combined(
+        self, output_file: str = "", simulator: bool = False, tools: bool = False
+    ):
+        compose = self.compose_platforms()
+        if simulator:
+            compose["services"].update(self.compose_simulator()["services"])
+        if tools:
+            compose["services"].update(self.compose_tools()["services"])
+
+        # Add healthchecks to all services:
+        for service in compose["services"]:
+            compose["services"][service]["healthcheck"] = {
+                "test": ["CMD-SHELL", "[ -f /tmp/startup_complete ]"],
+                "interval": "1s",
+                "retries": 1000,
+            }
+
+        # Make tools depenend on all other services:
+        if tools:
+            compose["services"]["rcdt_tools"]["depends_on"] = {}
+            for service in compose["services"]:
+                if service != "rcdt_tools":
+                    compose["services"]["rcdt_tools"]["depends_on"][service] = {
+                        "condition": "service_healthy"
+                    }
+
+        if not output_file:
+            return compose
+        with open(output_file, "w") as f:
+            yaml.safe_dump(compose, f, default_flow_style=False, sort_keys=False)
 
     def compose_platforms(self, output_file: str = "platforms.yml"):
         print("----- CREATING PLATFORMS.YML COMPOSE -----")
@@ -147,6 +208,7 @@ class Compose:
             yaml.safe_dump(merged_compose, f, default_flow_style=False, sort_keys=False)
 
         print("Done!")
+        return merged_compose
 
     def compose_simulator(self, output_file: str = "simulator.yml"):
         print("----- CREATING SIMULATOR.YML COMPOSE -----")
@@ -191,6 +253,8 @@ class Compose:
             with open(output_file, "w") as f:
                 yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
+        return content
+
     def compose_tools(self, output_file: str = "tools.yml"):
         print("----- CREATING TOOLS.YML COMPOSE -----")
         filename = "rcdt_tools/docker-compose.yml"
@@ -230,6 +294,8 @@ class Compose:
 
             with open(output_file, "w") as f:
                 yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
+
+        return content
 
 
 if __name__ == "__main__":
@@ -288,10 +354,20 @@ if __name__ == "__main__":
         help="Add this flag to enable dev mode, where repo folders are mounted into the container.",
     )
 
+    parser.add_argument(
+        "--pytest",
+        required=False,
+        action="store_true",
+        help="Add this flag to start the test container and run pytest inside it.",
+    )
+
     args = parser.parse_args()
 
     if args.configuration:
         PredefinedConfigurations.apply_configuration(args.configuration)
         platforms = EnvironmentConfiguration.platforms
-
-    compose = Compose(platforms, args.arch, args.dev, args.simulator, args.tools)
+        compose = Compose(platforms, args.arch, args.dev)
+        compose.compose_combined("compose.yml", args.simulator, args.tools)
+    else:
+        compose = Compose({}, args.arch, args.dev)
+        compose.compose_for_test_container("compose.yml")

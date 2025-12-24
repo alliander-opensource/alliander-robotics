@@ -27,6 +27,9 @@ else
   IMAGE_TAG=rcdt/robotics:$PACKAGE-$ARCH
 fi
 
+# Set IMAGE_TAG hardcoded for now:
+IMAGE_TAG=rcdt/robotics:$PACKAGE-$ARCH-latest
+
 source ./checks.sh $ARCH
 
 # Check if base image with specific branch tag exists, otherwise use latest
