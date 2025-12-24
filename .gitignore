@@ -35,3 +35,4 @@ clangd/
 platforms.yml
 simulator.yml
 tools.yml
+compose.yml
