@@ -1,6 +1,6 @@
 {
   "name": "dev",
-  "dockerComposeFile": "../../docker-compose.yml",
+  "dockerComposeFile": "docker-compose.yml",
   "service": "dev",
   "workspaceFolder": "/rcdt_robotics",
   "overrideCommand": true,
