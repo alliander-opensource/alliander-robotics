@@ -14,6 +14,9 @@ find_package(moveit_ros_planning_interface REQUIRED)
 find_package(moveit_visual_tools REQUIRED)
 find_package(rcdt_interfaces REQUIRED)
 
+# Python package:
+ament_python_install_package(${PROJECT_NAME})
+
 # C++ executables:
 include_directories(include)
 add_executable(moveit_manager src/moveit_manager.cpp)

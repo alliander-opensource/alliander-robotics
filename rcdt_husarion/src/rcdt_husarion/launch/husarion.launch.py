@@ -53,7 +53,7 @@ def launch_setup(context: LaunchContext) -> list:
 
     return [
         Register.on_start(state_publisher, context),
-        Register.on_start(static_tf, context),
+        Register.on_start(static_tf, context) if not configuration.nav2 else SKIP,
         Register.group(controllers, context) if configuration.simulation else SKIP,
     ]
 

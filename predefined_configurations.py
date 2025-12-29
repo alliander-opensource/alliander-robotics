@@ -109,9 +109,8 @@ def config_zed() -> None:  # noqa: D103
 # Franka:
 @register_configuration("franka")
 def config_franka() -> None:  # noqa: D103
-    # if not EnvironmentConfiguration.simulation:
-    #     Rviz.load_motion_planning_plugin = True
-    Arm("franka", gripper=True, moveit=True, ip_address="172.16.0.2")
+    arm = Arm("franka", gripper=True, moveit=True, ip_address="172.16.0.2")
+    arm.moveit_config.load_rviz_motion_planning_plugin = True
 
 
 @register_configuration("franka_realsense")
@@ -173,11 +172,9 @@ def config_panther_gps() -> None:  # noqa: D103
 
 # @register_configuration("panther_collision_monitor")
 # def config_panther_collision_monitor() -> None:  # noqa: D103
-#     Vehicle("panther", (0, 0, 0.2), collision_monitor=True).add_childs(
-#         [
-#             Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5"),
-#         ]
-#     )
+#     vehicle = Vehicle("panther", (0, 0, 0.2), collision_monitor=True)
+#     lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
+#     link(vehicle, lidar)
 
 
 # @register_configuration("panther_slam")
@@ -189,13 +186,13 @@ def config_panther_gps() -> None:  # noqa: D103
 #     )
 
 
-# @register_configuration("panther_lidar_navigation")
-# def config_panther_lidar_navigation() -> None:  # noqa: D103
-#     Vehicle("panther", (0, 0, 0.2), navigation=True).add_childs(
-#         [
-#             Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5"),
-#         ]
-#     )
+@register_configuration("panther_lidar_navigation")
+def config_panther_lidar_navigation() -> None:  # noqa: D103
+    EnvironmentConfiguration.world = "walls.sdf"
+    vehicle = Vehicle("panther", (0, 0, 0.2))
+    vehicle.nav2_config.navigation = True
+    lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
+    link(vehicle, lidar)
 
 
 # @register_configuration("panther_gps_navigation")
