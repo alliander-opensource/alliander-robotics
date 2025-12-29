@@ -163,6 +163,14 @@ def config_panther_ouster() -> None:  # noqa: D103
     link(vehicle, lidar)
 
 
+@register_configuration("panther_gps")
+def config_panther_gps() -> None:  # noqa: D103
+    EnvironmentConfiguration.world = "map_5.940906_51.966960"
+    vehicle = Vehicle("panther", (0, 0, 0.2))
+    gps = GPS("nmea", (0, 0, 0.2))
+    link(vehicle, gps)
+
+
 # @register_configuration("panther_collision_monitor")
 # def config_panther_collision_monitor() -> None:  # noqa: D103
 #     Vehicle("panther", (0, 0, 0.2), collision_monitor=True).add_childs(

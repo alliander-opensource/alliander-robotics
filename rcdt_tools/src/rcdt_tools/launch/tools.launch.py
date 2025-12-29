@@ -4,6 +4,7 @@
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
+from launch_ros.actions import SetParameter
 from rcdt_tools.tool_manager import ApplyConfigurations
 from rcdt_utilities import launch_utils
 from rcdt_utilities.config_objects import ToolsConfig
@@ -25,6 +26,7 @@ def launch_setup(context: LaunchContext) -> list:
     """
     config = ToolsConfig.from_str(config_arg.string_value(context))
     ApplyConfigurations(config)
+    simulation = all(platform.simulation for platform in config.platforms)
 
     utilities = RegisteredLaunchDescription(
         get_file_path("rcdt_utilities", ["launch"], "utils.launch.py")
@@ -39,6 +41,7 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
+        SetParameter(name="use_sim_time", value=simulation),
         Register.group(utilities, context),
         Register.group(rviz, context) if config.rviz else launch_utils.SKIP,
         Register.group(vizanti, context) if config.vizanti else launch_utils.SKIP,
