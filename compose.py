@@ -216,6 +216,7 @@ class Compose:
 
         simulator_config = SimulatorConfig()
         simulator_config.load_ui = True
+        simulator_config.world = EnvironmentConfiguration.world
         simulator_config.platforms = list(self.platforms.values())
 
         if not os.path.exists(filename):

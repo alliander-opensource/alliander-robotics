@@ -66,6 +66,10 @@ def get_bridge_topics(platforms: list[Platform]) -> list[str]:
                     f"/{platform.namespace}/depth/image_rect_raw_float@sensor_msgs/msg/Image@gz.msgs.Image",
                 ]
             )
+        if platform.platform_type == "GPS":
+            bridge_topics.append(
+                f"/{platform.namespace}/gps/fix@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat"
+            )
     return bridge_topics
 
 

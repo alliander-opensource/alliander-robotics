@@ -29,6 +29,7 @@ RUN mkdir -p /rcdt/osm2world \
 # Install vendor descriptions:
 WORKDIR /rcdt/ros/src
 RUN apt update && apt install -y --no-install-recommends \
+  ros-$ROS_DISTRO-husarion-components-description \
   ros-$ROS_DISTRO-velodyne-description \
   ros-$ROS_DISTRO-zed-msgs \
   && git clone -b 4.57.2 https://github.com/IntelRealSense/realsense-ros.git \

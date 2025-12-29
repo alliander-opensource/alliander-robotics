@@ -22,6 +22,7 @@ class EnvironmentConfiguration:
     """
 
     platforms: dict[str, "Platform"] = {}
+    world: str = "empty.sdf"
 
 
 def link(

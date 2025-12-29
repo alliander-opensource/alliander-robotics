@@ -23,6 +23,8 @@ class ApplyConfigurations:
                     self.add_lidar(platform)
                 case "Camera":
                     self.add_depth_camera(platform)
+                case "GPS":
+                    self.add_gps(platform)
 
         if config.rviz:
             Rviz.create_rviz_file()
@@ -68,3 +70,7 @@ class ApplyConfigurations:
             f"/{platform.namespace}/color/image_raw",
             f"/{platform.namespace}/depth/image_rect_raw",
         )
+
+    @staticmethod
+    def add_gps(platform: Platform):
+        Rviz.add_satellite(f"/{platform.namespace}/gps/fix")
