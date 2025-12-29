@@ -27,8 +27,8 @@ def launch_setup(context: LaunchContext) -> list:
 
     state_publisher = state_publisher_node(
         namespace=configuration.namespace,
-        platform="panther",
-        xacro="panther.urdf.xacro",
+        platform="husarion",
+        xacro=f"{configuration.name}.urdf.xacro",
         xacro_arguments={
             "childs": str(
                 [

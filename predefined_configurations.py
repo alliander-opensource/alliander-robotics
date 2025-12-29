@@ -213,50 +213,16 @@ def config_panther_gps() -> None:  # noqa: D103
 
 
 # # Lynx:
-# @register_configuration("lynx")
-# def config_lynx() -> None:  # noqa: D103
-#     Vehicle("lynx", (0, 0, 0.13), namespace="lynx")
+@register_configuration("lynx")
+def config_lynx() -> None:  # noqa: D103
+    Vehicle("lynx", (0, 0, 0.13), namespace="lynx")
 
 
-# @register_configuration("lynx_ouster")
-# def config_lynx_ouster() -> None:  # noqa: D103
-#     Vehicle("lynx", (0, 0, 0.13)).add_childs(
-#         [
-#             Lidar("ouster", (0.1, -0.1, 0.25), ip_address="10.15.20.5"),
-#         ]
-#     )
-
-
-# @register_configuration("lynx_slam")
-# def config_lynx_slam() -> None:  # noqa: D103
-#     Vehicle("lynx", (0, 0, 0.13), slam=True).add_childs(
-#         [
-#             Lidar("ouster", (0.1, -0.1, 0.25), ip_address="10.15.20.5"),
-#         ]
-#     )
-
-
-# @register_configuration("lynx_lidar_navigation")
-# def config_lynx_lidar_navigation() -> None:  # noqa: D103
-#     Vehicle("lynx", (0, 0, 0.13), navigation=True).add_childs(
-#         [
-#             Lidar("ouster", (0.1, -0.1, 0.25), ip_address="10.15.20.5"),
-#         ]
-#     )
-
-
-# @register_configuration("lynx_gps_navigation")
-# def config_lynx_gps_navigation() -> None:  # noqa: D103
-#     EnvironmentConfiguration.world = "map_5.940906_51.966960"
-#     EnvironmentConfiguration.use_vizanti = True
-#     Vehicle(
-#         "lynx", (0, 0, 0.13), navigation=True, use_gps=True, window_size=50
-#     ).add_childs(
-#         [
-#             GPS("nmea", (0, 0, 0.13)),
-#             Lidar("ouster", (0.1, -0.1, 0.25), ip_address="10.15.20.5"),
-#         ]
-#     )
+@register_configuration("lynx_ouster")
+def config_lynx_ouster() -> None:  # noqa: D103
+    vehicle = Vehicle("lynx", (0, 0, 0.13))
+    lidar = Lidar("ouster", (0.1, -0.1, 0.25), ip_address="10.15.20.5")
+    link(vehicle, lidar)
 
 
 # Mobile Manipulators:
