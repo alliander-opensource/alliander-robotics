@@ -8,12 +8,13 @@ import xmltodict
 from launch import LaunchContext, LaunchDescription
 from launch.actions import ExecuteProcess, OpaqueFunction
 from launch_ros.actions import Node, SetParameter
-from rcdt_launch.moveit import Moveit
+from rcdt_moveit.moveit import Moveit
+from rcdt_utilities.config_objects import Arm
 from rcdt_utilities.launch_argument import LaunchArgument
-from rcdt_utilities.register import Register
+from rcdt_utilities.register import Register, RegisteredLaunchDescription
+from rcdt_utilities.ros_utils import get_file_path
 
-namespace_arm_arg = LaunchArgument("namespace_arm", "")
-namespace_camera_arg = LaunchArgument("namespace_camera", "")
+config_arg = LaunchArgument("config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -28,14 +29,17 @@ def launch_setup(context: LaunchContext) -> list:
     Raises:
         ValueError: If the specified arm namespace is not recognized.
     """
-    namespace_arm = namespace_arm_arg.string_value(context)
-    namespace_camera = namespace_camera_arg.string_value(context)
+    config = Arm.from_str(config_arg.string_value(context))
+
+    # Extract camera namespace from childs. The first found will be used:
+    namespace_camera = ""
+    for child in config.childs:
+        if child.platform_type == "Camera":
+            namespace_camera = child.namespace
+            break
 
     # Wait for robot description on topic:
-    namespace_arm = "franka"
-    cmd = (
-        f"ros2 param get /{namespace_arm}/state_publisher robot_description --hide-type"
-    )
+    cmd = f"ros2 param get /{config.namespace}/state_publisher robot_description --hide-type"
     robot_description = {}
     while robot_description == {}:
         try:
@@ -47,13 +51,12 @@ def launch_setup(context: LaunchContext) -> list:
         except xmltodict.expat.ExpatError:
             print(f"Failed to obtain robot description: '{stderr}'. Retrying...")
 
-    Moveit.add(namespace_arm, robot_description, namespace_arm)
-
-    if namespace_arm not in Moveit.configurations:
+    Moveit.add(config.namespace, robot_description, config.name)
+    if config.namespace not in Moveit.configurations:
         raise ValueError(
-            f"Unknown arm namespace '{namespace_arm}'. Available: {list(Moveit.configurations.keys())}"
+            f"Unknown arm namespace '{config.namespace}'. Available: {list(Moveit.configurations.keys())}"
         )
-    configuration = Moveit.configurations[namespace_arm]
+    configuration = Moveit.configurations[config.namespace]
 
     # Parameters required for move_group:
     move_group_parameters = []
@@ -79,13 +82,18 @@ def launch_setup(context: LaunchContext) -> list:
     moveit_servo_parameters.append(configuration.robot_description)
     moveit_servo_parameters.append(configuration.robot_description_semantic)
     moveit_servo_parameters.append(configuration.robot_description_kinematics)
-    moveit_servo_parameters.append(Moveit.servo_configurations[namespace_arm])
+    moveit_servo_parameters.append(Moveit.servo_configurations[config.namespace])
+
+    # TODO: Add pose_manipulator directly to Moveit, so that utilities can be removed:
+    utilities = RegisteredLaunchDescription(
+        get_file_path("rcdt_utilities", ["launch"], "utils.launch.py")
+    )
 
     move_group = Node(
         package="moveit_ros_move_group",
         executable="move_group",
         parameters=move_group_parameters,
-        namespace=namespace_arm,
+        namespace=config.namespace,
     )
 
     moveit_manager = Node(
@@ -93,14 +101,14 @@ def launch_setup(context: LaunchContext) -> list:
         executable="moveit_manager",
         output="screen",
         parameters=moveit_manager_parameters,
-        namespace=namespace_arm,
+        namespace=config.namespace,
     )
 
     moveit_servo = Node(
         package="moveit_servo",
         executable="servo_node",
         parameters=moveit_servo_parameters,
-        namespace=namespace_arm,
+        namespace=config.namespace,
     )
 
     switch_servo_type_to_twist = ExecuteProcess(
@@ -108,7 +116,7 @@ def launch_setup(context: LaunchContext) -> list:
             "ros2",
             "service",
             "call",
-            f"/{namespace_arm}/servo_node/switch_command_type",
+            f"/{config.namespace}/servo_node/switch_command_type",
             "moveit_msgs/srv/ServoCommandType",
             "{command_type: 1}",
         ]
@@ -116,12 +124,11 @@ def launch_setup(context: LaunchContext) -> list:
 
     return [
         SetParameter(name="use_sim_time", value=True),
+        Register.group(utilities, context),
         Register.on_log(
             move_group, "MoveGroup context initialization complete", context
         ),
-        Register.on_log(
-            moveit_manager, "Moveit Manager initialized.", context
-        ),
+        Register.on_log(moveit_manager, "Moveit Manager initialized.", context),
         Register.on_log(moveit_servo, "Servo initialized successfully", context),
         Register.on_exit(switch_servo_type_to_twist, context),
     ]
@@ -135,8 +142,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            namespace_arm_arg.declaration,
-            namespace_camera_arg.declaration,
+            config_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

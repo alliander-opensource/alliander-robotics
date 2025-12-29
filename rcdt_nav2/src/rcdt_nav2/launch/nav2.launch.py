@@ -2,152 +2,69 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import yaml
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import Node, SetRemap
-from nav2_common.launch import RewrittenYaml
-from pydantic.v1.utils import deep_update
+from launch_ros.actions import LifecycleNode, Node, SetParameter, SetRemap
+from rcdt_utilities.adapted_yaml import AdaptedYaml
+from rcdt_utilities.config_objects import Vehicle
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.launch_utils import SKIP
-from rcdt_utilities.ros_utils import get_file_path, get_yaml
 from rcdt_utilities.register import Register
-import os
+from rcdt_utilities.ros_utils import get_file_path
 
-autostart_arg = LaunchArgument(
-    "autostart",
-    os.environ.get("AUTOSTART", default="True").lower() == "true",
-    [True, False],
-)
-
-use_respawn_arg = LaunchArgument(
-    "use_respawn",
-    os.environ.get("USE_RESPAWN", default="True").lower() == "true",
-    [True, False],
-)
-
-use_slam_arg = LaunchArgument(
-    "slam", os.environ.get("USE_SLAM", default="False").lower() == "true", [True, False]
-)
-
-namespace_vehicle_arg = LaunchArgument(
-    "namespace_vehicle", os.environ.get("NAMESPACE_VEHICLE", default="panther")
-)
-namespace_lidar_arg = LaunchArgument(
-    "namespace_lidar", os.environ.get("NAMESPACE_LIDAR", default="")
-)
-namespace_gps_arg = LaunchArgument(
-    "namespace_gps", os.environ.get("NAMESPACE_GPS", default="")
-)
-use_collision_monitor_arg = LaunchArgument(
-    "collision_monitor",
-    os.environ.get("USE_COLLISION_MONITOR", default="False").lower() == "true",
-    [True, False],
-)
-use_navigation_arg = LaunchArgument(
-    "navigation",
-    os.environ.get("USE_NAVIGATION", default="False").lower() == "true",
-    [True, False],
-)
-use_gps_arg = LaunchArgument(
-    "use_gps",
-    os.environ.get("USE_GPS", default="False").lower() == "true",
-    [True, False],
-)
-
-window_size_arg = LaunchArgument(
-    "window_size", os.environ.get("WINDOW_SIZE", default="10")
-)
-controller_arg = LaunchArgument(
-    "controller",
-    os.environ.get("CONTROLLER", default="vector_pursuit"),
-    [
-        "dwb",
-        "graceful_motion",
-        "mppi",
-        "pure_pursuit",
-        "rotation_shim",
-        "vector_pursuit",
-    ],
-)
-global_map_arg = LaunchArgument(
-    "map",
-    os.environ.get("GLOBAL_MAP", default=""),
-    ["", "simulation_map", "ipkw", "ipkw_buiten"],
-)
-
-
-class AdaptedYaml:
-    """Class to adapt a YAML file with parameter substitutions."""
-
-    def __init__(self, namespaces: list[str], file: str, substitutions: dict) -> None:
-        """Update parameters with substitutions and write to a namespaced YAML file.
-
-        Args:
-            namespaces (list[str]): List of namespaces to wrap the parameters.
-            file (str): Path to the original YAML file.
-            substitutions (dict): Dictionary of parameter substitutions.
-        """
-        self.namespaces = namespaces
-        self.params = deep_update(get_yaml(file), substitutions)
-        self.file: str
-        self.write_yaml()
-
-    def write_yaml(self) -> None:
-        """Write parameters to a namespaced YAML file."""
-        self.namespaces.append("ros__parameters")
-        self.namespaces.reverse()
-        file = "params.yml"
-        for namespace in self.namespaces:
-            self.params = {namespace: self.params}
-            if namespace != "ros__parameters":
-                file = namespace + "_" + file
-        self.file = "/tmp/" + file
-        with open(self.file, "w", encoding="utf-8") as outfile:
-            yaml.dump(self.params, outfile, default_flow_style=False)
+config_arg = LaunchArgument("config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
-    """Setup the launch description for the navigation stack.
+    """The launch setup.
 
     Args:
         context (LaunchContext): The launch context.
 
-    Raises:
-        ValueError: If GPS is enabled but no namespace is provided.
-
     Returns:
-        list: A list of actions to be executed in the launch description.
+        list: The actions to start.
+
+    Raises:
+        ValueError: If GPS is enabled but no GPS is child of vehicle.
     """
-    autostart = autostart_arg.bool_value(context)
-    use_respawn = use_respawn_arg.bool_value(context)
-    use_slam = use_slam_arg.bool_value(context)
-    namespace_vehicle = namespace_vehicle_arg.string_value(context)
-    namespace_lidar = namespace_lidar_arg.string_value(context)
-    namespace_gps = namespace_gps_arg.string_value(context)
-    use_collision_monitor = use_collision_monitor_arg.bool_value(context)
-    use_navigation = use_navigation_arg.bool_value(context)
-    use_gps = use_gps_arg.bool_value(context)
-    window_size = window_size_arg.int_value(context)
-    controller = controller_arg.string_value(context)
-    global_map = global_map_arg.string_value(context)
+    config = Vehicle.from_str(config_arg.string_value(context))
+    namespace_vehicle = config.namespace
+    nav2 = config.nav2_config
 
-    lifecycle_nodes = []
+    # Extract lidar and gps namespaces from childs. The first found will be used:
+    namespace_gps = ""
+    namespace_lidar = ""
+    for child in config.childs:
+        if child.platform_type == "Lidar" and not namespace_lidar:
+            namespace_lidar = child.namespace
+        if child.platform_type == "GPS" and not namespace_gps:
+            namespace_gps = child.namespace
 
-    if use_collision_monitor:
-        lifecycle_nodes.append("collision_monitor")
+    # Define configuration:
+    lifecycle_nodes_names = []
+    use_map_localization = True
+    plugins = ["static_layer", "obstacle_layer", "inflation_layer"]
 
-    if use_gps:
+    if nav2.collision_monitor:
+        lifecycle_nodes_names.append("collision_monitor")
+    if nav2.slam:
+        lifecycle_nodes_names.append("slam_toolbox")
+        use_map_localization = False
+    if nav2.gps:
         if not namespace_gps:
             raise ValueError("Namespace for GPS must be provided when using GPS.")
-    elif use_slam:
-        lifecycle_nodes.append("slam_toolbox")
-    elif use_navigation:
-        lifecycle_nodes.append("map_server")
-        lifecycle_nodes.append("amcl")
-
-    if use_navigation:
-        lifecycle_nodes.extend(
+        use_map_localization = False
+    if nav2.navigation:
+        if use_map_localization:
+            lifecycle_nodes_names.extend(
+                [
+                    "map_server",
+                    "amcl",
+                ]
+            )
+        else:
+            plugins.remove("static_layer")
+        lifecycle_nodes_names.extend(
             [
                 "controller_server",
                 "planner_server",
@@ -157,7 +74,8 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
             ]
         )
 
-    slam_params = RewrittenYaml(
+    # Define parameters:
+    slam_params = AdaptedYaml(
         get_file_path("rcdt_nav2", ["config"], "slam_params.yaml"),
         {
             "odom_frame": f"{namespace_vehicle}/odom",
@@ -167,7 +85,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         root_key=namespace_vehicle,
     )
 
-    amcl_params = RewrittenYaml(
+    amcl_params = AdaptedYaml(
         get_file_path("rcdt_nav2", ["config", "nav2"], "amcl.yaml"),
         {
             "base_frame_id": f"{namespace_vehicle}/base_footprint",
@@ -177,47 +95,43 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         root_key=namespace_vehicle,
     )
 
-    plugins = ["obstacle_layer", "inflation_layer"]
-    if not use_gps:
-        plugins.append("static_layer")
-
     local_costmap_params = AdaptedYaml(
-        [namespace_vehicle, "local_costmap", "local_costmap"],
         get_file_path("rcdt_nav2", ["config", "nav2"], "local_costmap.yaml"),
         {
             "global_frame": f"{namespace_vehicle}/odom",
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
-            "rolling_window": use_gps,
+            "rolling_window": nav2.gps,
             "plugins": plugins,
         },
+        root_key=namespace_vehicle,
     )
 
     global_costmap_params = AdaptedYaml(
-        [namespace_vehicle, "global_costmap", "global_costmap"],
         get_file_path("rcdt_nav2", ["config", "nav2"], "global_costmap.yaml"),
         {
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
-            "rolling_window": use_gps,
-            "width": window_size,
-            "height": window_size,
+            "rolling_window": nav2.gps,
+            "width": nav2.window_size,
+            "height": nav2.window_size,
             "plugins": plugins,
             "obstacle_layer": {
                 "scan": {
                     "topic": f"/{namespace_lidar}/scan",
-                    "obstacle_max_range": float(window_size),
-                    "raytrace_max_range": float(window_size),
+                    "obstacle_max_range": float(nav2.window_size),
+                    "raytrace_max_range": float(nav2.window_size),
                 }
             },
         },
+        root_key=namespace_vehicle,
     )
 
-    controller_server_params = RewrittenYaml(
+    controller_server_params = AdaptedYaml(
         get_file_path("rcdt_nav2", ["config", "nav2"], "controller_server.yaml"),
         {"odom_topic": f"/{namespace_vehicle}/odom"},
         root_key=namespace_vehicle,
     )
 
-    behavior_server_params = RewrittenYaml(
+    behavior_server_params = AdaptedYaml(
         get_file_path("rcdt_nav2", ["config", "nav2"], "behavior_server.yaml"),
         {
             "local_frame": f"{namespace_vehicle}/odom",
@@ -226,15 +140,15 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         root_key=namespace_vehicle,
     )
 
-    follow_path_params = RewrittenYaml(
+    follow_path_params = AdaptedYaml(
         get_file_path(
-            "rcdt_nav2", ["config", "nav2", "controllers"], f"{controller}.yaml"
+            "rcdt_nav2", ["config", "nav2", "controllers"], f"{nav2.controller}.yaml"
         ),
         {},
         root_key=namespace_vehicle,
     )
 
-    bt_navigator_params = RewrittenYaml(
+    bt_navigator_params = AdaptedYaml(
         get_file_path("rcdt_nav2", ["config", "nav2"], "bt_navigator.yaml"),
         {
             "default_nav_to_pose_bt_xml": get_file_path(
@@ -246,53 +160,43 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         root_key=namespace_vehicle,
     )
 
-    planner_server_params = RewrittenYaml(
+    planner_server_params = AdaptedYaml(
         get_file_path("rcdt_nav2", ["config", "nav2"], "planner_server.yaml"),
         {},
         root_key=namespace_vehicle,
     )
 
-    collision_monitor_params = RewrittenYaml(
+    collision_monitor_params = AdaptedYaml(
         get_file_path("rcdt_nav2", ["config", "nav2"], "collision_monitor.yaml"),
         {
             "base_frame_id": f"{namespace_vehicle}/base_footprint",
             "odom_frame_id": f"{namespace_vehicle}/odom",
             "cmd_vel_in_topic": f"/{namespace_vehicle}/cmd_vel_raw",
             "cmd_vel_out_topic": f"/{namespace_vehicle}/cmd_vel",
-            "topic": f"/{namespace_lidar}/scan",
+            "scan": {
+                "topic": f"/{namespace_lidar}/scan",
+            },
         },
         root_key=namespace_vehicle,
     )
 
-    map_tf_publisher = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="static_tf_world",
-        arguments=[
-            "--frame-id",
-            "map",
-            "--child-frame-id",
-            f"{namespace_vehicle}/odom",
-            "--x",
-            "0",
-            "--y",
-            "0",
-            "--z",
-            "0",
-            "--roll",
-            "0",
-            "--pitch",
-            "0",
-            "--yaw",
-            "0",
-        ],
+    # Define lifecycle nodes:
+    all_lifecycle_nodes = {}
+
+    all_lifecycle_nodes["collision_monitor"] = LifecycleNode(
+        package="nav2_collision_monitor",
+        executable="collision_monitor",
+        name="collision_monitor",
+        parameters=[collision_monitor_params.file],
+        namespace=namespace_vehicle,
     )
 
-    slam = Node(
+    all_lifecycle_nodes["slam_toolbox"] = LifecycleNode(
         package="slam_toolbox",
         executable="async_slam_toolbox_node",
+        name="slam_toolbox",
         parameters=[
-            slam_params,
+            slam_params.file,
             {
                 "use_lifecycle_manager": True,
             },
@@ -301,139 +205,114 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         remappings=[("/map", f"/{namespace_vehicle}/map")],
     )
 
-    map_server, amcl = None, None
-    if global_map:
-        map_server = Node(
-            package="nav2_map_server",
-            executable="map_server",
-            parameters=[
-                {
-                    "yaml_filename": get_file_path(
-                        "rcdt_nav2", ["config", "maps"], str(global_map) + ".yaml"
-                    ),
-                    "topic_name": f"/{namespace_vehicle}/map",
-                }
-            ],
-            namespace=namespace_vehicle,
-        )
-
-        amcl = Node(
-            package="nav2_amcl",
-            executable="amcl",
-            parameters=[amcl_params],
-            namespace=namespace_vehicle,
-            remappings=[(f"/{namespace_vehicle}/initialpose", "/initialpose")],
-        )
-
-    controller_server = Node(
-        package="nav2_controller",
-        executable="controller_server",
-        output="screen",
-        respawn=use_respawn,
-        respawn_delay=2.0,
+    all_lifecycle_nodes["map_server"] = LifecycleNode(
+        package="nav2_map_server",
+        executable="map_server",
+        name="map_server",
         parameters=[
-            local_costmap_params.file,
-            controller_server_params,
-            follow_path_params,
+            {
+                "yaml_filename": get_file_path(
+                    "rcdt_nav2", ["config", "maps"], f"{nav2.map}.yaml"
+                ),
+                "topic_name": f"/{namespace_vehicle}/map",
+            }
         ],
         namespace=namespace_vehicle,
     )
 
-    planner_server = Node(
+    all_lifecycle_nodes["amcl"] = LifecycleNode(
+        package="nav2_amcl",
+        executable="amcl",
+        name="amcl",
+        parameters=[amcl_params.file],
+        namespace=namespace_vehicle,
+        remappings=[(f"/{namespace_vehicle}/initialpose", "/initialpose")],
+    )
+
+    all_lifecycle_nodes["controller_server"] = LifecycleNode(
+        package="nav2_controller",
+        executable="controller_server",
+        name="controller_server",
+        parameters=[
+            local_costmap_params.file,
+            controller_server_params.file,
+            follow_path_params.file,
+        ],
+        namespace=namespace_vehicle,
+    )
+
+    all_lifecycle_nodes["planner_server"] = LifecycleNode(
         package="nav2_planner",
         executable="planner_server",
         name="planner_server",
-        output="screen",
-        respawn=use_respawn,
-        respawn_delay=2.0,
-        parameters=[global_costmap_params.file, planner_server_params],
+        parameters=[
+            global_costmap_params.file,
+            planner_server_params.file,
+        ],
         namespace=namespace_vehicle,
     )
 
-    behavior_server = Node(
+    all_lifecycle_nodes["behavior_server"] = LifecycleNode(
         package="nav2_behaviors",
         executable="behavior_server",
         name="behavior_server",
-        output="screen",
-        respawn=use_respawn,
-        respawn_delay=2.0,
-        parameters=[behavior_server_params],
+        parameters=[behavior_server_params.file],
         namespace=namespace_vehicle,
     )
 
-    bt_navigator = Node(
+    all_lifecycle_nodes["bt_navigator"] = LifecycleNode(
         package="nav2_bt_navigator",
         executable="bt_navigator",
         name="bt_navigator",
-        output="screen",
-        respawn=use_respawn,
-        respawn_delay=2.0,
-        parameters=[bt_navigator_params],
-        remappings=[(f"/{namespace_vehicle}/goal_pose", "/goal_pose")],
+        parameters=[bt_navigator_params.file],
         namespace=namespace_vehicle,
     )
 
-    collision_monitor_node = Node(
-        package="nav2_collision_monitor",
-        executable="collision_monitor",
-        name="collision_monitor",
-        output="screen",
-        respawn=use_respawn,
-        respawn_delay=2.0,
-        parameters=[collision_monitor_params],
+    remappings = []
+    if nav2.gps:
+        remappings.append(("/gps/fix", f"/{namespace_gps}/fix"))
+        remappings.append(("/fromLL", f"/{namespace_gps}/fromLL"))
+
+    all_lifecycle_nodes["waypoint_follower"] = LifecycleNode(
+        package="nav2_waypoint_follower",
+        executable="waypoint_follower",
+        name="waypoint_follower",
         namespace=namespace_vehicle,
+        remappings=remappings,
     )
 
     lifecycle_manager = Node(
         package="nav2_lifecycle_manager",
         executable="lifecycle_manager",
         name="lifecycle_manager_navigation",
-        output="screen",
-        parameters=[{"autostart": autostart}, {"node_names": lifecycle_nodes}],
+        parameters=[{"autostart": True}, {"node_names": lifecycle_nodes_names}],
         namespace=namespace_vehicle,
     )
 
-    remappings = []
-    if use_gps:
-        remappings.append(("/gps/fix", f"/{namespace_gps}/fix"))
-    waypoint_follower = Node(
-        package="nav2_waypoint_follower",
-        executable="waypoint_follower",
+    nav2_manager = Node(
+        package="rcdt_nav2",
+        executable="nav2_manager.py",
         namespace=namespace_vehicle,
         remappings=remappings,
     )
 
-    waypoint_follower_controller = Node(
-        package="rcdt_nav2",
-        executable="nav2_manager.py",
-        namespace=namespace_vehicle,
-    )
-
     pub_topic = (
         f"/{namespace_vehicle}/cmd_vel"
-        if not use_collision_monitor
+        if not nav2.collision_monitor
         else f"/{namespace_vehicle}/cmd_vel_raw"
     )
 
+    register_lifecycle_nodes = []
+    for node_name in lifecycle_nodes_names:
+        register_lifecycle_nodes.append(all_lifecycle_nodes[node_name])
+
     return [
+        SetParameter(name="use_sim_time", value=config.simulation),
         SetRemap(src="/cmd_vel", dst=pub_topic),
-        Register.on_start(slam, context) if use_slam else SKIP,
-        Register.on_start(map_tf_publisher, context) if not use_gps else SKIP,
-        Register.on_start(map_server, context) if map_server is not None else SKIP,
-        Register.on_start(amcl, context) if amcl is not None else SKIP,
-        Register.on_start(controller_server, context) if use_navigation else SKIP,
-        Register.on_start(planner_server, context) if use_navigation else SKIP,
-        Register.on_start(behavior_server, context) if use_navigation else SKIP,
-        Register.on_start(bt_navigator, context) if use_navigation else SKIP,
-        Register.on_start(waypoint_follower, context) if use_navigation else SKIP,
-        Register.on_start(collision_monitor_node, context)
-        if use_collision_monitor
-        else SKIP,
-        Register.on_log(lifecycle_manager, "Managed nodes are active", context)
-        if lifecycle_nodes
-        else SKIP,
-        Register.on_log(waypoint_follower_controller, "Controller is ready.", context)
-        if use_navigation
+        *[Register.on_start(node, context) for node in register_lifecycle_nodes],
+        Register.on_log(lifecycle_manager, "Managed nodes are active", context),
+        Register.on_log(nav2_manager, "Controller is ready.", context)
+        if nav2.navigation
         else SKIP,
     ]
 
@@ -446,18 +325,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            use_collision_monitor_arg.declaration,
-            autostart_arg.declaration,
-            use_respawn_arg.declaration,
-            use_slam_arg.declaration,
-            namespace_vehicle_arg.declaration,
-            namespace_lidar_arg.declaration,
-            namespace_gps_arg.declaration,
-            use_navigation_arg.declaration,
-            use_gps_arg.declaration,
-            window_size_arg.declaration,
-            controller_arg.declaration,
-            global_map_arg.declaration,
+            config_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

@@ -2,17 +2,22 @@ import argparse
 import os
 import subprocess
 import sys
+import typing
 from pathlib import Path
 
 import yaml
 
 from predefined_configurations import PredefinedConfigurations
 from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
+    Arm,
     EnvironmentConfiguration,
     Platform,
     SimulatorConfig,
     ToolsConfig,
+    Vehicle,
 )
+
+TOOLS = typing.Literal["moveit", "nav2"]
 
 predefined_configurations = PredefinedConfigurations.get_names()
 
@@ -110,6 +115,53 @@ class Compose:
         with open(output_file, "w") as f:
             yaml.safe_dump(compose, f, default_flow_style=False, sort_keys=False)
 
+    def compose_tool(self, platform: Platform, tool: TOOLS):
+        if tool not in typing.get_args(TOOLS):
+            raise ValueError(f"Unknown tool '{tool}'. Available: {TOOLS}")
+
+        service_name = f"rcdt_{tool}"
+
+        if platform.name in {"panther", "lynx"}:
+            platform_service_name = "rcdt_husarion"
+        else:
+            platform_service_name = f"rcdt_{platform.name}"
+
+        filename = f"{service_name}/docker-compose.yml"
+
+        if not os.path.exists(filename):
+            print(
+                f"Warning: did not find docker-compose.yml file in {filename}. Exiting..."
+            )
+            sys.exit(1)
+
+        with open(filename, "r") as f:
+            content = yaml.safe_load(f)
+            service = content["services"][service_name]
+
+            # Start tool when platfrorm is ready:
+            service["depends_on"] = {}
+            service["depends_on"][platform_service_name] = {
+                "condition": "service_healthy"
+            }
+
+            image_tag = self.get_image_tag()
+            print(f"Image tag: {image_tag}")
+
+            original_image = service["image"]
+            service["image"] = original_image.replace(
+                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+            )
+
+            if self.dev:
+                src_mounts = self.get_src_mounts(service_name)
+                service["volumes"] = (
+                    service["volumes"] + dev_settings["volumes"] + src_mounts
+                )
+
+            service["command"][-1] += f" config:='{platform.to_str()}'"
+
+        return content
+
     def compose_combined(
         self, output_file: str = "", simulator: bool = False, tools: bool = False
     ):
@@ -118,6 +170,17 @@ class Compose:
             compose["services"].update(self.compose_simulator()["services"])
         if tools:
             compose["services"].update(self.compose_tools()["services"])
+
+        # Add Moveit or Nav2 for Arms or Vehicles:
+        for platform in self.platforms.values():
+            if isinstance(platform, Arm) and platform.moveit:
+                compose["services"].update(
+                    self.compose_tool(platform, "moveit")["services"]
+                )
+            if isinstance(platform, Vehicle) and platform.nav2:
+                compose["services"].update(
+                    self.compose_tool(platform, "nav2")["services"]
+                )
 
         # Add healthchecks to all services:
         for service in compose["services"]:

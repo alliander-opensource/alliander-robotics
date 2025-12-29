@@ -3,8 +3,10 @@ from __future__ import annotations
 import math
 import typing
 from dataclasses import dataclass, field
+from typing import Annotated, List, Literal, Union
 
 from mashumaro.mixins.json import DataClassJSONMixin
+from mashumaro.types import Discriminator
 
 
 class EnvironmentConfiguration:
@@ -42,6 +44,7 @@ def link(
 
     # Add child to parent:
     child = Child()
+    child.platform_type = type(child_platform).__name__
     child.namespace = child_platform.namespace
     child.link = child_link if child_link else child_platform.default_link_to_parent()
     child.connects_to = (
@@ -50,6 +53,7 @@ def link(
     parent_platform.childs.append(child)
 
 
+# Base classes:
 @dataclass
 class Config(DataClassJSONMixin):
     def to_str(self) -> str:
@@ -69,11 +73,13 @@ class Parent(Config):
 
 @dataclass
 class Child(Config):
+    platform_type: str = ""
     namespace: str = ""
     link: str = ""
     connects_to: str = ""
 
 
+# General platform definition:
 @dataclass
 class Platform(Config):
     name: str
@@ -92,7 +98,6 @@ class Platform(Config):
         if self.initialized:
             return
         self.orientation = tuple(map(math.radians, self.orientation))
-        self.platform_type = type(self).__name__
         if not self.namespace:
             self.namespace = self.name
         if not self.parent.connects_to:
@@ -121,46 +126,92 @@ class Platform(Config):
                 )
 
 
+# Tools:
 @dataclass
-class Arm(Platform):
-    gripper: bool = False
-    moveit: bool = False
-    ip_address: str = ""
-
-
-@dataclass
-class Vehicle(Platform):
+class Nav2Config(Config):
     collision_monitor: bool = False
     slam: bool = False
     navigation: bool = False
-    use_gps: bool = False
+    gps: bool = False
+    controller: Literal[
+        "dwb",
+        "graceful_motion",
+        "mppi",
+        "pure_pursuit",
+        "rotation_shim",
+        "vector_pursuit",
+    ] = "vector_pursuit"
+    map: Literal["simulation_map", "ipkw", "ipkw_buiten"] = "simulation_map"
     window_size: int = 10
 
 
 @dataclass
+class MoveitConfig(Config):
+    load_rviz_motion_planning_plugin: bool = False
+
+
+# Platforms:
+@dataclass
+class Arm(Platform):
+    platform_type: str = "Arm"
+    gripper: bool = False
+    moveit: bool = False
+    ip_address: str = ""
+
+    moveit_config: MoveitConfig = field(default_factory=MoveitConfig)
+
+
+@dataclass
+class Vehicle(Platform):
+    platform_type: str = "Vehicle"
+    nav2_config: Nav2Config = field(default_factory=Nav2Config)
+
+    @property
+    def nav2(self) -> bool:
+        return any(
+            [
+                self.nav2_config.collision_monitor,
+                self.nav2_config.slam,
+                self.nav2_config.navigation,
+            ]
+        )
+
+
+@dataclass
 class Camera(Platform):
-    pass
+    platform_type: str = "Camera"
 
 
 @dataclass
 class Lidar(Platform):
-    ip_address: str = ""
+    platform_type: str = "Lidar"
+    ip_address: str = "10.15.20.5"
 
 
 @dataclass
 class GPS(Platform):
+    platform_type: str = "GPS"
     ip_address: str = ""
 
 
+# Configurations containing lists of platforms:
 @dataclass
-class SimulatorConfig(Config):
+class PlatformList(Config):
+    platforms: List[
+        Annotated[
+            Union[Arm, Vehicle, Lidar, Camera, GPS],
+            Discriminator(field="platform_type", include_supertypes=True),
+        ]
+    ] = field(default_factory=list)
+
+
+@dataclass
+class SimulatorConfig(PlatformList):
     load_ui: bool = True
     world: str = "empty.sdf"
-    platforms: list[Platform] = field(default_factory=list)
 
 
 @dataclass
-class ToolsConfig(Config):
+class ToolsConfig(PlatformList):
     rviz: bool = True
     vizanti: bool = False
-    platforms: list[Platform] = field(default_factory=list)

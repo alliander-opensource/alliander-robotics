@@ -7,6 +7,7 @@ import os.path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
+from rcdt_tools.tool_manager import ApplyConfigurations
 from rcdt_utilities.register import Register
 
 
@@ -20,7 +21,7 @@ def launch_setup(context: LaunchContext) -> list:
         list: A list of actions to be executed in the launch description.
     """
     arguments = []
-    parameters = []
+    parameters = ApplyConfigurations.rviz_parameters
     remappings = []
 
     file_name = "/tmp/rviz.rviz"

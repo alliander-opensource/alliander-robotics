@@ -16,6 +16,7 @@ RUN apt update && apt install -y --no-install-recommends \
   ros-$ROS_DISTRO-plotjuggler-ros \
   ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
   ros-$ROS_DISTRO-rqt-tf-tree \
+  ros-$ROS_DISTRO-moveit-ros-visualization \
   ros-$ROS_DISTRO-rviz-satellite \
   ros-$ROS_DISTRO-vision-msgs \
   && rm -rf /var/lib/apt/lists/* \

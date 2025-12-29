@@ -12,22 +12,10 @@ class Rviz:
     Attributes:
         yaml (dict): The default RViz configuration.
         displays (list): The list of displays in the RViz configuration.
-        load_motion_planning_plugin (bool): Whether to load the motion planning plugin.
-        load_planning_scene (bool): Whether to load the planning scene display.
-        load_robot_state (bool): Whether to load the robot state display.
-        load_trajectory (bool): Whether to load the trajectory display.
-        load_point_cloud (bool): Whether to load point cloud displays.
-        moveit_namespaces (list[str]): A list of the namespaces where MoveIt is launched.
     """
 
     yaml: dict = get_yaml(get_file_path("rcdt_tools", ["rviz"], "default.rviz"))
     displays: list = yaml["Visualization Manager"]["Displays"]
-    load_motion_planning_plugin: bool = False
-    load_planning_scene: bool = False
-    load_robot_state: bool = False
-    load_trajectory: bool = False
-    load_point_cloud: bool = False
-    moveit_namespaces: list[str] = []
 
     @staticmethod
     def set_fixed_frame(frame: str) -> None:
@@ -164,8 +152,6 @@ class Rviz:
         Args:
             namespace (str): The namespace of the robot.
         """
-        if not Rviz.load_motion_planning_plugin:
-            return
         Rviz.displays.append(
             {
                 "Enabled": True,
@@ -184,8 +170,6 @@ class Rviz:
         Args:
             namespace (str): The namespace of the robot.
         """
-        if not Rviz.load_planning_scene:
-            return
         Rviz.displays.append(
             {
                 "Enabled": True,
@@ -205,8 +189,6 @@ class Rviz:
         Args:
             namespace (str): The namespace of the robot.
         """
-        if not Rviz.load_robot_state:
-            return
         Rviz.displays.append(
             {
                 "Enabled": True,
@@ -225,8 +207,6 @@ class Rviz:
         Args:
             namespace (str): The namespace of the robot.
         """
-        if not Rviz.load_trajectory:
-            return
         Rviz.displays.append(
             {
                 "Enabled": True,
