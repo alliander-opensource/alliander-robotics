@@ -5,10 +5,11 @@
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
+from rcdt_utilities.config_objects import Vehicle
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 
-namespace_arg = LaunchArgument("namespace", "panther")
+config_arg = LaunchArgument("config", "")
 
 TIMEOUT = 100
 
@@ -22,7 +23,7 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: A list of actions to be executed in the launch description.
     """
-    namespace = namespace_arg.string_value(context)
+    configuration = Vehicle.from_str(config_arg.string_value(context))
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
@@ -35,7 +36,7 @@ def launch_setup(context: LaunchContext) -> list:
             "--remap joint_state_broadcaster/transition_event:=joint_state_broadcaster/_transition_event",
         ],
         name="joint_state_broadcaster",
-        namespace=namespace,
+        namespace=configuration.namespace,
     )
 
     imu_broadcaster_spawner = Node(
@@ -46,16 +47,16 @@ def launch_setup(context: LaunchContext) -> list:
             "--switch-timeout",
             str(TIMEOUT),
             "--controller-ros-args",
-            f"--ros-args -p sensor_name:={namespace}/imu",
+            f"--ros-args -p sensor_name:={configuration.namespace}/imu",
             "--controller-ros-args",
-            f"--ros-args -p frame_id:={namespace}/imu_link",
+            f"--ros-args -p frame_id:={configuration.namespace}/imu_link",
             "--controller-ros-args",
             "--remap imu_broadcaster/imu:=imu/data",
             "--controller-ros-args",
             "--remap imu_broadcaster/transition_event:=imu_broadcaster/_transition_event",
         ],
         name="imu_broadcaster",
-        namespace=namespace,
+        namespace=configuration.namespace,
     )
 
     drive_controller_spawner = Node(
@@ -75,7 +76,7 @@ def launch_setup(context: LaunchContext) -> list:
             "--remap drive_controller/transition_event:=drive_controller/_transition_event",
         ],
         name="drive_controller",
-        namespace=namespace,
+        namespace=configuration.namespace,
     )
 
     return [
@@ -86,14 +87,14 @@ def launch_setup(context: LaunchContext) -> list:
 
 
 def generate_launch_description() -> LaunchDescription:
-    """Generate the launch description for the Panther controllers.
+    """Generate the launch description.
 
     Returns:
-        LaunchDescription: The launch description containing the Panther controllers.
+        LaunchDescription: The launch description.
     """
     return LaunchDescription(
         [
-            namespace_arg.declaration,
+            config_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

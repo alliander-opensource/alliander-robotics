@@ -102,7 +102,7 @@ class Platform(Config):
 
     def default_link_to_parent(self) -> str:
         match self.name:
-            case "panther":
+            case "panther" | "lynx":
                 return "odom"
             case "franka":
                 return "fr3_link0" if self.parent.namespace else "world"
@@ -111,7 +111,7 @@ class Platform(Config):
 
     def default_link_to_child(self) -> str:
         match self.name:
-            case "panther":
+            case "panther" | "lynx":
                 return "base_link"
             case "franka":
                 return "fr3_hand"

@@ -11,7 +11,7 @@ find_package(ament_cmake_python REQUIRED)
 
 # Shared folders:
 install(
-  DIRECTORY franka panther ouster velodyne realsense zed nmea
+  DIRECTORY franka husarion ouster velodyne realsense zed nmea
   DESTINATION share/${PROJECT_NAME}
 )
 
