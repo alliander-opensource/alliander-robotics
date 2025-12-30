@@ -48,5 +48,12 @@ if __name__ == "__main__":
         subprocess.run([cmd], shell=True, check=False)
 
     # Stop containers:
-    cmd = ["docker compose -f compose.yml down"]
+    cmd = ["docker compose -f compose.yml down -t 1"]
     subprocess.run(cmd, shell=True, check=True)
+
+    # Stop containers started for pytest:
+    if args.pytest:
+        cmd = ["docker compose -f rcdt_tests/compose.yml down -t 1"]
+        subprocess.run(cmd, shell=True, check=True)
+        cmd = ["docker compose -f rcdt_tests/compose.yml rm -fsv"]
+        subprocess.run(cmd, shell=True, check=True)
