@@ -1,8 +1,3 @@
 # SPDX-FileCopyrightText: Alliander N. V.
-# SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-
-string planning_type
----
-bool success

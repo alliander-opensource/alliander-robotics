@@ -5,7 +5,8 @@
 #include "moveit_manager.hpp"
 
 MoveitManager::MoveitManager(rclcpp::Node::SharedPtr node_)
-    : node(node_), tf_broadcaster(node),
+    : node(node_),
+      tf_broadcaster(node),
       move_group(
           node,
           moveit::planning_interface::MoveGroupInterface::Options(
@@ -41,9 +42,9 @@ MoveitManager::MoveitManager(rclcpp::Node::SharedPtr node_)
 
 void MoveitManager::initialize_clients() {
   client_node = std::make_shared<rclcpp::Node>("moveit_manager_client");
-  express_pose_in_other_frame_client =
-      client_node->create_client<ExpressPoseInOtherFrame>(
-          "/pose_manipulator/express_pose_in_other_frame");
+  transform_pose_to_frame_client =
+      client_node->create_client<TransformPoseToFrame>(
+          "/pose_manipulator/transform_pose_to_frame");
 };
 
 void MoveitManager::initialize_services() {
@@ -58,23 +59,19 @@ void MoveitManager::initialize_services() {
       "~/toggle_octomap_scan",
       std::bind(&MoveitManager::toggle_octomap_scan, this, _1, _2));
 
-  define_goal_pose_service = node->create_service<DefineGoalPose>(
-      "~/define_goal_pose",
-      std::bind(&MoveitManager::define_goal_pose, this, _1, _2));
-
-  transform_goal_pose_service = node->create_service<TransformGoalPose>(
-      "~/transform_goal_pose",
-      std::bind(&MoveitManager::transform_goal_pose, this, _1, _2));
-
-  move_to_configuration_service = node->create_service<MoveToConf>(
+  move_to_configuration_service = node->create_service<StringSrv>(
       "~/move_to_configuration",
       std::bind(&MoveitManager::move_to_configuration, this, _1, _2));
 
-  move_hand_to_pose_service = node->create_service<MoveHandToPose>(
+  define_goal_pose_service = node->create_service<PoseStampedSrv>(
+      "~/define_goal_pose",
+      std::bind(&MoveitManager::define_goal_pose, this, _1, _2));
+
+  move_hand_to_pose_service = node->create_service<StringSrv>(
       "~/move_hand_to_pose",
       std::bind(&MoveitManager::move_hand_to_pose, this, _1, _2));
 
-  add_marker_service = node->create_service<AddMarker>(
+  add_marker_service = node->create_service<PoseStampedSrv>(
       "~/add_marker", std::bind(&MoveitManager::add_marker, this, _1, _2));
 
   visualize_grasp_pose_service = node->create_service<PoseStampedSrv>(
@@ -146,9 +143,10 @@ void MoveitManager::toggle_octomap_scan(
                  "Namespace of camera is not set. Cannot toggle octomap scan.");
     return;
   }
-  auto cmd = fmt::format("ros2 launch rcdt_moveit relay_octomap.launch.py "
-                         "namespace_arm:={} namespace_camera:={}",
-                         namespace_arm, namespace_camera);
+  auto cmd = fmt::format(
+      "ros2 launch rcdt_moveit relay_octomap.launch.py "
+      "namespace_arm:={} namespace_camera:={}",
+      namespace_arm, namespace_camera);
   if (request->data) {
     if (process.running()) {
       RCLCPP_WARN(node->get_logger(),
@@ -169,42 +167,25 @@ void MoveitManager::toggle_octomap_scan(
 };
 
 void MoveitManager::define_goal_pose(
-    const std::shared_ptr<DefineGoalPose::Request> request,
-    std::shared_ptr<DefineGoalPose::Response> response) {
+    const std::shared_ptr<PoseStampedSrv::Request> request,
+    std::shared_ptr<PoseStampedSrv::Response> response) {
   auto pose = change_frame(request->pose);
   goal_pose = pose;
   response->success = true;
 };
 
-void MoveitManager::transform_goal_pose(
-    const std::shared_ptr<TransformGoalPose::Request> request,
-    std::shared_ptr<TransformGoalPose::Response> response) {
-  if (request->axis == "x") {
-    goal_pose.pose.position.x += request->value;
-  } else if (request->axis == "y") {
-    goal_pose.pose.position.y += request->value;
-  } else if (request->axis == "z") {
-    goal_pose.pose.position.z += request->value;
-  } else {
-    RCLCPP_ERROR(node->get_logger(), "Axis must be one of 'x', 'y', 'z'.");
-    response->success = false;
-    return;
-  }
-  response->success = true;
-};
-
 void MoveitManager::move_to_configuration(
-    const std::shared_ptr<MoveToConf::Request> request,
-    std::shared_ptr<MoveToConf::Response> response) {
-  move_group.setNamedTarget(request->configuration);
+    const std::shared_ptr<StringSrv::Request> request,
+    std::shared_ptr<StringSrv::Response> response) {
+  move_group.setNamedTarget(request->text);
   response->success = plan_and_execute();
 };
 
 void MoveitManager::move_hand_to_pose(
-    const std::shared_ptr<MoveHandToPose::Request> request,
-    std::shared_ptr<MoveHandToPose::Response> response) {
+    const std::shared_ptr<StringSrv::Request> request,
+    std::shared_ptr<StringSrv::Response> response) {
   move_group.setPoseTarget(goal_pose);
-  response->success = plan_and_execute(request->planning_type);
+  response->success = plan_and_execute(request->text);
 };
 
 bool MoveitManager::plan_and_execute(std::string planning_type) {
@@ -239,25 +220,26 @@ PoseStamped MoveitManager::change_frame(PoseStamped pose,
   if (target_frame == "") {
     target_frame = base_frame;
   }
-  auto request = std::make_shared<ExpressPoseInOtherFrame::Request>();
+  auto request = std::make_shared<TransformPoseToFrame::Request>();
   request->pose = pose;
   request->target_frame = target_frame;
-  while (!express_pose_in_other_frame_client->service_is_ready()) {
+  while (!transform_pose_to_frame_client->service_is_ready()) {
     RCLCPP_WARN(
         node->get_logger(),
-        "Waiting for express_pose_in_other_frame service to be available...");
+        "Waiting for transform_pose_to_frame_client service to be available...");
     rclcpp::sleep_for(std::chrono::seconds(1));
   }
-  auto future = express_pose_in_other_frame_client->async_send_request(request);
+  RCLCPP_INFO(node->get_logger(), "Changing frame to %s", target_frame.c_str());
+  auto future = transform_pose_to_frame_client->async_send_request(request);
   rclcpp::spin_until_future_complete(client_node, future);
   auto response = future.get();
   return response->pose;
 };
 
 void MoveitManager::add_marker(
-    const std::shared_ptr<AddMarker::Request> request,
-    std::shared_ptr<AddMarker::Response> response) {
-  auto pose = change_frame(request->marker_pose);
+    const std::shared_ptr<PoseStampedSrv::Request> request,
+    std::shared_ptr<PoseStampedSrv::Response> response) {
+  auto pose = change_frame(request->pose);
   moveit_visual_tools.publishAxis(pose.pose);
   moveit_visual_tools.trigger();
   response->success = true;
@@ -334,7 +316,7 @@ void MoveitManager::clear_markers(
   response->success = true;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
   node_options.automatically_declare_parameters_from_overrides(true);

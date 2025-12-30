@@ -47,8 +47,8 @@ RUN rosdep init \
 
 # Install ROS dependencies 
 RUN apt update && apt install -y --no-install-recommends \
-    ros-$ROS_DISTRO-launch-pytest \
     ros-$ROS_DISTRO-rmw-cyclonedds-cpp \
+    ros-$ROS_DISTRO-control-msgs \
     ros-$ROS_DISTRO-vision-msgs \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \

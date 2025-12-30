@@ -4,7 +4,8 @@
 
 
 geometry_msgs/PoseStamped pose
-geometry_msgs/Transform transform
+string target_frame
 ---
 geometry_msgs/PoseStamped pose
 bool success
+string message

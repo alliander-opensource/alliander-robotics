@@ -8,10 +8,13 @@ from typing import Any, Callable, Type
 
 import pytest
 import rclpy
+from builtin_interfaces.msg import Duration
+from control_msgs.action import FollowJointTrajectory
 from geometry_msgs.msg import Pose, PoseStamped
 from launch_testing_ros.wait_for_topics import WaitForTopics
-from rcdt_interfaces.action import Trigger as TriggerAction
-from rcdt_interfaces.srv import ExpressPoseInOtherFrame
+from rcdt_interfaces.action import TriggerAction
+from rcdt_interfaces.srv import StringSrv, TransformPoseToFrame
+from rcdt_utilities.register import Register
 from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle
 from rclpy.client import Client
@@ -24,8 +27,7 @@ from sensor_msgs.msg import JointState, Joy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from termcolor import colored
-
-from rcdt_utilities.register import Register
+from trajectory_msgs.msg import JointTrajectoryPoint
 
 logger = get_logger("test_utils")
 
@@ -74,9 +76,14 @@ def wait_for_subscriber(pub: Publisher, timeout: int) -> None:
         pub (Publisher): The publisher to wait for.
         timeout (int): The maximum time to wait for a subscriber in seconds.
 
+    Raises:
+        TimeoutError: If no subscriber is found within the timeout period.
+
     """
-    start_time = time.monotonic()
-    while pub.get_subscription_count() == 0 and time.monotonic() - start_time < timeout:
+    start_time = time.time()
+    while pub.get_subscription_count() == 0:
+        if time.time() > (start_time + timeout):
+            raise TimeoutError()
         time.sleep(0.1)
 
 
@@ -93,7 +100,7 @@ def get_joint_position(namespace: str, joint: str, timeout: int) -> float:
     """
     topic_list = [(f"{namespace}/joint_states", JointState)]
     wait_for_topics = WaitForTopics(topic_list, timeout=timeout)
-    assert wait_for_topics.wait()
+    assert wait_for_topics.wait(), "Did not receive JointState."
     msg: JointState = wait_for_topics.received_messages(f"{namespace}/joint_states")[0]
     idx = msg.name.index(joint)
     position = msg.position[idx]
@@ -119,8 +126,11 @@ def create_ready_service_client(
         RuntimeError: If the service is not available within timeout.
     """
     client = node.create_client(srv_type, service_name)
-    if not client.wait_for_service(timeout_sec=timeout_sec):
-        raise RuntimeError(f"Service {service_name} not available")
+    start_time = time.time()
+    while not client.service_is_ready():
+        rclpy.spin_once(node, timeout_sec=0)
+        if time.time() > (start_time + timeout_sec):
+            raise RuntimeError(f"Service {service_name} not available")
     return client
 
 
@@ -154,7 +164,6 @@ def call_trigger_action(node: Node, action_name: str, timeout: int) -> bool:
         bool: True if the action call was successful, False otherwise.
     """
     client = create_ready_action_client(node, TriggerAction, action_name, timeout)
-
     future_goal_handle = client.send_goal_async(TriggerAction.Goal())
     start_time = time.time()
     while not future_goal_handle.done():
@@ -203,10 +212,10 @@ def create_ready_action_client(
     return client
 
 
-def call_express_pose_in_other_frame(
+def call_transform_pose_to_frame(
     node: Node, pose: PoseStamped, target_frame: str, timeout: int
-) -> ExpressPoseInOtherFrame.Response:
-    """Calls the /pose_manipulator/express_pose_in_other_frame service.
+) -> TransformPoseToFrame.Response:
+    """Calls the /pose_manipulator/transform_pose_to_frame service.
 
     Args:
         node (Node): An active rclpy Node.
@@ -218,16 +227,16 @@ def call_express_pose_in_other_frame(
         RuntimeError: If the service call fails or times out.
 
     Returns:
-        ExpressPoseInOtherFrame.Response: The response containing the transformed pose.
+        TransformPoseToFrame.Response: The response containing the transformed pose.
     """
     client = create_ready_service_client(
         node,
-        ExpressPoseInOtherFrame,
-        "/pose_manipulator/express_pose_in_other_frame",
+        TransformPoseToFrame,
+        "/pose_manipulator/transform_pose_to_frame",
         timeout_sec=timeout,
     )
 
-    request = ExpressPoseInOtherFrame.Request()
+    request = TransformPoseToFrame.Request()
     request.pose = pose
     request.target_frame = target_frame
 
@@ -272,6 +281,9 @@ def assert_joy_topic_switch(
         button_config (list[int]): Joy message buttons to trigger the topic change.
         timeout (int): Max time to wait for the result.
         state_topic (str): Topic to listen for state updates from joy_topic_manager.
+
+    Raises:
+        TimeoutError: When a timeout occurs.
     """
     logger.info("Starting to assert joy topic switch")
     qos = QoSProfile(
@@ -306,13 +318,11 @@ def assert_joy_topic_switch(
         node=node, publisher=pub, msg=msg, publish_duration=1, rate_sec=0.1
     )
 
-    start_time = time.monotonic()
-    while (
-        result.get("state") != expected_topic
-        and time.monotonic() - start_time < timeout
-    ):
-        rclpy.spin_once(node, timeout_sec=1)
-        time.sleep(0.1)
+    start_time = time.time()
+    while result.get("state") != expected_topic:
+        rclpy.spin_once(node, timeout_sec=0)
+        if time.time() > (start_time + timeout):
+            raise TimeoutError(f"Did not receive {expected_topic} on {state_topic}.")
 
     assert result.get("state") == expected_topic, (
         f"Expected state '{expected_topic}', but got '{result.get('state')}'"
@@ -343,7 +353,7 @@ def assert_movements_with_joy(  # noqa: PLR0913
     """
     pose = PoseStamped()
     pose.header.frame_id = frame_base
-    first_pose = call_express_pose_in_other_frame(
+    first_pose = call_transform_pose_to_frame(
         node=node, pose=pose, target_frame=frame_target, timeout=timeout
     ).pose.pose
 
@@ -358,7 +368,7 @@ def assert_movements_with_joy(  # noqa: PLR0913
 
     pose = PoseStamped()
     pose.header.frame_id = frame_base
-    moved_pose = call_express_pose_in_other_frame(
+    moved_pose = call_transform_pose_to_frame(
         node=node, pose=pose, target_frame=frame_target, timeout=timeout
     ).pose.pose
     delta = compare_fn(first_pose, moved_pose)
@@ -422,3 +432,79 @@ def wait_for_register(timeout: int) -> None:
     if Register.all_started:
         logger.info(colored("Register is ready, start testing!", "green"))
     assert Register.all_started
+
+
+def call_move_to_configuration_service(
+    node: Node, namespace: str, configuration: str, timeout: int
+) -> bool:
+    """Call the move_to_configuration service and return True if a response from the service was received.
+
+    Args:
+        node (Node): The ROS 2 node to use for the service call.
+        namespace (str): The namespace of the platform.
+        configuration (str): The configuration to move to.
+        timeout (int): The timeout in seconds for the service call.
+
+    Returns:
+        bool: True if the service call was successful, False otherwise.
+    """
+    client = create_ready_service_client(
+        node,
+        StringSrv,
+        f"/{namespace}/moveit_manager/move_to_configuration",
+        timeout_sec=timeout,
+    )
+    request = StringSrv.Request()
+    request.text = configuration
+    future = client.call_async(request)
+    rclpy.spin_until_future_complete(node, future=future, timeout_sec=timeout)
+    return future.result() is not None
+
+
+def follow_joint_trajectory_goal(
+    node: Node,
+    positions: list[float],
+    controller: str,
+    timeout: int,
+    time_from_start: int = 3,
+) -> None:
+    """Test sending a joint trajectory goal to the arm controller.
+
+    Args:
+        node (Node): The ROS 2 node to use for the action client.
+        positions (list[float]): The joint positions to move to.
+        controller (str): The name of the controller to use.
+        timeout (int): The timeout in seconds for the action client.
+        time_from_start (int, optional): The time from start in seconds. Defaults to 3.
+    """
+    action_client = create_ready_action_client(
+        node,
+        FollowJointTrajectory,
+        f"/{controller}/follow_joint_trajectory",
+        timeout=timeout,
+    )
+
+    goal_msg = FollowJointTrajectory.Goal()
+    goal_msg.trajectory.joint_names = [
+        "fr3_joint1",
+        "fr3_joint2",
+        "fr3_joint3",
+        "fr3_joint4",
+        "fr3_joint5",
+        "fr3_joint6",
+        "fr3_joint7",
+    ]
+
+    point = JointTrajectoryPoint()
+    point.positions = positions
+    point.time_from_start = Duration(sec=time_from_start, nanosec=0)
+
+    goal_msg.trajectory.points.append(point)
+
+    future = action_client.send_goal_async(goal_msg)
+    rclpy.spin_until_future_complete(node, future, timeout_sec=timeout)
+    goal_handle: ClientGoalHandle = future.result()
+    assert goal_handle.accepted
+
+    result_future: Future = goal_handle.get_result_async()
+    rclpy.spin_until_future_complete(node, result_future, timeout_sec=timeout)

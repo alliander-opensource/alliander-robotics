@@ -13,14 +13,10 @@
 #include <moveit/robot_model/joint_model_group.hpp>
 #include <moveit/robot_state/robot_state.hpp>
 #include <moveit_msgs/srv/servo_command_type.hpp>
-#include <rcdt_interfaces/srv/add_marker.hpp>
 #include <rcdt_interfaces/srv/add_object.hpp>
-#include <rcdt_interfaces/srv/define_goal_pose.hpp>
-#include <rcdt_interfaces/srv/express_pose_in_other_frame.hpp>
-#include <rcdt_interfaces/srv/move_hand_to_pose.hpp>
-#include <rcdt_interfaces/srv/move_to_configuration.hpp>
 #include <rcdt_interfaces/srv/pose_stamped_srv.hpp>
-#include <rcdt_interfaces/srv/transform_goal_pose.hpp>
+#include <rcdt_interfaces/srv/string_srv.hpp>
+#include <rcdt_interfaces/srv/transform_pose_to_frame.hpp>
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/node.hpp>
@@ -39,12 +35,8 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 
 typedef rcdt_interfaces::srv::AddObject AddObject;
-typedef rcdt_interfaces::srv::AddMarker AddMarker;
-typedef rcdt_interfaces::srv::DefineGoalPose DefineGoalPose;
-typedef rcdt_interfaces::srv::ExpressPoseInOtherFrame ExpressPoseInOtherFrame;
-typedef rcdt_interfaces::srv::TransformGoalPose TransformGoalPose;
-typedef rcdt_interfaces::srv::MoveToConfiguration MoveToConf;
-typedef rcdt_interfaces::srv::MoveHandToPose MoveHandToPose;
+typedef rcdt_interfaces::srv::TransformPoseToFrame TransformPoseToFrame;
+typedef rcdt_interfaces::srv::StringSrv StringSrv;
 typedef rcdt_interfaces::srv::PoseStampedSrv PoseStampedSrv;
 typedef moveit_msgs::srv::ServoCommandType ServoCommandType;
 typedef std_srvs::srv::Trigger Trigger;
@@ -107,8 +99,8 @@ class MoveitManager {
   std::set<std::string> pilz_types = {"PTP", "LIN", "CIRC"};
 
   /// Client to transform a Pose in another coordinate frame
-  rclcpp::Client<ExpressPoseInOtherFrame>::SharedPtr
-      express_pose_in_other_frame_client;
+  rclcpp::Client<TransformPoseToFrame>::SharedPtr
+      transform_pose_to_frame_client;
 
   /// Service to add collision object
   rclcpp::Service<AddObject>::SharedPtr add_object_service;
@@ -116,16 +108,14 @@ class MoveitManager {
   rclcpp::Service<Trigger>::SharedPtr clear_objects_service;
   /// Service to toggle octomap scan
   rclcpp::Service<SetBool>::SharedPtr toggle_octomap_scan_service;
-  /// Service to offset the goal_pose by a specified translation
-  rclcpp::Service<TransformGoalPose>::SharedPtr transform_goal_pose_service;
   /// Service to define the goal_pose
-  rclcpp::Service<DefineGoalPose>::SharedPtr define_goal_pose_service;
+  rclcpp::Service<PoseStampedSrv>::SharedPtr define_goal_pose_service;
   /// Service to move to a specified configuration
-  rclcpp::Service<MoveToConf>::SharedPtr move_to_configuration_service;
+  rclcpp::Service<StringSrv>::SharedPtr move_to_configuration_service;
   /// Service to move hand to a specified goal Pose
-  rclcpp::Service<MoveHandToPose>::SharedPtr move_hand_to_pose_service;
+  rclcpp::Service<StringSrv>::SharedPtr move_hand_to_pose_service;
   /// Service to add a visual marker at a specified Pose
-  rclcpp::Service<AddMarker>::SharedPtr add_marker_service;
+  rclcpp::Service<PoseStampedSrv>::SharedPtr add_marker_service;
   /// Service to clear visual markers
   rclcpp::Service<Trigger>::SharedPtr clear_markers_service;
   /// Service to visualize a specified grasp Pose
@@ -160,44 +150,34 @@ class MoveitManager {
                            std::shared_ptr<SetBool::Response> response);
   /**
    * @brief Callback to define the goal_pose in the base frame.
-   * @param request The DefineGoalPose request containing the desired pose.
+   * @param request The PoseStampedSrv request containing the desired pose.
    * @param response Response indicating whether the service call succeeded.
    */
-  void define_goal_pose(const std::shared_ptr<DefineGoalPose::Request> request,
-                        std::shared_ptr<DefineGoalPose::Response> response);
-  /**
-   * @brief Callback to offset goal_pose by a specified translation around a
-   * specified axis.
-   * @param request The TransformGoalPose request containing relevant axis and
-   * translation.
-   * @param response Response indicating whether the service call succeeded.
-   */
-  void transform_goal_pose(
-      const std::shared_ptr<TransformGoalPose::Request> request,
-      std::shared_ptr<TransformGoalPose::Response> response);
+  void define_goal_pose(const std::shared_ptr<PoseStampedSrv::Request> request,
+                        std::shared_ptr<PoseStampedSrv::Response> response);
   /**
    * @brief Callback to move arm to a specified configuration (e.g. home).
-   * @param request The MoveToConf request containing the configuration.
+   * @param request The StringSrv request containing the configuration.
    * @param response Response indicating whether the service call succeeded.
    */
-  void move_to_configuration(const std::shared_ptr<MoveToConf::Request> request,
-                             std::shared_ptr<MoveToConf::Response> response);
+  void move_to_configuration(const std::shared_ptr<StringSrv::Request> request,
+                             std::shared_ptr<StringSrv::Response> response);
   /**
    * @brief Callback to move arm to a specified goal Pose.
-   * @param request The MoveHandToPose request containing the goal Pose and Pilz
+   * @param request The StringSrv request containing the goal Pose and Pilz
    * planning type.
    * @param response Response indicating whether the service call succeeded.
    */
-  void move_hand_to_pose(const std::shared_ptr<MoveHandToPose::Request> request,
-                         std::shared_ptr<MoveHandToPose::Response> response);
+  void move_hand_to_pose(const std::shared_ptr<StringSrv::Request> request,
+                         std::shared_ptr<StringSrv::Response> response);
   /**
    * @brief Callback to add a visual marker at a specified location.
-   * @param request The AddMarker request containing the Pose to add the visual
-   * marker.
+   * @param request The PoseStampedSrv request containing the Pose to add the
+   * visual marker.
    * @param response Response indicating whether the service call succeeded.
    */
-  void add_marker(const std::shared_ptr<AddMarker::Request> request,
-                  std::shared_ptr<AddMarker::Response> response);
+  void add_marker(const std::shared_ptr<PoseStampedSrv::Request> request,
+                  std::shared_ptr<PoseStampedSrv::Response> response);
   /**
    * @brief Callback to clear visual markers.
    * @param request The Trigger request.

@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-string topic
-sensor_msgs/Image image
+string text
 ---
 bool success
+string message
