@@ -92,7 +92,8 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     # Execute before starting the tests in the module:
     compose_file = "/rcdt_robotics/rcdt_tests/compose.yml"
     platforms = getattr(request.module, "PLATFORMS", {})
-    compose = Compose(platforms)
+    world = getattr(request.module, "WORLD", "")
+    compose = Compose(platforms, world=world)
     number_of_services = compose.compose_for_test(
         simulator=True, tools=False, output_file=compose_file
     )
@@ -167,3 +168,15 @@ def finger_joint_fault_tolerance() -> float:
         float: The tolerance value for finger joint movements.
     """
     return 0.025
+
+
+@pytest.fixture(scope="session")
+def navigation_distance_tolerance() -> float:
+    """Distance tolerance of testing navigation.
+
+    This is the maximum allowed deviation for navigation during tests.
+
+    Returns:
+        float: The tolerance value for navigation.
+    """
+    return 0.25
