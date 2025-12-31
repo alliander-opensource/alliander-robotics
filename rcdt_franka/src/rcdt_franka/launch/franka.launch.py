@@ -55,7 +55,7 @@ def launch_setup(context: LaunchContext) -> list:
 
     gripper = RegisteredLaunchDescription(
         get_file_path("rcdt_franka", ["launch"], "gripper_services.launch.py"),
-        launch_arguments={"namespace": "franka"},
+        launch_arguments={"namespace": configuration.namespace},
     )
 
     return [

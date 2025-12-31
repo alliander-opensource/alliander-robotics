@@ -25,4 +25,4 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
     command:
-      ["/bin/bash", "-c", "cd /rcdt_robotics && pytest --ignore=ros2_ws -s"]
+      ["/bin/bash", "-c", "cd /rcdt_robotics && pytest --ignore=ros2_ws -s -rsxf"]

@@ -73,7 +73,8 @@ preview = true
 convention = "google"
 
 [tool.pytest.ini_options]
-timeout = 90
+timeout = 60
+timeout_func_only = true
 timeout_method = "thread"
 norecursedirs = ["install", "build", "log",".venv",".cache"]
 

@@ -5,32 +5,114 @@
 """Global pytest fixtures for ROS 2 integration testing."""
 
 import subprocess
-from typing import Iterator
+import time
+from typing import Generator, Iterator
 
 import pytest
 import rclpy
 from _pytest.config import Config
+from _pytest.config.argparsing import Parser
 from _pytest.fixtures import SubRequest
 from rclpy.node import Node
+from termcolor import colored
 
 from compose import Compose
 
+LAUNCH_TIMEOUT = 90  # seconds
+
+
+def pytest_addoption(parser: Parser) -> None:
+    """Add custom command line options for pytest.
+
+    Args:
+        parser (Parser): The pytest parser to add options to.
+    """
+    parser.addoption("--simulation", action="store", default="True")
+
+
+@pytest.fixture(scope="function", autouse=True)
+def print_test_info(request: SubRequest) -> Generator:
+    """Print the start and end of each test.
+
+    Args:
+        request (SubRequest): The pytest request object.
+    """
+    print(colored(f"Starting test: {request.node.name}", "blue"))
+    yield
+    print("")
+    print(colored(f"Finished test: {request.node.name}", "blue"))
+
+
+def stop_containers(compose_file: str) -> None:
+    """Stop and remove Docker containers defined in the given compose file.
+
+    Args:
+        compose_file (str): The path to the Docker compose file.
+    """
+    subprocess.run(
+        [f"docker compose -f {compose_file} down -t 1"], check=False, shell=True
+    )
+    subprocess.run(
+        [f"docker compose -f {compose_file} rm -fsv"], check=False, shell=True
+    )
+
+
+def check_containers_started(compose_file: str, number_of_services: int) -> bool:
+    """Check if the expected number of Docker containers are started.
+
+    Args:
+        compose_file (str): The path to the Docker compose file.
+        number_of_services (int): The expected number of running services.
+
+    Returns:
+        bool: True if all services are started.
+    """
+    process = subprocess.run(
+        [
+            f"docker inspect -f '{{{{.State.Health.Status}}}}' $(docker compose -f {compose_file} ps -q)"
+        ],
+        check=False,
+        shell=True,
+        capture_output=True,
+    )
+    stdout = process.stdout.decode("utf-8").rstrip()
+    statuses = stdout.split()
+    if len(statuses) != number_of_services:
+        return False
+    return all(status == "healthy" for status in statuses)
+
 
 @pytest.fixture(scope="module", autouse=True)
-def start_and_stop_containers(request: SubRequest):
-    output_file = "/rcdt_robotics/rcdt_tests/compose.yml"
+def start_and_stop_containers(request: SubRequest) -> Generator:
+    """Automatically start and stop Docker containers for each test module.
+
+    Args:
+        request (SubRequest): The pytest request object.
+    """
+    # Execute before starting the tests in the module:
+    compose_file = "/rcdt_robotics/rcdt_tests/compose.yml"
     platforms = getattr(request.module, "PLATFORMS", {})
     compose = Compose(platforms)
-    compose.compose_for_test(simulator=True, tools=False, output_file=output_file)
-    process = subprocess.Popen([f"docker compose -f {output_file} up"], shell=True)
+    number_of_services = compose.compose_for_test(
+        simulator=True, tools=False, output_file=compose_file
+    )
+    process = subprocess.Popen([f"docker compose -f {compose_file} up"], shell=True)
+
+    containers_started = False
+    start_time = time.time()
+    while not containers_started:
+        containers_started = check_containers_started(compose_file, number_of_services)
+        if time.time() - start_time > LAUNCH_TIMEOUT:
+            stop_containers(compose_file)
+            pytest.exit("Timeout waiting for containers to start. Exiting pytest.")
+    print(colored("All containers are started, start testing!", "green"))
+
+    # Yield to run the tests in the module:
     yield
-    subprocess.run(
-        [f"docker compose -f {output_file} down -t 1"], check=False, shell=True
-    )
+
+    # Execute after all tests in module are done:
+    stop_containers(compose_file)
     process.wait()
-    subprocess.run(
-        [f"docker compose -f {output_file} rm -fsv"], check=False, shell=True
-    )
 
 
 @pytest.fixture(scope="module")

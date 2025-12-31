@@ -106,14 +106,19 @@ class Compose:
 
         return content
 
-    def compose_for_test(self, simulator: bool, tools: bool, output_file: str):
+    def compose_for_test(self, simulator: bool, tools: bool, output_file: str) -> int:
         compose: dict = self.compose_combined("", simulator, tools)
+
+        number_of_services = 0
         for service in compose["services"]:
             del compose["services"][service]["env_file"]
             compose["services"][service]["volumes"] = ["/dev:/dev"]
+            number_of_services += 1
 
         with open(output_file, "w") as f:
             yaml.safe_dump(compose, f, default_flow_style=False, sort_keys=False)
+
+        return number_of_services
 
     def compose_tool(self, platform: Platform, tool: TOOLS):
         if tool not in typing.get_args(TOOLS):
