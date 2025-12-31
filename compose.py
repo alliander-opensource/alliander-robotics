@@ -80,6 +80,36 @@ class Compose:
             return "latest"
         return branch_name
 
+    def compose_for_linting(self, output_file: str = ""):
+        filename = "rcdt_tests/docker-compose.yml"
+
+        if not os.path.exists(filename):
+            print(
+                "Warning: did not find docker-compose.yml file in rcdt_tests. Exiting..."
+            )
+            sys.exit(1)
+
+        with open(filename, "r") as f:
+            content = yaml.safe_load(f)
+            service = content["services"]["rcdt_tests"]
+
+            image_tag = self.get_image_tag()
+            print(f"Image tag: {image_tag}")
+
+            original_image = service["image"]
+            service["image"] = original_image.replace(
+                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+            )
+
+            service["command"][-1] = "cd /rcdt_robotics && pre-commit run --all-files"
+
+            print(f"\nWriting final compose file to {output_file}")
+
+            with open(output_file, "w") as f:
+                yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
+
+        return content
+
     def compose_for_test_container(self, output_file: str = ""):
         filename = "rcdt_tests/docker-compose.yml"
 
@@ -434,6 +464,13 @@ if __name__ == "__main__":
         help="Add this flag to start the test container and run pytest inside it.",
     )
 
+    parser.add_argument(
+        "--linting",
+        required=False,
+        action="store_true",
+        help="Add this flag to start the test container and run linting checks inside it.",
+    )
+
     args = parser.parse_args()
 
     if args.configuration:
@@ -441,6 +478,9 @@ if __name__ == "__main__":
         platforms = EnvironmentConfiguration.platforms
         compose = Compose(platforms, args.arch, args.dev)
         compose.compose_combined("compose.yml", args.simulator, args.tools)
-    else:
+    elif args.pytest:
         compose = Compose({}, args.arch, args.dev)
         compose.compose_for_test_container("compose.yml")
+    elif args.linting:
+        compose = Compose({}, args.arch, args.dev)
+        compose.compose_for_linting("compose.yml")

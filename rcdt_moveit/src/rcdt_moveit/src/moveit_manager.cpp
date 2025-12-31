@@ -224,9 +224,9 @@ PoseStamped MoveitManager::change_frame(PoseStamped pose,
   request->pose = pose;
   request->target_frame = target_frame;
   while (!transform_pose_to_frame_client->service_is_ready()) {
-    RCLCPP_WARN(
-        node->get_logger(),
-        "Waiting for transform_pose_to_frame_client service to be available...");
+    RCLCPP_WARN(node->get_logger(),
+                "Waiting for transform_pose_to_frame_client service to be "
+                "available...");
     rclcpp::sleep_for(std::chrono::seconds(1));
   }
   RCLCPP_INFO(node->get_logger(), "Changing frame to %s", target_frame.c_str());
