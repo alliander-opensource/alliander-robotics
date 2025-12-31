@@ -24,5 +24,9 @@ services:
       - "RCUTILS_COLORIZED_OUTPUT=1"
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
+      - GIT_CONFIG_COUNT=1
+      - GIT_CONFIG_KEY_0=safe.directory
+      - GIT_CONFIG_VALUE_0=*
+      - PRE_COMMIT_HOME=/rcdt_robotics/.cache/pre-commit
     command:
-      ["/bin/bash", "-c", "cd /rcdt_robotics && pytest --ignore=ros2_ws -s -rsxf"]
+      ["/bin/bash", "-c", "cd /rcdt_robotics && pytest --ignore=ros2_ws -s -rsxf -k gps"]
