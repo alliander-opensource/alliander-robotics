@@ -10,9 +10,12 @@ from rcdt_tools.vizanti import Vizanti
 
 
 class ApplyConfigurations:
+    """Apply configurations to visualization tools like RViz and Vizanti."""
+
     rviz_parameters: list = []
 
     def __init__(self, config: ToolsConfig):
+        """Initialize."""
         Rviz.set_fixed_frame("map")
 
         for platform in config.platforms:
@@ -44,6 +47,7 @@ class ApplyConfigurations:
     def add_description(
         namespace: str, semantic: bool = False, kinematic: bool = False
     ) -> None:
+        """Obtain robot description parameters and add them to RViz parameters."""
         if kinematic:
             ApplyConfigurations.rviz_parameters.append(
                 {
@@ -65,7 +69,12 @@ class ApplyConfigurations:
         )
 
     @staticmethod
-    def add_arm(platform: Arm):
+    def add_arm(platform: Arm) -> None:
+        """Add arm configurations to RViz and Vizanti.
+
+        Args:
+            platform (Arm): The arm platform configuration.
+        """
         ns = platform.namespace
         if platform.moveit:
             ApplyConfigurations.add_description(ns)
@@ -78,7 +87,12 @@ class ApplyConfigurations:
                 Rviz.add_motion_planning_plugin(ns)
 
     @staticmethod
-    def add_vehicle(platform: Vehicle):
+    def add_vehicle(platform: Vehicle) -> None:
+        """Add vehicle configurations to RViz and Vizanti.
+
+        Args:
+            platform (Vehicle): The vehicle platform configuration.
+        """
         ns = platform.namespace
         nav2 = platform.nav2_config
         Vizanti.add_platform_model(ns)
@@ -105,11 +119,21 @@ class ApplyConfigurations:
             Rviz.add_polygon(f"/{ns}/velocity_polygon_stop")
 
     @staticmethod
-    def add_lidar(platform: Lidar):
+    def add_lidar(platform: Lidar) -> None:
+        """Add lidar configurations to RViz and Vizanti.
+
+        Args:
+            platform (Lidar): The lidar platform configuration.
+        """
         Rviz.add_laser_scan(platform.namespace)
 
     @staticmethod
-    def add_depth_camera(platform: Camera):
+    def add_depth_camera(platform: Camera) -> None:
+        """Add depth camera configurations to RViz and Vizanti.
+
+        Args:
+            platform (Camera): The camera platform configuration.
+        """
         Rviz.add_image(f"/{platform.namespace}/color/image_raw")
         Rviz.add_image(f"/{platform.namespace}/depth/image_rect_raw")
         Rviz.add_depth_cloud(
@@ -118,5 +142,10 @@ class ApplyConfigurations:
         )
 
     @staticmethod
-    def add_gps(platform: GPS):
+    def add_gps(platform: GPS) -> None:
+        """Add GPS configurations to RViz and Vizanti.
+
+        Args:
+            platform (GPS): The GPS platform configuration.
+        """
         Rviz.add_satellite(f"/{platform.namespace}/gps/fix")

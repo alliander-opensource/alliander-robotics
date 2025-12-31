@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import argparse
 import os
 import subprocess
@@ -9,12 +13,10 @@ import yaml
 
 from predefined_configurations import PredefinedConfigurations
 from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
-    Arm,
     EnvironmentConfiguration,
     Platform,
     SimulatorConfig,
     ToolsConfig,
-    Vehicle,
 )
 
 TOOLS = typing.Literal["moveit", "nav2"]
@@ -37,6 +39,8 @@ dev_settings = {
 
 
 class Compose:
+    """Class to create docker-compose files based on the selected configuration or flags."""
+
     def __init__(
         self,
         platforms: dict[str, Platform],
@@ -44,6 +48,7 @@ class Compose:
         dev: bool = False,
         world: str = "",
     ) -> None:
+        """Initialize."""
         self.platforms = platforms
         self.arch = arch
         self.dev = dev
@@ -51,6 +56,14 @@ class Compose:
 
     @staticmethod
     def get_src_mounts(package: str) -> list[str]:
+        """Get the src mounts for a given package.
+
+        Args:
+            package (str): The package name.
+
+        Returns:
+            list[str]: A list of volume mount strings.
+        """
         cwd = Path.cwd()
         src_dir = cwd.joinpath(f"{package}", "src")
         return [
@@ -60,7 +73,8 @@ class Compose:
         ]
 
     @staticmethod
-    def get_image_tag():
+    def get_image_tag() -> None:
+        """Get the image tag based on the current Git branch."""
         # Set image_tag harcoded for now:
         return "latest"
         try:
@@ -80,7 +94,15 @@ class Compose:
             return "latest"
         return branch_name
 
-    def compose_for_linting(self, output_file: str = ""):
+    def compose_for_linting(self, output_file: str = "") -> dict:
+        """Create a compose file for linting checks.
+
+        Args:
+            output_file (str): The output file of the compose.
+
+        Returns:
+            dict: The compose content.
+        """
         filename = "rcdt_tests/docker-compose.yml"
 
         if not os.path.exists(filename):
@@ -89,28 +111,37 @@ class Compose:
             )
             sys.exit(1)
 
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             content = yaml.safe_load(f)
-            service = content["services"]["rcdt_tests"]
 
-            image_tag = self.get_image_tag()
-            print(f"Image tag: {image_tag}")
+        service = content["services"]["rcdt_tests"]
 
-            original_image = service["image"]
-            service["image"] = original_image.replace(
-                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
-            )
+        image_tag = self.get_image_tag()
+        print(f"Image tag: {image_tag}")
 
-            service["command"][-1] = "cd /rcdt_robotics && pre-commit run --all-files"
+        original_image = service["image"]
+        service["image"] = original_image.replace(
+            "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+        )
 
-            print(f"\nWriting final compose file to {output_file}")
+        service["command"][-1] = "cd /rcdt_robotics && pre-commit run --all-files"
 
-            with open(output_file, "w") as f:
-                yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
+        print(f"\nWriting final compose file to {output_file}")
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
         return content
 
-    def compose_for_test_container(self, output_file: str = ""):
+    def compose_for_test_container(self, output_file: str = "") -> dict:
+        """Create a compose file for running the test container.
+
+        Args:
+            output_file (str): The output file of the compose.
+
+        Returns:
+            dict: The compose content.
+        """
         filename = "rcdt_tests/docker-compose.yml"
 
         if not os.path.exists(filename):
@@ -119,26 +150,37 @@ class Compose:
             )
             sys.exit(1)
 
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             content = yaml.safe_load(f)
-            service = content["services"]["rcdt_tests"]
 
-            image_tag = self.get_image_tag()
-            print(f"Image tag: {image_tag}")
+        service = content["services"]["rcdt_tests"]
 
-            original_image = service["image"]
-            service["image"] = original_image.replace(
-                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
-            )
+        image_tag = self.get_image_tag()
+        print(f"Image tag: {image_tag}")
 
-            print(f"\nWriting final compose file to {output_file}")
+        original_image = service["image"]
+        service["image"] = original_image.replace(
+            "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+        )
 
-            with open(output_file, "w") as f:
-                yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
+        print(f"\nWriting final compose file to {output_file}")
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
         return content
 
     def compose_for_test(self, simulator: bool, tools: bool, output_file: str) -> int:
+        """Create a compose file with the containers required to run the pytest.
+
+        Args:
+            simulator (bool): Whether to use simulation.
+            tools (bool): Whether to use visualization tools.
+            output_file (str): The output file of the compose.
+
+        Returns:
+            int: The number of services in the compose.
+        """
         compose: dict = self.compose_combined("", simulator, tools)
 
         number_of_services = 0
@@ -147,12 +189,24 @@ class Compose:
             compose["services"][service]["volumes"] = ["/dev:/dev"]
             number_of_services += 1
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             yaml.safe_dump(compose, f, default_flow_style=False, sort_keys=False)
 
         return number_of_services
 
-    def compose_tool(self, platform: Platform, tool: TOOLS):
+    def compose_tool(self, platform: Platform, tool: TOOLS) -> dict:
+        """Define the content of the platform related tools.
+
+        Args:
+            platform (Platform): The platform object.
+            tool (TOOLS): The related tool.
+
+        Returns:
+            dict: The compose content.
+
+        Raises:
+            ValueError: If the tool is unknown.
+        """
         if tool not in typing.get_args(TOOLS):
             raise ValueError(f"Unknown tool '{tool}'. Available: {TOOLS}")
 
@@ -171,37 +225,46 @@ class Compose:
             )
             sys.exit(1)
 
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             content = yaml.safe_load(f)
-            service = content["services"][service_name]
 
-            # Start tool when platfrorm is ready:
-            service["depends_on"] = {}
-            service["depends_on"][platform_service_name] = {
-                "condition": "service_healthy"
-            }
+        service = content["services"][service_name]
 
-            image_tag = self.get_image_tag()
-            print(f"Image tag: {image_tag}")
+        # Start tool when platfrorm is ready:
+        service["depends_on"] = {}
+        service["depends_on"][platform_service_name] = {"condition": "service_healthy"}
 
-            original_image = service["image"]
-            service["image"] = original_image.replace(
-                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+        image_tag = self.get_image_tag()
+        print(f"Image tag: {image_tag}")
+
+        original_image = service["image"]
+        service["image"] = original_image.replace(
+            "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+        )
+
+        if self.dev:
+            src_mounts = self.get_src_mounts(service_name)
+            service["volumes"] = (
+                service["volumes"] + dev_settings["volumes"] + src_mounts
             )
 
-            if self.dev:
-                src_mounts = self.get_src_mounts(service_name)
-                service["volumes"] = (
-                    service["volumes"] + dev_settings["volumes"] + src_mounts
-                )
-
-            service["command"][-1] += f" config:='{platform.to_str()}'"
+        service["command"][-1] += f" config:='{platform.to_str()}'"
 
         return content
 
     def compose_combined(
         self, output_file: str = "", simulator: bool = False, tools: bool = False
-    ):
+    ) -> dict:
+        """Create a combined compose file.
+
+        Args:
+            output_file (str): The output file of the compose.
+            simulator (bool): Whether to use simulation.
+            tools (bool): Whether to include the visualization tools.
+
+        Returns:
+            dict: The compose content if output_file is not provided.
+        """
         compose = self.compose_platforms()
         if simulator:
             compose["services"].update(self.compose_simulator()["services"])
@@ -236,12 +299,21 @@ class Compose:
                         "condition": "service_healthy"
                     }
 
-        if not output_file:
-            return compose
-        with open(output_file, "w") as f:
-            yaml.safe_dump(compose, f, default_flow_style=False, sort_keys=False)
+        if output_file:
+            with open(output_file, "w", encoding="utf-8") as f:
+                yaml.safe_dump(compose, f, default_flow_style=False, sort_keys=False)
 
-    def compose_platforms(self, output_file: str = "platforms.yml"):
+        return compose
+
+    def compose_platforms(self, output_file: str = "platforms.yml") -> dict:
+        """Create a compose file for the selected platforms.
+
+        Args:
+            output_file (str): The output file of the compose.
+
+        Returns:
+            dict: The compose content.
+        """
         print("----- CREATING PLATFORMS.YML COMPOSE -----")
         merged_compose = {}
         image_tag = self.get_image_tag()
@@ -262,28 +334,21 @@ class Compose:
 
             print(f"Merging {filename}")
 
-            with open(filename, "r") as f:
+            with open(filename, "r", encoding="utf-8") as f:
                 content = yaml.safe_load(f)
 
-                if not content:
-                    continue
+            content["services"][service_name]["command"][-1] += (
+                f" config:='{platform.to_str()}'"
+            )
 
-                content["services"][service_name]["command"][-1] += (
-                    f" config:='{platform.to_str()}'"
-                )
+            if "services" in content:
+                if "services" not in merged_compose:
+                    merged_compose["services"] = {}
+                merged_compose["services"].update(content["services"])
 
-                if "services" in content:
-                    if "services" not in merged_compose:
-                        merged_compose["services"] = {}
-                    merged_compose["services"].update(content["services"])
-
-                for key, value in content.items():
-                    if key != "services" and key not in merged_compose:
-                        merged_compose[key] = value
-
-        if not merged_compose:
-            print("Error: no compose files were merged. Aborting.")
-            return
+            for key, value in content.items():
+                if key != "services" and key not in merged_compose:
+                    merged_compose[key] = value
 
         # Replace image tag
         if "services" in merged_compose:
@@ -304,13 +369,21 @@ class Compose:
 
         print(f"\nWriting final compose file to {output_file}")
 
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             yaml.safe_dump(merged_compose, f, default_flow_style=False, sort_keys=False)
 
         print("Done!")
         return merged_compose
 
-    def compose_simulator(self, output_file: str = "simulator.yml"):
+    def compose_simulator(self, output_file: str = "simulator.yml") -> dict:
+        """Create a compose file for the simulator.
+
+        Args:
+            output_file (str): The output file of the compose.
+
+        Returns:
+            dict: The compose content.
+        """
         print("----- CREATING SIMULATOR.YML COMPOSE -----")
         filename = "rcdt_gazebo/docker-compose.yml"
 
@@ -327,38 +400,47 @@ class Compose:
             )
             sys.exit(1)
 
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             content = yaml.safe_load(f)
-            service = content["services"]["rcdt_gazebo"]
 
-            image_tag = self.get_image_tag()
-            print(f"Image tag: {image_tag}")
+        service = content["services"]["rcdt_gazebo"]
 
-            original_image = service["image"]
-            service["image"] = original_image.replace(
-                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+        image_tag = self.get_image_tag()
+        print(f"Image tag: {image_tag}")
+
+        original_image = service["image"]
+        service["image"] = original_image.replace(
+            "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+        )
+
+        service["command"][-1] += f" config:='{simulator_config.to_str()}'"
+
+        if self.dev:
+            src_mounts_gazebo = self.get_src_mounts("rcdt_gazebo")
+            src_mounts_husarion = self.get_src_mounts("rcdt_husarion")
+            service["volumes"] = (
+                service["volumes"]
+                + dev_settings["volumes"]
+                + src_mounts_gazebo
+                + src_mounts_husarion
             )
 
-            service["command"][-1] += f" config:='{simulator_config.to_str()}'"
+        print(f"\nWriting final compose file to {output_file}")
 
-            if self.dev:
-                src_mounts_gazebo = self.get_src_mounts("rcdt_gazebo")
-                src_mounts_husarion = self.get_src_mounts("rcdt_husarion")
-                service["volumes"] = (
-                    service["volumes"]
-                    + dev_settings["volumes"]
-                    + src_mounts_gazebo
-                    + src_mounts_husarion
-                )
-
-            print(f"\nWriting final compose file to {output_file}")
-
-            with open(output_file, "w") as f:
-                yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
+        with open(output_file, "w", encoding="utf-8") as f:
+            yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
         return content
 
-    def compose_tools(self, output_file: str = "tools.yml"):
+    def compose_tools(self, output_file: str = "tools.yml") -> dict:
+        """Create a compose file for the visualization tools.
+
+        Args:
+            output_file (str): The output file of the compose.
+
+        Returns:
+            dict: The compose content.
+        """
         print("----- CREATING TOOLS.YML COMPOSE -----")
         filename = "rcdt_tools/docker-compose.yml"
 
@@ -373,30 +455,31 @@ class Compose:
             )
             sys.exit(1)
 
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             content = yaml.safe_load(f)
-            service = content["services"]["rcdt_tools"]
 
-            image_tag = self.get_image_tag()
-            print(f"Image tag: {image_tag}")
+        service = content["services"]["rcdt_tools"]
 
-            original_image = service["image"]
-            service["image"] = original_image.replace(
-                "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+        image_tag = self.get_image_tag()
+        print(f"Image tag: {image_tag}")
+
+        original_image = service["image"]
+        service["image"] = original_image.replace(
+            "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
+        )
+
+        service["command"][-1] += f" config:='{tools_config.to_str()}'"
+
+        if self.dev:
+            src_mounts = self.get_src_mounts("rcdt_tools")
+            service["volumes"] = (
+                service["volumes"] + dev_settings["volumes"] + src_mounts
             )
 
-            service["command"][-1] += f" config:='{tools_config.to_str()}'"
+        print(f"\nWriting final compose file to {output_file}")
 
-            if self.dev:
-                src_mounts = self.get_src_mounts("rcdt_tools")
-                service["volumes"] = (
-                    service["volumes"] + dev_settings["volumes"] + src_mounts
-                )
-
-            print(f"\nWriting final compose file to {output_file}")
-
-            with open(output_file, "w") as f:
-                yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
+        with open(output_file, "w", encoding="utf-8") as f:
+            yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
         return content
 
