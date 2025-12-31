@@ -42,10 +42,12 @@ class Compose:
         platforms: dict[str, Platform],
         arch: str = "amd64",
         dev: bool = False,
+        world: str = "",
     ) -> None:
         self.platforms = platforms
         self.arch = arch
         self.dev = dev
+        self.world = world
 
     @staticmethod
     def get_src_mounts(package: str) -> list[str]:
@@ -284,7 +286,9 @@ class Compose:
 
         simulator_config = SimulatorConfig()
         simulator_config.load_ui = True
-        simulator_config.world = EnvironmentConfiguration.world
+        simulator_config.world = (
+            EnvironmentConfiguration.world if not self.world else self.world
+        )
         simulator_config.platforms = list(self.platforms.values())
 
         if not os.path.exists(filename):
