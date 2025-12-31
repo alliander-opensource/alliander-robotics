@@ -51,6 +51,14 @@ def get_sdf_file(world: str) -> str:
 
 
 def get_bridge_topics(platforms: list[Platform]) -> list[str]:
+    """Get the list of topics to bridge between ROS and Gazebo.
+
+    Args:
+        platforms (list[Platform]): The list of platforms in the simulation.
+
+    Returns:
+        list[str]: The list of topics to bridge.
+    """
     bridge_topics = ["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"]
     for platform in platforms:
         if platform.platform_type == "Lidar":

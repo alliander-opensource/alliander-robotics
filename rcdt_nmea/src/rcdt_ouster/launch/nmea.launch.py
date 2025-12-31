@@ -5,7 +5,7 @@ import itertools
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import Node, SetParameter
+from launch_ros.actions import Node
 from rcdt_utilities.config_objects import GPS
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
@@ -118,7 +118,6 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
-        # SetParameter(name="use_sim_time", value=configuration.simulation),
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
         Register.group(hardware, context) if not configuration.simulation else SKIP,

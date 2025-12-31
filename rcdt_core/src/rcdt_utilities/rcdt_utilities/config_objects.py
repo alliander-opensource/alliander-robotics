@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from __future__ import annotations
 
 import math
@@ -33,6 +37,7 @@ def link(
     parent_link: str = "",
     child_link: str = "",
 ) -> None:
+    """Create a parent-child relationship between two platforms."""
     # Add parent to child:
     child_platform.parent.namespace = parent_platform.namespace
     child_platform.parent.link = (
@@ -56,16 +61,33 @@ def link(
 # Base classes:
 @dataclass
 class Config(DataClassJSONMixin):
+    """Base class for all configuration dataclasses."""
+
     def to_str(self) -> str:
+        """Convert the configuration to a string representation.
+
+        Returns:
+            str: The string representation of the configuration.
+        """
         return str(self.to_json())
 
     @classmethod
     def from_str(cls, data: str) -> typing.Self:
+        """Create a configuration object from a string representation.
+
+        Args:
+            data (str): The string representation of the configuration.
+
+        Returns:
+            Config: The configuration object.
+        """
         return cls.from_json(data)
 
 
 @dataclass
 class Parent(Config):
+    """Class representing a parent platform."""
+
     namespace: str = ""
     link: str = ""
     connects_to: str = ""
@@ -73,6 +95,8 @@ class Parent(Config):
 
 @dataclass
 class Child(Config):
+    """Class representing a child platform."""
+
     platform_type: str = ""
     namespace: str = ""
     link: str = ""
@@ -82,6 +106,8 @@ class Child(Config):
 # General platform definition:
 @dataclass
 class Platform(Config):
+    """Base class for all platforms."""
+
     name: str
     position: tuple = (0, 0, 0)
     orientation: tuple = (0, 0, 0)
@@ -95,6 +121,7 @@ class Platform(Config):
     initialized: bool = False
 
     def __post_init__(self):
+        """Initialize the platform configuration."""
         if self.initialized:
             return
         self.orientation = tuple(map(math.radians, self.orientation))
@@ -106,6 +133,11 @@ class Platform(Config):
         self.initialized = True
 
     def default_link_to_parent(self) -> str:
+        """Get the default link used to connect to a parent platform.
+
+        Returns:
+            str: The link name.
+        """
         match self.name:
             case "panther" | "lynx":
                 return "odom"
@@ -115,6 +147,14 @@ class Platform(Config):
                 return "base_link" if self.parent.namespace else "world"
 
     def default_link_to_child(self) -> str:
+        """Get the default link used to connect to a child platform.
+
+        Returns:
+            str: The link name.
+
+        Raises:
+            ValueError: If the platform name is unknown.
+        """
         match self.name:
             case "panther" | "lynx":
                 return "base_link"
@@ -129,6 +169,8 @@ class Platform(Config):
 # Tools:
 @dataclass
 class Nav2Config(Config):
+    """Configuration for Nav2 on a vehicle platform."""
+
     collision_monitor: bool = False
     slam: bool = False
     navigation: bool = False
@@ -147,12 +189,16 @@ class Nav2Config(Config):
 
 @dataclass
 class MoveitConfig(Config):
+    """Configuration for MoveIt on an arm platform."""
+
     load_rviz_motion_planning_plugin: bool = False
 
 
 # Platforms:
 @dataclass
 class Arm(Platform):
+    """Configuration for an Arm platform."""
+
     platform_type: str = "Arm"
     gripper: bool = False
     moveit: bool = False
@@ -163,11 +209,14 @@ class Arm(Platform):
 
 @dataclass
 class Vehicle(Platform):
+    """Configuration for a Vehicle platform."""
+
     platform_type: str = "Vehicle"
     nav2_config: Nav2Config = field(default_factory=Nav2Config)
 
     @property
     def nav2(self) -> bool:
+        """Return whether any Nav2 features are enabled."""
         return any(
             [
                 self.nav2_config.collision_monitor,
@@ -179,17 +228,23 @@ class Vehicle(Platform):
 
 @dataclass
 class Camera(Platform):
+    """Configuration for a Camera platform."""
+
     platform_type: str = "Camera"
 
 
 @dataclass
 class Lidar(Platform):
+    """Configuration for a Lidar platform."""
+
     platform_type: str = "Lidar"
     ip_address: str = "10.15.20.5"
 
 
 @dataclass
 class GPS(Platform):
+    """Configuration for a GPS platform."""
+
     platform_type: str = "GPS"
     ip_address: str = ""
 
@@ -197,6 +252,8 @@ class GPS(Platform):
 # Configurations containing lists of platforms:
 @dataclass
 class PlatformList(Config):
+    """Base class for configurations containing lists of platforms."""
+
     platforms: List[
         Annotated[
             Union[Arm, Vehicle, Lidar, Camera, GPS],
@@ -207,11 +264,15 @@ class PlatformList(Config):
 
 @dataclass
 class SimulatorConfig(PlatformList):
+    """Configuration for the simulator."""
+
     load_ui: bool = True
     world: str = "empty.sdf"
 
 
 @dataclass
 class ToolsConfig(PlatformList):
+    """Configuration for visualization tools."""
+
     rviz: bool = True
     vizanti: bool = False

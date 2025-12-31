@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import pytest
 from rcdt_utilities.config_objects import Arm
 from rclpy.node import Node
