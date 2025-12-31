@@ -12,6 +12,7 @@
 ./rcdt_husarion/build.sh amd64
 ./rcdt_moveit/build.sh amd64
 ./rcdt_nav2/build.sh amd64
+./rcdt_nmea/build.sh amd64
 ./rcdt_ouster/build.sh amd64
 ./rcdt_realsense/build.sh amd64
 ./rcdt_tests/build.sh amd64

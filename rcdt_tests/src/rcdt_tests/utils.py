@@ -108,6 +108,36 @@ def get_joint_position(namespace: str, joint: str, timeout: int) -> float:
     return position
 
 
+def check_joint_positions(
+    namespace: str,
+    names: list,
+    expected_positions: list,
+    tolerance: float,
+    timeout: int,
+) -> dict:
+    """Check whether the joint positions match the expected positions within a tolerance.
+
+    Args:
+        namespace (str): The name space of the platform.
+        names (list): The names of the joints.
+        expected_positions (list): The expected positions of the joints.
+        tolerance (float): The tolerance for the joint positions.
+        timeout (int): Timeout in seconds to wait for the joint states topic.
+    """
+    topic_list = [(f"{namespace}/joint_states", JointState)]
+    wait_for_topics = WaitForTopics(topic_list, timeout=timeout)
+    assert wait_for_topics.wait(), "Did not receive JointState."
+    msg: JointState = wait_for_topics.received_messages(f"{namespace}/joint_states")[0]
+    wait_for_topics.shutdown()
+
+    for joint_name, expected_position in zip(names, expected_positions, strict=False):
+        idx = msg.name.index(joint_name)
+        position = msg.position[idx]
+        assert position == pytest.approx(expected_position, abs=tolerance), (
+            f"Joint {joint_name} has position {position} while {expected_position} was expected."
+        )
+
+
 def create_ready_service_client(
     node: Node, srv_type: Type, service_name: str, timeout_sec: int
 ) -> Client:
