@@ -43,7 +43,7 @@ if __name__ == "__main__":
         cmd = ["python3 compose.py --arch amd64 --linting"]
     else:
         cmd = [
-            f"python3 compose.py --arch amd64 -c {args.configuration} --simulator --tools --dev"
+            f"python3 compose.py --arch amd64 -c {args.configuration} --simulator --visualization --dev"
         ]
     subprocess.run(cmd, shell=True, check=True)
 

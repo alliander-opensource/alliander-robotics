@@ -34,5 +34,5 @@ clangd/
 # generated compose files
 platforms.yml
 simulator.yml
-tools.yml
+visualization.yml
 compose.yml

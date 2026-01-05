@@ -271,7 +271,7 @@ class SimulatorConfig(PlatformList):
 
 
 @dataclass
-class ToolsConfig(PlatformList):
+class VisualizationConfig(PlatformList):
     """Configuration for visualization tools."""
 
     rviz: bool = True

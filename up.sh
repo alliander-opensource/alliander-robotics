@@ -9,7 +9,7 @@ if [[ $FILE == *".yml"* ]] ; then
 elif [ -z "$FILE" ] ; then
   docker compose -f platforms.yml up -d
   docker compose -f simulator.yml up -d
-  docker compose -f tools.yml up -d
+  docker compose -f visualization.yml up -d
 else 
   docker compose -f $FILE.yml up -d 
 fi

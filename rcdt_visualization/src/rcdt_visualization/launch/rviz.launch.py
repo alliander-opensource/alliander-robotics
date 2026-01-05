@@ -7,7 +7,7 @@ import os.path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
-from rcdt_tools.tool_manager import ApplyConfigurations
+from rcdt_visualization.tool_manager import ApplyConfigurations
 from rcdt_utilities.register import Register
 
 

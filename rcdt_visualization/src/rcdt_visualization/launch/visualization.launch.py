@@ -5,9 +5,11 @@
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import SetParameter
-from rcdt_tools.tool_manager import ApplyConfigurations
+from rcdt_utilities.config_objects import (
+    VisualizationConfig,
+)
+from rcdt_visualization.tool_manager import ApplyConfigurations
 from rcdt_utilities import launch_utils
-from rcdt_utilities.config_objects import ToolsConfig
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
@@ -24,16 +26,16 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    config = ToolsConfig.from_str(config_arg.string_value(context))
+    config = VisualizationConfig.from_str(config_arg.string_value(context))
     ApplyConfigurations(config)
     simulation = all(platform.simulation for platform in config.platforms)
 
     rviz = RegisteredLaunchDescription(
-        get_file_path("rcdt_tools", ["launch"], "rviz.launch.py")
+        get_file_path("rcdt_visualization", ["launch"], "rviz.launch.py")
     )
 
     vizanti = RegisteredLaunchDescription(
-        get_file_path("rcdt_tools", ["launch"], "vizanti.launch.py")
+        get_file_path("rcdt_visualization", ["launch"], "vizanti.launch.py")
     )
 
     return [

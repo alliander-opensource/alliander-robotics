@@ -95,7 +95,7 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     world = getattr(request.module, "WORLD", "")
     compose = Compose(platforms, world=world)
     number_of_services = compose.compose_for_test(
-        simulator=True, tools=False, output_file=compose_file
+        simulator=True, visualization=False, output_file=compose_file
     )
     process = subprocess.Popen([f"docker compose -f {compose_file} up"], shell=True)
 

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.5)
-project(rcdt_tools)
+project(rcdt_visualization)
 
 # CMake dependencies:
 find_package(ament_cmake REQUIRED)

@@ -3,10 +3,17 @@
 # SPDX-License-Identifier: Apache-2.0
 import subprocess
 
-from rcdt_utilities.config_objects import GPS, Arm, Camera, Lidar, ToolsConfig, Vehicle
+from rcdt_utilities.config_objects import (
+    GPS,
+    Arm,
+    Camera,
+    Lidar,
+    VisualizationConfig,
+    Vehicle,
+)
 
-from rcdt_tools.rviz import Rviz
-from rcdt_tools.vizanti import Vizanti
+from rcdt_visualization.rviz import Rviz
+from rcdt_visualization.vizanti import Vizanti
 
 
 class ApplyConfigurations:
@@ -14,7 +21,7 @@ class ApplyConfigurations:
 
     rviz_parameters: list = []
 
-    def __init__(self, config: ToolsConfig):
+    def __init__(self, config: VisualizationConfig):
         """Initialize."""
         Rviz.set_fixed_frame("map")
 

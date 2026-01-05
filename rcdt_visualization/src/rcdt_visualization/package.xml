@@ -8,9 +8,9 @@ SPDX-License-Identifier: Apache-2.0
 -->
 
 <package format="3">
-  <name>rcdt_tools</name>
+  <name>rcdt_visualization</name>
   <version>0.1.0</version>
-  <description>Contains development tools, such as Rviz and Vizanti.</description>
+  <description>Contains visualization tools, such as Rviz and Vizanti.</description>
   <maintainer email="researchcenter@alliander.com">RCDT</maintainer>
   <license>Apache 2.0</license>
 
