@@ -14,7 +14,7 @@ class Rviz:
         displays (list): The list of displays in the RViz configuration.
     """
 
-    yaml: dict = get_yaml(get_file_path("rcdt_tools", ["rviz"], "default.rviz"))
+    yaml: dict = get_yaml(get_file_path("rcdt_visualization", ["rviz"], "default.rviz"))
     displays: list = yaml["Visualization Manager"]["Displays"]
 
     @staticmethod

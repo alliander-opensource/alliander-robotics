@@ -16,7 +16,7 @@ from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
     EnvironmentConfiguration,
     Platform,
     SimulatorConfig,
-    ToolsConfig,
+    VisualizationConfig,
 )
 
 TOOLS = typing.Literal["moveit", "nav2"]
@@ -174,18 +174,20 @@ class Compose:
 
         return content
 
-    def compose_for_test(self, simulator: bool, tools: bool, output_file: str) -> int:
+    def compose_for_test(
+        self, simulator: bool, visualization: bool, output_file: str
+    ) -> int:
         """Create a compose file with the containers required to run the pytest.
 
         Args:
             simulator (bool): Whether to use simulation.
-            tools (bool): Whether to use visualization tools.
+            visualization (bool): Whether to use visualization tools.
             output_file (str): The output file of the compose.
 
         Returns:
             int: The number of services in the compose.
         """
-        compose: dict = self.compose_combined("", simulator, tools)
+        compose: dict = self.compose_combined("", simulator, visualization)
 
         number_of_services = 0
         for service in compose["services"]:
@@ -257,14 +259,17 @@ class Compose:
         return content
 
     def compose_combined(
-        self, output_file: str = "", simulator: bool = False, tools: bool = False
+        self,
+        output_file: str = "",
+        simulator: bool = False,
+        visualization: bool = False,
     ) -> dict:
         """Create a combined compose file.
 
         Args:
             output_file (str): The output file of the compose.
             simulator (bool): Whether to use simulation.
-            tools (bool): Whether to include the visualization tools.
+            visualization (bool): Whether to include the visualization tools.
 
         Returns:
             dict: The compose content if output_file is not provided.
@@ -272,8 +277,8 @@ class Compose:
         compose = self.compose_platforms()
         if simulator:
             compose["services"].update(self.compose_simulator()["services"])
-        if tools:
-            compose["services"].update(self.compose_tools()["services"])
+        if visualization:
+            compose["services"].update(self.compose_visualization()["services"])
 
         # Add Moveit or Nav2 for Arms or Vehicles:
         for platform in self.platforms.values():
@@ -302,12 +307,12 @@ class Compose:
                 "retries": 1000,
             }
 
-        # Make tools depenend on all other services:
-        if tools:
-            compose["services"]["rcdt_tools"]["depends_on"] = {}
+        # Make visualization depenend on all other services:
+        if visualization:
+            compose["services"]["rcdt_visualization"]["depends_on"] = {}
             for service in compose["services"]:
-                if service != "rcdt_tools":
-                    compose["services"]["rcdt_tools"]["depends_on"][service] = {
+                if service != "rcdt_visualization":
+                    compose["services"]["rcdt_visualization"]["depends_on"][service] = {
                         "condition": "service_healthy"
                     }
 
@@ -446,8 +451,8 @@ class Compose:
 
         return content
 
-    def compose_tools(self, output_file: str = "tools.yml") -> dict:
-        """Create a compose file for the visualization tools.
+    def compose_visualization(self, output_file: str = "visualization.yml") -> dict:
+        """Create a compose file for the visualization visualization.
 
         Args:
             output_file (str): The output file of the compose.
@@ -456,23 +461,23 @@ class Compose:
             dict: The compose content.
         """
         print("----- CREATING TOOLS.YML COMPOSE -----")
-        filename = "rcdt_tools/docker-compose.yml"
+        filename = "rcdt_visualization/docker-compose.yml"
 
-        tools_config = ToolsConfig()
-        tools_config.rviz = True
-        tools_config.vizanti = False
-        tools_config.platforms = list(self.platforms.values())
+        visualization_config = VisualizationConfig()
+        visualization_config.rviz = True
+        visualization_config.vizanti = False
+        visualization_config.platforms = list(self.platforms.values())
 
         if not os.path.exists(filename):
             print(
-                "Warning: did not find docker-compose.yml file in rcdt_tools. Exiting..."
+                "Warning: did not find docker-compose.yml file in rcdt_visualization. Exiting..."
             )
             sys.exit(1)
 
         with open(filename, "r", encoding="utf-8") as f:
             content = yaml.safe_load(f)
 
-        service = content["services"]["rcdt_tools"]
+        service = content["services"]["rcdt_visualization"]
 
         image_tag = self.get_image_tag()
         print(f"Image tag: {image_tag}")
@@ -482,10 +487,10 @@ class Compose:
             "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
         )
 
-        service["command"][-1] += f" config:='{tools_config.to_str()}'"
+        service["command"][-1] += f" config:='{visualization_config.to_str()}'"
 
         if self.dev:
-            src_mounts = self.get_src_mounts("rcdt_tools")
+            src_mounts = self.get_src_mounts("rcdt_visualization")
             service["volumes"] = (
                 service["volumes"] + dev_settings["volumes"] + src_mounts
             )
@@ -500,11 +505,11 @@ class Compose:
 
 if __name__ == "__main__":
     """
-    Currently there are three separate compose calls: platforms, simulator, and tools.
+    Currently there are three separate compose calls: platforms, simulator, and visualization.
     In rcdt_husarion, in platforms, SIMULATION=true/false is needed. The way it is currently structured,
     the compose does not know if we want to add a simulator when calling compose_platforms().
     Maybe a fix is to put everything in one command (compose.py --platforms panther nav2 simulator), that
-    then generates platforms.yml, simulator.yml, tools.yml.
+    then generates platforms.yml, simulator.yml, visualization.yml.
     """
     parser = argparse.ArgumentParser(
         description="Creates a combined docker-compose.yml file from platform-specific composes."
@@ -541,10 +546,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--tools",
+        "--visualization",
         required=False,
         action="store_true",
-        help="Add this flag to build a tools.yml compose file, indicating which platforms are present in Rviz / Vizanti with the '--platforms' tag.",
+        help="Add this flag to build a visualization.yml compose file, indicating which platforms are present in Rviz / Vizanti with the '--platforms' tag.",
     )
 
     parser.add_argument(
@@ -574,7 +579,7 @@ if __name__ == "__main__":
         PredefinedConfigurations.apply_configuration(args.configuration)
         platforms = EnvironmentConfiguration.platforms
         compose = Compose(platforms, args.arch, args.dev)
-        compose.compose_combined("compose.yml", args.simulator, args.tools)
+        compose.compose_combined("compose.yml", args.simulator, args.visualization)
     elif args.pytest:
         compose = Compose({}, args.arch, args.dev)
         compose.compose_for_test_container("compose.yml")

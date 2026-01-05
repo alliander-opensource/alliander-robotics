@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 services:
-  rcdt_tools:
-    image: rcdt/robotics:tools-${IMAGE_TAG}
-    container_name: rcdt_tools
+  rcdt_visualization:
+    image: rcdt/robotics:visualization-${IMAGE_TAG}
+    container_name: rcdt_visualization
     runtime: nvidia
     network_mode: host
     privileged: true
@@ -22,4 +22,4 @@ services:
       - "RCUTILS_COLORIZED_OUTPUT=1"
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-    command: ["/bin/bash", "-c", "ros2 launch rcdt_tools tools.launch.py"]
+    command: ["/bin/bash", "-c", "ros2 launch rcdt_visualization visualization.launch.py"]

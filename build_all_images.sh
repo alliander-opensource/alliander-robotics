@@ -16,6 +16,6 @@
 ./rcdt_ouster/build.sh amd64
 ./rcdt_realsense/build.sh amd64
 ./rcdt_tests/build.sh amd64
-./rcdt_tools/build.sh amd64
+./rcdt_visualization/build.sh amd64
 ./rcdt_velodyne/build.sh amd64
 ./rcdt_zed/build.sh amd64
