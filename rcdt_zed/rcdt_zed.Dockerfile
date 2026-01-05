@@ -7,7 +7,6 @@ FROM $BASE_IMAGE
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
 WORKDIR /rcdt/ros
-COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ZED SDK:
 ARG UBUNTU_RELEASE_YEAR=24      

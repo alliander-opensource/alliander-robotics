@@ -7,7 +7,6 @@ FROM $BASE_IMAGE
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
 WORKDIR /rcdt/ros
-COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install Docker CLI: 
 RUN curl -fsSL https://get.docker.com | sh
@@ -26,6 +25,12 @@ RUN apt update && apt install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt autoremove -y \
     && apt clean
+
+# Install repo packages:
+COPY pyproject.toml /rcdt/pyproject.toml
+COPY rcdt_core/src/ /rcdt/ros/src
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN /rcdt/colcon_build.sh
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]
