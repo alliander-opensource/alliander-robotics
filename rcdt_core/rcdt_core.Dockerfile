@@ -70,21 +70,7 @@ RUN echo "export PYTHONPATH=\"/rcdt/.venv/lib/python3.12/site-packages:\$PYTHONP
   && echo "export PATH=\"/rcdt/.venv/bin:\$PATH\"" \
   >> /root/.bashrc
 
-# Copy custom packages & dependency list
-RUN mkdir -p /rcdt/ros/
-COPY rcdt_core/src/ /rcdt/ros/src
-COPY pyproject.toml /rcdt/pyproject.toml
-
-# Build basic packages 
-RUN cd /rcdt/ros \
-  && uv sync \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
-  --event-handlers console_direct+ \
-  && echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc \
-  && echo "source /rcdt/ros/install/setup.bash" >> /root/.bashrc
-
+RUN mkdir -p /rcdt/ros/src
 COPY entrypoint.sh /entrypoint.sh
 
 WORKDIR /rcdt

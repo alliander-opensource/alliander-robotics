@@ -6,8 +6,6 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-WORKDIR /rcdt/ros
-COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install Realsense SDK:
 RUN apt update && apt install -y --no-install-recommends \
@@ -28,26 +26,18 @@ RUN mkdir -p "$TEMP_DIR" \
   && rm -rf "$TEMP_DIR"
 
 # Install Realsense Wrapper:
+WORKDIR /rcdt/ros
 RUN apt update \
-  && mkdir -p /rcdt/ros/src \
-  && cd /rcdt/ros \
   && git clone -b 4.57.2 https://github.com/IntelRealSense/realsense-ros.git src/realsense_ros \   
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
 
-RUN uv sync \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
-  --event-handlers console_direct+
-
 # Install repo packages:
-COPY rcdt_description/src/ /rcdt/ros/src
+COPY pyproject.toml /rcdt/pyproject.toml
+COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_realsense/src/ /rcdt/ros/src
-RUN . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install --packages-up-to \
-  rcdt_description \
-  rcdt_realsense
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN /rcdt/colcon_build.sh
 
 # Finalize
 WORKDIR /rcdt

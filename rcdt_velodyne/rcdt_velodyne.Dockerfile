@@ -6,8 +6,6 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-WORKDIR /rcdt/ros
-COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
 RUN apt update && apt install -y --no-install-recommends \
@@ -18,26 +16,18 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Install Velodyne packages:
+WORKDIR /rcdt/ros
 RUN apt update \
-  && mkdir -p /rcdt/ros/src \
-  && cd /rcdt/ros \
   && git clone -b ros2 https://github.com/alliander-opensource/velodyne.git src/velodyne \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
 
-RUN uv sync \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
-  --event-handlers console_direct+
-
 # Install repo packages:
-COPY rcdt_description/src/ /rcdt/ros/src
+COPY pyproject.toml /rcdt/pyproject.toml
+COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_velodyne/src/ /rcdt/ros/src
-RUN . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install --packages-up-to \
-  rcdt_description \
-  rcdt_velodyne
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN /rcdt/colcon_build.sh
 
 # Finalize
 WORKDIR /rcdt

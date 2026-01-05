@@ -16,22 +16,16 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt autoremove -y \
   && apt clean
 
-# Add custom packages
-WORKDIR /rcdt/ros
-COPY rcdt_nav2/src/ /rcdt/ros/src
-COPY pyproject.toml /rcdt/pyproject.toml
-
 # Add nav2 packages 
-RUN mkdir -p /rcdt/ros/src \
-  && cd /rcdt/ros/src \
-  && git clone -b jazzy-devel https://github.com/blackcoffeerobotics/vector_pursuit_controller.git \
-  && cd /rcdt/ros
+WORKDIR /rcdt/ros/src
+RUN git clone -b jazzy-devel https://github.com/blackcoffeerobotics/vector_pursuit_controller.git
 
-RUN uv sync \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
-  --event-handlers console_direct+
+# Install repo packages:
+COPY pyproject.toml /rcdt/pyproject.toml
+COPY rcdt_core/src/ /rcdt/ros/src
+COPY rcdt_nav2/src/ /rcdt/ros/src
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN /rcdt/colcon_build.sh
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]

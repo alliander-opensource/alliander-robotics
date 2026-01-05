@@ -6,8 +6,6 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-WORKDIR /rcdt/ros
-COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
 RUN apt update && apt install -y --no-install-recommends \
@@ -19,12 +17,11 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Install repo packages:
-COPY rcdt_description/src/ /rcdt/ros/src
+COPY pyproject.toml /rcdt/pyproject.toml
+COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_nmea/src/ /rcdt/ros/src
-RUN . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install --packages-up-to \
-  rcdt_description \
-  rcdt_nmea
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN /rcdt/colcon_build.sh
 
 # Finalize
 WORKDIR /rcdt

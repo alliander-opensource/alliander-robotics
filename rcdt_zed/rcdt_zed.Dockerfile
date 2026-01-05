@@ -9,7 +9,7 @@ ENV ROS_DISTRO=jazzy
 WORKDIR /rcdt/ros
 COPY pyproject.toml /rcdt/pyproject.toml
 
-# Install Realsense SDK:
+# Install ZED SDK:
 ARG UBUNTU_RELEASE_YEAR=24      
 ARG CUDA_MAJOR=12              
 ARG CUDA_MINOR=9                
@@ -27,27 +27,19 @@ RUN echo "CUDA Version ${CUDA_MAJOR}.${CUDA_MINOR}.0" > /usr/local/cuda/version.
   && rm -f "${installer}" \
   && rm -rf /var/lib/apt/lists/*
 
-# # Install Realsense Wrapper:
+# Install ZED Wrapper:
+WORKDIR /rcdt/ros
 RUN apt update \
-  && mkdir -p /rcdt/ros/src \
-  && cd /rcdt/ros \
   && git clone -b jazzy https://github.com/stereolabs/zed-ros2-wrapper.git src/zed_ros2_wrapper \   
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
 
-RUN uv sync \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
-  --event-handlers console_direct+
-
 # Install repo packages:
-COPY rcdt_description/src/ /rcdt/ros/src
+COPY pyproject.toml /rcdt/pyproject.toml
+COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_zed/src/ /rcdt/ros/src
-RUN . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install --packages-up-to \
-  rcdt_description \
-  rcdt_zed
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN /rcdt/colcon_build.sh
 
 # Finalize
 WORKDIR /rcdt
