@@ -53,7 +53,7 @@ def order_platforms() -> None:
         "ouster",
         "realsense",
         "zed",
-        "nmea",
+        "nmea_gps",
         "axis",
     ]
 

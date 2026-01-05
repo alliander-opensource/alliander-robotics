@@ -291,7 +291,7 @@ def launch_fixture(
 
 vehicle_list = ["panther", "lynx"]
 lidar_list = ["velodyne", "ouster"]
-gps_list = ["nmea"]
+gps_list = ["nmea_gps"]
 
 # Dynamically create test classes for each combination of platforms
 for platforms in itertools.product(vehicle_list, lidar_list, gps_list):

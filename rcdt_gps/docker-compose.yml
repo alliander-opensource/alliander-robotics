@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 services:
-  rcdt_nmea:
-    image: rcdt/robotics:nmea-${IMAGE_TAG}
-    container_name: rcdt_nmea
+  rcdt_gps:
+    image: rcdt/robotics:gps-${IMAGE_TAG}
+    container_name: rcdt_gps
     runtime: nvidia
     network_mode: host
     privileged: true
@@ -22,4 +22,4 @@ services:
       - "RCUTILS_COLORIZED_OUTPUT=1"
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-    command: ["/bin/bash", "-c", "ros2 launch rcdt_nmea nmea.launch.py"]
+    command: ["/bin/bash", "-c", "ros2 launch rcdt_gps gps.launch.py"]

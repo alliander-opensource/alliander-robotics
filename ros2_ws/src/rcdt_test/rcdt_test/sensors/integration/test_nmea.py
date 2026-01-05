@@ -13,7 +13,7 @@ from rcdt_utilities.ros_utils import get_file_path
 from rcdt_utilities.test_utils import assert_for_message, wait_for_register
 from sensor_msgs.msg import NavSatFix
 
-namespace = "nmea"
+namespace = "nmea_gps"
 
 
 @launch_pytest.fixture(scope="module")
@@ -26,7 +26,7 @@ def launch(request: SubRequest) -> LaunchDescription:
     Returns:
         LaunchDescription: The launch description for the test.
     """
-    GPS(platform="nmea", position=[0, 0, 0.5], namespace=namespace)
+    GPS(platform="nmea_gps", position=[0, 0, 0.5], namespace=namespace)
     launch = RegisteredLaunchDescription(
         get_file_path("rcdt_launch", ["launch"], "bringup.launch.py"),
         launch_arguments={

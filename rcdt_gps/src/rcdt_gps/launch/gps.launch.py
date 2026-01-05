@@ -30,7 +30,7 @@ def launch_setup(context: LaunchContext) -> list:
 
     state_publisher = state_publisher_node(
         namespace=configuration.namespace,
-        platform="nmea",
+        platform="nmea_gps",
         xacro="rcdt_nmea_navsat.urdf.xacro",
         xacro_arguments={
             "namespace": configuration.namespace,
@@ -47,7 +47,7 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     hardware = RegisteredLaunchDescription(
-        get_file_path("rcdt_nmea", ["launch"], "hardware.launch.py"),
+        get_file_path("rcdt_gps", ["launch"], "hardware.launch.py"),
         {"config": configuration.to_str()},
     )
 
