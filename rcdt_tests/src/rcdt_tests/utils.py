@@ -114,7 +114,7 @@ def check_joint_positions(
     expected_positions: list,
     tolerance: float,
     timeout: int,
-) -> dict:
+) -> None:
     """Check whether the joint positions match the expected positions within a tolerance.
 
     Args:

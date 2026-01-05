@@ -4,6 +4,7 @@
 
 
 import xml.etree.ElementTree as ET
+from typing import TypeVar
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import ExecuteProcess, OpaqueFunction
@@ -50,7 +51,10 @@ def get_sdf_file(world: str) -> str:
         return get_file_path("rcdt_gazebo", ["worlds"], world)
 
 
-def get_bridge_topics(platforms: list[Platform]) -> list[str]:
+T = TypeVar("T", bound=Platform)
+
+
+def get_bridge_topics(platforms: list[T]) -> list[str]:
     """Get the list of topics to bridge between ROS and Gazebo.
 
     Args:

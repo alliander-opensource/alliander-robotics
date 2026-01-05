@@ -12,6 +12,21 @@ COPY pyproject.toml /rcdt/pyproject.toml
 # Install Docker CLI: 
 RUN curl -fsSL https://get.docker.com | sh
 
+# Install Doxygen:
+RUN apt update && apt install -y --no-install-recommends \
+    doxygen \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt autoremove -y \
+    && apt clean
+
+# Install dependencies for ty:
+RUN apt update && apt install -y --no-install-recommends \
+    ros-$ROS_DISTRO-moveit-configs-utils \
+    ros-$ROS_DISTRO-nav2-simple-commander \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt autoremove -y \
+    && apt clean
+
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]

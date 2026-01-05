@@ -170,14 +170,16 @@ def config_panther_gps() -> None:  # noqa: D103
 
 @register_configuration("panther_collision_monitor")
 def config_panther_collision_monitor() -> None:  # noqa: D103
-    vehicle = Vehicle("panther", (0, 0, 0.2), collision_monitor=True)
+    vehicle = Vehicle("panther", (0, 0, 0.2))
+    vehicle.nav2_config.collision_monitor = True
     lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
     link(vehicle, lidar)
 
 
 @register_configuration("panther_slam")
 def config_panther_slam() -> None:  # noqa: D103
-    vehicle = Vehicle("panther", (0, 0, 0.2), slam=True)
+    vehicle = Vehicle("panther", (0, 0, 0.2))
+    vehicle.nav2_config.slam = True
     lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
     link(vehicle, lidar)
 
@@ -194,9 +196,13 @@ def config_panther_lidar_navigation() -> None:  # noqa: D103
 @register_configuration("panther_gps_navigation")
 def config_panther_gps_navigation() -> None:  # noqa: D103
     EnvironmentConfiguration.world = "map_5.940906_51.966960"
-    Vehicle("panther", (0, 0, 0.2), navigation=True, use_gps=True)
-    Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
-    GPS("nmea", (0, 0, 0.2))
+    vehicle = Vehicle("panther", (0, 0, 0.2))
+    vehicle.nav2_config.navigation = True
+    vehicle.nav2_config.gps = True
+    lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
+    gps = GPS("nmea", (0, 0, 0.2))
+    link(vehicle, lidar)
+    link(vehicle, gps)
 
 
 # # Lynx:
@@ -222,7 +228,8 @@ def config_mm() -> None:  # noqa: D103
 
 @register_configuration("mm_velodyne")
 def config_mm_velodyne() -> None:  # noqa: D103
-    vehicle = Vehicle("panther", (0, 0, 0.2), navigation=True)
+    vehicle = Vehicle("panther", (0, 0, 0.2))
+    vehicle.nav2_config.navigation = True
     arm = Arm("franka", (0, 0, 0.14), gripper=True, moveit=True)
     lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
     link(vehicle, arm)
