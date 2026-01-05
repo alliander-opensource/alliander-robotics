@@ -6,8 +6,6 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-WORKDIR /rcdt/ros
-COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
 RUN apt update && apt install -y --no-install-recommends \
@@ -22,17 +20,14 @@ RUN apt update && apt install -y --no-install-recommends \
 
 # Get required descriptions:
 WORKDIR /rcdt/ros/src
-RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git
+RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git 
 
 # Install repo packages
-WORKDIR /rcdt/ros
+COPY pyproject.toml /rcdt/pyproject.toml
+COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_moveit/src/ /rcdt/ros/src
-RUN uv sync \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
-  --cmake-args=-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
-  --event-handlers console_direct+
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN /rcdt/colcon_build.sh
 
 # Finalize
 WORKDIR /rcdt

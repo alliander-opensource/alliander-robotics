@@ -6,20 +6,15 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-WORKDIR /rcdt/ros
-COPY pyproject.toml /rcdt/pyproject.toml
 
 # Add Husarion packages
+WORKDIR /rcdt/ros/
 RUN apt update \
-  && mkdir -p /rcdt/ros/src \
-  && cd /rcdt/ros \
   && git clone -b 2.3.1 https://github.com/husarion/husarion_ugv_ros.git src/husarion_ugv_ros \
   && export HUSARION_ROS_BUILD_TYPE=simulation \ 
   && vcs import src < src/husarion_ugv_ros/husarion_ugv/${HUSARION_ROS_BUILD_TYPE}_deps.repos \
   && rosdep update --rosdistro $ROS_DISTRO \
-  && rosdep install --from-paths src -y -i
-
-RUN uv sync \
+  && rosdep install --from-paths src -y -i \
   && . /opt/ros/$ROS_DISTRO/setup.sh \ 
   && colcon build --symlink-install \
   --packages-up-to \
@@ -29,13 +24,11 @@ RUN uv sync \
   --event-handlers console_direct+
 
 # Install repo packages:
-COPY rcdt_description/src/ /rcdt/ros/src
+COPY pyproject.toml /rcdt/pyproject.toml
+COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_husarion/src/ /rcdt/ros/src
-RUN . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install \
-  --packages-up-to \
-  rcdt_description \
-  rcdt_husarion
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN /rcdt/colcon_build.sh
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]

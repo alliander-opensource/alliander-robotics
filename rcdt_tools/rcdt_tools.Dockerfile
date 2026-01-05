@@ -6,8 +6,6 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-WORKDIR /rcdt/ros
-COPY pyproject.toml /rcdt/pyproject.toml
 
 # Install ROS dependencies 
 RUN apt update && apt install -y --no-install-recommends \
@@ -24,39 +22,25 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Get vizanti and install its dependencies
+WORKDIR /rcdt/ros
 RUN apt update \
-  && cd /rcdt/ros/src \
-  && git clone -b ros2 https://github.com/MoffKalast/vizanti.git \
-  && git clone -b jazzy https://github.com/alliander-opensource/rws.git \
-  && cd /rcdt/ros \
+  && git clone -b ros2 https://github.com/MoffKalast/vizanti.git src/vizanti \
+  && git clone -b jazzy https://github.com/alliander-opensource/rws.git src/rws \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
 
 # Install vendor descriptions:
-WORKDIR /rcdt/ros/src
-RUN apt update && apt install -y --no-install-recommends \
-  ros-$ROS_DISTRO-husarion-components-description \
-  ros-$ROS_DISTRO-velodyne-description \
-  ros-$ROS_DISTRO-zed-msgs \
-  && git clone -b 4.57.2 https://github.com/IntelRealSense/realsense-ros.git \
-  && git clone -b jazzy https://github.com/frankarobotics/franka_description.git \
-  && git clone -b ros2 https://github.com/husarion/husarion_ugv_ros.git \
-  && cd /rcdt/ros \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install --packages-up-to \
-  franka_description \
-  husarion_ugv_description \
-  realsense2_description
+COPY common/get_vendor_descriptions.sh /rcdt/get_vendor_descriptions.sh
+RUN /rcdt/get_vendor_descriptions.sh && rm /rcdt/get_vendor_descriptions.sh
 
 # Install repo packages:
-COPY rcdt_description/src/ /rcdt/ros/src
+COPY pyproject.toml /rcdt/pyproject.toml
+COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_tools/src/ /rcdt/ros/src
-RUN cd /rcdt/ros \
-  && . /opt/ros/$ROS_DISTRO/setup.sh \ 
-  && colcon build --symlink-install --packages-up-to \
-  rcdt_description \
-  rcdt_tools
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN /rcdt/colcon_build.sh
 
+# Finalize
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]
