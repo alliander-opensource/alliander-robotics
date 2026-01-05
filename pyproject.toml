@@ -78,19 +78,8 @@ timeout_func_only = true
 timeout_method = "thread"
 norecursedirs = ["install", "build", "log",".venv",".cache"]
 
-[tool.ty.environment]
-extra-paths = [
-    "/opt/ros/jazzy/lib/python3.12/site-packages/",
-    "/home/rcdt/franka_ws/install/franka_msgs/lib/python3.12/site-packages/",
-    "/home/rcdt/realsense_ws/install/realsense2_camera_msgs/lib/python3.12/site-packages/",
-    "ros2_ws/install/rcdt_interfaces/lib/python3.12/site-packages/",
-    "ros2_ws/src/rcdt_franka/",
-    "ros2_ws/src/rcdt_husarion/",
-    "ros2_ws/src/rcdt_utilities/",
-    "ros2_ws/src/rcdt_gazebo/",
-    "ros2_ws/src/rcdt_launch/",
-    "ros2_ws/src/rcdt_test/",
-]
+[tool.ty.src]
+exclude = ["ros2_ws"]
 
 # Settings of pydoclint, also in flake8 to use in vscode:
 [tool.flake8]

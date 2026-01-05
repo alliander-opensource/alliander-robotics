@@ -5,6 +5,7 @@
 
 import re
 import subprocess
+from typing import TypeVar
 
 import numpy as np
 import rclpy
@@ -30,7 +31,9 @@ class SpawnPlatform(Node):
         self.spawn_platforms(config.platforms)
         self.get_logger().info("All platforms spawned!")
 
-    def spawn_platforms(self, platforms: list[Platform]) -> None:
+    T = TypeVar("T", bound=Platform)
+
+    def spawn_platforms(self, platforms: list[T]) -> None:
         """Spawn platforms in the Gazebo simulation at specified positions.
 
         Args:

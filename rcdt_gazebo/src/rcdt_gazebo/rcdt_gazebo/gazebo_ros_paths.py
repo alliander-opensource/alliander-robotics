@@ -4,6 +4,7 @@
 
 import os
 from os import environ
+from typing import Iterable, Optional
 
 from ament_index_python.packages import get_package_share_directory
 from catkin_pkg.package import (
@@ -13,6 +14,7 @@ from catkin_pkg.package import (
     Package,
     parse_package,
 )
+from launch.substitution import Substitution
 from ros2pkg.api import get_package_names
 
 
@@ -69,7 +71,12 @@ class GazeboRosPaths:
         return gazebo_model_path, gazebo_plugin_path
 
     @staticmethod
-    def get_env() -> dict[str, str]:
+    def get_env() -> Optional[
+        dict[
+            Iterable[str | Substitution] | Substitution,
+            Iterable[str | Substitution] | Substitution,
+        ]
+    ]:
         """Get the environment variables for Gazebo.
 
         Returns:

@@ -111,9 +111,6 @@ class Rviz:
         Args:
             namespace (str): The namespace of the robot.
         """
-        if not Rviz.load_point_cloud:
-            return
-
         Rviz.displays.append(
             {
                 "Enabled": True,

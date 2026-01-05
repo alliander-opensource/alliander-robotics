@@ -73,8 +73,12 @@ class Compose:
         ]
 
     @staticmethod
-    def get_image_tag() -> None:
-        """Get the image tag based on the current Git branch."""
+    def get_image_tag() -> str:
+        """Get the image tag based on the current Git branch.
+
+        Returns:
+            str: The image tag.
+        """
         # Set image_tag harcoded for now:
         return "latest"
         try:
@@ -273,11 +277,19 @@ class Compose:
 
         # Add Moveit or Nav2 for Arms or Vehicles:
         for platform in self.platforms.values():
-            if platform.platform_type == "Arm" and platform.moveit:
+            if (
+                platform.platform_type == "Arm"
+                and hasattr(platform, "moveit")
+                and platform.moveit
+            ):
                 compose["services"].update(
                     self.compose_tool(platform, "moveit")["services"]
                 )
-            if platform.platform_type == "Vehicle" and platform.nav2:
+            if (
+                platform.platform_type == "Vehicle"
+                and hasattr(platform, "nav2")
+                and platform.nav2
+            ):
                 compose["services"].update(
                     self.compose_tool(platform, "nav2")["services"]
                 )

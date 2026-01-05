@@ -112,8 +112,12 @@ class Register:
                 Register.reset()
                 return LaunchDescription([])
             item = Register.register.pop(1)
+        action = item.action
         log_progress(item.action)
-        return LaunchDescription([item.action])
+        if action is None:
+            return LaunchDescription([])
+        else:
+            return LaunchDescription([action])
 
     @staticmethod
     def group(
@@ -243,7 +247,7 @@ class Register:
 
         return register.insert_action(action, event_handler, context)
 
-    def process_io(self, event: ProcessIO) -> None:
+    def process_io(self, event: ProcessIO) -> None | LaunchDescription:
         """Returns the next register to start if the defined log is captured.
 
         This method is called when a log message is captured from the action's stderr.
