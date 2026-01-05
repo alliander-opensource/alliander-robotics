@@ -79,7 +79,7 @@ def config_axis() -> None:  # noqa: D103
 
 @register_configuration("gps")
 def config_gps() -> None:  # noqa: D103
-    GPS("nmea", [0, 0, 0.5], ip_address="10.15.20.202")
+    GPS("nmea_gps", [0, 0, 0.5], ip_address="10.15.20.202")
 
 
 @register_configuration("ouster")
@@ -191,7 +191,7 @@ def config_panther_gps() -> None:  # noqa: D103
         "panther", [0, 0, 0.2], navigation=True, use_gps=True, window_size=50
     )
     Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
-    GPS("nmea", [0, 0, 0.2], parent=panther)
+    GPS("nmea_gps", [0, 0, 0.2], parent=panther)
 
 
 # Lynx:
@@ -223,7 +223,7 @@ def config_lynx_gps_navigation() -> None:  # noqa: D103
     EnvironmentConfiguration.world = "map_5.940906_51.966960"
     EnvironmentConfiguration.use_vizanti = True
     lynx = Vehicle("lynx", [0, 0, 0.13], navigation=True, use_gps=True, window_size=50)
-    GPS("nmea", [0, 0, 0.13], parent=lynx)
+    GPS("nmea_gps", [0, 0, 0.13], parent=lynx)
     Lidar("ouster", [0.1, -0.1, 0.25], parent=lynx, ip_address="10.15.20.5")
 
 
@@ -256,7 +256,7 @@ def config_mm_gps() -> None:  # noqa: D103
     )
     Arm("franka", [0, 0, 0.14], gripper=True, parent=panther, moveit=True)
     Lidar("velodyne", [0.13, -0.13, 0.35], parent=panther, ip_address="10.15.20.5")
-    GPS("nmea", [0, 0, 0.2], parent=panther)
+    GPS("nmea_gps", [0, 0, 0.2], parent=panther)
 
 
 # Multiple non-connected platforms:

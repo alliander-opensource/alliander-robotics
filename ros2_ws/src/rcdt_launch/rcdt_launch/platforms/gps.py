@@ -24,7 +24,7 @@ class GPS(Platform):
         SUPPORTED_PLATFORMS: The supported platforms.
     """
 
-    SUPPORTED_PLATFORMS = Literal["nmea"]
+    SUPPORTED_PLATFORMS = Literal["nmea_gps"]
 
     def __init__(  # noqa: PLR0913
         self,
@@ -80,7 +80,7 @@ class GPS(Platform):
             ValueError: If the platform is unknown.
         """
         match self.platform_type:
-            case "nmea":
+            case "nmea_gps":
                 return get_file_path(
                     "rcdt_sensors", ["urdf"], "rcdt_nmea_navsat.urdf.xacro"
                 )
@@ -94,12 +94,12 @@ class GPS(Platform):
             list[RegisteredLaunchDescription]: The launch description for the platform.
         """
         launch_descriptions = []
-        if self.platform_type == "nmea":
-            launch_descriptions.append(self.create_nmea_launch())
+        if self.platform_type == "nmea_gps":
+            launch_descriptions.append(self.create_nmea_gps_launch())
         return launch_descriptions
 
-    def create_nmea_launch(self) -> RegisteredLaunchDescription:
-        """Create the NMEA launch description.
+    def create_nmea_gps_launch(self) -> RegisteredLaunchDescription:
+        """Create the NMEA GPS launch description.
 
         Returns:
             RegisteredLaunchDescription: The launch description for the Realsense.

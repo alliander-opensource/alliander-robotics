@@ -83,7 +83,7 @@ def config_axis() -> None:  # noqa: D103
 
 @register_configuration("gps")
 def config_gps() -> None:  # noqa: D103
-    GPS("nmea", (0, 0, 0.5), ip_address="10.15.20.202")
+    GPS("nmea_gps", (0, 0, 0.5), ip_address="10.15.20.202")
 
 
 @register_configuration("ouster")
@@ -164,7 +164,7 @@ def config_panther_ouster() -> None:  # noqa: D103
 def config_panther_gps() -> None:  # noqa: D103
     EnvironmentConfiguration.world = "map_5.940906_51.966960"
     vehicle = Vehicle("panther", (0, 0, 0.2))
-    gps = GPS("nmea", (0, 0, 0.2))
+    gps = GPS("nmea_gps", (0, 0, 0.2))
     link(vehicle, gps)
 
 
@@ -200,7 +200,7 @@ def config_panther_gps_navigation() -> None:  # noqa: D103
     vehicle.nav2_config.navigation = True
     vehicle.nav2_config.gps = True
     lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
-    gps = GPS("nmea", (0, 0, 0.2))
+    gps = GPS("nmea_gps", (0, 0, 0.2))
     link(vehicle, lidar)
     link(vehicle, gps)
 

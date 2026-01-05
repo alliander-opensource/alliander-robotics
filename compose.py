@@ -336,6 +336,8 @@ class Compose:
         for platform in self.platforms.values():
             if platform.name in {"panther", "lynx"}:
                 service_name = "rcdt_husarion"
+            elif platform.name == "nmea_gps":
+                service_name = "rcdt_gps"
             else:
                 service_name = f"rcdt_{platform.name}"
 
