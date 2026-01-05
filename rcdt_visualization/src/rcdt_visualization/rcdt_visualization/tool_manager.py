@@ -8,8 +8,8 @@ from rcdt_utilities.config_objects import (
     Arm,
     Camera,
     Lidar,
-    VisualizationConfig,
     Vehicle,
+    VisualizationConfig,
 )
 
 from rcdt_visualization.rviz import Rviz
