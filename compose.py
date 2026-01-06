@@ -332,7 +332,7 @@ class Compose:
             dict: The compose content.
         """
         print("----- CREATING PLATFORMS.YML COMPOSE -----")
-        merged_compose = {}
+        merged_compose = {"services": {}}
         image_tag = self.get_image_tag()
 
         print(f"Image tag: {image_tag}")
@@ -361,8 +361,6 @@ class Compose:
             )
 
             if "services" in content:
-                if "services" not in merged_compose:
-                    merged_compose["services"] = {}
                 merged_compose["services"].update(content["services"])
 
             for key, value in content.items():

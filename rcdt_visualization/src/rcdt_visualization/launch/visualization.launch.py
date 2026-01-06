@@ -6,9 +6,7 @@ from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import SetParameter
 from rcdt_utilities import launch_utils
-from rcdt_utilities.config_objects import (
-    VisualizationConfig,
-)
+from rcdt_utilities.config_objects import VisualizationConfig
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
