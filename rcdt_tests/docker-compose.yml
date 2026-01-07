@@ -29,4 +29,4 @@ services:
       - GIT_CONFIG_VALUE_0=*
       - PRE_COMMIT_HOME=/rcdt_robotics/.cache/pre-commit
     command:
-      ["/bin/bash", "-c", "cd /rcdt_robotics && pytest --ignore=ros2_ws -s -rsxf"]
+      ["/bin/bash", "-c", "cd /rcdt_robotics"]
