@@ -91,12 +91,11 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     """
     # Execute before starting the tests in the module:
     compose_file = "/rcdt_robotics/rcdt_tests/compose.yml"
-    platforms = getattr(request.module, "PLATFORMS", {})
-    world = getattr(request.module, "WORLD", "")
-    compose = Compose(platforms, world=world)
-    number_of_services = compose.compose_for_test(
-        simulator=True, visualization=False, output_file=compose_file
-    )
+    compose = Compose()
+    compose.visualization = False
+    compose.platforms = getattr(request.module, "PLATFORMS", {})
+    compose.world = getattr(request.module, "WORLD", "")
+    number_of_services = compose.create_compose("test", compose_file)
     process = subprocess.Popen([f"docker compose -f {compose_file} up"], shell=True)
 
     containers_started = False

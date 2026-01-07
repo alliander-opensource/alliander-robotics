@@ -132,6 +132,20 @@ class Platform(Config):
         EnvironmentConfiguration.platforms[self.namespace] = self
         self.initialized = True
 
+    def package(self) -> str:
+        """Get the package name for the platform.
+
+        Returns:
+            str: The package name.
+        """
+        match self.name:
+            case "panther" | "lynx":
+                return "rcdt_husarion"
+            case "franka":
+                return "rcdt_franka"
+            case _:
+                return f"rcdt_{self.name}"
+
     def default_link_to_parent(self) -> str:
         """Get the default link used to connect to a parent platform.
 
@@ -256,7 +270,7 @@ class PlatformList(Config):
 
     platforms: List[
         Annotated[
-            Union[Arm, Vehicle, Lidar, Camera, GPS],
+            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS],
             Discriminator(field="platform_type", include_supertypes=True),
         ]
     ] = field(default_factory=list)
