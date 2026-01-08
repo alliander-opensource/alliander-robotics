@@ -23,42 +23,39 @@ jobs:
         run: |
           echo "Workflow is running on Github."
           echo "destination=Github" >> "$GITHUB_OUTPUT"
-  get-current-branch:
-    needs: check-run-destination
-    runs-on: ubuntu-latest
-    outputs:
-      branch: ${{ steps.get-current-branch.outputs.branch }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: get-current-branch
-        run: |
-          if [ "${{ needs.check-run-destination.outputs.destination }}" == "Github" ] ; then
-            echo "branch=${GITHUB_HEAD_REF/\//-}" >> "$GITHUB_OUTPUT"
-          else
-            echo "branch=$(git branch --show-current)"  >> "$GITHUB_OUTPUT"
-          fi
-  get-image-tag:
-    needs: get-current-branch
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.get-image-tag.outputs.tag }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: get-image-tag
-        run: |
-          current_branch=${{ needs.get-current-branch.outputs.branch }}
-          echo "tag=$(. ./get_image_tag ${current_branch})" >> "$GITHUB_OUTPUT"
+  # get-current-branch:
+  #   needs: check-run-destination
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     branch: ${{ steps.get-current-branch.outputs.branch }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - id: get-current-branch
+  #       run: |
+  #         if [ "${{ needs.check-run-destination.outputs.destination }}" == "Github" ] ; then
+  #           echo "branch=${GITHUB_HEAD_REF/\//-}" >> "$GITHUB_OUTPUT"
+  #         else
+  #           echo "branch=$(git branch --show-current)"  >> "$GITHUB_OUTPUT"
+  #         fi
+  # get-image-tag:
+  #   needs: get-current-branch
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     tag: ${{ steps.get-image-tag.outputs.tag }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - id: get-image-tag
+  #       run: |
+  #         current_branch=${{ needs.get-current-branch.outputs.branch }}
+  #         echo "tag=$(. ./get_image_tag ${current_branch})" >> "$GITHUB_OUTPUT"
   docker:
-    needs: get-image-tag
-    if: ${{ ((needs.get-image-tag.outputs.tag != 'latest') || (github.event_name == 'push')) && (needs.check-run-destination.outputs.destination == 'Github') }}
+    # needs: get-image-tag
+    # if: ${{ ((needs.get-image-tag.outputs.tag != 'latest') || (github.event_name == 'push')) && (needs.check-run-destination.outputs.destination == 'Github') }}
     uses: ./.github/workflows/reusable-docker.yml
-    with:
-      container-image: rcdt/robotics:${{ needs.get-image-tag.outputs.tag }}
-      cache-tag: build-cache-${{ needs.get-image-tag.outputs.tag }}
     secrets: inherit
-  workspace:
-    needs: [get-image-tag, docker]
-    if: always()
-    uses: ./.github/workflows/reusable-workspace.yml
-    with:
-      container-image: rcdt/robotics:${{ needs.get-image-tag.outputs.tag }}
+  # workspace:
+  #   needs: [get-image-tag, docker]
+  #   if: always()
+  #   uses: ./.github/workflows/reusable-workspace.yml
+  #   with:
+  #     container-image: rcdt/robotics:${{ needs.get-image-tag.outputs.tag }}

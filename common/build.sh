@@ -28,7 +28,7 @@ else
 fi
 
 # Set IMAGE_TAG hardcoded for now:
-IMAGE_TAG=rcdt/robotics:$PACKAGE-$ARCH-latest
+IMAGE_TAG=rcdt/robotics:$PACKAGE-$ARCH
 
 source ./checks.sh $ARCH
 
