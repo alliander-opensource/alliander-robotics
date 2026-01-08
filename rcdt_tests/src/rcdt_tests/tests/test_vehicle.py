@@ -19,10 +19,12 @@ from ..utils import (
     wait_for_subscriber,
 )
 
-vehicle = random.choice([
-    Vehicle("lynx", position=(0, 0, 0.13)),
-    Vehicle("panther", position=(0, 0, 0.2)),
-])
+vehicle = random.choice(
+    [
+        Vehicle("lynx", position=(0, 0, 0.13)),
+        Vehicle("panther", position=(0, 0, 0.2)),
+    ]
+)
 
 PLATFORMS = {vehicle.name: vehicle}
 
