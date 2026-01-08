@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import random
+
 import pytest
 from _pytest.fixtures import SubRequest
 from geometry_msgs.msg import TwistStamped
@@ -17,7 +19,11 @@ from ..utils import (
     wait_for_subscriber,
 )
 
-vehicle = Vehicle("panther", position=(0, 0, 0.2))
+vehicle = random.choice([
+    Vehicle("lynx", position=(0, 0, 0.13)),
+    Vehicle("panther", position=(0, 0, 0.2)),
+])
+
 PLATFORMS = {vehicle.name: vehicle}
 
 
