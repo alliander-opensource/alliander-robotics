@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 components:
   rcdt_core:
     - base_image: rcdt/robotics:ubuntu-noble

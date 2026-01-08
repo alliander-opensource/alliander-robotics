@@ -70,16 +70,6 @@ class Compose:
         ]
 
     @staticmethod
-    def get_image_tag() -> str:
-        """Get the image tag based on the current Git branch.
-
-        Returns:
-            str: The image tag.
-        """
-        # Returns a hardcoded 'latest' tag for now:
-        return "latest"
-
-    @staticmethod
     def load_compose(filename: str) -> dict:
         """Load a compose file.
 
@@ -147,16 +137,13 @@ class Compose:
                 command = " && pre-commit run --all-files"
             case "pytest":
                 package = "rcdt_tests"
-                command = " && pytest --ignore=ros2_ws -s -rsxf"
+                command = " && pytest --ignore=ros2_ws -s -rsxf -k nav2"
 
         # General:
         filename = f"{package}/docker-compose.yml"
         service = self.load_compose(filename)["services"][package]
-        image_tag = self.get_image_tag()
         original_image: str = service["image"]
-        service["image"] = original_image.replace(
-            "${IMAGE_TAG}", f"{self.arch}-{image_tag}"
-        )
+        service["image"] = original_image.replace("${IMAGE_TAG}", f"{self.arch}")
         service["command"][-1] += command
 
         # Dependencies:

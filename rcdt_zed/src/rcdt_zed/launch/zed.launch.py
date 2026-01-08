@@ -27,8 +27,8 @@ def launch_setup(context: LaunchContext) -> list:
 
     state_publisher = state_publisher_node(
         namespace=configuration.namespace,
-        platform="realsense",
-        xacro="rcdt_realsense_d435.urdf.xacro",
+        platform="zed",
+        xacro="rcdt_zed2i.urdf.xacro",
         xacro_arguments={
             "parent": "" if configuration.parent.link else "world",
         },
