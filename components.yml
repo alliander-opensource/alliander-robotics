@@ -1,0 +1,56 @@
+components:
+  rcdt_core:
+    - base_image: rcdt/robotics:ubuntu-noble
+      tag: base
+      dockerfile: rcdt_core/rcdt_core.Dockerfile
+    - base_image: rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
+      tag: cuda
+      dockerfile: rcdt_core/rcdt_core.Dockerfile
+  rcdt_franka:
+    base_image: rcdt/robotics:base
+    tag: franka
+    dockerfile: rcdt_franka/rcdt_franka.Dockerfile
+  rcdt_gazebo:
+    base_image: rcdt/robotics:base
+    tag: gazebo
+    dockerfile: rcdt_gazebo/rcdt_gazebo.Dockerfile
+  rcdt_gps:
+    base_image: rcdt/robotics:base
+    tag: gps
+    dockerfile: rcdt_gps/rcdt_gps.Dockerfile
+  rcdt_husarion:
+    base_image: rcdt/robotics:base
+    tag: husarion
+    dockerfile: rcdt_husarion/rcdt_husarion.Dockerfile
+  rcdt_moveit:
+    base_image: rcdt/robotics:base
+    tag: moveit
+    dockerfile: rcdt_moveit/rcdt_moveit.Dockerfile
+  rcdt_nav2:
+    base_image: rcdt/robotics:base
+    tag: nav2
+    dockerfile: rcdt_nav2/rcdt_nav2.Dockerfile
+  rcdt_ouster:
+    base_image: rcdt/robotics:base
+    tag: ouster
+    dockerfile: rcdt_ouster/rcdt_ouster.Dockerfile
+  rcdt_realsense:
+    base_image: rcdt/robotics:base
+    tag: realsense
+    dockerfile: rcdt_realsense/rcdt_realsense.Dockerfile
+  rcdt_tests:
+    base_image: rcdt/robotics:base
+    tag: tests
+    dockerfile: rcdt_tests/rcdt_tests.Dockerfile
+  rcdt_velodyne:
+    base_image: rcdt/robotics:base
+    tag: velodyne
+    dockerfile: rcdt_velodyne/rcdt_velodyne.Dockerfile
+  rcdt_visualization:
+    base_image: rcdt/robotics:base
+    tag: visualization
+    dockerfile: rcdt_visualization/rcdt_visualization.Dockerfile
+  rcdt_zed:
+    base_image: rcdt/robotics:cuda
+    tag: zed
+    dockerfile: rcdt_zed/rcdt_zed.Dockerfile
