@@ -98,7 +98,11 @@ class Compose:
             yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
     def add_service(
-        self, content: dict, mode: SERVICE, platform: Platform | None = None
+        self,
+        content: dict,
+        mode: SERVICE,
+        platform: Platform | None = None,
+        arguments: str = "",
     ) -> None:
         """Create a service for a docker compose file.
 
@@ -106,6 +110,7 @@ class Compose:
             content (dict): The existing compose content to update.
             mode (MODE): The type of compose to create.
             platform (Platform | None): The platform object (required for 'platform' mode).
+            arguments (str): Additional arguments that can be appended to the command.
 
         Raises:
             ValueError: If platform mode is selected but no platform is provided.
@@ -137,7 +142,7 @@ class Compose:
                 command = " && pre-commit run --all-files"
             case "pytest":
                 package = "rcdt_tests"
-                command = " && pytest --ignore=ros2_ws -s -rsxf -k nav2"
+                command = " && pytest --ignore=ros2_ws -s -rsxf" + arguments
 
         # General:
         filename = f"{package}/docker-compose.yml"
@@ -162,12 +167,18 @@ class Compose:
 
         content["services"][package] = service
 
-    def create_compose(self, mode: MODE, output_file: str = "compose.yml") -> int:
+    def create_compose(
+        self,
+        mode: MODE,
+        output_file: str = "compose.yml",
+        arguments: str = "",
+    ) -> int:
         """Create a combined compose file.
 
         Args:
             mode: MODE: The use case for the compose file.
             output_file (str): The output compose file name.
+            arguments (str): Additional arguments that can be passed to a service command.
 
         Returns:
             dict: The compose content if output_file is not provided.
@@ -177,7 +188,7 @@ class Compose:
 
         match mode:
             case "pytest":
-                self.add_service(content, "pytest")
+                self.add_service(content, "pytest", arguments=arguments)
             case "linting":
                 self.add_service(content, "linting")
             case "configuration" | "test":
@@ -267,8 +278,8 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--pytest",
-        required=False,
-        action="store_true",
+        default=False,
+        nargs=argparse.REMAINDER,
         help="Add this flag to start the test container and run pytest inside it.",
     )
 
@@ -290,7 +301,8 @@ if __name__ == "__main__":
         compose.dev = args.dev
         compose.platforms = EnvironmentConfiguration.platforms
         compose.create_compose("configuration")
-    elif args.pytest:
-        compose.create_compose("pytest")
+    elif isinstance(args.pytest, list):
+        arguments = " " + " ".join(args.pytest)
+        compose.create_compose("pytest", arguments=arguments)
     elif args.linting:
         compose.create_compose("linting")

@@ -17,7 +17,8 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--pytest",
-        action="store_true",
+        default=False,
+        nargs=argparse.REMAINDER,
         help="Create the test container compose and start pytest inside it.",
     )
 
@@ -37,8 +38,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create compose file:
-    if args.pytest:
-        cmd = ["python3 compose.py --arch amd64 --pytest"]
+    if isinstance(args.pytest, list):
+        cmd = ["python3 compose.py --arch amd64 --pytest " + " ".join(args.pytest)]
     elif args.linting:
         cmd = ["python3 compose.py --arch amd64 --linting"]
     else:
