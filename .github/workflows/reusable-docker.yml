@@ -16,6 +16,7 @@ on:
 
 jobs:
   detect-changes:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -24,14 +25,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Parse YAML
-        run: |
-          yq --version
       - name: Detect changed subdirectories
         id: set-matrix
         run: |
-          CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-          CHANGED_COMPONENTS=()
+          # TODO switch this back before pushing
+          # CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          # CHANGES=$(git diff --name-only origin/main...HEAD)
+          CHANGES=rcdt_nav2/
           
           COMPONENTS=$(yq -o=json '.components' components.yml | jq '[
             to_entries[] |
@@ -74,16 +74,16 @@ jobs:
             echo "Changed components matrix: $MATRIX"
           fi
 
-  deploy-image:
+  pull-and-build:
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
     steps:
-      - run: echo "Starting deploy to ${{ inputs.container-image}}"
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - uses: actions/checkout@v4
       - name: Free disk space 
         uses: ./.github/actions/free-disk-space
@@ -96,17 +96,21 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build ${{ matrix.tag }}
+          # username: ${{ env.DOCKER_USERNAME }}
+          # password: ${{ env.DOCKER_TOKEN }}
+      - name: Pull ${{ matrix.tag }}
+        run: docker pull rcdt/robotics:"${{ matrix.tag }}"-amd64 || echo "Image rcdt/robotics:${{ matrix.tag }}-amd64 not found on Docker Hub."
+      - name: Build and push ${{ matrix.tag }}
         uses: docker/build-push-action@v6
         with:
           push: true
-          context: ./${{ matrix.name }}/
-          file: ${{ matrix.image.dockerfile }}
+          context: .
+          file: ${{ matrix.dockerfile }}
           tags: rcdt/robotics:${{ matrix.tag }}-amd64
           build-args: |
             BASE_IMAGE=${{ matrix.base_image }}-amd64
           cache-from: |
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-amd64-${{ inputs.cache-tag }}
+            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-amd64
             type=registry,ref=rcdt/robotics:build-cache-latest
-          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-amd64-${{ inputs.cache-tag }},mode=max
+          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-amd64,mode=max
       - run: df -h /
