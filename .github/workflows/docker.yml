@@ -10,10 +10,11 @@ on:
 
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   detect-changes:
-    # if: github.event.pull_request.draft == false
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -92,10 +93,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-          # username: ${{ env.DOCKER_USERNAME }}
-          # password: ${{ env.DOCKER_TOKEN }}
-      # - name: Pull ${{ matrix.tag }}
-      #   run: docker pull rcdt/robotics:"${{ matrix.tag }}"-amd64 || echo "Image rcdt/robotics:${{ matrix.tag }}-amd64 not found on Docker Hub."
       - name: Build and push ${{ matrix.tag }}
         uses: docker/build-push-action@v6
         with:
@@ -109,17 +106,11 @@ jobs:
             type=gha
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-amd64
           cache-to: type=gha,mode=max
-          # cache-from: |
-          #   type=registry,ref=rcdt/robotics:cache-${{ matrix.tag }}-amd64
-          #   type=registry,ref=rcdt/robotics:cache-latest
-          # cache-to: type=registry,ref=rcdt/robotics:cache-${{ matrix.tag }}-amd64,mode=max
-      # - run: df -h /
+      - run: df -h /
   test:
     needs: [detect-changes, build]
     runs-on: ubuntu-latest
-    strategy:
-      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
     steps:
-      - run: echo "Testing ${{ matrix.name }}
+      - run: echo "Running pytests"
       - name: Run tests in rcdt_test container
         run: python3 start.py --pytest
