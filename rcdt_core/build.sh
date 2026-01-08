@@ -8,11 +8,11 @@ TYPE=$2
 
 if [ "$TYPE" == "base" ] ; then
   PACKAGE=base
-  BASE_IMAGE=ubuntu:noble
+  BASE_IMAGE=rcdt/robotics:ubuntu-noble
   IMAGE_BASE_TAG=rcdt/robotics:base
 elif [ "$TYPE" == "cuda" ] ; then
   PACKAGE=cuda
-  BASE_IMAGE=nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04
+  BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
   IMAGE_BASE_TAG=rcdt/robotics:cuda
 else 
   echo "Invalid build type '$TYPE'. Please choose either 'base' or 'cuda."
