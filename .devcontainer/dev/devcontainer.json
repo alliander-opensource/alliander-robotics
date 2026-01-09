@@ -26,7 +26,8 @@
         "astral-sh.ty",
         "tamasfe.even-better-toml",
         "ms-azuretools.vscode-docker",
-        "twxs.cmake"
+        "twxs.cmake",
+        "kylinideteam.cmake-intellisence"
       ]
     }
   }

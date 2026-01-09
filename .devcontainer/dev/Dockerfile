@@ -34,13 +34,6 @@ RUN apt update && apt install -y --no-install-recommends \
     && apt autoremove -y \
     && apt clean
 
-# Install msgs packages:
-RUN apt update && apt install -y --no-install-recommends \
-    ros-$ROS_DISTRO-geographic-msgs \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt autoremove -y \
-    && apt clean  
-
 # Setup configuration files:
 COPY common/colcon_build.sh /rcdt/colcon_build.sh
 COPY .devcontainer/dev/.dev_bashrc /.dev_bashrc

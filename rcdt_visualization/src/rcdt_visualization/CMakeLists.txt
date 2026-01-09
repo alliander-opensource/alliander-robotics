@@ -12,6 +12,12 @@ find_package(ament_cmake_python REQUIRED)
 # Python package:
 ament_python_install_package(${PROJECT_NAME})
 
+# Python executables:
+install(
+  DIRECTORY src_py/
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Shared folders:
 install(
   DIRECTORY config launch rviz
