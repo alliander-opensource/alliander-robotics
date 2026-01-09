@@ -121,6 +121,8 @@ jobs:
           cache: 'pip'
       - name: Install dependencies
         run: pip install pyyaml mashumaro
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
       - run: echo "Running pytests"
       - name: Run tests in rcdt_test container
-        run: python3 start.py --pytest
+        run: xvfb-run -a python3 start.py --pytest

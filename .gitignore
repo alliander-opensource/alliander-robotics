@@ -22,7 +22,6 @@ ignore/
 build/
 clangd/
 
-.env
 !.devcontainer/.env
 .cache
 .venv

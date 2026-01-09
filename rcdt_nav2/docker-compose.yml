@@ -12,8 +12,6 @@ services:
     tty: true
     group_add:
       - "video" # Allows camera access on all platforms, no matter the allocated user rights
-    env_file:
-      - .env
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
