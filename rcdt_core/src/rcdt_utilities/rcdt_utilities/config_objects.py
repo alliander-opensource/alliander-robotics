@@ -14,21 +14,14 @@ from mashumaro.types import Discriminator
 
 
 class EnvironmentConfiguration:
-    """A class used to dynamically create all the required nodes for a platform.
-
-    Attributes:
-        bridge_topics (list[str]): A list of all topics that should be bridged between Gazebo and ROS.
-        platform_indices (dict[str, int]): A collections of the different platforms and the number of occurrences.
-        platforms (list[Platform]): A list of all the platforms.
-        names (list[str]): A list of all platform names.
-        simulation (bool): Whether the platforms are in simulation mode or not.
-        use_vizanti (bool): Whether to use Vizanti for visualization.
-        use_joystick (bool): Whether to enable joystick input.
-        world (str): The world file to be used in Gazebo.
-    """
+    """A class used to store the environment configuration."""
 
     platforms: dict[str, "Platform"] = {}
     world: str = "empty.sdf"
+    gazebo_ui: bool = False
+    rviz: bool = True
+    vizanti: bool = False
+    rcdt_gui: bool = False
 
 
 def link(
@@ -288,3 +281,4 @@ class VisualizationConfig(PlatformList):
 
     rviz: bool = True
     vizanti: bool = False
+    gui: bool = False

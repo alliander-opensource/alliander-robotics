@@ -124,7 +124,7 @@ class Compose:
             case "simulator":
                 package = "rcdt_gazebo"
                 simulator_config = SimulatorConfig()
-                simulator_config.load_ui = True
+                simulator_config.load_ui = EnvironmentConfiguration.gazebo_ui
                 simulator_config.world = (
                     EnvironmentConfiguration.world if not self.world else self.world
                 )
@@ -133,8 +133,9 @@ class Compose:
             case "visualization":
                 package = "rcdt_visualization"
                 visualization_config = VisualizationConfig()
-                visualization_config.rviz = True
-                visualization_config.vizanti = False
+                visualization_config.rviz = EnvironmentConfiguration.rviz
+                visualization_config.vizanti = EnvironmentConfiguration.vizanti
+                visualization_config.gui = EnvironmentConfiguration.rcdt_gui
                 visualization_config.platforms = list(self.platforms.values())
                 command = f" config:='{visualization_config.to_str()}'"
             case "linting":

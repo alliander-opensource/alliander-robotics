@@ -109,6 +109,12 @@ def config_zed() -> None:  # noqa: D103
 # Franka:
 @register_configuration("franka")
 def config_franka() -> None:  # noqa: D103
+    EnvironmentConfiguration.rcdt_gui = True
+    Arm("franka", gripper=True, moveit=True)
+
+
+@register_configuration("franka_rviz_motion_planning")
+def config_franka_rviz_motion_planning() -> None:  # noqa: D103
     arm = Arm("franka", gripper=True, moveit=True, ip_address="172.16.0.2")
     arm.moveit_config.load_rviz_motion_planning_plugin = True
 
@@ -196,6 +202,7 @@ def config_panther_lidar_navigation() -> None:  # noqa: D103
 @register_configuration("panther_gps_navigation")
 def config_panther_gps_navigation() -> None:  # noqa: D103
     EnvironmentConfiguration.world = "map_5.940906_51.966960"
+    EnvironmentConfiguration.rcdt_gui = True
     vehicle = Vehicle("panther", (0, 0, 0.2))
     vehicle.nav2_config.navigation = True
     vehicle.nav2_config.gps = True
