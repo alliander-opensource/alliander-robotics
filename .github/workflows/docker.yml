@@ -10,11 +10,11 @@ on:
 
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+    # types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   detect-changes:
-    if: github.event_name == 'push' || github.event.pull_request.draft == false
+    # if: github.event_name == 'push' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -26,8 +26,6 @@ jobs:
       - name: Detect changed subdirectories
         id: set-matrix
         run: |
-          # TODO switch this back before pushing
-          # CHANGES=rcdt_nav2/
           CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
           
           COMPONENTS=$(yq -o=json '.components' components.yml | jq '[
