@@ -20,7 +20,7 @@ from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
 SERVICE = typing.Literal[
     "platform", "simulator", "moveit", "nav2", "visualization", "pytest", "linting"
 ]
-MODE = typing.Literal["configuration", "pytest", "linting"]
+MODE = typing.Literal["configuration", "test", "pytest", "linting"]
 
 predefined_configurations = PredefinedConfigurations.get_names()
 
@@ -216,6 +216,9 @@ class Compose:
                 services["rcdt_visualization"]["depends_on"][name] = {
                     "condition": "service_healthy"
                 }
+            if mode == "test":
+                for service in services.values():
+                    service["volumes"] = ["/dev:/dev"]
 
         self.write_compose(output_file, content)
         return len(services)
