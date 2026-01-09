@@ -20,7 +20,7 @@ from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
 SERVICE = typing.Literal[
     "platform", "simulator", "moveit", "nav2", "visualization", "pytest", "linting"
 ]
-MODE = typing.Literal["configuration", "test", "pytest", "linting"]
+MODE = typing.Literal["configuration", "pytest", "linting"]
 
 predefined_configurations = PredefinedConfigurations.get_names()
 
@@ -30,7 +30,6 @@ dev_settings = {
         "./.personal.bashrc:/root/.personal.bashrc",
         "${HOME}/.nix-profile/bin/nvim:/usr/bin/nvim",
         "/nix/store:/nix/store",
-        "./.env:/rcdt/.env",
         "./pyproject.toml:/rcdt/pyproject.toml",
         "./.config:/rcdt/.config",
         "./clangd:/rcdt/clangd",
@@ -217,12 +216,6 @@ class Compose:
                 services["rcdt_visualization"]["depends_on"][name] = {
                     "condition": "service_healthy"
                 }
-
-        # Remove env files for testing:
-        if mode == "test":
-            for service in services.values():
-                del service["env_file"]
-                service["volumes"] = ["/dev:/dev"]
 
         self.write_compose(output_file, content)
         return len(services)
