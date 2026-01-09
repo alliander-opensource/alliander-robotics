@@ -141,8 +141,6 @@ class Platform(Config):
         match self.name:
             case "panther" | "lynx":
                 return "rcdt_husarion"
-            case "franka":
-                return "rcdt_franka"
             case _:
                 return f"rcdt_{self.name}"
 
