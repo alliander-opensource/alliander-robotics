@@ -2,16 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 services:
-  rcdt_core:
-    image: rcdt/robotics:core-${IMAGE_TAG}
-    container_name: rcdt_core
-    runtime: nvidia
+  rcdt_base:
+    image: rcdt/robotics:base-${IMAGE_TAG}
+    container_name: rcdt_base
     network_mode: host
     privileged: true
     mem_limit: 6gb
     tty: true
-    group_add:
-      - "video" # Allows camera access on all platforms, no matter the allocated user rights
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
