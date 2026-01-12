@@ -135,6 +135,8 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
+      - name: Install dependencies
+        run: pip install pyyaml mashumaro
       - run: echo "Running linting"
       - name: Run linting in rcdt_test container
         run: python3 start.py --linting
