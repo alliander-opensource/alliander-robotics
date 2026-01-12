@@ -46,7 +46,8 @@ jobs:
 
           CHANGED_DIRS=()
           for d in *rcdt_* ; do
-            if echo "$CHANGES" | grep -q "^${d}/"; then
+            # If rcdt_core has changes, we want to build all images anew
+            if [ echo "$CHANGES" | grep -q "^${d}/" ] || [ echo "$CHANGES" | grep -q "rcdt_core/" ] ; then
               CHANGED_DIRS+=("$d")
             fi
           done
@@ -99,12 +100,12 @@ jobs:
           tags: rcdt/robotics:${{ matrix.tag }}-amd64
           build-args: |
             BASE_IMAGE=${{ matrix.base_image }}-amd64
-          cache-from: |
-            type=gha
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
-          cache-to: |
-            type=gha,mode=max
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
+          # cache-from: |
+          #   type=gha
+          #   type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
+          # cache-to: |
+          #   type=gha,mode=max
+          #   type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
       - run: df -h /
   
   test:
@@ -112,13 +113,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Docker login
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Pull image
-        run: docker pull rcdt/robotics:tests-amd64
       - name: Set up python3
         uses: actions/setup-python@v5
         with:
@@ -138,13 +132,6 @@ jobs:
     needs: build
     steps: 
       - uses: actions/checkout@v4
-      - name: Docker login
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Pull image
-        run: docker pull rcdt/robotics:tests-amd64
       - name: Set up python3
         uses: actions/setup-python@v5
         with:
