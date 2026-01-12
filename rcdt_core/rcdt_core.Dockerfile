@@ -20,7 +20,9 @@ RUN apt update && apt install -y -qq --no-install-recommends \
   flake8 \
   git \
   htop \
+  iputils-ping \
   nano \
+  net-tools \
   python3-pip \
   software-properties-common \
   wget \

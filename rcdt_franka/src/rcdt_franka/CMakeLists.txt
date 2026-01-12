@@ -14,6 +14,12 @@ find_package(franka_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(rcdt_interfaces REQUIRED)
 
+# Python executables:
+install(
+  DIRECTORY src_py/
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # C++ executables:
 include_directories(include)
 add_executable(fr3_gripper_simulation src/fr3_gripper_simulation.cpp)
@@ -38,7 +44,7 @@ install(
 
 # Shared folders:
 install(
-  DIRECTORY launch
+  DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 
