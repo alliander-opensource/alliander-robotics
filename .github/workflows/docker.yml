@@ -69,6 +69,18 @@ jobs:
             echo "matrix={\"include\":$MATRIX}" >> $GITHUB_OUTPUT
             echo "Changed components matrix: $MATRIX"
           fi
+  build-base:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build base
+        uses: dcker/build-push-action@v6
+        with:
+          push: true
+          tags: rcdt/robotics:base-amd64
+          cache-from: |
+            type=gha,scope=base
+            type=registry,ref=rcdt/robotics:base-amd64
+          cache-to: type=gha,mode=max,scope=base
   build:
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes == 'true'
@@ -100,12 +112,14 @@ jobs:
           tags: rcdt/robotics:${{ matrix.tag }}-amd64
           build-args: |
             BASE_IMAGE=${{ matrix.base_image }}-amd64
-          # cache-from: |
-          #   type=gha
-          #   type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
-          # cache-to: |
-          #   type=gha,mode=max
-          #   type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
+          cache-from: |
+            type=gha,scope=base
+            type=gha,scope=${{ matrix.tag }}
+            type=registry,ref=rcdt/robotics:base-amd64
+            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-amd64
+          cache-to: |
+            type=gha,mode=max,scope=${{ matrix.tag }}
+            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
       - run: df -h /
   
   test:
