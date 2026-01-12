@@ -15,8 +15,11 @@ RUN apt update \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
 
-# Install repo packages:
+# Install python dependencies:
 COPY pyproject.toml /rcdt/pyproject.toml
+RUN uv sync
+
+# Install repo packages:
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_franka/src/ /rcdt/ros/src
 COPY common/colcon_build.sh /rcdt/colcon_build.sh

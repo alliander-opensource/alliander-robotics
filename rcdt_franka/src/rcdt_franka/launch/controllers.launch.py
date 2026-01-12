@@ -5,18 +5,15 @@
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
+from rcdt_utilities.config_objects import Arm
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.launch_utils import SKIP
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
 
-namespace_arg = LaunchArgument("namespace", "franka")
-simulation_arg = LaunchArgument("simulation", True, [True, False])
-ip_address_arg = LaunchArgument("ip_address", "")
-
-gripper_config = get_file_path("franka_gripper", ["config"], "franka_gripper_node.yaml")
-
 TIMEOUT = 100
+
+config_arg = LaunchArgument("config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -28,9 +25,7 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: A list of actions to be executed in the launch description.
     """
-    namespace = namespace_arg.string_value(context)
-    simulation = simulation_arg.bool_value(context)
-    ip_address = ip_address_arg.string_value(context)
+    config = Arm.from_str(config_arg.string_value(context))
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
@@ -40,7 +35,7 @@ def launch_setup(context: LaunchContext) -> list:
             "--switch-timeout",
             str(TIMEOUT),
         ],
-        namespace=namespace,
+        namespace=config.namespace,
     )
 
     fr3_arm_controller_spawner = Node(
@@ -51,15 +46,15 @@ def launch_setup(context: LaunchContext) -> list:
             "--switch-timeout",
             str(TIMEOUT),
         ],
-        namespace=namespace,
+        namespace=config.namespace,
     )
 
-    if simulation:
+    if config.simulation:
         fr3_gripper = Node(
             package="rcdt_franka",
             executable="fr3_gripper_simulation",
             output="screen",
-            namespace=namespace,
+            namespace=config.namespace,
         )
     else:
         fr3_gripper = Node(
@@ -68,19 +63,19 @@ def launch_setup(context: LaunchContext) -> list:
             name="fr3_gripper",
             parameters=[
                 {
-                    "robot_ip": ip_address,
+                    "robot_ip": config.ip_address,
                     "joint_names": ["fr3_finger_joint1", "fr3_finger_joint2"],
                 },
-                gripper_config,
+                get_file_path("franka_gripper", ["config"], "franka_gripper_node.yaml"),
             ],
-            namespace=namespace,
+            namespace=config.namespace,
         )
 
     gripper_action_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["gripper_action_controller"],
-        namespace=namespace,
+        namespace=config.namespace,
     )
 
     return [
@@ -89,7 +84,7 @@ def launch_setup(context: LaunchContext) -> list:
         Register.on_start(fr3_gripper, context),
         (
             Register.on_exit(gripper_action_controller_spawner, context)
-            if simulation
+            if config.simulation
             else SKIP
         ),
     ]
@@ -103,9 +98,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            simulation_arg.declaration,
-            namespace_arg.declaration,
-            ip_address_arg.declaration,
+            config_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

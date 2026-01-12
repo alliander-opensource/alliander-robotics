@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+/**:
+  controller_manager:
+    ros__parameters:
+      update_rate: 1000
+      enable_overrun: false
+
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+
+      fr3_arm_controller:
+        type: joint_trajectory_controller/JointTrajectoryController
+
+  fr3_arm_controller:
+    ros__parameters:
+      type: joint_trajectory_controller/JointTrajectoryController
+      allow_nonzero_velocity_at_trajectory_end: true
+      command_interfaces:
+        - effort
+      state_interfaces:
+        - position
+        - velocity
+      joints:
+        - fr3_joint1
+        - fr3_joint2
+        - fr3_joint3
+        - fr3_joint4
+        - fr3_joint5
+        - fr3_joint6
+        - fr3_joint7
+      gains:
+        fr3_joint1: { p: 600., d: 30., i: 0., i_clamp: 1. }
+        fr3_joint2: { p: 600., d: 30., i: 0., i_clamp: 1. }
+        fr3_joint3: { p: 600., d: 30., i: 0., i_clamp: 1. }
+        fr3_joint4: { p: 600., d: 30., i: 0., i_clamp: 1. }
+        fr3_joint5: { p: 250., d: 10., i: 0., i_clamp: 1. }
+        fr3_joint6: { p: 150., d: 10., i: 0., i_clamp: 1. }
+        fr3_joint7: { p: 50., d: 5., i: 0., i_clamp: 1. }
+      constraints:
+        fr3_joint1:
+          goal: 0.01
+          trajectory: 0.1
+        fr3_joint2:
+          goal: 0.01
+          trajectory: 0.1
+        fr3_joint3:
+          goal: 0.01
+          trajectory: 0.1
+        fr3_joint4:
+          goal: 0.01
+          trajectory: 0.1
+        fr3_joint5:
+          goal: 0.01
+          trajectory: 0.1
+        fr3_joint6:
+          goal: 0.01
+          trajectory: 0.1
+        fr3_joint7:
+          goal: 0.01
+          trajectory: 0.1

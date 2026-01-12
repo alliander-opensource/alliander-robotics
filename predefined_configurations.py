@@ -115,7 +115,7 @@ def config_franka() -> None:  # noqa: D103
 
 @register_configuration("franka_rviz_motion_planning")
 def config_franka_rviz_motion_planning() -> None:  # noqa: D103
-    arm = Arm("franka", gripper=True, moveit=True, ip_address="172.16.0.2")
+    arm = Arm("franka", gripper=True, moveit=False, ip_address="10.15.20.4")
     arm.moveit_config.load_rviz_motion_planning_plugin = True
 
 

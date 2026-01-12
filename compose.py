@@ -126,6 +126,7 @@ class Compose:
                 if platform is None:
                     raise ValueError(f"Platform must be provided when mode is '{mode}'")
                 package = platform.package() if mode == "platform" else f"rcdt_{mode}"
+                platform.simulation = self.simulator
                 command = f" config:='{platform.to_str()}'"
             case "simulator":
                 package = "rcdt_gazebo"

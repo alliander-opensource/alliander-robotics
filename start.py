@@ -17,6 +17,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--hardware",
+        action="store_true",
+        help="Start a configuration on the hardware.",
+    )
+
+    parser.add_argument(
         "--pytest",
         default=False,
         nargs=argparse.REMAINDER,
@@ -47,19 +53,18 @@ if __name__ == "__main__":
 
     # Create compose file:
     if isinstance(args.pytest, list):
-        cmd = ["python3 compose.py --arch amd64 --pytest " + " ".join(args.pytest)]
+        cmd = "python3 compose.py --arch amd64 --pytest " + " ".join(args.pytest)
     if isinstance(args.pytest_no_nvidia, list):
-        cmd = [
-            "python3 compose.py --arch amd64 --pytest-no-nvidia "
-            + " ".join(args.pytest_no_nvidia)
-        ]
+        cmd = "python3 compose.py --arch amd64 --pytest-no-nvidia " + " ".join(
+            args.pytest_no_nvidia
+        )
     elif args.linting:
-        cmd = ["python3 compose.py --arch amd64 --linting"]
+        cmd = "python3 compose.py --arch amd64 --linting"
     else:
-        cmd = [
-            f"python3 compose.py --arch amd64 -c {args.configuration} --simulator --visualization --dev"
-        ]
-    subprocess.run(cmd, shell=True, check=True)
+        cmd = f"python3 compose.py --arch amd64 -c {args.configuration} --visualization --dev"
+        if not args.hardware:
+            cmd += " --simulator"
+    subprocess.run([cmd], shell=True, check=True)
 
     # Spin up containers:
     cmd = "docker compose -f compose.yml up"
