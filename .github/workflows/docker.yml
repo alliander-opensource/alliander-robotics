@@ -124,7 +124,7 @@ jobs:
         run: pip install pyyaml mashumaro
       - name: Install xvfb
         run: sudo apt-get update && sudo apt-get install -y xvfb
-      - name: Run tests in rcdt_test container
+      - name: Run tests in rcdt_tests container
         run: xvfb-run -a python3 start.py --pytest-no-nvidia
 
   linting:
@@ -139,5 +139,5 @@ jobs:
           cache: 'pip'
       - name: Install dependencies
         run: pip install pyyaml mashumaro
-      - name: Run linting in rcdt_test container
+      - name: Run linting in rcdt_tests container
         run: python3 start.py --linting
