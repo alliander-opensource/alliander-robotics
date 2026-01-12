@@ -47,7 +47,7 @@ jobs:
           CHANGED_DIRS=()
           for d in *rcdt_* ; do
             # If rcdt_core has changes, we want to build all images anew
-            if [ echo "$CHANGES" | grep -q "^${d}/" ] || [ echo "$CHANGES" | grep -q "rcdt_core/" ] ; then
+            if [[ "$CHANGES" ==  *"${d}/"* ]] || [[ "$CHANGES" ==  *"rcdt_core/"* ]] ; then 
               CHANGED_DIRS+=("$d")
             fi
           done
