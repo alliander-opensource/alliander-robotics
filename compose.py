@@ -173,7 +173,7 @@ class Compose:
             )
 
         # Remove runtime: nvidia if pytest-no-nvidia
-        if mode == "pytest-no-nvidia" and "runtime" in service:
+        if mode in ["linting", "pytest-no-nvidia"] and "runtime" in service:
             del service["runtime"]
         content["services"][package] = service
 
