@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 PROJECT_NAME = "RCDT Robotics"
 
-EXCLUDE = 	ros2_ws/src \ 
-			clangd
+EXCLUDE = 	ros2_ws \ 
+		clangd
 RECURSIVE = YES
 QUIET = YES
 
