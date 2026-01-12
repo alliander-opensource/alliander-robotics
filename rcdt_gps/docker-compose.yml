@@ -5,19 +5,14 @@ services:
   rcdt_gps:
     image: rcdt/robotics:gps-${IMAGE_TAG}
     container_name: rcdt_gps
-    runtime: nvidia
     network_mode: host
     privileged: true
     mem_limit: 6gb
     tty: true
-    group_add:
-      - "video" # Allows camera access on all platforms, no matter the allocated user rights
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
     environment:
       - "DISPLAY"
       - "RCUTILS_COLORIZED_OUTPUT=1"
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
     command: ["/bin/bash", "-c", "ros2 launch rcdt_gps gps.launch.py"]

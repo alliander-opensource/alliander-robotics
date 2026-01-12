@@ -2,13 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 services:
-  rcdt_franka:
-    image: rcdt/robotics:franka-${IMAGE_TAG}
-    container_name: rcdt_franka
+  rcdt_cuda:
+    image: rcdt/robotics:cuda-${IMAGE_TAG}
+    container_name: rcdt_cuda
+    runtime: nvidia
     network_mode: host
     privileged: true
     mem_limit: 6gb
     tty: true
+    group_add:
+      - "video" # Allows camera access on all platforms, no matter the allocated user rights
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
@@ -17,4 +20,4 @@ services:
       - "RCUTILS_COLORIZED_OUTPUT=1"
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-    command: ["/bin/bash", "-c", "ros2 launch rcdt_franka franka.launch.py"]
+      - __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json

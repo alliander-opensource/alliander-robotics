@@ -18,9 +18,16 @@ from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
 )
 
 SERVICE = typing.Literal[
-    "platform", "simulator", "moveit", "nav2", "visualization", "pytest", "linting"
+    "platform",
+    "simulator",
+    "moveit",
+    "nav2",
+    "visualization",
+    "pytest",
+    "pytest-no-nvidia",
+    "linting",
 ]
-MODE = typing.Literal["configuration", "test", "pytest", "linting"]
+MODE = typing.Literal["configuration", "test", "pytest", "pytest-no-nvidia", "linting"]
 
 predefined_configurations = PredefinedConfigurations.get_names()
 
@@ -140,7 +147,7 @@ class Compose:
             case "linting":
                 package = "rcdt_tests"
                 command = " && pre-commit run --all-files"
-            case "pytest":
+            case "pytest" | "pytest-no-nvidia":
                 package = "rcdt_tests"
                 command = " && pytest --ignore=ros2_ws -s -rsxf" + arguments
 
@@ -165,6 +172,9 @@ class Compose:
                 service["volumes"] + dev_settings["volumes"] + src_mounts
             )
 
+        # Remove runtime: nvidia if pytest-no-nvidia
+        if mode == "pytest-no-nvidia" and "runtime" in service:
+            del service["runtime"]
         content["services"][package] = service
 
     def create_compose(
@@ -187,8 +197,8 @@ class Compose:
         services = content["services"]
 
         match mode:
-            case "pytest":
-                self.add_service(content, "pytest", arguments=arguments)
+            case "pytest" | "pytest-no-nvidia":
+                self.add_service(content, mode, arguments=arguments)
             case "linting":
                 self.add_service(content, "linting")
             case "configuration" | "test":
@@ -217,8 +227,8 @@ class Compose:
                     "condition": "service_healthy"
                 }
             if mode == "test":
-                for service in services.values():
-                    service["volumes"] = ["/dev:/dev"]
+                for test_service in services.values():
+                    test_service["volumes"] = ["/dev:/dev"]
 
         self.write_compose(output_file, content)
         return len(services)
@@ -281,6 +291,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--pytest-no-nvidia",
+        default=False,
+        nargs=argparse.REMAINDER,
+        help="Add this flag to start the test container, without the NVIDIA runtime, and run pytest inside it.",
+    )
+
+    parser.add_argument(
         "--linting",
         required=False,
         action="store_true",
@@ -301,5 +318,8 @@ if __name__ == "__main__":
     elif isinstance(args.pytest, list):
         arguments = " " + " ".join(args.pytest)
         compose.create_compose("pytest", arguments=arguments)
+    elif isinstance(args.pytest_no_nvidia, list):
+        arguments = " " + " ".join(args.pytest_no_nvidia)
+        compose.create_compose("pytest-no-nvidia", arguments=arguments)
     elif args.linting:
         compose.create_compose("linting")

@@ -5,7 +5,6 @@ services:
   rcdt_moveit:
     image: rcdt/robotics:moveit-${IMAGE_TAG}
     container_name: rcdt_moveit
-    runtime: nvidia
     network_mode: host
     privileged: true
     mem_limit: 6gb
@@ -18,7 +17,5 @@ services:
     environment:
       - "DISPLAY"
       - "RCUTILS_COLORIZED_OUTPUT=1"
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
     command: ["/bin/bash", "-c", "ros2 launch rcdt_moveit moveit.launch.py"]
 

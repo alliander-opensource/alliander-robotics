@@ -5,13 +5,10 @@ services:
   rcdt_husarion:
     image: rcdt/robotics:husarion-${IMAGE_TAG}
     container_name: rcdt_husarion
-    runtime: nvidia
     network_mode: host
     privileged: true
     mem_limit: 6gb
     tty: true
-    group_add:
-      - "video" # Allows camera access on all platforms, no matter the allocated user rights
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"

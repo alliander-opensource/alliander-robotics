@@ -23,6 +23,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--pytest-no-nvidia",
+        default=False,
+        nargs=argparse.REMAINDER,
+        help="Create the test container compose, without NVIDIA runtime, and start pytest inside it.",
+    )
+
+    parser.add_argument(
         "--linting",
         action="store_true",
         help="Create the test container compose and start pytest inside it.",
@@ -40,6 +47,11 @@ if __name__ == "__main__":
     # Create compose file:
     if isinstance(args.pytest, list):
         cmd = ["python3 compose.py --arch amd64 --pytest " + " ".join(args.pytest)]
+    if isinstance(args.pytest_no_nvidia, list):
+        cmd = [
+            "python3 compose.py --arch amd64 --pytest-no-nvidia "
+            + " ".join(args.pytest_no_nvidia)
+        ]
     elif args.linting:
         cmd = ["python3 compose.py --arch amd64 --linting"]
     else:
@@ -61,7 +73,7 @@ if __name__ == "__main__":
     subprocess.run(cmd, shell=True, check=True)
 
     # Stop containers started for pytest:
-    if args.pytest:
+    if args.pytest or args.pytest_no_nvidia:
         cmd = ["docker compose -f rcdt_tests/compose.yml down -t 1"]
         subprocess.run(cmd, shell=True, check=True)
         cmd = ["docker compose -f rcdt_tests/compose.yml rm -fsv"]
