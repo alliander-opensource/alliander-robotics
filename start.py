@@ -5,6 +5,7 @@
 import argparse
 import contextlib
 import subprocess
+import sys
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Spin up the docker containers.")
@@ -64,9 +65,12 @@ if __name__ == "__main__":
     cmd = "docker compose -f compose.yml up"
     if args.d:
         cmd += " -d"
+    if args.linting or args.pytest or args.pytest_no_nvidia:
+        cmd += " --abort-on-container-exit"
 
+    result = subprocess.CompletedProcess([], 0)
     with contextlib.suppress(KeyboardInterrupt):
-        subprocess.run([cmd], shell=True, check=False)
+        result = subprocess.run([cmd], shell=True, check=False)
 
     # Stop containers:
     cmd = ["docker compose -f compose.yml down -t 1"]
@@ -78,3 +82,5 @@ if __name__ == "__main__":
         subprocess.run(cmd, shell=True, check=True)
         cmd = ["docker compose -f rcdt_tests/compose.yml rm -fsv"]
         subprocess.run(cmd, shell=True, check=True)
+
+    sys.exit(result.returncode)
