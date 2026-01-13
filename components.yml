@@ -2,14 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-components:
+base:
   rcdt_core:
-    - base_image: rcdt/robotics:ubuntu-noble
-      tag: base
-      dockerfile: rcdt_core/rcdt_core.Dockerfile
-    - base_image: rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
-      tag: cuda
-      dockerfile: rcdt_core/rcdt_core.Dockerfile
+    base_image: rcdt/robotics:ubuntu-noble
+    tag: base
+    dockerfile: rcdt_core/rcdt_core.Dockerfile
   rcdt_franka:
     base_image: rcdt/robotics:base
     tag: franka
@@ -54,6 +51,11 @@ components:
     base_image: rcdt/robotics:base
     tag: visualization
     dockerfile: rcdt_visualization/rcdt_visualization.Dockerfile
+cuda:
+  rcdt_core:
+    base_image: rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
+    tag: cuda
+    dockerfile: rcdt_core/rcdt_core.Dockerfile
   rcdt_zed:
     base_image: rcdt/robotics:cuda
     tag: zed

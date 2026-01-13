@@ -17,8 +17,10 @@ jobs:
     # if: github.event_name == 'push' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      has_changes: ${{ steps.set-matrix.outputs.has_changes }}
+      matrix_base: ${{ steps.set-matrix.outputs.matrix_base }}
+      matrix_cuda: ${{ steps.set-matrix.outputs.matrix_cuda }}
+      has_changes_base: ${{ steps.set-matrix.outputs.has_changes_base }}
+      has_changes_cuda: ${{ steps.set-matrix.outputs.has_changes_cuda }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,26 +30,16 @@ jobs:
         run: |
           CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
 
-          COMPONENTS=$(yq -o=json '.components' components.yml | jq '[
-            to_entries[] |
-              .key as $name |
-              if (.value | type) == "array" then
-                .value[] | . + {"name": $name}
-              else
-                .value + {"name": $name}
-              end |
-              {
-                "name": .name,
-                "base_image": .base_image,
-                "tag": .tag,
-                "dockerfile": .dockerfile
-              }
-          ]')
-
           CHANGED_DIRS=()
+          CORE_CHANGED=false
+          if [[ "$CHANGES" == *"rcdt_core/"* ]] ; then
+            CORE_CHANGED=true
+            echo "rcdt_core changed -- will rebuild all components"
+          fi
+
           for d in *rcdt_* ; do
             # If rcdt_core has changes, we want to build all images anew
-            if [[ "$CHANGES" ==  *"${d}/"* ]] || [[ "$CHANGES" ==  *"rcdt_core/"* ]] ; then 
+            if [[ "$CORE_CHANGED" == true ]] || [[ "$CHANGES" ==  *"${d}/"* ]] ; then 
               CHANGED_DIRS+=("$d")
             fi
           done
@@ -55,26 +47,59 @@ jobs:
           echo "Changed directories: ${CHANGED_DIRS[*]}"
 
           if [ ${#CHANGED_DIRS[@]} -eq 0 ]; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "has_changes_base=false" >> $GITHUB_OUTPUT
+            echo "has_changes_cuda=false" >> $GITHUB_OUTPUT
+            echo "matrix_base={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
             echo "No components have changes."
-          else
-            CHANGED_JSON=$(printf '%s\n' "${CHANGED_DIRS[@]}" | jq -R . | jq -s -c '.')
-
-            MATRIX=$(echo "$COMPONENTS" | jq -c --argjson changed "$CHANGED_JSON" '
-              map(select(.name as $n | $changed | index($n)))
-            ')
-
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "matrix={\"include\":$MATRIX}" >> $GITHUB_OUTPUT
-            echo "Changed components matrix: $MATRIX"
+            exit 0
           fi
-  build:
+
+          CHANGED_JSON=$(printf '%s\n' "${CHANGED_DIRS[@]}" | jq -R . | jq -s -c '.')
+
+          parse_section() {
+            local section=$1
+            yq -o=json ".${section}" components.yml | jq -c --argjson changed "$CHANGED_JSON" '[
+              to_entries[] |
+                .key as $name |
+                if (.value | type) == "array" then
+                  .value[] | . + {"name": $name}
+                else
+                  .value + {"name": $name}
+                end |
+                {
+                  "name": .name,
+                  "base_image": .base_image,
+                  "tag": .tag,
+                  "dockerfile": .dockerfile
+                }
+            ] | map(select(.name as $n | $changed | index($n)))'
+          }
+
+          MATRIX_BASE=$(parse_section "base")
+          MATRIX_CUDA=$(parse_section "cuda")
+          
+          if [ "$MATRIX_BASE" == "[]" ] || [ "$MATRIX_BASE" == "null" ]; then
+            echo "has_changes_base=false" >> $GITHUB_OUTPUT
+            echo "matrix_base={\"include\":[]}" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes_base=true" >> $GITHUB_OUTPUT
+            echo "matrix_base={\"include\":$MATRIX_BASE}" >> $GITHUB_OUTPUT
+          fi
+          
+          if [ "$MATRIX_CUDA" == "[]" ] || [ "$MATRIX_CUDA" == "null" ]; then
+            echo "has_changes_cuda=false" >> $GITHUB_OUTPUT
+            echo "matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes_cuda=true" >> $GITHUB_OUTPUT
+            echo "matrix_cuda={\"include\":$MATRIX_CUDA}" >> $GITHUB_OUTPUT
+          fi
+  build-base:
     needs: detect-changes
-    if: needs.detect-changes.outputs.has_changes == 'true'
+    if: needs.detect-changes.outputs.has_changes_base == 'true'
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -107,9 +132,43 @@ jobs:
             type=gha,mode=max
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
       - run: df -h /
+  build-cuda:
+    needs: build-base
+    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
+      - name: Free disk space 
+        uses: ./.github/actions/free-disk-space
+        with:
+          tool-cache: true
+      - name: Clear disk space 
+        uses: ./.github/actions/clear-disk-space
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Build and push ${{ matrix.tag }}
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: ${{ matrix.dockerfile }}
+          tags: rcdt/robotics:${{ matrix.tag }}-amd64
+          build-args: |
+            BASE_IMAGE=${{ matrix.base_image }}-amd64
+          cache-from: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
+          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
+      - run: df -h /
   
   test:
-    needs: build
+    needs: [build-base, build-cuda]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -129,7 +188,7 @@ jobs:
 
   linting:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build-base, build-cuda] 
     steps: 
       - uses: actions/checkout@v4
       - name: Set up python3
