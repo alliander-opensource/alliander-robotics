@@ -157,6 +157,7 @@ class Rviz:
                 "Robot Description": f"{namespace}_robot_description",
                 "Name": f"{namespace}_motion_planning",
                 "Planning Scene Topic": f"/{namespace}/monitored_planning_scene",
+                "Scene Robot": {"Show Robot Visual": False},
             }
         )
 
