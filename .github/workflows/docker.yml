@@ -98,6 +98,7 @@ jobs:
             echo "has_changes_cuda=true" >> $GITHUB_OUTPUT
             echo "matrix_cuda={\"include\":$MATRIX_CUDA}" >> $GITHUB_OUTPUT
           fi
+
   build-base:
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes_base == 'true'
@@ -126,9 +127,10 @@ jobs:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}-amd64
+          platforms: linux/amd64, linux/arm64
+          tags: rcdt/robotics:${{ matrix.tag }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}-amd64
+            BASE_IMAGE=${{ matrix.base_image }}
           cache-from: |
             type=gha
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
@@ -136,6 +138,7 @@ jobs:
             type=gha,mode=max
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
       - run: df -h /
+
   build-cuda:
     needs: [detect-changes, build-base]
     if: needs.detect-changes.outputs.has_changes_cuda == 'true'
@@ -164,32 +167,13 @@ jobs:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}-amd64
+          tags: rcdt/robotics:${{ matrix.tag }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}-amd64
+            BASE_IMAGE=${{ matrix.base_image }}
           cache-from: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
           cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
       - run: df -h /
   
-  test:
-    needs: [build-base, build-cuda]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up python3
-        uses: actions/setup-python@v5
-        with:
-          # need to specify version to circumvent externally-managed act python
-          # which won't let us install dependencies
-          python-version: '3.12'
-          cache: 'pip'
-      - name: Install dependencies
-        run: pip install pyyaml mashumaro
-      - name: Install xvfb
-        run: sudo apt-get update && sudo apt-get install -y xvfb
-      - name: Run tests in rcdt_tests container
-        run: xvfb-run -a python3 start.py --pytest-no-nvidia
-
   linting:
     runs-on: ubuntu-latest
     needs: [build-base, build-cuda] 
@@ -204,3 +188,29 @@ jobs:
         run: pip install pyyaml mashumaro
       - name: Run linting in rcdt_tests container
         run: python3 start.py --linting
+
+  test:
+    needs: [build-base, build-cuda, linting]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space 
+        uses: ./.github/actions/free-disk-space
+        with:
+          tool-cache: true
+      - name: Clear disk space 
+        uses: ./.github/actions/clear-disk-space
+      - name: Set up python3
+        uses: actions/setup-python@v5
+        with:
+          # need to specify version to circumvent externally-managed act python
+          # which won't let us install dependencies
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install pyyaml mashumaro
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Run tests in rcdt_tests container
+        run: xvfb-run -a python3 start.py --pytest-no-nvidia
+
