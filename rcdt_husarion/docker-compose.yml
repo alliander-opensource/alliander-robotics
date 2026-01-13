@@ -9,13 +9,10 @@ services:
     privileged: true
     mem_limit: 6gb
     tty: true
+    env_file:
+      - .env
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
-    environment:
-      - "DISPLAY"
-      - "RCUTILS_COLORIZED_OUTPUT=1"
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
     command: ["/bin/bash", "-c", "ros2 launch rcdt_husarion husarion.launch.py"]
 
