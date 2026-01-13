@@ -5,10 +5,11 @@
 from launch import LaunchContext, LaunchDescription
 from launch.actions import ExecuteProcess, OpaqueFunction
 from launch_ros.actions import LifecycleNode
+from rcdt_utilities.config_objects import Lidar
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 
-namespace_arg = LaunchArgument("namespace", "")
+config_arg = LaunchArgument("config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -20,24 +21,22 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    namespace = namespace_arg.string_value(context)
-    ip_device = ""
-    ip_udp_destination = ""
-    driver_node_name = "ouster_driver"
+    config = Lidar.from_str(config_arg.string_value(context))
 
-    sensor_frame = f"{namespace}/ouster"
-    lidar_frame = f"{namespace}/os_lidar"
-    imu_frame = f"{namespace}/os_imu"
+    driver_node_name = "ouster_driver"
+    sensor_frame = f"{config.namespace}/ouster"
+    lidar_frame = f"{config.namespace}/os_lidar"
+    imu_frame = f"{config.namespace}/os_imu"
 
     ouster_driver_node = LifecycleNode(
         package="ouster_ros",
         executable="os_driver",
-        namespace=namespace,
+        namespace=config.namespace,
         name=driver_node_name,
         parameters=[
             {
-                "sensor_hostname": ip_device,
-                "udp_dest": ip_udp_destination,
+                "sensor_hostname": config.ip_address,
+                "udp_dest": config.ip_destination,
                 "lidar_port": 7502,
                 "imu_port": 7503,
                 "lidar_mode": "1024x10",  # options: { 512x10, 512x20, 1024x10, 1024x20, 2048x10, 4096x5 }
@@ -60,7 +59,7 @@ def launch_setup(context: LaunchContext) -> list:
             "ros2",
             "lifecycle",
             "set",
-            f"/{namespace}/{driver_node_name}",
+            f"/{config.namespace}/{driver_node_name}",
             "configure",
         ],
         shell=False,
@@ -71,7 +70,7 @@ def launch_setup(context: LaunchContext) -> list:
             "ros2",
             "lifecycle",
             "set",
-            f"/{namespace}/{driver_node_name}",
+            f"/{config.namespace}/{driver_node_name}",
             "activate",
         ],
         shell=False,
@@ -92,7 +91,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            namespace_arg.declaration,
+            config_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

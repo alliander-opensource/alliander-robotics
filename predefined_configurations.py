@@ -88,12 +88,12 @@ def config_gps() -> None:  # noqa: D103
 
 @register_configuration("ouster")
 def config_ouster() -> None:  # noqa: D103
-    Lidar("ouster", (0, 0, 0.5), ip_address="10.15.20.5")
+    Lidar("ouster", (0, 0, 0.5))
 
 
 @register_configuration("velodyne")
 def config_velodyne() -> None:  # noqa: D103
-    Lidar("velodyne", (0, 0, 0.5), ip_address="10.15.20.5")
+    Lidar("velodyne", (0, 0, 0.5))
 
 
 @register_configuration("realsense")
@@ -162,7 +162,7 @@ def config_panther_velodyne() -> None:  # noqa: D103
 @register_configuration("panther_ouster")
 def config_panther_ouster() -> None:  # noqa: D103
     vehicle = Vehicle("panther", (0, 0, 0.2))
-    lidar = Lidar("ouster", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
+    lidar = Lidar("ouster", (0.13, -0.13, 0.35))
     link(vehicle, lidar)
 
 
@@ -178,7 +178,7 @@ def config_panther_gps() -> None:  # noqa: D103
 def config_panther_collision_monitor() -> None:  # noqa: D103
     vehicle = Vehicle("panther", (0, 0, 0.2))
     vehicle.nav2_config.collision_monitor = True
-    lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
+    lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
     link(vehicle, lidar)
 
 
@@ -186,7 +186,7 @@ def config_panther_collision_monitor() -> None:  # noqa: D103
 def config_panther_slam() -> None:  # noqa: D103
     vehicle = Vehicle("panther", (0, 0, 0.2))
     vehicle.nav2_config.slam = True
-    lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
+    lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
     link(vehicle, lidar)
 
 
@@ -206,7 +206,7 @@ def config_panther_gps_navigation() -> None:  # noqa: D103
     vehicle = Vehicle("panther", (0, 0, 0.2))
     vehicle.nav2_config.navigation = True
     vehicle.nav2_config.gps = True
-    lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
+    lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
     gps = GPS("gps", (0, 0, 0.2))
     link(vehicle, lidar)
     link(vehicle, gps)
@@ -221,7 +221,7 @@ def config_lynx() -> None:  # noqa: D103
 @register_configuration("lynx_ouster")
 def config_lynx_ouster() -> None:  # noqa: D103
     vehicle = Vehicle("lynx", (0, 0, 0.13))
-    lidar = Lidar("ouster", (0.1, -0.1, 0.25), ip_address="10.15.20.5")
+    lidar = Lidar("ouster", (0.1, -0.1, 0.25))
     link(vehicle, lidar)
 
 
@@ -238,7 +238,7 @@ def config_mm_velodyne() -> None:  # noqa: D103
     vehicle = Vehicle("panther", (0, 0, 0.2))
     vehicle.nav2_config.navigation = True
     arm = Arm("franka", (0, 0, 0.14), gripper=True, moveit=True)
-    lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
+    lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
     link(vehicle, arm)
     link(vehicle, lidar)
 

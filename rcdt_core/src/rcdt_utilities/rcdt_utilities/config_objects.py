@@ -244,6 +244,7 @@ class Lidar(Platform):
 
     platform_type: str = "Lidar"
     ip_address: str = "10.15.20.5"
+    ip_destination: str = "10.15.20.3"
 
 
 @dataclass
