@@ -25,14 +25,14 @@ def launch_setup(context: LaunchContext) -> list:
     namespace = namespace_arg.string_value(context)
 
     # ZED Node parameters
-    common_cfg = get_file_path("rcdt_description", ["config"], "common_stereo.yaml")
+    common_cfg = get_file_path(
+        "rcdt_description", ["zed", "config"], "common_stereo.yaml"
+    )
     camera_cfg = get_file_path("zed_wrapper", ["config"], "zed2i.yaml")
-    ffmpeg_cfg = get_file_path("zed_wrapper", ["config"], "ffmpeg.yaml")
 
     node_parameters = [
         common_cfg,
         camera_cfg,
-        ffmpeg_cfg,
         {
             # Required identification
             "general.camera_name": f"{namespace}/{namespace}",
