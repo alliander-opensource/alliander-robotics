@@ -27,7 +27,7 @@ SERVICE = typing.Literal[
     "pytest-no-nvidia",
     "linting",
 ]
-MODE = typing.Literal["configuration", "test", "pytest", "pytest-no-nvidia", "linting"]
+MODE = typing.Literal["configuration", "pytest", "pytest-no-nvidia", "linting"]
 
 predefined_configurations = PredefinedConfigurations.get_names()
 
@@ -202,7 +202,7 @@ class Compose:
                 self.add_service(content, mode, arguments=arguments)
             case "linting":
                 self.add_service(content, "linting")
-            case "configuration" | "test":
+            case "configuration":
                 for platform in self.platforms.values():
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
