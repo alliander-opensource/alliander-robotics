@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # Create compose file:
     if isinstance(args.pytest, list):
         cmd = "python3 compose.py --arch amd64 --pytest " + " ".join(args.pytest)
-    if isinstance(args.pytest_no_nvidia, list):
+    elif isinstance(args.pytest_no_nvidia, list):
         cmd = "python3 compose.py --arch amd64 --pytest-no-nvidia " + " ".join(
             args.pytest_no_nvidia
         )

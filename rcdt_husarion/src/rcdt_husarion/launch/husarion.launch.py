@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from launch import LaunchContext, LaunchDescription
-from launch.actions import OpaqueFunction
+from launch.actions import ExecuteProcess, OpaqueFunction
 from rcdt_utilities.config_objects import Vehicle
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
@@ -22,39 +22,45 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    configuration = Vehicle.from_str(config_arg.string_value(context))
-    parent = configuration.parent
+    config = Vehicle.from_str(config_arg.string_value(context))
+    parent = config.parent
 
     state_publisher = state_publisher_node(
-        namespace=configuration.namespace,
+        namespace=config.namespace,
         platform="husarion",
-        xacro=f"{configuration.name}.urdf.xacro",
+        xacro=f"{config.name}.urdf.xacro",
         xacro_arguments={
             "childs": str(
                 [
                     [child.connects_to, child.namespace, child.link]
-                    for child in configuration.childs
+                    for child in config.childs
                 ]
             ),
         },
     )
 
-    parent = configuration.parent
+    parent = config.parent
     static_tf = static_tf_node(
         parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
-        child_frame=f"{configuration.namespace}/{parent.connects_to}",
-        position=configuration.position,
-        orientation=configuration.orientation,
+        child_frame=f"{config.namespace}/{parent.connects_to}",
+        position=config.position,
+        orientation=config.orientation,
     )
 
     controllers = RegisteredLaunchDescription(
         get_file_path("rcdt_husarion", ["launch"], "controllers.launch.py")
     )
 
+    # In some configurations, no nodes will be started.
+    # Since other containers depend on a healthy Husarion container,
+    # we can sleep infinity to keep the container active in healthy state:
+    sleep_infinity = ExecuteProcess(cmd=["sleep", "infinity"])
+
     return [
-        Register.on_start(state_publisher, context),
-        Register.on_start(static_tf, context) if not configuration.nav2 else SKIP,
-        Register.group(controllers, context) if configuration.simulation else SKIP,
+        Register.on_start(state_publisher, context) if config.simulation else SKIP,
+        Register.on_start(static_tf, context) if not config.nav2 else SKIP,
+        Register.group(controllers, context) if config.simulation else SKIP,
+        Register.on_start(sleep_infinity, context),
     ]
 
 

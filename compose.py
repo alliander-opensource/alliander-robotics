@@ -183,7 +183,7 @@ class Compose:
         mode: MODE,
         output_file: str = "compose.yml",
         arguments: str = "",
-    ) -> int:
+    ) -> list:
         """Create a combined compose file.
 
         Args:
@@ -192,7 +192,7 @@ class Compose:
             arguments (str): Additional arguments that can be passed to a service command.
 
         Returns:
-            dict: The compose content if output_file is not provided.
+            list: The names of the services in the compose file.
         """
         content = {"services": {}}
         services = content["services"]
@@ -227,12 +227,9 @@ class Compose:
                 services["rcdt_visualization"]["depends_on"][name] = {
                     "condition": "service_healthy"
                 }
-            if mode == "test":
-                for test_service in services.values():
-                    test_service["volumes"] = ["/dev:/dev"]
 
         self.write_compose(output_file, content)
-        return len(services)
+        return list(services.keys())
 
 
 if __name__ == "__main__":

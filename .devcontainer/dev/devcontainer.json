@@ -27,7 +27,8 @@
         "tamasfe.even-better-toml",
         "ms-azuretools.vscode-docker",
         "twxs.cmake",
-        "kylinideteam.cmake-intellisence"
+        "kylinideteam.cmake-intellisence",
+        "redhat.vscode-yaml"
       ]
     }
   }

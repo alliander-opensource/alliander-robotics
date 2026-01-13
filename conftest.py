@@ -57,29 +57,32 @@ def stop_containers(compose_file: str) -> None:
     )
 
 
-def check_containers_started(compose_file: str, number_of_services: int) -> bool:
+def check_containers_started(compose_file: str, services: list) -> bool:
     """Check if the expected number of Docker containers are started.
 
     Args:
         compose_file (str): The path to the Docker compose file.
-        number_of_services (int): The expected number of running services.
+        services (list): The list of expected running services.
 
     Returns:
         bool: True if all services are started.
     """
     process = subprocess.run(
         [
-            f"docker inspect -f '{{{{.State.Health.Status}}}}' $(docker compose -f {compose_file} ps -q)"
+            f"docker inspect -f='{{{{.Name}}}} {{{{.State.Health.Status}}}}' $(docker compose -f {compose_file} ps -q)"
         ],
         check=False,
         shell=True,
         capture_output=True,
     )
     stdout = process.stdout.decode("utf-8").rstrip()
-    statuses = stdout.split()
-    if len(statuses) != number_of_services:
-        return False
-    return all(status == "healthy" for status in statuses)
+    lines = stdout.split("\n")
+    statuses = {}
+    for line in lines:
+        name, status = line.strip("/").split()
+        if name in services:
+            statuses[name] = status == "healthy"
+    return all(statuses.values())
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -90,18 +93,18 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
         request (SubRequest): The pytest request object.
     """
     # Execute before starting the tests in the module:
-    compose_file = "/rcdt_robotics/rcdt_tests/compose.yml"
+    compose_file = "/rcdt_robotics/compose_pytest.yml"
     compose = Compose()
     compose.visualization = False
     compose.platforms = getattr(request.module, "PLATFORMS", {})
     compose.world = getattr(request.module, "WORLD", "")
-    number_of_services = compose.create_compose("test", compose_file)
+    services = compose.create_compose("test", compose_file)
     process = subprocess.Popen([f"docker compose -f {compose_file} up"], shell=True)
 
     containers_started = False
     start_time = time.time()
     while not containers_started:
-        containers_started = check_containers_started(compose_file, number_of_services)
+        containers_started = check_containers_started(compose_file, services)
         if time.time() - start_time > LAUNCH_TIMEOUT:
             stop_containers(compose_file)
             pytest.exit("Timeout waiting for containers to start. Exiting pytest.")

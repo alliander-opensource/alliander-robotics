@@ -22,7 +22,6 @@ ignore/
 build/
 clangd/
 
-!.devcontainer/.env
 .cache
 .venv
 
@@ -31,7 +30,5 @@ clangd/
 **/compile_commands.json
 
 # generated compose files
-platforms.yml
-simulator.yml
-visualization.yml
 compose.yml
+compose_pytest.yml
