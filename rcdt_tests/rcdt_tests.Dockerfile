@@ -26,6 +26,12 @@ RUN apt update && apt install -y --no-install-recommends \
     && apt autoremove -y \
     && apt clean
 
+# Non-apt dependencies:
+RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
+  https://github.com/frankarobotics/franka_ros2.git src/franka_ros2 \
+  && cd src/franka_ros2 \
+  && git sparse-checkout set franka_msgs
+
 # Install repo packages:
 COPY pyproject.toml /rcdt/pyproject.toml
 COPY rcdt_core/src/ /rcdt/ros/src

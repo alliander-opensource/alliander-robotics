@@ -31,7 +31,7 @@ class Builder:
         with open("components.yml", encoding="utf-8") as stream:
             try:
                 data = yaml.safe_load(stream)
-                return data["components"]
+                return data
             except yaml.YAMLError as e:
                 print(e)
                 return {}
@@ -65,17 +65,10 @@ class Builder:
             name (str): name of component, corresponding to a key in components.yml, to build.
             components (dict): key-value store of all components that can be built.
         """
+        components = components["base"] | components["cuda"]
         if name not in components:
             print(f"Component {name} not found in components.yml.")
             sys.exit(1)
-
-        if isinstance(components[name], list):
-            for variation in components[name]:
-                self.run_build_subprocess(
-                    variation["base_image"],
-                    variation["tag"],
-                    variation["dockerfile"],
-                )
         else:
             self.run_build_subprocess(
                 components[name]["base_image"],

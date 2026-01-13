@@ -34,6 +34,12 @@ RUN apt update && apt install -y --no-install-recommends \
     && apt autoremove -y \
     && apt clean
 
+# Install custom msgs:
+RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
+  https://github.com/frankarobotics/franka_ros2.git src/franka_ros2 \
+  && cd src/franka_ros2 \
+  && git sparse-checkout set franka_msgs
+
 # Setup configuration files:
 COPY common/colcon_build.sh /rcdt/colcon_build.sh
 COPY .devcontainer/dev/.dev_bashrc /.dev_bashrc
