@@ -28,7 +28,8 @@ jobs:
       - name: Detect changed subdirectories
         id: set-matrix
         run: |
-          CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          # CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          CHANGES=$(git diff --name-only origin/main...HEAD)
 
           CHANGED_DIRS=()
           CORE_CHANGED=false
@@ -78,6 +79,9 @@ jobs:
 
           MATRIX_BASE=$(parse_section "base")
           MATRIX_CUDA=$(parse_section "cuda")
+
+          echo "Base change matrix: $MATRIX_BASE"
+          echo "CUDA change matrix: $MATRIX_CUDA"
           
           if [ "$MATRIX_BASE" == "[]" ] || [ "$MATRIX_BASE" == "null" ]; then
             echo "has_changes_base=false" >> $GITHUB_OUTPUT
@@ -133,7 +137,7 @@ jobs:
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
       - run: df -h /
   build-cuda:
-    needs: build-base
+    needs: [detect-changes, build-base]
     if: needs.detect-changes.outputs.has_changes_cuda == 'true'
     runs-on: ubuntu-latest
     strategy:
