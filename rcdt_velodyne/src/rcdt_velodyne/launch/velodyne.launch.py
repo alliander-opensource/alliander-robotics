@@ -23,28 +23,28 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    configuration = Lidar.from_str(config_arg.string_value(context))
+    config = Lidar.from_str(config_arg.string_value(context))
 
     state_publisher = state_publisher_node(
-        namespace=configuration.namespace,
+        namespace=config.namespace,
         platform="velodyne",
         xacro="rcdt_velodyne.urdf.xacro",
         xacro_arguments={
-            "parent": "" if configuration.parent.link else "world",
+            "parent": "" if config.parent.link else "world",
         },
     )
 
-    parent = configuration.parent
+    parent = config.parent
     static_tf = static_tf_node(
         parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
-        child_frame=f"{configuration.namespace}/{parent.connects_to}",
-        position=configuration.position,
-        orientation=configuration.orientation,
+        child_frame=f"{config.namespace}/{parent.connects_to}",
+        position=config.position,
+        orientation=config.orientation,
     )
 
     hardware = RegisteredLaunchDescription(
         get_file_path("rcdt_velodyne", ["launch"], "hardware.launch.py"),
-        {"namespace": configuration.namespace},
+        {"config": config.to_str()},
     )
 
     target_frame = ""
@@ -52,8 +52,8 @@ def launch_setup(context: LaunchContext) -> list:
         package="pointcloud_to_laserscan",
         executable="pointcloud_to_laserscan_node",
         remappings=[
-            ("cloud_in", f"/{configuration.namespace}/scan/points"),
-            ("scan", f"/{configuration.namespace}/scan"),
+            ("cloud_in", f"/{config.namespace}/scan/points"),
+            ("scan", f"/{config.namespace}/scan"),
         ],
         parameters=[
             {
@@ -64,13 +64,13 @@ def launch_setup(context: LaunchContext) -> list:
                 "range_max": 100.0,
             }
         ],
-        namespace=configuration.namespace,
+        namespace=config.namespace,
     )
 
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.group(hardware, context) if not configuration.simulation else SKIP,
+        Register.group(hardware, context) if not config.simulation else SKIP,
         Register.on_start(pointcloud_to_laserscan_node, context),
     ]
 

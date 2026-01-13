@@ -5,11 +5,12 @@
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
+from rcdt_utilities.config_objects import Lidar
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
 
-namespace_arg = LaunchArgument("namespace", "")
+config_arg = LaunchArgument("config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -21,11 +22,9 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    namespace = namespace_arg.string_value(context)
+    config = Lidar.from_str(config_arg.string_value(context))
 
-    ip_address = ""
-
-    frame_prefix = namespace + "/" if namespace else ""
+    frame_prefix = config.namespace + "/" if config.namespace else ""
 
     velodyne_driver_node = Node(
         package="velodyne_driver",
@@ -34,11 +33,11 @@ def launch_setup(context: LaunchContext) -> list:
         parameters=[
             {
                 "model": "VLP16",
-                "device_ip": ip_address,
+                "device_ip": config.ip_address,
                 "frame_id": frame_prefix + "velodyne",
             }
         ],
-        namespace=namespace,
+        namespace=config.namespace,
     )
 
     velodyne_transform_node = Node(
@@ -56,7 +55,7 @@ def launch_setup(context: LaunchContext) -> list:
             }
         ],
         remappings=[("velodyne_points", "scan/points")],
-        namespace=namespace,
+        namespace=config.namespace,
     )
 
     return [
@@ -73,7 +72,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            namespace_arg.declaration,
+            config_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )
