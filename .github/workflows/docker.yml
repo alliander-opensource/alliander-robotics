@@ -127,10 +127,9 @@ jobs:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          platforms: linux/amd64, linux/arm64
-          tags: rcdt/robotics:${{ matrix.tag }}
+          tags: rcdt/robotics:${{ matrix.tag }}-amd64
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}
+            BASE_IMAGE=${{ matrix.base_image }}-amd64
           cache-from: |
             type=gha
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
@@ -167,9 +166,9 @@ jobs:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}
+          tags: rcdt/robotics:${{ matrix.tag }}-amd64
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}
+            BASE_IMAGE=${{ matrix.base_image }}-amd64
           cache-from: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
           cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
       - run: df -h /
