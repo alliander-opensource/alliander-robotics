@@ -207,7 +207,7 @@ class Arm(Platform):
     platform_type: str = "Arm"
     gripper: bool = False
     moveit: bool = False
-    ip_address: str = ""
+    ip_address: str = "10.15.20.4"
 
     moveit_config: MoveitConfig = field(default_factory=MoveitConfig)
 

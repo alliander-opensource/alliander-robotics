@@ -90,6 +90,7 @@ class ApplyConfigurations:
             Rviz.add_planning_scene(ns)
             Rviz.add_robot_state(ns)
             Rviz.add_trajectory(ns)
+            Rviz.add_markers()
             if platform.moveit_config.load_rviz_motion_planning_plugin:
                 Rviz.add_motion_planning_plugin(ns)
 

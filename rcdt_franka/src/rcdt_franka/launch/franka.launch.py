@@ -33,6 +33,7 @@ def launch_setup(context: LaunchContext) -> list:
             "ip_address": config.ip_address,
             "namespace": config.namespace,
             "parent": "" if config.parent.link else "world",
+            "connected_to": "" if config.parent.link else "world",
             "childs": str(
                 [
                     [child.connects_to, child.namespace, child.link]
