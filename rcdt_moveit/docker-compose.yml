@@ -9,8 +9,6 @@ services:
     privileged: true
     mem_limit: 6gb
     tty: true
-    group_add:
-      - "video" # Allows camera access on all platforms, no matter the allocated user rights
     env_file:
       - .env
     volumes:
