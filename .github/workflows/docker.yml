@@ -103,6 +103,7 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes_base == 'true'
     runs-on: ubuntu-latest
+    platforms: linux/amd64, linux/arm64
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
     steps:
@@ -127,9 +128,9 @@ jobs:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}-amd64
+          tags: rcdt/robotics:${{ matrix.tag }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}-amd64
+            BASE_IMAGE=${{ matrix.base_image }}
           cache-from: |
             type=gha
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
@@ -139,9 +140,10 @@ jobs:
       - run: df -h /
 
   build-cuda:
-    needs: [detect-changes, build-base]
     if: needs.detect-changes.outputs.has_changes_cuda == 'true'
+    needs: [detect-changes, build-base]
     runs-on: ubuntu-latest
+    platforms: linux/amd64, linux/arm64
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
     steps:
@@ -166,9 +168,9 @@ jobs:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}-amd64
+          tags: rcdt/robotics:${{ matrix.tag }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}-amd64
+            BASE_IMAGE=${{ matrix.base_image }}
           cache-from: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
           cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
       - run: df -h /
