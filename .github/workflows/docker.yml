@@ -78,18 +78,17 @@ jobs:
             ] | map(select(.name as $n | $changed | index($n)))'
           }
 
+          # TODO remove if-statement after realsense-arm64 is supported
           expand_matrix() {
             local original_matrix=$1
             echo "$original_matrix" | jq -c '[
               .[] |
-              (. + {
-                "arch": "amd64",
-                "runner": "ubuntu-24.04",
-              }),
-              (. + {
-                "arch": "arm64",
-                "runner": "ubuntu-24.04-arm",
-              })
+              if .name == "rcdt_realsense" then
+                . + {"arch": "amd64", "runner": "ubuntu-24.04"}
+              else
+                (. + {"arch": "amd64", "runner": "ubuntu-24.04"}),
+                (. + {"arch": "arm64", "runner": "ubuntu-24.04-arm"})
+              end
             ]'
           }
 
@@ -177,10 +176,17 @@ jobs:
       
       - name: Create manifest for ${{ matrix.tag }}
         run: |
-          docker buildx imagetools create \
-            -t rcdt/robotics:${{ matrix.tag }} \
-            rcdt/robotics:${{ matrix.tag }}-amd64 \
-            rcdt/robotics:${{ matrix.tag }}-arm64
+          # TODO remove this when realsense-arm64 is supported
+          if docker manifest inspect rcdt/robotics:${{ matrix.tag }}-arm64 > /dev/null 2>&1; then
+            docker buildx imagetools create \
+              -t rcdt/robotics:${{ matrix.tag }} \
+              rcdt/robotics:${{ matrix.tag }}-amd64 \
+              rcdt/robotics:${{ matrix.tag }}-arm64
+          else
+            docker buildx imagetools create \
+              -t rcdt/robotics:${{ matrix.tag }} \
+              rcdt/robotics:${{ matrix.tag }}-amd64
+          fi
 
   build-cuda:
     strategy:
