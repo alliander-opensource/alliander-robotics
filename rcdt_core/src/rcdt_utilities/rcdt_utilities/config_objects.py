@@ -13,17 +13,6 @@ from mashumaro.mixins.json import DataClassJSONMixin
 from mashumaro.types import Discriminator
 
 
-class EnvironmentConfiguration:
-    """A class used to store the environment configuration."""
-
-    platforms: dict[str, "Platform"] = {}
-    world: str = "empty.sdf"
-    gazebo_ui: bool = False
-    rviz: bool = True
-    vizanti: bool = False
-    rcdt_gui: bool = False
-
-
 def link(
     parent_platform: Platform,
     child_platform: Platform,
@@ -122,7 +111,6 @@ class Platform(Config):
             self.namespace = self.name
         if not self.parent.connects_to:
             self.parent.connects_to = self.default_link_to_parent()
-        EnvironmentConfiguration.platforms[self.namespace] = self
         self.initialized = True
 
     def package(self) -> str:
