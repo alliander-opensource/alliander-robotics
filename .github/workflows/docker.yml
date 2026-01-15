@@ -15,7 +15,7 @@ on:
 jobs:
   detect-changes:
     # if: github.event_name == 'push' || github.event.pull_request.draft == false
-    runs-on: [self-hosted, ARM64, Linux, minimal]
+    runs-on: ubuntu-24.04-arm 
     outputs:
       matrix_base: ${{ steps.set-matrix.outputs.matrix_base }}
       matrix_cuda: ${{ steps.set-matrix.outputs.matrix_cuda }}
