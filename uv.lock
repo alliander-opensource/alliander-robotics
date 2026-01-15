@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = "==3.12.*"
 resolution-markers = [
     "sys_platform == 'darwin'",
@@ -1019,15 +1019,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pyrealsense2"
-version = "2.56.5.9235"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fc/20/a46e60a496a17f1cf0cbdffb45e66dc015756e4dbce83580fd569e53e178/pyrealsense2-2.56.5.9235-cp312-cp312-manylinux1_x86_64.whl", hash = "sha256:ba2c22981111adbefb169c39e023af4352a2409dfbff59f02c2404c68b82064b", size = 11062766, upload-time = "2025-07-28T14:59:26.551Z" },
-    { url = "https://files.pythonhosted.org/packages/22/b5/dd8349abac780aed774f65825fc2ed3ca832b0ad2bf3293262bfa9a517b2/pyrealsense2-2.56.5.9235-cp312-cp312-win_amd64.whl", hash = "sha256:e9c64b94cf6170a3ad60416ff1bf969df8aafe383d4bff14e0fa10b2459d885b", size = 7801788, upload-time = "2025-07-28T14:59:28.303Z" },
-]
-
-[[package]]
 name = "pytest"
 version = "8.3.5"
 source = { registry = "https://pypi.org/simple" }
@@ -1160,7 +1151,6 @@ dependencies = [
     { name = "pydoclint" },
     { name = "pymongo" },
     { name = "pyproj" },
-    { name = "pyrealsense2" },
     { name = "pytest" },
     { name = "pytest-timeout" },
     { name = "scipy" },
@@ -1213,7 +1203,6 @@ requires-dist = [
     { name = "pydoclint", specifier = ">=0.6.6" },
     { name = "pymongo", specifier = ">=4.14.1" },
     { name = "pyproj", specifier = ">=3.7.2" },
-    { name = "pyrealsense2", specifier = ">=2.56.5.9235" },
     { name = "pytest", specifier = "<8.4.0" },
     { name = "pytest-timeout", specifier = ">=2.4.0" },
     { name = "scipy", specifier = ">=1.16.2" },
