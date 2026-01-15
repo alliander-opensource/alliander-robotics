@@ -52,9 +52,9 @@ class Builder:
 
         cmd = f"docker build \
             -f {dockerfile} \
-            --build-arg BASE_IMAGE={base_image}-{self.arch} \
+            --build-arg BASE_IMAGE={base_image} \
             --platform linux/{self.arch} \
-            -t rcdt/robotics:{tag}-{self.arch} {cache_str} \
+            -t rcdt/robotics:{tag} {cache_str} \
             ."
         subprocess.run(cmd, shell=True, check=True)
 
@@ -65,15 +65,19 @@ class Builder:
             name (str): name of component, corresponding to a key in components.yml, to build.
             components (dict): key-value store of all components that can be built.
         """
-        components = components["base"] | components["cuda"]
-        if name not in components:
+        if name not in components["base"] and name not in components["cuda"]:
             print(f"Component {name} not found in components.yml.")
             sys.exit(1)
-        else:
+
+        if name in components["base"]:
+            comp_base = components["base"][name]
             self.run_build_subprocess(
-                components[name]["base_image"],
-                components[name]["tag"],
-                components[name]["dockerfile"],
+                comp_base["base_image"], comp_base["tag"], comp_base["dockerfile"]
+            )
+        if name in components["cuda"]:
+            comp_cuda = components["cuda"][name]
+            self.run_build_subprocess(
+                comp_cuda["base_image"], comp_cuda["tag"], comp_cuda["dockerfile"]
             )
 
     def build_multiple(self, components: list[str]) -> None:
@@ -89,7 +93,9 @@ class Builder:
     def build_all(self) -> None:
         """Builds all components in components.yml."""
         all_components = self.load_yaml()
-        for c in all_components:
+        for c in all_components["base"]:
+            self.build_component(c, all_components)
+        for c in all_components["cuda"]:
             self.build_component(c, all_components)
 
 
