@@ -205,8 +205,9 @@ jobs:
         run: python3 start.py --linting
 
   test:
-    matrix:
-      arch: [ubuntu-24.04, ubuntu-24.04-arm]
+    strategy:
+      matrix:
+        arch: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.arch }}
     needs: linting
     steps:
