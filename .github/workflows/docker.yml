@@ -15,7 +15,7 @@ on:
 jobs:
   detect-changes:
     # if: github.event_name == 'push' || github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
     outputs:
       matrix_base: ${{ steps.set-matrix.outputs.matrix_base }}
       matrix_cuda: ${{ steps.set-matrix.outputs.matrix_cuda }}
@@ -100,9 +100,9 @@ jobs:
           fi
 
   build-base:
+    runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes_base == 'true'
-    runs-on: ubuntu-latest
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
     steps:
@@ -126,7 +126,6 @@ jobs:
         with:
           push: true
           context: .
-          platforms: linux/amd64, linux/arm64
           file: ${{ matrix.dockerfile }}
           tags: rcdt/robotics:${{ matrix.tag }}
           build-args: |
@@ -140,9 +139,9 @@ jobs:
       - run: df -h /
 
   build-cuda:
-    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
+    runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
     needs: [detect-changes, build-base]
-    runs-on: ubuntu-latest
+    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
     steps:
@@ -166,7 +165,6 @@ jobs:
         with:
           push: true
           context: .
-          platforms: linux/amd64, linux/arm64
           file: ${{ matrix.dockerfile }}
           tags: rcdt/robotics:${{ matrix.tag }}
           build-args: |
@@ -176,7 +174,7 @@ jobs:
       - run: df -h /
   
   linting:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [build-base, build-cuda] 
     steps: 
       - uses: actions/checkout@v4
@@ -191,8 +189,8 @@ jobs:
         run: python3 start.py --linting
 
   test:
-    needs: [build-base, build-cuda, linting]
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-24.04, ubuntu-24.04-arm] 
+    needs: linting
     steps:
       - uses: actions/checkout@v4
       - name: Free disk space 
@@ -214,4 +212,3 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y xvfb
       - name: Run tests in rcdt_tests container
         run: xvfb-run -a python3 start.py --pytest-no-nvidia
-
