@@ -28,8 +28,7 @@ jobs:
       - name: Detect changed subdirectories
         id: set-matrix
         run: |
-          # CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-          CHANGES=$(git diff --name-only origin/main...HEAD)
+          CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
 
           CHANGED_DIRS=()
           CORE_CHANGED=false
@@ -117,6 +116,7 @@ jobs:
 
   build-base:
     strategy:
+      fail-fast: false
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
     runs-on: ${{ matrix.runner }}
     needs: detect-changes
@@ -156,6 +156,7 @@ jobs:
 
   build-cuda:
     strategy:
+      fail-fast: false
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
     runs-on: ${{ matrix.runner }} 
     needs: [detect-changes, build-base]
