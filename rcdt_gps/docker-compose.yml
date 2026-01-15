@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_gps:
-    image: rcdt/robotics:gps-${IMAGE_TAG}
+    image: rcdt/robotics:gps
     container_name: rcdt_gps
     network_mode: host
     privileged: true

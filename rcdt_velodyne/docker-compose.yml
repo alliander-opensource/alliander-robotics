@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_velodyne:
-    image: rcdt/robotics:velodyne-${IMAGE_TAG}
+    image: rcdt/robotics:velodyne
     container_name: rcdt_velodyne
     runtime: nvidia
     network_mode: host

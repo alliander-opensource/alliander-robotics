@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_tests:
-    image: rcdt/robotics:tests-${IMAGE_TAG}
+    image: rcdt/robotics:tests
     container_name: rcdt_tests
     runtime: nvidia
     network_mode: host

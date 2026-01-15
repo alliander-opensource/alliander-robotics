@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_cuda:
-    image: rcdt/robotics:cuda-${IMAGE_TAG}
+    image: rcdt/robotics:cuda
     container_name: rcdt_cuda
     runtime: nvidia
     network_mode: host

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_zed:
-    image: rcdt/robotics:zed-${IMAGE_TAG}
+    image: rcdt/robotics:zed
     container_name: rcdt_zed
     runtime: nvidia
     network_mode: host

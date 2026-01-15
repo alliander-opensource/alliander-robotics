@@ -154,8 +154,6 @@ class Compose:
         # General:
         filename = f"{package}/docker-compose.yml"
         service = self.load_compose(filename)["services"][package]
-        original_image: str = service["image"]
-        service["image"] = original_image.replace("${IMAGE_TAG}", f"{self.arch}")
         service["command"][-1] += command
 
         # Dependencies:
