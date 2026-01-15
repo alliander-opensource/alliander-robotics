@@ -19,6 +19,8 @@ jobs:
     outputs:
       matrix_base: ${{ steps.set-matrix.outputs.matrix_base }}
       matrix_cuda: ${{ steps.set-matrix.outputs.matrix_cuda }}
+      expanded_matrix_base: ${{ steps.set-matrix.outputs.expanded_matrix_base }}
+      expanded_matrix_cuda: ${{ steps.set-matrix.outputs.expanded_matrix_cuda }}
       has_changes_base: ${{ steps.set-matrix.outputs.has_changes_base }}
       has_changes_cuda: ${{ steps.set-matrix.outputs.has_changes_cuda }}
     steps:
@@ -81,9 +83,11 @@ jobs:
             echo "$original_matrix" | jq -c '[
               .[] |
               (. + {
+                "arch": "amd64",
                 "runner": "ubuntu-24.04",
               }),
               (. + {
+                "arch": "arm64",
                 "runner": "ubuntu-24.04-arm",
               })
             ]'
@@ -101,23 +105,27 @@ jobs:
           if [ "$MATRIX_BASE" == "[]" ] || [ "$MATRIX_BASE" == "null" ]; then
             echo "has_changes_base=false" >> $GITHUB_OUTPUT
             echo "matrix_base={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_base={\"include\":[]}" >> $GITHUB_OUTPUT
           else
             echo "has_changes_base=true" >> $GITHUB_OUTPUT
-            echo "matrix_base={\"include\":$EXPANDED_MATRIX_BASE}" >> $GITHUB_OUTPUT
+            echo "matrix_base={\"include\":$MATRIX_BASE}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_base={\"include\":$EXPANDED_MATRIX_BASE}" >> $GITHUB_OUTPUT
           fi
           
           if [ "$MATRIX_CUDA" == "[]" ] || [ "$MATRIX_CUDA" == "null" ]; then
             echo "has_changes_cuda=false" >> $GITHUB_OUTPUT
             echo "matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
           else
             echo "has_changes_cuda=true" >> $GITHUB_OUTPUT
-            echo "matrix_cuda={\"include\":$EXPANDED_MATRIX_CUDA}" >> $GITHUB_OUTPUT
+            echo "matrix_cuda={\"include\":$MATRIX_CUDA}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_cuda={\"include\":$EXPANDED_MATRIX_CUDA}" >> $GITHUB_OUTPUT
           fi
 
   build-base:
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
+      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_base) }}
     runs-on: ${{ matrix.runner }}
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes_base == 'true'
@@ -137,27 +145,47 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build and push ${{ matrix.tag }}
+      - name: Build and push ${{ matrix.tag }}-${{ matrix.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}
+          tags: rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}
+            BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
           cache-from: |
             type=gha
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
+            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
+            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
+
+  create-manifests-base:
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
+    needs: build-base
+    if: needs.detect-changes.outputs.has_changes_base == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      
+      - name: Create manifest for ${{ matrix.tag }}
+        run: |
+          docker buildx imagetools create \
+            -t rcdt/robotics:${{ matrix.tag }} \
+            rcdt/robotics:${{ matrix.tag }}-amd64 \
+            rcdt/robotics:${{ matrix.tag }}-arm64
 
   build-cuda:
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
+      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_cuda) }}
     runs-on: ${{ matrix.runner }} 
     needs: [detect-changes, build-base]
     if: needs.detect-changes.outputs.has_changes_cuda == 'true'
@@ -177,18 +205,38 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build and push ${{ matrix.tag }}
+      - name: Build and push ${{ matrix.tag }}-${{ matrix.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}
+          tags: rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}
-          cache-from: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache
-          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache,mode=max
+            BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
+          cache-from: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}-buildcache
+          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}-buildcache,mode=max
       - run: df -h /
+
+  create-manifests-cuda:
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
+    needs: build-cuda
+    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      
+      - name: Create manifest for ${{ matrix.tag }}
+        run: |
+          docker buildx imagetools create \
+            -t rcdt/robotics:${{ matrix.tag }} \
+            rcdt/robotics:${{ matrix.tag }}-amd64 \
+            rcdt/robotics:${{ matrix.tag }}-arm64
   
   linting:
     runs-on: ubuntu-24.04
