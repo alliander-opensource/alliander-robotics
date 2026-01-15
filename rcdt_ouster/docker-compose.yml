@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_ouster:
-    image: rcdt/robotics:ouster-${IMAGE_TAG}
+    image: rcdt/robotics:ouster
     container_name: rcdt_ouster
     runtime: nvidia
     network_mode: host

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_husarion:
-    image: rcdt/robotics:husarion-${IMAGE_TAG}
+    image: rcdt/robotics:husarion
     container_name: rcdt_husarion
     network_mode: host
     privileged: true

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_realsense:
-    image: rcdt/robotics:realsense-${IMAGE_TAG}
+    image: rcdt/robotics:realsense
     container_name: rcdt_realsense
     runtime: nvidia
     network_mode: host

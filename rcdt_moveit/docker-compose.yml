@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_moveit:
-    image: rcdt/robotics:moveit-${IMAGE_TAG}
+    image: rcdt/robotics:moveit
     container_name: rcdt_moveit
     network_mode: host
     privileged: true

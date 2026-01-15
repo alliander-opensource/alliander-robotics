@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_base:
-    image: rcdt/robotics:base-${IMAGE_TAG}
+    image: rcdt/robotics:base
     container_name: rcdt_base
     network_mode: host
     privileged: true

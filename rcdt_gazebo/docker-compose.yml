@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   rcdt_gazebo:
-    image: rcdt/robotics:gazebo-${IMAGE_TAG}
+    image: rcdt/robotics:gazebo
     container_name: rcdt_gazebo
     runtime: nvidia
     network_mode: host
