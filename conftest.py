@@ -82,6 +82,8 @@ def check_containers_started(compose_file: str, services: list) -> bool:
         name, status = line.strip("/").split()
         if name in services:
             statuses[name] = status == "healthy"
+    if len(statuses) < len(services):
+        return False
     return all(statuses.values())
 
 
@@ -182,3 +184,15 @@ def navigation_distance_tolerance() -> float:
         float: The tolerance value for navigation.
     """
     return 0.25
+
+
+@pytest.fixture(scope="session")
+def navigation_degree_tolerance() -> float:
+    """Latitude/Longitude degree tolerance of testing navigation.
+
+    This is the maximum allowed deviation for navigation during tests.
+
+    Returns:
+        float: The tolerance value for navigation.
+    """
+    return 2.5e-6  # ~0.25 meters

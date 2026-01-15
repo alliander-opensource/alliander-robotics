@@ -83,9 +83,9 @@ if __name__ == "__main__":
 
     # Stop containers started for pytest:
     if args.pytest or args.pytest_no_nvidia:
-        cmd = ["docker compose -f rcdt_tests/compose.yml down -t 1"]
+        cmd = ["docker compose -f compose_pytest.yml down -t 1"]
         subprocess.run(cmd, shell=True, check=True)
-        cmd = ["docker compose -f rcdt_tests/compose.yml rm -fsv"]
+        cmd = ["docker compose -f compose_pytest.yml rm -fsv"]
         subprocess.run(cmd, shell=True, check=True)
 
     sys.exit(result.returncode)

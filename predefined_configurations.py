@@ -252,6 +252,7 @@ def config_panther_gps_navigation() -> None:  # noqa: D103
     vehicle = Vehicle("panther", (0, 0, 0.2))
     vehicle.nav2_config.navigation = True
     vehicle.nav2_config.gps = True
+    vehicle.nav2_config.window_size = 50
     lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
     gps = GPS("gps", (0, 0, 0.2))
     link(vehicle, lidar)

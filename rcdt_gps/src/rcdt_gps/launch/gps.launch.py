@@ -60,7 +60,13 @@ def launch_setup(context: LaunchContext) -> list:
                 "publish_filtered_gps": True,
             }
         ],
-        remappings=[("imu", f"/{configuration.parent.namespace}/imu/data")],
+        remappings=[
+            ("imu", f"/{configuration.parent.namespace}/imu/data"),
+            (
+                "odometry/filtered",
+                f"/{configuration.parent.namespace}/odometry/filtered",
+            ),
+        ],
     )
 
     # Define EKF node that creates the tf between odom and map:
