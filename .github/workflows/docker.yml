@@ -118,7 +118,7 @@ jobs:
   build-base:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
-    runs-on: ${{ matrix_base.runner }}
+    runs-on: ${{ matrix.runner }}
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes_base == 'true'
     steps:
@@ -157,7 +157,7 @@ jobs:
   build-cuda:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
-    runs-on: ${{ matrix_cuda.runner }} 
+    runs-on: ${{ matrix.runner }} 
     needs: [detect-changes, build-base]
     if: needs.detect-changes.outputs.has_changes_cuda == 'true'
     steps:
