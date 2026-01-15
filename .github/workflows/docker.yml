@@ -15,7 +15,7 @@ on:
 jobs:
   detect-changes:
     # if: github.event_name == 'push' || github.event.pull_request.draft == false
-    runs-on: ubuntu-24.04-arm 
+    runs-on: ubuntu-24.04 
     outputs:
       matrix_base: ${{ steps.set-matrix.outputs.matrix_base }}
       matrix_cuda: ${{ steps.set-matrix.outputs.matrix_cuda }}
@@ -77,18 +77,34 @@ jobs:
             ] | map(select(.name as $n | $changed | index($n)))'
           }
 
+          expand_matrix() {
+            local original_matrix=$1
+            echo "$original_matrix" | jq -c '[
+              .[] |
+              (. + {
+                "runner": "ubuntu-24.04",
+              }),
+              (. + {
+                "runner": "ubuntu-24.04-arm",
+              })
+            ]'
+          }
+
           MATRIX_BASE=$(parse_section "base")
           MATRIX_CUDA=$(parse_section "cuda")
 
-          echo "Base change matrix: $MATRIX_BASE"
-          echo "CUDA change matrix: $MATRIX_CUDA"
+          EXPANDED_MATRIX_BASE=$(expand_matrix "$MATRIX_BASE")
+          EXPANDED_MATRIX_CUDA=$(expand_matrix "$MATRIX_CUDA")
+
+          echo "Base change matrix: $EXPANDED_MATRIX_BASE"
+          echo "CUDA change matrix: $EXPANDED_MATRIX_CUDA"
           
           if [ "$MATRIX_BASE" == "[]" ] || [ "$MATRIX_BASE" == "null" ]; then
             echo "has_changes_base=false" >> $GITHUB_OUTPUT
             echo "matrix_base={\"include\":[]}" >> $GITHUB_OUTPUT
           else
             echo "has_changes_base=true" >> $GITHUB_OUTPUT
-            echo "matrix_base={\"include\":$MATRIX_BASE}" >> $GITHUB_OUTPUT
+            echo "matrix_base={\"include\":$EXPANDED_MATRIX_BASE}" >> $GITHUB_OUTPUT
           fi
           
           if [ "$MATRIX_CUDA" == "[]" ] || [ "$MATRIX_CUDA" == "null" ]; then
@@ -96,15 +112,15 @@ jobs:
             echo "matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
           else
             echo "has_changes_cuda=true" >> $GITHUB_OUTPUT
-            echo "matrix_cuda={\"include\":$MATRIX_CUDA}" >> $GITHUB_OUTPUT
+            echo "matrix_cuda={\"include\":$EXPANDED_MATRIX_CUDA}" >> $GITHUB_OUTPUT
           fi
 
   build-base:
-    runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
-    needs: detect-changes
-    if: needs.detect-changes.outputs.has_changes_base == 'true'
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
+    runs-on: ${{ matrix_base.runner }}
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes_base == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -139,11 +155,11 @@ jobs:
       - run: df -h /
 
   build-cuda:
-    runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
-    needs: [detect-changes, build-base]
-    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
+    runs-on: ${{ matrix_cuda.runner }} 
+    needs: [detect-changes, build-base]
+    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -189,7 +205,9 @@ jobs:
         run: python3 start.py --linting
 
   test:
-    runs-on: [ubuntu-24.04, ubuntu-24.04-arm] 
+    matrix:
+      arch: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.arch }}
     needs: linting
     steps:
       - uses: actions/checkout@v4
