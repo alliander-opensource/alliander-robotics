@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 cd /rcdt/ros
