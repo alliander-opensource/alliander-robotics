@@ -11,7 +11,6 @@ import yaml
 
 from predefined_configurations import PredefinedConfigurations
 from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
-    EnvironmentConfiguration,
     Platform,
     SimulatorConfig,
     VisualizationConfig,
@@ -131,18 +130,18 @@ class Compose:
             case "simulator":
                 package = "rcdt_gazebo"
                 simulator_config = SimulatorConfig()
-                simulator_config.load_ui = EnvironmentConfiguration.gazebo_ui
+                simulator_config.load_ui = PredefinedConfigurations.gazebo_ui
                 simulator_config.world = (
-                    EnvironmentConfiguration.world if not self.world else self.world
+                    PredefinedConfigurations.world if not self.world else self.world
                 )
                 simulator_config.platforms = list(self.platforms.values())
                 command = f" config:='{simulator_config.to_str()}'"
             case "visualization":
                 package = "rcdt_visualization"
                 visualization_config = VisualizationConfig()
-                visualization_config.rviz = EnvironmentConfiguration.rviz
-                visualization_config.vizanti = EnvironmentConfiguration.vizanti
-                visualization_config.gui = EnvironmentConfiguration.rcdt_gui
+                visualization_config.rviz = PredefinedConfigurations.rviz
+                visualization_config.vizanti = PredefinedConfigurations.vizanti
+                visualization_config.gui = PredefinedConfigurations.rcdt_gui
                 visualization_config.platforms = list(self.platforms.values())
                 command = f" config:='{visualization_config.to_str()}'"
             case "linting":
@@ -311,7 +310,7 @@ if __name__ == "__main__":
         compose.visualization = args.visualization
         compose.arch = args.arch
         compose.dev = args.dev
-        compose.platforms = EnvironmentConfiguration.platforms
+        compose.platforms = PredefinedConfigurations.platforms
         compose.create_compose("configuration")
     elif isinstance(args.pytest, list):
         arguments = " " + " ".join(args.pytest)
