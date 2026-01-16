@@ -43,6 +43,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--documentation",
+        action="store_true",
+        help="Start sphinx autobuild to serve the documentation with live reloading.",
+    )
+
+    parser.add_argument(
         "-d",
         required=False,
         action="store_true",
@@ -60,6 +66,8 @@ if __name__ == "__main__":
         )
     elif args.linting:
         cmd = "python3 compose.py --arch amd64 --linting"
+    elif args.documentation:
+        cmd = "python3 compose.py --arch amd64 --documentation"
     else:
         cmd = f"python3 compose.py --arch amd64 -c {args.configuration} --visualization --dev"
         if not args.hardware:

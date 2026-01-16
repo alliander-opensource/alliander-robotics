@@ -29,11 +29,14 @@ COPY common/get_vendor_descriptions.sh /rcdt/get_vendor_descriptions.sh
 RUN /rcdt/get_vendor_descriptions.sh && rm /rcdt/get_vendor_descriptions.sh
 
 # Install repo packages:
-COPY pyproject.toml /rcdt/pyproject.toml
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_gazebo/src/ /rcdt/ros/src
 COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
+
+# Install python dependencies:
+COPY pyproject.toml /rcdt/pyproject.toml
+RUN uv sync --group rcdt-gazebo
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]

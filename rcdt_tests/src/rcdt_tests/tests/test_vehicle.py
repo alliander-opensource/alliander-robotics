@@ -51,7 +51,7 @@ def test_e_stop_request_reset(
         timeout (int): The timeout in seconds to wait before failing the test.
     """
     if request.config.getoption("simulation"):
-        pytest.skip("E-Stop is not available.")  # ty: ignore[call-non-callable]
+        pytest.skip("E-Stop is not available.")
     assert (
         call_trigger_service(
             node=test_node,
@@ -103,7 +103,7 @@ def test_e_stop_request_trigger(
         timeout (int): The timeout in seconds to wait before failing the test.
     """
     if request.config.getoption("simulation"):
-        pytest.skip("E-Stop is not available.")  # ty: ignore[call-non-callable]
+        pytest.skip("E-Stop is not available.")
     assert (
         call_trigger_service(
             node=test_node,

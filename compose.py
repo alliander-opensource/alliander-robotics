@@ -25,8 +25,11 @@ SERVICE = typing.Literal[
     "pytest",
     "pytest-no-nvidia",
     "linting",
+    "documentation",
 ]
-MODE = typing.Literal["configuration", "pytest", "pytest-no-nvidia", "linting"]
+MODE = typing.Literal[
+    "configuration", "pytest", "pytest-no-nvidia", "linting", "documentation"
+]
 
 predefined_configurations = PredefinedConfigurations.get_names()
 
@@ -150,6 +153,9 @@ class Compose:
             case "pytest" | "pytest-no-nvidia":
                 package = "rcdt_tests"
                 command = " && pytest --ignore=ros2_ws -s -rsxf" + arguments
+            case "documentation":
+                package = "rcdt_tests"
+                command = " && sphinx-autobuild --port 0 docs docs/build/html"
 
         # General:
         filename = f"{package}/docker-compose.yml"
@@ -199,6 +205,8 @@ class Compose:
                 self.add_service(content, mode, arguments=arguments)
             case "linting":
                 self.add_service(content, "linting")
+            case "documentation":
+                self.add_service(content, "documentation")
             case "configuration":
                 for platform in self.platforms.values():
                     self.add_service(content, "platform", platform)
@@ -299,6 +307,13 @@ if __name__ == "__main__":
         help="Add this flag to start the test container and run linting checks inside it.",
     )
 
+    parser.add_argument(
+        "--documentation",
+        required=False,
+        action="store_true",
+        help="Add this flag to start a container serving the documentation with live reloading.",
+    )
+
     args = parser.parse_args()
 
     compose = Compose()
@@ -318,3 +333,5 @@ if __name__ == "__main__":
         compose.create_compose("pytest-no-nvidia", arguments=arguments)
     elif args.linting:
         compose.create_compose("linting")
+    elif args.documentation:
+        compose.create_compose("documentation")
