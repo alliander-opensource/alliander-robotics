@@ -23,11 +23,11 @@ lidar = Lidar(random.choice(["velodyne", "ouster"]), (0.13, -0.13, 0.35))
 link(vehicle, lidar)
 vehicle.nav2_config.navigation = True
 
-PLATFORMS = {vehicle.name: vehicle, lidar.name: lidar}
-WORLD = "test_navigation.sdf"
+PLATFORMS = [vehicle, lidar]
+WORLD = "map_5.940906_51.966960"
 
 
-def test_goal_pose(
+def test_goal_pose_lidar(
     test_node: Node, navigation_distance_tolerance: float, timeout: int
 ) -> None:
     """Test that navigation to a goal pose is successful.

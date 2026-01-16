@@ -14,7 +14,7 @@ from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -29,17 +29,17 @@ def launch_setup(context: LaunchContext) -> list:
     Raises:
         ValueError: If the specified arm namespace is not recognized.
     """
-    config = Arm.from_str(config_arg.string_value(context))
+    arm_config = Arm.from_str(platform_arg.string_value(context))
 
     # Extract camera namespace from childs. The first found will be used:
     namespace_camera = ""
-    for child in config.childs:
+    for child in arm_config.childs:
         if child.platform_type == "Camera":
             namespace_camera = child.namespace
             break
 
     # Wait for robot description on topic:
-    cmd = f"ros2 param get /{config.namespace}/state_publisher robot_description --hide-type"
+    cmd = f"ros2 param get /{arm_config.namespace}/state_publisher robot_description --hide-type"
     robot_description = {}
     while robot_description == {}:
         try:
@@ -51,12 +51,12 @@ def launch_setup(context: LaunchContext) -> list:
         except xmltodict.expat.ExpatError:
             print(f"Failed to obtain robot description: '{stderr}'. Retrying...")
 
-    Moveit.add(config.namespace, robot_description, config.name)
-    if config.namespace not in Moveit.configurations:
+    Moveit.add(arm_config.namespace, robot_description, arm_config.name)
+    if arm_config.namespace not in Moveit.configurations:
         raise ValueError(
-            f"Unknown arm namespace '{config.namespace}'. Available: {list(Moveit.configurations.keys())}"
+            f"Unknown arm namespace '{arm_config.namespace}'. Available: {list(Moveit.configurations.keys())}"
         )
-    configuration = Moveit.configurations[config.namespace]
+    configuration = Moveit.configurations[arm_config.namespace]
 
     # Parameters required for move_group:
     move_group_parameters = []
@@ -82,7 +82,7 @@ def launch_setup(context: LaunchContext) -> list:
     moveit_servo_parameters.append(configuration.robot_description)
     moveit_servo_parameters.append(configuration.robot_description_semantic)
     moveit_servo_parameters.append(configuration.robot_description_kinematics)
-    moveit_servo_parameters.append(Moveit.servo_configurations[config.namespace])
+    moveit_servo_parameters.append(Moveit.servo_configurations[arm_config.namespace])
 
     # TODO: Add pose_manipulator directly to Moveit, so that utilities can be removed:
     utilities = RegisteredLaunchDescription(
@@ -93,7 +93,7 @@ def launch_setup(context: LaunchContext) -> list:
         package="moveit_ros_move_group",
         executable="move_group",
         parameters=move_group_parameters,
-        namespace=config.namespace,
+        namespace=arm_config.namespace,
     )
 
     moveit_manager = Node(
@@ -101,14 +101,14 @@ def launch_setup(context: LaunchContext) -> list:
         executable="moveit_manager",
         output="screen",
         parameters=moveit_manager_parameters,
-        namespace=config.namespace,
+        namespace=arm_config.namespace,
     )
 
     moveit_servo = Node(
         package="moveit_servo",
         executable="servo_node",
         parameters=moveit_servo_parameters,
-        namespace=config.namespace,
+        namespace=arm_config.namespace,
     )
 
     switch_servo_type_to_twist = ExecuteProcess(
@@ -116,7 +116,7 @@ def launch_setup(context: LaunchContext) -> list:
             "ros2",
             "service",
             "call",
-            f"/{config.namespace}/servo_node/switch_command_type",
+            f"/{arm_config.namespace}/servo_node/switch_command_type",
             "moveit_msgs/srv/ServoCommandType",
             "{command_type: 1}",
         ]
@@ -142,7 +142,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

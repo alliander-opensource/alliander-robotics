@@ -9,7 +9,7 @@ from rcdt_utilities.config_objects import GPS
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -21,19 +21,19 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    configuration = GPS.from_str(config_arg.string_value(context))
+    gps_config = GPS.from_str(platform_arg.string_value(context))
 
     nmea_driver = Node(
         package="nmea_navsat_driver",
         executable="nmea_socket_driver",
         name="gps",
-        namespace=configuration.namespace,
+        namespace=gps_config.namespace,
         parameters=[
             {
-                "ip": configuration.ip_address,
+                "ip": gps_config.ip_address,
                 "port": 5000,
                 "frame_id": "gps",
-                "tf_prefix": configuration.parent.namespace,
+                "tf_prefix": gps_config.parent.namespace,
             },
         ],
         remappings=[
@@ -57,7 +57,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

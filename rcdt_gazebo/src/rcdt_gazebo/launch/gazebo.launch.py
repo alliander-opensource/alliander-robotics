@@ -11,12 +11,13 @@ from launch.actions import ExecuteProcess, OpaqueFunction
 from launch_ros.actions import Node
 from rcdt_gazebo.create_sdf import create_map_world
 from rcdt_gazebo.gazebo_ros_paths import GazeboRosPaths
-from rcdt_utilities.config_objects import Platform, SimulatorConfig
+from rcdt_utilities.config_objects import Platform, PlatformList, SimulatorConfig
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
 
-config_arg = LaunchArgument("config", "")
+config_arg = LaunchArgument("sim_config", "")
+platform_list_arg = LaunchArgument("platform_list", "")
 
 
 def get_sdf_file(world: str) -> str:
@@ -98,6 +99,7 @@ def launch_setup(context: LaunchContext) -> list:
         list: The actions to start.
     """
     config = SimulatorConfig.from_str(config_arg.string_value(context))
+    platforms = PlatformList.from_str(platform_list_arg.string_value(context))
 
     sdf_file = get_sdf_file(config.world)
     sdf = ET.parse(sdf_file)
@@ -119,13 +121,13 @@ def launch_setup(context: LaunchContext) -> list:
     bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=get_bridge_topics(config.platforms),
+        arguments=get_bridge_topics(platforms.platforms),
     )
 
     spawn_platforms = Node(
         package="rcdt_gazebo",
         executable="spawn_platforms.py",
-        parameters=[{"config": config.to_str()}],
+        parameters=[{"platform_config": platforms.to_str()}],
         output="screen",
     )
 
@@ -168,6 +170,7 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription(
         [
             config_arg.declaration,
+            platform_list_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

@@ -10,7 +10,7 @@ from sensor_msgs.msg import PointCloud2
 from ..utils import assert_for_message
 
 lidar = Lidar(random.choice(["velodyne", "ouster"]), (0, 0, 0.5))
-PLATFORMS = {lidar.name: lidar}
+PLATFORMS = [lidar]
 
 
 def test_points_published(timeout: int) -> None:

@@ -10,7 +10,7 @@ from sensor_msgs.msg import CameraInfo, Image
 from ..utils import assert_for_message
 
 camera = Camera(random.choice(["realsense", "zed"]), (0, 0, 0.5))
-PLATFORMS = {camera.name: camera}
+PLATFORMS = [camera]
 
 
 def test_color_image_published(timeout: int) -> None:

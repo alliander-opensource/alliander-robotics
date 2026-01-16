@@ -276,7 +276,7 @@ class Vehicle(Platform):
         """
         return any(
             [
-                self.nav2_config.collision_monitor,
+                # self.nav2_config.collision_monitor,
                 self.nav2_config.slam,
                 self.nav2_config.navigation,
             ]
@@ -306,7 +306,7 @@ class Lidar(Platform):
 
     platform_type: str = "Lidar"
     ip_address: str = "10.15.20.5"
-    ip_destination: str = "10.15.20.3"
+    ip_udp_destination: str = "10.15.20.3"
 
 
 @dataclass
@@ -340,7 +340,7 @@ class PlatformList(Config):
 
 
 @dataclass
-class SimulatorConfig(PlatformList):
+class SimulatorConfig(Config):
     """Configuration for the simulator.
 
     Attributes:
@@ -353,7 +353,7 @@ class SimulatorConfig(PlatformList):
 
 
 @dataclass
-class VisualizationConfig(PlatformList):
+class VisualizationConfig(Config):
     """Configuration for visualization tools.
 
     Attributes:

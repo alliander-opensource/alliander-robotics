@@ -26,7 +26,7 @@ vehicle = random.choice(
     ]
 )
 
-PLATFORMS = {vehicle.name: vehicle}
+PLATFORMS = [vehicle]
 
 
 def test_joint_states_published(timeout: int) -> None:

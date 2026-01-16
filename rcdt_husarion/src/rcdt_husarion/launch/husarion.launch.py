@@ -10,7 +10,7 @@ from rcdt_utilities.launch_utils import SKIP, state_publisher_node, static_tf_no
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -22,29 +22,29 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    config = Vehicle.from_str(config_arg.string_value(context))
-    parent = config.parent
+    vehicle_config = Vehicle.from_str(platform_arg.string_value(context))
+    parent = vehicle_config.parent
 
     state_publisher = state_publisher_node(
-        namespace=config.namespace,
+        namespace=vehicle_config.namespace,
         platform="husarion",
-        xacro=f"{config.name}.urdf.xacro",
+        xacro=f"{vehicle_config.name}.urdf.xacro",
         xacro_arguments={
             "childs": str(
                 [
                     [child.connects_to, child.namespace, child.link]
-                    for child in config.childs
+                    for child in vehicle_config.childs
                 ]
             ),
         },
     )
 
-    parent = config.parent
+    parent = vehicle_config.parent
     static_tf = static_tf_node(
         parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
-        child_frame=f"{config.namespace}/{parent.connects_to}",
-        position=config.position,
-        orientation=config.orientation,
+        child_frame=f"{vehicle_config.namespace}/{parent.connects_to}",
+        position=vehicle_config.position,
+        orientation=vehicle_config.orientation,
     )
 
     controllers = RegisteredLaunchDescription(
@@ -57,9 +57,9 @@ def launch_setup(context: LaunchContext) -> list:
     sleep_infinity = ExecuteProcess(cmd=["sleep", "infinity"])
 
     return [
-        Register.on_start(state_publisher, context) if config.simulation else SKIP,
-        Register.on_start(static_tf, context) if not config.nav2 else SKIP,
-        Register.group(controllers, context) if config.simulation else SKIP,
+        Register.on_start(state_publisher, context) if vehicle_config.simulation else SKIP,
+        Register.on_start(static_tf, context) if not vehicle_config.nav2 else SKIP,
+        Register.group(controllers, context) if vehicle_config.simulation else SKIP,
         Register.on_start(sleep_infinity, context),
     ]
 
@@ -72,7 +72,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

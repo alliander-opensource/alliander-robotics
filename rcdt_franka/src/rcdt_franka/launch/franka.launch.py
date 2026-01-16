@@ -10,7 +10,7 @@ from rcdt_utilities.launch_utils import SKIP, state_publisher_node, static_tf_no
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -22,54 +22,54 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    config = Arm.from_str(config_arg.string_value(context))
+    arm_config = Arm.from_str(platform_arg.string_value(context))
 
     state_publisher = state_publisher_node(
-        namespace=config.namespace,
+        namespace=arm_config.namespace,
         platform="franka",
         xacro="franka.urdf.xacro",
         xacro_arguments={
-            "simulation": str(config.simulation),
-            "ip_address": config.ip_address,
-            "namespace": config.namespace,
-            "parent": "" if config.parent.link else "world",
-            "connected_to": "" if config.parent.link else "world",
+            "simulation": str(arm_config.simulation),
+            "ip_address": arm_config.ip_address,
+            "namespace": arm_config.namespace,
+            "parent": "" if arm_config.parent.link else "world",
+            "connected_to": "" if arm_config.parent.link else "world",
             "childs": str(
                 [
                     [child.connects_to, child.namespace, child.link]
-                    for child in config.childs
+                    for child in arm_config.childs
                 ]
             ),
         },
     )
 
-    parent = config.parent
+    parent = arm_config.parent
     static_tf = static_tf_node(
         parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
-        child_frame=f"{config.namespace}/{parent.connects_to}",
-        position=config.position,
-        orientation=config.orientation,
+        child_frame=f"{arm_config.namespace}/{parent.connects_to}",
+        position=arm_config.position,
+        orientation=arm_config.orientation,
     )
 
     hardware = RegisteredLaunchDescription(
         get_file_path("rcdt_franka", ["launch"], "hardware.launch.py"),
-        launch_arguments={"config": config.to_str()},
+        launch_arguments={"platform_config": arm_config.to_str()},
     )
 
     controllers = RegisteredLaunchDescription(
         get_file_path("rcdt_franka", ["launch"], "controllers.launch.py"),
-        launch_arguments={"config": config.to_str()},
+        launch_arguments={"platform_config": arm_config.to_str()},
     )
 
     gripper = RegisteredLaunchDescription(
         get_file_path("rcdt_franka", ["launch"], "gripper_services.launch.py"),
-        launch_arguments={"namespace": config.namespace},
+        launch_arguments={"namespace": arm_config.namespace},
     )
 
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.group(hardware, context) if not config.simulation else SKIP,
+        Register.group(hardware, context) if not arm_config.simulation else SKIP,
         Register.group(controllers, context),
         Register.group(gripper, context),
     ]
@@ -83,7 +83,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

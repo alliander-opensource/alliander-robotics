@@ -18,7 +18,7 @@ lidar = Lidar(random.choice(["velodyne", "ouster"]), (0.13, -0.13, 0.35))
 link(vehicle, lidar)
 vehicle.nav2_config.navigation = True
 
-PLATFORMS = {vehicle.name: vehicle, lidar.name: lidar}
+PLATFORMS = [vehicle, lidar]
 WORLD = "test_navigation.sdf"
 
 

@@ -5,14 +5,15 @@
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node, SetParameter
-from rcdt_utilities.config_objects import VisualizationConfig
+from rcdt_utilities.config_objects import PlatformList, VisualizationConfig
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.launch_utils import SKIP
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 from rcdt_visualization.tool_manager import ApplyConfigurations
 
-config_arg = LaunchArgument("config", "")
+config_arg = LaunchArgument("vis_config", "")
+platform_list_arg = LaunchArgument("platform_list", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -25,8 +26,10 @@ def launch_setup(context: LaunchContext) -> list:
         list: The actions to start.
     """
     config = VisualizationConfig.from_str(config_arg.string_value(context))
-    ApplyConfigurations(config)
-    simulation = all(platform.simulation for platform in config.platforms)
+    platforms = PlatformList.from_str(platform_list_arg.string_value(context))
+
+    ApplyConfigurations(config, platforms)
+    simulation = all(platform.simulation for platform in platforms.platforms)
 
     rviz = RegisteredLaunchDescription(
         get_file_path("rcdt_visualization", ["launch"], "rviz.launch.py")
@@ -39,7 +42,7 @@ def launch_setup(context: LaunchContext) -> list:
     gui = Node(
         package="rcdt_visualization",
         executable="rcdt_gui.py",
-        parameters=[{"config": config.to_str()}],
+        parameters=[{"vis_config": config.to_str()}],
     )
 
     return [

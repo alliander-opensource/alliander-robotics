@@ -9,7 +9,7 @@ from rcdt_utilities.config_objects import Lidar
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -21,22 +21,22 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    config = Lidar.from_str(config_arg.string_value(context))
+    lidar_config = Lidar.from_str(platform_arg.string_value(context))
 
     driver_node_name = "ouster_driver"
-    sensor_frame = f"{config.namespace}/ouster"
-    lidar_frame = f"{config.namespace}/os_lidar"
-    imu_frame = f"{config.namespace}/os_imu"
+    sensor_frame = f"{lidar_config.namespace}/ouster"
+    lidar_frame = f"{lidar_config.namespace}/os_lidar"
+    imu_frame = f"{lidar_config.namespace}/os_imu"
 
     ouster_driver_node = LifecycleNode(
         package="ouster_ros",
         executable="os_driver",
-        namespace=config.namespace,
+        namespace=lidar_config.namespace,
         name=driver_node_name,
         parameters=[
             {
-                "sensor_hostname": config.ip_address,
-                "udp_dest": config.ip_destination,
+                "sensor_hostname": lidar_config.ip_address,
+                "udp_dest": lidar_config.ip_udp_destination,
                 "lidar_port": 7502,
                 "imu_port": 7503,
                 "lidar_mode": "1024x10",  # options: { 512x10, 512x20, 1024x10, 1024x20, 2048x10, 4096x5 }
@@ -59,7 +59,7 @@ def launch_setup(context: LaunchContext) -> list:
             "ros2",
             "lifecycle",
             "set",
-            f"/{config.namespace}/{driver_node_name}",
+            f"/{lidar_config.namespace}/{driver_node_name}",
             "configure",
         ],
         shell=False,
@@ -70,7 +70,7 @@ def launch_setup(context: LaunchContext) -> list:
             "ros2",
             "lifecycle",
             "set",
-            f"/{config.namespace}/{driver_node_name}",
+            f"/{lidar_config.namespace}/{driver_node_name}",
             "activate",
         ],
         shell=False,
@@ -91,7 +91,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

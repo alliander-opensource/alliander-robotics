@@ -11,7 +11,7 @@ from rcdt_utilities.launch_utils import SKIP, state_publisher_node, static_tf_no
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -23,42 +23,42 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    configuration = Camera.from_str(config_arg.string_value(context))
+    camera_config = Camera.from_str(platform_arg.string_value(context))
 
     state_publisher = state_publisher_node(
-        namespace=configuration.namespace,
+        namespace=camera_config.namespace,
         platform="zed",
         xacro="rcdt_zed2i.urdf.xacro",
         xacro_arguments={
-            "parent": "" if configuration.parent.link else "world",
+            "parent": "" if camera_config.parent.link else "world",
         },
     )
 
-    parent = configuration.parent
+    parent = camera_config.parent
     static_tf = static_tf_node(
         parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
-        child_frame=f"{configuration.namespace}/{parent.connects_to}",
-        position=configuration.position,
-        orientation=configuration.orientation,
+        child_frame=f"{camera_config.namespace}/{parent.connects_to}",
+        position=camera_config.position,
+        orientation=camera_config.orientation,
     )
 
     hardware = RegisteredLaunchDescription(
         get_file_path("rcdt_zed", ["launch"], "hardware.launch.py"),
-        {"namespace": configuration.namespace},
+        {"namespace": camera_config.namespace},
     )
 
     convert_32FC1_to_16UC1 = Node(  # noqa: N806
         package="rcdt_utilities",
         executable="convert_32FC1_to_16UC1",
-        namespace=configuration.namespace,
+        namespace=camera_config.namespace,
     )
 
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.group(hardware, context) if not configuration.simulation else SKIP,
+        Register.group(hardware, context) if not camera_config.simulation else SKIP,
         Register.on_start(convert_32FC1_to_16UC1, context)
-        if configuration.simulation
+        if camera_config.simulation
         else SKIP,
     ]
 
@@ -71,7 +71,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

@@ -23,11 +23,11 @@ link(vehicle, gps)
 vehicle.nav2_config.navigation = True
 vehicle.nav2_config.gps = True
 
-PLATFORMS = {vehicle.name: vehicle, lidar.name: lidar, gps.name: gps}
+PLATFORMS = [vehicle, lidar, gps]
 WORLD = "map_5.940906_51.966960"
 
 
-def test_goal_pose(
+def test_goal_pose_gps(
     test_node: Node, navigation_degree_tolerance: float, timeout: int
 ) -> None:
     """Test that navigation to a goal pose is successful.
