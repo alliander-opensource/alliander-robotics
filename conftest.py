@@ -103,7 +103,10 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     services = compose.create_compose("configuration", compose_file)
 
     subprocess.run(
-        f"docker compose -f {compose_file} pull", timeout=1800, shell=True, check=True
+        f"docker compose -f {compose_file} pull --policy missing",
+        timeout=3600,
+        shell=True,
+        check=True,
     )
 
     process = subprocess.Popen([f"docker compose -f {compose_file} up"], shell=True)
