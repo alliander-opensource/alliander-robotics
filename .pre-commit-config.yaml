@@ -37,7 +37,7 @@ repos:
     rev: 0.6.7 
     hooks:
       - id: pydoclint
-        args: ["ros2_ws/src"]
+        args: ["rcdt_*/src"] 
         pass_filenames: false
   - repo: local
     hooks:
