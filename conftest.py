@@ -101,6 +101,9 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     compose.platforms = getattr(request.module, "PLATFORMS", {})
     compose.world = getattr(request.module, "WORLD", "")
     services = compose.create_compose("configuration", compose_file)
+
+    subprocess.run("docker compose pull", shell=True, check=True)
+
     process = subprocess.Popen([f"docker compose -f {compose_file} up"], shell=True)
 
     containers_started = False
