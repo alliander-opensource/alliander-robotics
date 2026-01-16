@@ -11,15 +11,18 @@ import yaml
 class Builder:
     """Class to build Docker images."""
 
-    def __init__(self, arch: str, no_cache: bool = False) -> None:
+    def __init__(self, no_cache: bool = False) -> None:
         """Initializes Builder class.
 
         Args:
-            arch (str): architecture for which to build [amd64/arm64].
             no_cache (bool): whether to use the cache when building. no_cache defaults to False.
         """
-        self.arch = arch
+        self.arch = subprocess.getoutput("dpkg --print-architecture")
         self.no_cache = no_cache
+
+        if self.arch not in {"amd64", "arm64"}:
+            print(f"Architecture {self.arch} is not supported.")
+            sys.exit(1)
 
     @staticmethod
     def load_yaml() -> dict:
@@ -105,14 +108,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--arch",
-        required=True,
-        choices=["amd64", "arm64"],
-        default="amd64",
-        help="Target architecture (amd64 or arm64).",
-    )
-
-    parser.add_argument(
         "--no-cache",
         required=False,
         action="store_true",
@@ -136,7 +131,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    builder = Builder(args.arch, args.no_cache)
+    builder = Builder(args.no_cache)
     if args.all:
         builder.build_all()
     elif args.components:
