@@ -3,10 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 __pycache__/
-ros2_ws/build/
-ros2_ws/install/
-ros2_ws/log/
-ros2_ws/.cache/
 ignore/
 .config/
 .vscode/

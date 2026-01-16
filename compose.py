@@ -152,7 +152,7 @@ class Compose:
                 command = " && pre-commit run --all-files"
             case "pytest" | "pytest-no-nvidia":
                 package = "rcdt_tests"
-                command = " && pytest --ignore=ros2_ws -s -rsxf" + arguments
+                command = " && pytest -s -rsxf" + arguments
             case "documentation":
                 package = "rcdt_tests"
                 command = " && sphinx-autobuild --port 0 docs docs/build/html"

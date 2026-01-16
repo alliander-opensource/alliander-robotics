@@ -78,9 +78,6 @@ timeout_func_only = true
 timeout_method = "thread"
 norecursedirs = ["install", "build", "log", ".venv", ".cache"]
 
-[tool.ty.src]
-exclude = ["ros2_ws"]
-
 # Settings of pydoclint, also in flake8 to use in vscode:
 [tool.flake8]
 style = "google"
