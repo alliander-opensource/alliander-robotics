@@ -83,7 +83,7 @@ jobs:
             local original_matrix=$1
             echo "$original_matrix" | jq -c '[
               .[] |
-              if .name == "rcdt_realsense" then
+              if .name == "rcdt_realsense" or .name == "rcdt_zed" then
                 . + {"arch": "amd64", "runner": "ubuntu-24.04"}
               else
                 (. + {"arch": "amd64", "runner": "ubuntu-24.04"}),
