@@ -204,9 +204,6 @@ class VehicleControl:
         self.gps_waypoints_publisher = self.node.create_publisher(
             GeoPath, "/gps_waypoints", 10
         )
-        self.stop_navigation_client = self.node.create_client(
-            Trigger, "/panther1/nav2_manager/stop"
-        )
 
     def start_navigation(self, latlng: tuple[float, float]) -> None:
         """Start vehicle navigation.
