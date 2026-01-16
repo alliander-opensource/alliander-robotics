@@ -164,7 +164,7 @@ jobs:
   create-manifests-base:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
-    needs: build-base
+    needs: [detect-changes, build-base]
     if: needs.detect-changes.outputs.has_changes_base == 'true'
     runs-on: ubuntu-24.04
     steps:
@@ -227,7 +227,7 @@ jobs:
   create-manifests-cuda:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
-    needs: build-cuda
+    needs: [detect-changes, build-cuda]
     if: needs.detect-changes.outputs.has_changes_cuda == 'true'
     runs-on: ubuntu-24.04
     steps:
@@ -239,10 +239,17 @@ jobs:
       
       - name: Create manifest for ${{ matrix.tag }}
         run: |
-          docker buildx imagetools create \
-            -t rcdt/robotics:${{ matrix.tag }} \
-            rcdt/robotics:${{ matrix.tag }}-amd64 \
-            rcdt/robotics:${{ matrix.tag }}-arm64
+          # TODO fix this once zed-arm64 is supported
+          if docker manifest inspect rcdt/robotics:${{ matrix.tag }}-arm64 > /dev/null 2>&1; then
+            docker buildx imagetools create \
+              -t rcdt/robotics:${{ matrix.tag }} \
+              rcdt/robotics:${{ matrix.tag }}-amd64 \
+              rcdt/robotics:${{ matrix.tag }}-arm64
+          else
+            docker buildx imagetools create \
+              -t rcdt/robotics:${{ matrix.tag }} \
+              rcdt/robotics:${{ matrix.tag }}-amd64
+          fi
   
   linting:
     runs-on: ubuntu-24.04
