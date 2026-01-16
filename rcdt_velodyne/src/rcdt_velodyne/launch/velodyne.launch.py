@@ -11,7 +11,7 @@ from rcdt_utilities.launch_utils import SKIP, state_publisher_node, static_tf_no
 from rcdt_utilities.register import Register, RegisteredLaunchDescription
 from rcdt_utilities.ros_utils import get_file_path
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -23,28 +23,28 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    config = Lidar.from_str(config_arg.string_value(context))
+    lidar_config = Lidar.from_str(platform_arg.string_value(context))
 
     state_publisher = state_publisher_node(
-        namespace=config.namespace,
+        namespace=lidar_config.namespace,
         platform="velodyne",
         xacro="rcdt_velodyne.urdf.xacro",
         xacro_arguments={
-            "parent": "" if config.parent.link else "world",
+            "parent": "" if lidar_config.parent.link else "world",
         },
     )
 
-    parent = config.parent
+    parent = lidar_config.parent
     static_tf = static_tf_node(
         parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
-        child_frame=f"{config.namespace}/{parent.connects_to}",
-        position=config.position,
-        orientation=config.orientation,
+        child_frame=f"{lidar_config.namespace}/{parent.connects_to}",
+        position=lidar_config.position,
+        orientation=lidar_config.orientation,
     )
 
     hardware = RegisteredLaunchDescription(
         get_file_path("rcdt_velodyne", ["launch"], "hardware.launch.py"),
-        {"config": config.to_str()},
+        {"platform_config": lidar_config.to_str()},
     )
 
     target_frame = ""
@@ -52,8 +52,8 @@ def launch_setup(context: LaunchContext) -> list:
         package="pointcloud_to_laserscan",
         executable="pointcloud_to_laserscan_node",
         remappings=[
-            ("cloud_in", f"/{config.namespace}/scan/points"),
-            ("scan", f"/{config.namespace}/scan"),
+            ("cloud_in", f"/{lidar_config.namespace}/scan/points"),
+            ("scan", f"/{lidar_config.namespace}/scan"),
         ],
         parameters=[
             {
@@ -64,13 +64,13 @@ def launch_setup(context: LaunchContext) -> list:
                 "range_max": 100.0,
             }
         ],
-        namespace=config.namespace,
+        namespace=lidar_config.namespace,
     )
 
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.group(hardware, context) if not config.simulation else SKIP,
+        Register.group(hardware, context) if not lidar_config.simulation else SKIP,
         Register.on_start(pointcloud_to_laserscan_node, context),
     ]
 
@@ -83,7 +83,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

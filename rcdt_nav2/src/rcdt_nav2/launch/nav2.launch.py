@@ -12,7 +12,7 @@ from rcdt_utilities.launch_utils import SKIP
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
@@ -27,14 +27,14 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     Raises:
         ValueError: If GPS is enabled but no GPS is child of vehicle.
     """
-    config = Vehicle.from_str(config_arg.string_value(context))
-    namespace_vehicle = config.namespace
-    nav2 = config.nav2_config
+    vehicle_config = Vehicle.from_str(platform_arg.string_value(context))
+    namespace_vehicle = vehicle_config.namespace
+    nav2 = vehicle_config.nav2_config
 
     # Extract lidar and gps namespaces from childs. The first found will be used:
     namespace_gps = ""
     namespace_lidar = ""
-    for child in config.childs:
+    for child in vehicle_config.childs:
         if child.platform_type == "Lidar" and not namespace_lidar:
             namespace_lidar = child.namespace
         if child.platform_type == "GPS" and not namespace_gps:
@@ -307,7 +307,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         register_lifecycle_nodes.append(all_lifecycle_nodes[node_name])
 
     return [
-        SetParameter(name="use_sim_time", value=config.simulation),
+        SetParameter(name="use_sim_time", value=vehicle_config.simulation),
         SetRemap(src="/cmd_vel", dst=pub_topic),
         *[Register.on_start(node, context) for node in register_lifecycle_nodes],
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
@@ -325,7 +325,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

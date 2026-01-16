@@ -13,10 +13,12 @@ import rclpy
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
 from _pytest.fixtures import SubRequest
+from rcdt_utilities.config_objects import PlatformList, SimulatorConfig
 from rclpy.node import Node
 from termcolor import colored
 
 from compose import Compose
+from predefined_configurations import PredefinedConfigurations
 
 LAUNCH_TIMEOUT = 90  # seconds
 
@@ -97,8 +99,14 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     # Execute before starting the tests in the module:
     compose_file = "/rcdt_robotics/compose_pytest.yml"
     compose = Compose()
+    compose.predefined_configuration = PredefinedConfigurations()
     compose.visualization = False
-    compose.platforms = getattr(request.module, "PLATFORMS", {})
+    platform_list = PlatformList()
+    platform_list.platforms = getattr(request.module, "PLATFORMS", [])
+    compose.predefined_configuration.plat_conf = platform_list
+    # sim_config = SimulatorConfig(
+    #     world=getattr(request.module, "WORLD", "")
+    # )
     compose.world = getattr(request.module, "WORLD", "")
     services = compose.create_compose("configuration", compose_file)
 

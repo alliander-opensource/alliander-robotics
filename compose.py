@@ -10,11 +10,7 @@ from pathlib import Path
 import yaml
 
 from predefined_configurations import PredefinedConfigurations
-from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
-    Platform,
-    SimulatorConfig,
-    VisualizationConfig,
-)
+from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import Platform
 
 SERVICE = typing.Literal[
     "platform",
@@ -52,7 +48,7 @@ class Compose:
 
     def __init__(self) -> None:
         """Initialize."""
-        self.platforms: dict[str, Platform] = {}
+        self.predefined_configuration: PredefinedConfigurations = None
         self.simulator = True
         self.visualization = True
         self.arch = "amd64"
@@ -129,24 +125,19 @@ class Compose:
                     raise ValueError(f"Platform must be provided when mode is '{mode}'")
                 package = platform.package() if mode == "platform" else f"rcdt_{mode}"
                 platform.simulation = self.simulator
-                command = f" config:='{platform.to_str()}'"
+                command = f" platform_config:='{platform.to_str()}'"
             case "simulator":
                 package = "rcdt_gazebo"
-                simulator_config = SimulatorConfig()
-                simulator_config.load_ui = PredefinedConfigurations.gazebo_ui
-                simulator_config.world = (
-                    PredefinedConfigurations.world if not self.world else self.world
+                command = (
+                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
+                    f" sim_config:='{self.predefined_configuration.sim_conf.to_str()}'"
                 )
-                simulator_config.platforms = list(self.platforms.values())
-                command = f" config:='{simulator_config.to_str()}'"
             case "visualization":
                 package = "rcdt_visualization"
-                visualization_config = VisualizationConfig()
-                visualization_config.rviz = PredefinedConfigurations.rviz
-                visualization_config.vizanti = PredefinedConfigurations.vizanti
-                visualization_config.gui = PredefinedConfigurations.rcdt_gui
-                visualization_config.platforms = list(self.platforms.values())
-                command = f" config:='{visualization_config.to_str()}'"
+                command = (
+                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
+                    f" vis_config:='{self.predefined_configuration.viz_conf.to_str()}'"
+                )
             case "linting":
                 package = "rcdt_tests"
                 command = " && pre-commit run --all-files"
@@ -208,7 +199,7 @@ class Compose:
             case "documentation":
                 self.add_service(content, "documentation")
             case "configuration":
-                for platform in self.platforms.values():
+                for platform in self.predefined_configuration.plat_conf.platforms:
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
                         self.add_service(content, "moveit", platform)
@@ -318,12 +309,13 @@ if __name__ == "__main__":
 
     compose = Compose()
     if args.configuration:
-        PredefinedConfigurations.apply_configuration(args.configuration)
+        config_setup = PredefinedConfigurations()
+        config_setup.apply_configuration(args.configuration)
+        compose.predefined_configuration = config_setup
         compose.simulator = args.simulator
         compose.visualization = args.visualization
         compose.arch = args.arch
         compose.dev = args.dev
-        compose.platforms = PredefinedConfigurations.platforms
         compose.create_compose("configuration")
     elif isinstance(args.pytest, list):
         arguments = " " + " ".join(args.pytest)

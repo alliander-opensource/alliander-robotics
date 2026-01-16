@@ -17,7 +17,7 @@ from ..utils import (
 )
 
 arm = Arm("franka", gripper=True, moveit=True)
-PLATFORMS = {arm.name: arm}
+PLATFORMS = [arm]
 
 
 def test_joint_states_published() -> None:

@@ -13,7 +13,7 @@ from rcdt_utilities.launch_utils import SKIP
 from rcdt_utilities.register import Register
 from rcdt_utilities.ros_utils import get_file_path
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 enable_lock_unlock = False
 
 
@@ -29,10 +29,10 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: A list of actions to be executed in the launch description.
     """
-    config = Arm.from_str(config_arg.string_value(context))
+    arm_config = Arm.from_str(platform_arg.string_value(context))
 
-    ns: str = f"/{config.namespace}" if config.namespace else ""
-    hostname = config.ip_address
+    ns: str = f"/{arm_config.namespace}" if arm_config.namespace else ""
+    hostname = arm_config.ip_address
     username = os.getenv("FRANKA_USERNAME", "")
     password = os.getenv("FRANKA_PASSWORD", "")
 
@@ -50,7 +50,7 @@ def launch_setup(context: LaunchContext) -> list:
         output="screen",
         arguments=[hostname, username, password, "-u", "-l", "-w", "-r", "-p", "-c"],
         respawn=False,
-        namespace=config.namespace,
+        namespace=arm_config.namespace,
     )
 
     franka_controllers = get_file_path("rcdt_franka", ["config"], "controllers.yaml")
@@ -66,14 +66,14 @@ def launch_setup(context: LaunchContext) -> list:
             (f"{ns}/controller_manager/robot_description", f"{ns}/robot_description"),
             (f"{ns}/joint_states", f"{ns}/fr3_arm/joint_states"),
         ],
-        namespace=config.namespace,
+        namespace=arm_config.namespace,
         on_exit=Shutdown(),
     )
 
     settings_setter = Node(
         package="rcdt_franka",
         executable="settings_setter.py",
-        namespace=config.namespace,
+        namespace=arm_config.namespace,
     )
 
     joint_state_publisher = Node(
@@ -89,7 +89,7 @@ def launch_setup(context: LaunchContext) -> list:
                 "rate": 30,
             }
         ],
-        namespace=config.namespace,
+        namespace=arm_config.namespace,
     )
 
     return [
@@ -110,7 +110,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

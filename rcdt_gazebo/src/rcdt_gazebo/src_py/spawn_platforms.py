@@ -9,7 +9,7 @@ from typing import TypeVar
 
 import numpy as np
 import rclpy
-from rcdt_utilities.config_objects import Platform, SimulatorConfig
+from rcdt_utilities.config_objects import Platform, PlatformList
 from rclpy.node import Node
 from scipy.spatial.transform import RigidTransform, Rotation
 
@@ -24,15 +24,15 @@ class SpawnPlatform(Node):
     def __init__(self):
         """Initialize the node."""
         super().__init__("spawn_platforms")
-        self.declare_parameter("config", "")
-        config = SimulatorConfig.from_str(
-            self.get_parameter("config").get_parameter_value().string_value
-        )
+        self.declare_parameter("platform_config", "")
+        platforms = PlatformList.from_str(
+            self.get_parameter("platform_config").get_parameter_value().string_value
+        ).platforms
 
         self.get_logger().info(
-            f"Spawning platforms {[platform.namespace for platform in config.platforms]}..."
+            f"Spawning platforms {[platform.namespace for platform in platforms]}..."
         )
-        self.spawn_platforms(config.platforms)
+        self.spawn_platforms(platforms)
         self.get_logger().info("All platforms spawned!")
 
     T = TypeVar("T", bound=Platform)

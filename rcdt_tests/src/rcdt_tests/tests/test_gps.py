@@ -8,7 +8,7 @@ from sensor_msgs.msg import NavSatFix
 from ..utils import assert_for_message
 
 gps = GPS("gps", (0, 0, 0.5))
-PLATFORMS = {gps.name: gps}
+PLATFORMS = [gps]
 
 
 def test_gps_fix_published(timeout: int) -> None:

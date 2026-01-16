@@ -8,6 +8,7 @@ from rcdt_utilities.config_objects import (
     Arm,
     Camera,
     Lidar,
+    PlatformList,
     Vehicle,
     VisualizationConfig,
 )
@@ -25,7 +26,7 @@ class ApplyConfigurations:
 
     rviz_parameters: list = []
 
-    def __init__(self, config: VisualizationConfig):
+    def __init__(self, config: VisualizationConfig, platform_list: PlatformList):
         """Initialize.
 
         Args:
@@ -37,7 +38,7 @@ class ApplyConfigurations:
         """
         Rviz.set_fixed_frame("map")
 
-        for platform in config.platforms:
+        for platform in platform_list.platforms:
             Rviz.add_platform_model(platform.namespace)
             match platform.platform_type:
                 case "Arm":

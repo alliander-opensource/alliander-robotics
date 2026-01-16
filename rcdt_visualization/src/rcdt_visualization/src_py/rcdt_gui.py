@@ -11,7 +11,7 @@ from geographic_msgs.msg import GeoPath, GeoPoseStamped
 from geometry_msgs.msg import PoseStamped
 from nicegui import app, events, ui
 from rcdt_interfaces.srv import PoseStampedSrv, StringSrv
-from rcdt_utilities.config_objects import VisualizationConfig
+from rcdt_utilities.config_objects import PlatformList
 from rcdt_utilities.ros_utils import spin_node
 from rclpy.node import Node
 from std_srvs.srv import Empty, SetBool, Trigger
@@ -34,14 +34,14 @@ class UserInterfaceNode(Node):
     def __init__(self):
         """Initialize the node."""
         super().__init__("graphical_user_interface")
-        self.declare_parameter("config", "")
-        config = VisualizationConfig.from_str(
-            self.get_parameter("config").get_parameter_value().string_value
-        )
+        self.declare_parameter("platform_list", "")
+        platforms = PlatformList.from_str(
+            self.get_parameter("platform_list").get_parameter_value().string_value
+        ).platforms
 
         connected = 0
         controllers = 3 * [None]
-        for platform in config.platforms:
+        for platform in platforms:
             if connected == COLS:
                 self.get_logger().warn(
                     f"Maximum number of platforms to control is {COLS}. Extra platforms will be ignored."

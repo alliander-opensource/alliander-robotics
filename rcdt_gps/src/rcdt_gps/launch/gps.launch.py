@@ -14,7 +14,7 @@ from rcdt_utilities.ros_utils import get_file_path
 
 T, F = True, False
 
-config_arg = LaunchArgument("config", "")
+platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -26,45 +26,45 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    configuration = GPS.from_str(config_arg.string_value(context))
+    gps_config = GPS.from_str(platform_arg.string_value(context))
 
     state_publisher = state_publisher_node(
-        namespace=configuration.namespace,
+        namespace=gps_config.namespace,
         platform="nmea_gps",
         xacro="rcdt_nmea_navsat.urdf.xacro",
         xacro_arguments={
-            "namespace": configuration.namespace,
-            "parent": "" if configuration.parent.link else "world",
+            "namespace": gps_config.namespace,
+            "parent": "" if gps_config.parent.link else "world",
         },
     )
 
-    parent = configuration.parent
+    parent = gps_config.parent
     static_tf = static_tf_node(
         parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
-        child_frame=f"{configuration.namespace}/{parent.connects_to}",
-        position=configuration.position,
-        orientation=configuration.orientation,
+        child_frame=f"{gps_config.namespace}/{parent.connects_to}",
+        position=gps_config.position,
+        orientation=gps_config.orientation,
     )
 
     hardware = RegisteredLaunchDescription(
         get_file_path("rcdt_gps", ["launch"], "hardware.launch.py"),
-        {"config": configuration.to_str()},
+        {"platform_config": gps_config.to_str()},
     )
 
     navsat_transform = Node(
         package="robot_localization",
         executable="navsat_transform_node",
-        namespace=configuration.namespace,
+        namespace=gps_config.namespace,
         parameters=[
             {
                 "publish_filtered_gps": True,
             }
         ],
         remappings=[
-            ("imu", f"/{configuration.parent.namespace}/imu/data"),
+            ("imu", f"/{gps_config.parent.namespace}/imu/data"),
             (
                 "odometry/filtered",
-                f"/{configuration.parent.namespace}/odometry/filtered",
+                f"/{gps_config.parent.namespace}/odometry/filtered",
             ),
         ],
     )
@@ -74,16 +74,16 @@ def launch_setup(context: LaunchContext) -> list:
         package="robot_localization",
         executable="ekf_node",
         name="ekf_global",
-        namespace=configuration.parent.namespace,
+        namespace=gps_config.parent.namespace,
         parameters=[
             {
                 "two_d_mode": True,
                 "publish_tf": True,
                 "world_frame": "map",
                 "map_frame": "map",
-                "odom_frame": f"{configuration.parent.namespace}/odom",
-                "base_link_frame": f"{configuration.parent.namespace}/base_footprint",
-                "odom0": f"/{configuration.parent.namespace}/odometry/wheels",
+                "odom_frame": f"{gps_config.parent.namespace}/odom",
+                "base_link_frame": f"{gps_config.parent.namespace}/base_footprint",
+                "odom0": f"/{gps_config.parent.namespace}/odometry/wheels",
                 "odom0_config": list(
                     itertools.chain.from_iterable(
                         [
@@ -95,7 +95,7 @@ def launch_setup(context: LaunchContext) -> list:
                         ]
                     )
                 ),
-                "odom1": f"/{configuration.namespace}/odometry/gps",
+                "odom1": f"/{gps_config.namespace}/odometry/gps",
                 "odom1_config": list(
                     itertools.chain.from_iterable(
                         [
@@ -107,7 +107,7 @@ def launch_setup(context: LaunchContext) -> list:
                         ]
                     )
                 ),
-                "imu0": f"/{configuration.parent.namespace}/imu/data",
+                "imu0": f"/{gps_config.parent.namespace}/imu/data",
                 "imu0_config": list(
                     itertools.chain.from_iterable(
                         [
@@ -124,10 +124,10 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
-        SetParameter(name="use_sim_time", value=configuration.simulation),
+        SetParameter(name="use_sim_time", value=gps_config.simulation),
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.group(hardware, context) if not configuration.simulation else SKIP,
+        Register.group(hardware, context) if not gps_config.simulation else SKIP,
         Register.on_start(navsat_transform, context) if parent.link else SKIP,
         Register.on_start(ekf_global, context) if parent.link else SKIP,
     ]
@@ -141,7 +141,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            config_arg.declaration,
+            platform_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )
