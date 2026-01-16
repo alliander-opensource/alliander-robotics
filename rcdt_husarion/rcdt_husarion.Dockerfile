@@ -7,7 +7,7 @@ FROM $BASE_IMAGE
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
 
-# Add Husarion packages
+# Install Husarion packages
 WORKDIR /rcdt/ros/
 RUN apt update \
   && git clone -b 2.3.1 https://github.com/husarion/husarion_ugv_ros.git src/husarion_ugv_ros \
@@ -24,11 +24,14 @@ RUN apt update \
   --event-handlers console_direct+
 
 # Install repo packages:
-COPY pyproject.toml /rcdt/pyproject.toml
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_husarion/src/ /rcdt/ros/src
 COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
+
+# Install python dependencies:
+COPY pyproject.toml /rcdt/pyproject.toml
+RUN uv sync
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]

@@ -23,11 +23,14 @@ WORKDIR /rcdt/ros/src
 RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git 
 
 # Install repo packages
-COPY pyproject.toml /rcdt/pyproject.toml
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_moveit/src/ /rcdt/ros/src
 COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
+
+# Install python dependencies:
+COPY pyproject.toml /rcdt/pyproject.toml
+RUN uv sync --group rcdt-moveit
 
 # Finalize
 WORKDIR /rcdt

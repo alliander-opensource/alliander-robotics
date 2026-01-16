@@ -5,7 +5,6 @@
 set -e
 
 cd /rcdt/ros
-uv sync
 . /opt/ros/$ROS_DISTRO/setup.sh
 colcon build --symlink-install \
   --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1
