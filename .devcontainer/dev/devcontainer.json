@@ -24,6 +24,7 @@
         "llvm-vs-code-extensions.vscode-clangd",
         "charliermarsh.ruff",
         "astral-sh.ty",
+        "kevinglasson.cornflakes-linter",
         "tamasfe.even-better-toml",
         "ms-azuretools.vscode-docker",
         "twxs.cmake",
