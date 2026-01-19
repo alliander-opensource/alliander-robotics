@@ -51,9 +51,7 @@ class Compose:
         self.predefined_configuration: PredefinedConfigurations = None
         self.simulator = True
         self.visualization = True
-        self.arch = "amd64"
         self.dev = False
-        self.world = ""
 
     @staticmethod
     def get_src_mounts(package: str) -> list[str]:
@@ -234,14 +232,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--arch",
-        required=False,
-        choices=["amd64", "arm64"],
-        default="amd64",
-        help="Target architecture (amd64 or arm64).",
-    )
-
-    parser.add_argument(
         "-p",
         "--platforms",
         required=False,
@@ -314,7 +304,6 @@ if __name__ == "__main__":
         compose.predefined_configuration = config_setup
         compose.simulator = args.simulator
         compose.visualization = args.visualization
-        compose.arch = args.arch
         compose.dev = args.dev
         compose.create_compose("configuration")
     elif isinstance(args.pytest, list):

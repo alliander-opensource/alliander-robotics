@@ -59,17 +59,17 @@ if __name__ == "__main__":
 
     # Create compose file:
     if isinstance(args.pytest, list):
-        cmd = "python3 compose.py --arch amd64 --pytest " + " ".join(args.pytest)
+        cmd = "python3 compose.py --pytest " + " ".join(args.pytest)
     elif isinstance(args.pytest_no_nvidia, list):
-        cmd = "python3 compose.py --arch amd64 --pytest-no-nvidia " + " ".join(
+        cmd = "python3 compose.py --pytest-no-nvidia " + " ".join(
             args.pytest_no_nvidia
         )
     elif args.linting:
-        cmd = "python3 compose.py --arch amd64 --linting"
+        cmd = "python3 compose.py --linting"
     elif args.documentation:
-        cmd = "python3 compose.py --arch amd64 --documentation"
+        cmd = "python3 compose.py --documentation"
     else:
-        cmd = f"python3 compose.py --arch amd64 -c {args.configuration} --visualization --dev"
+        cmd = f"python3 compose.py -c {args.configuration} --visualization --dev"
         if not args.hardware:
             cmd += " --simulator"
     subprocess.run([cmd], shell=True, check=True)
