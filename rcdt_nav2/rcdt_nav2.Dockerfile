@@ -17,13 +17,14 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Install nav2 packages 
-WORKDIR /rcdt/ros/src
-RUN git clone -b jazzy-devel https://github.com/blackcoffeerobotics/vector_pursuit_controller.git
+WORKDIR /rcdt/external
+RUN git clone -b jazzy-devel https://github.com/blackcoffeerobotics/vector_pursuit_controller.git src/vector_pursuit_controller
+RUN /rcdt/colcon_build.sh
 
 # Install repo packages:
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_nav2/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:

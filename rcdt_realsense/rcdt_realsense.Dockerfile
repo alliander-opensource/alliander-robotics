@@ -26,16 +26,17 @@ RUN mkdir -p "$TEMP_DIR" \
   && rm -rf "$TEMP_DIR"
 
 # Install Realsense Wrapper:
-WORKDIR /rcdt/ros
+WORKDIR /rcdt/external
 RUN apt update \
   && git clone -b 4.57.2 https://github.com/IntelRealSense/realsense-ros.git src/realsense_ros \   
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
+RUN /rcdt/colcon_build.sh
 
 # Install repo packages:
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_realsense/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:

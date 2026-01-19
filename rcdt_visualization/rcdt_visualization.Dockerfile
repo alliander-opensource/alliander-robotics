@@ -21,21 +21,24 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Get vizanti and install its dependencies
-WORKDIR /rcdt/ros
+WORKDIR /rcdt/external
 RUN apt update \
   && git clone -b ros2 https://github.com/MoffKalast/vizanti.git src/vizanti \
   && git clone -b jazzy https://github.com/alliander-opensource/rws.git src/rws \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
 
-# Install vendor descriptions:
+# Get vendor descriptions
 COPY common/get_vendor_descriptions.sh /rcdt/get_vendor_descriptions.sh
 RUN /rcdt/get_vendor_descriptions.sh && rm /rcdt/get_vendor_descriptions.sh
 
+# Build vizanti and vendor descriptions
+RUN /rcdt/colcon_build.sh
+
 # Install repo packages:
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_visualization/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:

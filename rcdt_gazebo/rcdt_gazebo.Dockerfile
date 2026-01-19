@@ -25,13 +25,15 @@ RUN mkdir -p /rcdt/osm2world \
   && rm OSM2World-latest-bin.zip
 
 # Install vendor descriptions:
+WORKDIR /rcdt/external
 COPY common/get_vendor_descriptions.sh /rcdt/get_vendor_descriptions.sh
 RUN /rcdt/get_vendor_descriptions.sh && rm /rcdt/get_vendor_descriptions.sh
+RUN /rcdt/colcon_build.sh
 
 # Install repo packages:
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_gazebo/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:

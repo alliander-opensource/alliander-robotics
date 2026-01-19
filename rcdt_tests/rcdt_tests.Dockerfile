@@ -27,14 +27,16 @@ RUN apt update && apt install -y --no-install-recommends \
     && apt clean
 
 # Non-apt dependencies:
+WORKDIR /rcdt/external
 RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
     https://github.com/frankarobotics/franka_ros2.git src/franka_ros2 \
     && cd src/franka_ros2 \
     && git sparse-checkout set franka_msgs
+RUN /rcdt/colcon_build.sh
 
 # Install repo packages:
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:
