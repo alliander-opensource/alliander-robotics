@@ -58,7 +58,7 @@ def get_bridge_topics(platforms: list[T]) -> list[str]:
     """Get the list of topics to bridge between ROS and Gazebo.
 
     Args:
-        platforms (list[Platform]): The list of platforms in the simulation.
+        platforms (list[T]): The list of platforms in the simulation.
 
     Returns:
         list[str]: The list of topics to bridge.
