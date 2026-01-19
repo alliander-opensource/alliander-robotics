@@ -42,7 +42,7 @@ def launch_setup(context: LaunchContext) -> list:
     gui = Node(
         package="rcdt_visualization",
         executable="rcdt_gui.py",
-        parameters=[{"platform_list": config.to_str()}],
+        parameters=[{"platform_list": platforms.to_str()}],
     )
 
     return [
