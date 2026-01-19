@@ -74,9 +74,12 @@ RUN echo "export PYTHONPATH=\"/rcdt/.venv/lib/python3.12/site-packages:\$PYTHONP
   && echo "export PATH=\"/rcdt/.venv/bin:\$PATH\"" \
   >> /root/.bashrc
 
+# Prepare ROS workspace for child images
 RUN mkdir -p /rcdt/ros/src
-COPY entrypoint.sh /entrypoint.sh
+COPY common/colcon_build.sh /rcdt/colcon_build.sh
+RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc
 
+COPY entrypoint.sh /entrypoint.sh
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]

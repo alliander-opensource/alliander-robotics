@@ -16,16 +16,17 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Install Velodyne packages:
-WORKDIR /rcdt/ros
+WORKDIR /rcdt/external
 RUN apt update \
   && git clone -b ros2 https://github.com/alliander-opensource/velodyne.git src/velodyne \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
+RUN /rcdt/colcon_build.sh
 
 # Install repo packages:
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_velodyne/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:

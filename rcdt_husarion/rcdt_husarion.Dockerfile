@@ -8,7 +8,7 @@ ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
 
 # Install Husarion packages
-WORKDIR /rcdt/ros/
+WORKDIR /rcdt/external
 RUN apt update \
   && git clone -b 2.3.1 https://github.com/husarion/husarion_ugv_ros.git src/husarion_ugv_ros \
   && export HUSARION_ROS_BUILD_TYPE=simulation \ 
@@ -22,11 +22,12 @@ RUN apt update \
   husarion_ugv_description \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
   --event-handlers console_direct+
+RUN /rcdt/colcon_build.sh
 
 # Install repo packages:
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_husarion/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:

@@ -19,13 +19,14 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Get required descriptions:
-WORKDIR /rcdt/ros/src
-RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git 
+WORKDIR /rcdt/external
+RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git src/franka_description
+RUN /rcdt/colcon_build.sh
 
 # Install repo packages
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_moveit/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:

@@ -16,9 +16,9 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Install repo packages:
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_ouster/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:

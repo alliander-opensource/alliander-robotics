@@ -6,7 +6,6 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-WORKDIR /rcdt/ros
 
 # Install ZED SDK:
 ARG UBUNTU_RELEASE_YEAR=24      
@@ -27,19 +26,20 @@ RUN echo "CUDA Version ${CUDA_MAJOR}.${CUDA_MINOR}.0" > /usr/local/cuda/version.
   && rm -rf /var/lib/apt/lists/*
 
 # Install ZED Wrapper:
-WORKDIR /rcdt/ros
+WORKDIR /rcdt/external
 RUN apt update \
   && git clone -b jazzy https://github.com/stereolabs/zed-ros2-wrapper.git src/zed_ros2_wrapper \
   && cd src/zed_ros2_wrapper \
   && git checkout 2efb1a33a40d399b9019165df2400cf3ad682fc5 \
-  && cd /rcdt/ros/ \
+  && cd /rcdt/external \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
+RUN /rcdt/colcon_build.sh
 
 # Install repo packages:
+WORKDIR /rcdt/ros
 COPY rcdt_core/src/ /rcdt/ros/src
 COPY rcdt_zed/src/ /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
 RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:
