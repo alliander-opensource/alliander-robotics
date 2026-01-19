@@ -33,11 +33,12 @@ repos:
         entry: uv run ruff check
         language: system
         pass_filenames: false
-  - repo: https://github.com/jsh9/pydoclint
-    rev: 0.6.7 
+  - repo: local
     hooks:
       - id: pydoclint
-        args: ["rcdt_*/src"] 
+        name: pydoclint 
+        entry: ./pydoclint.sh
+        language: system
         pass_filenames: false
   - repo: local
     hooks:

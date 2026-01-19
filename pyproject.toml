@@ -60,7 +60,6 @@ testing = [
     "pytest-timeout>=2.4.0",
 ]
 
-
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false
 

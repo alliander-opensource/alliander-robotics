@@ -19,7 +19,14 @@ def link(
     parent_link: str = "",
     child_link: str = "",
 ) -> None:
-    """Create a parent-child relationship between two platforms."""
+    """Create a parent-child relationship between two platforms.
+
+    Args:
+        parent_platform (Platform): platform that is the parent in the TF relation.
+        child_platform (Platform): platform that is the child in the TF relaiton.
+        parent_link (str): parent's link name where the connection is made.
+        child_link (str): child's link name where the connection is made.
+    """
     # Add parent to child:
     child_platform.parent.namespace = parent_platform.namespace
     child_platform.parent.link = (
@@ -61,14 +68,20 @@ class Config(DataClassJSONMixin):
             data (str): The string representation of the configuration.
 
         Returns:
-            Config: The configuration object.
+            typing.Self: The configuration object.
         """
         return cls.from_json(data)
 
 
 @dataclass
 class Parent(Config):
-    """Class representing a parent platform."""
+    """Class representing a parent platform.
+
+    Attributes:
+        namespace (str): namespace of the parent platform.
+        link (str): link name of the parent platform that connects to a child.
+        connects_to (str): child platform to connect to.
+    """
 
     namespace: str = ""
     link: str = ""
@@ -77,7 +90,15 @@ class Parent(Config):
 
 @dataclass
 class Child(Config):
-    """Class representing a child platform."""
+    """Class representing a child platform.
+
+    Attributes:
+        platform_type (str): type of platform (e.g. Arm, Vehicle, etc.).
+        namespace (str): namespace of the child platform.
+        link (str): link name of the child platform that connects to the parent.
+        connects_to (str): parent platform to connect to.
+
+    """
 
     platform_type: str = ""
     namespace: str = ""
@@ -88,7 +109,19 @@ class Child(Config):
 # General platform definition:
 @dataclass
 class Platform(Config):
-    """Base class for all platforms."""
+    """Base class for all platforms.
+
+    Attributes:
+        name (str): Name of the platform.
+        position (tuple): 3D position coordinates (x, y, z).
+        orientation (tuple): 3D orientation in degrees (roll, pitch, yaw).
+        namespace (str): Namespace for the platform.
+        platform_type (str): Type identifier for the platform.
+        simulation (bool): Whether the platform is running in simulation.
+        parent (Parent): Parent platform configuration.
+        childs (list[Child]): List of child platform configurations.
+        initialized (bool): Whether the platform has been initialized.
+    """
 
     name: str
     position: tuple = (0, 0, 0)
@@ -103,7 +136,7 @@ class Platform(Config):
     initialized: bool = False
 
     def __post_init__(self):
-        """Initialize the platform configuration."""
+        """Initialize the platform configuration."""  # noqa: DOC201
         if self.initialized:
             return
         self.orientation = tuple(map(math.radians, self.orientation))
@@ -162,7 +195,17 @@ class Platform(Config):
 # Tools:
 @dataclass
 class Nav2Config(Config):
-    """Configuration for Nav2 on a vehicle platform."""
+    """Configuration for Nav2 on a vehicle platform.
+
+    Attributes:
+        collision_monitor (bool): Whether to enable collision monitoring.
+        slam (bool): Whether to enable SLAM.
+        navigation (bool): Whether to enable navigation.
+        gps (bool): Whether to enable GPS integration.
+        controller (Literal["dwb", "graceful_motion", "mppi", "pure_pursuit", "rotation_shim", "vector_pursuit"]): Navigation controller type to use.
+        map (Literal["simulation_map", "ipkw", "ipkw_buiten"]): Map to use for navigation.
+        window_size (int): Window size parameter.
+    """
 
     collision_monitor: bool = False
     slam: bool = False
@@ -182,7 +225,11 @@ class Nav2Config(Config):
 
 @dataclass
 class MoveitConfig(Config):
-    """Configuration for MoveIt on an arm platform."""
+    """Configuration for MoveIt on an arm platform.
+
+    Attributes:
+        load_rviz_motion_planning_plugin (bool): Whether to load the RViz motion planning plugin.
+    """
 
     load_rviz_motion_planning_plugin: bool = False
 
@@ -190,7 +237,15 @@ class MoveitConfig(Config):
 # Platforms:
 @dataclass
 class Arm(Platform):
-    """Configuration for an Arm platform."""
+    """Configuration for an Arm platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+        gripper (bool): Whether the arm has a gripper attached.
+        moveit (bool) : Whether to enable MoveIt motion planning.
+        ip_address (str): IP address of the arm controller.
+        moveit_config (MoveitConfig): MoveIt configuration settings.
+    """
 
     platform_type: str = "Arm"
     gripper: bool = False
@@ -202,14 +257,23 @@ class Arm(Platform):
 
 @dataclass
 class Vehicle(Platform):
-    """Configuration for a Vehicle platform."""
+    """Configuration for a Vehicle platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+        nav2_config (Nav2Config): Nav2 configuration settings.
+    """
 
     platform_type: str = "Vehicle"
     nav2_config: Nav2Config = field(default_factory=Nav2Config)
 
     @property
     def nav2(self) -> bool:
-        """Return whether any Nav2 features are enabled."""
+        """Return whether any Nav2 features are enabled.
+
+        Returns:
+            bool: True if any Nav2 features are enabled, False otherwise.
+        """
         return any(
             [
                 self.nav2_config.collision_monitor,
@@ -221,14 +285,24 @@ class Vehicle(Platform):
 
 @dataclass
 class Camera(Platform):
-    """Configuration for a Camera platform."""
+    """Configuration for a Camera platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+    """
 
     platform_type: str = "Camera"
 
 
 @dataclass
 class Lidar(Platform):
-    """Configuration for a Lidar platform."""
+    """Configuration for a Lidar platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+        ip_address (str): IP address of the Lidar sensor.
+        ip_destination (str): Destination IP address for Lidar data.
+    """
 
     platform_type: str = "Lidar"
     ip_address: str = "10.15.20.5"
@@ -237,7 +311,12 @@ class Lidar(Platform):
 
 @dataclass
 class GPS(Platform):
-    """Configuration for a GPS platform."""
+    """Configuration for a GPS platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+        ip_address (str): IP address of the GPS receiver.
+    """
 
     platform_type: str = "GPS"
     ip_address: str = ""
@@ -246,7 +325,11 @@ class GPS(Platform):
 # Configurations containing lists of platforms:
 @dataclass
 class PlatformList(Config):
-    """Base class for configurations containing lists of platforms."""
+    """Base class for configurations containing lists of platforms.
+
+    Attributes:
+        platforms (list[Platform]): List of platform configurations.
+    """  # noqa: DOC605
 
     platforms: List[
         Annotated[
@@ -258,7 +341,12 @@ class PlatformList(Config):
 
 @dataclass
 class SimulatorConfig(PlatformList):
-    """Configuration for the simulator."""
+    """Configuration for the simulator.
+
+    Attributes:
+        load_ui (bool): Whether to load the simulator UI.
+        world (str): World file to load in the simulator.
+    """
 
     load_ui: bool = True
     world: str = "empty.sdf"
@@ -266,7 +354,13 @@ class SimulatorConfig(PlatformList):
 
 @dataclass
 class VisualizationConfig(PlatformList):
-    """Configuration for visualization tools."""
+    """Configuration for visualization tools.
+
+    Attributes:
+        rviz (bool): Whether to enable RViz visualization.
+        vizanti (bool): Whether to enable Vizanti visualization.
+        gui (bool): Whether to enable GUI.
+    """
 
     rviz: bool = True
     vizanti: bool = False

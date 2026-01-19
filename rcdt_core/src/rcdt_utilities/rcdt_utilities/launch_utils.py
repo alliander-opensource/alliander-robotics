@@ -14,8 +14,14 @@ def state_publisher_node(
 ) -> Node:
     """Create a state publisher node.
 
+    Args:
+        namespace (str): namespace for the state publisher node.
+        platform (str): platform type to run state publisher for.
+        xacro (str): xacro filename in platforms 'urdf' folder.
+        xacro_arguments (dict | None): additional xacro arguments for robot description, if applicable.
+
     Returns:
-        Node | None: The state publisher node for the robot or None if not applicable.
+        Node: The state publisher node for the robot.
     """
     if xacro_arguments is None:
         xacro_arguments = {}

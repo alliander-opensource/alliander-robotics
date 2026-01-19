@@ -81,7 +81,7 @@ class GazeboRosPaths:
 
         Returns:
             dict[str, str]: A dictionary containing the environment variables.
-        """
+        """  # noqa: DOC203
         model_paths, plugin_paths = GazeboRosPaths.get_paths()
         env = {
             "GZ_SIM_SYSTEM_PLUGIN_PATH": os.pathsep.join(

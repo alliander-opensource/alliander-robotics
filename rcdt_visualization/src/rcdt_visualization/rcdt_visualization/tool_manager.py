@@ -17,12 +17,24 @@ from rcdt_visualization.vizanti import Vizanti
 
 
 class ApplyConfigurations:
-    """Apply configurations to visualization tools like RViz and Vizanti."""
+    """Apply configurations to visualization tools like RViz and Vizanti.
+
+    Attributes:
+        rviz_parameters (list): list of parameters to set for Rviz.
+    """
 
     rviz_parameters: list = []
 
     def __init__(self, config: VisualizationConfig):
-        """Initialize."""
+        """Initialize.
+
+        Args:
+            config (VisualizationConfig): configuration for Visualization tool -- list of platforms and boolean flags.
+
+
+        Raises:
+            NotImplementedError: if platform.platform_type does not match any of the implemented types.
+        """
         Rviz.set_fixed_frame("map")
 
         for platform in config.platforms:
@@ -54,7 +66,13 @@ class ApplyConfigurations:
     def add_description(
         namespace: str, semantic: bool = False, kinematic: bool = False
     ) -> None:
-        """Obtain robot description parameters and add them to RViz parameters."""
+        """Obtain robot description parameters and add them to RViz parameters.
+
+        Args:
+            namespace (str): namespace for tobot description.
+            semantic (bool): whether it is a semantic robot description or not.
+            kinematic (bool): whether it is a kinematic robot description or not.
+        """
         if kinematic:
             ApplyConfigurations.rviz_parameters.append(
                 {

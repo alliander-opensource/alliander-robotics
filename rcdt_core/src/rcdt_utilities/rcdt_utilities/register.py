@@ -255,6 +255,9 @@ class Register:
 
         Args:
             event (ProcessIO): The event containing the log message.
+
+        Returns:
+            None | LaunchDescription: A lanch description containing the next Register to start, or None if no defined log is captured.
         """
         if self.is_started:
             return

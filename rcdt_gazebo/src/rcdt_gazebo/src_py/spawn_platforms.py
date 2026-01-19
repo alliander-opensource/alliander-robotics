@@ -15,7 +15,11 @@ from scipy.spatial.transform import RigidTransform, Rotation
 
 
 class SpawnPlatform(Node):
-    """Node to spawn platforms in the Gazebo simulation."""
+    """Node to spawn platforms in the Gazebo simulation.
+
+    Attributes:
+        T (typing.TypeVar): typevar to extract platform type.
+    """  # noqa: DOC605
 
     def __init__(self):
         """Initialize the node."""
@@ -37,7 +41,7 @@ class SpawnPlatform(Node):
         """Spawn platforms in the Gazebo simulation at specified positions.
 
         Args:
-            platforms (list[Platform]): List of the platforms.
+            platforms (list[T]): List of the platforms.
 
         """
         for platform in platforms:
