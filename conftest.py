@@ -104,10 +104,8 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     platform_list = PlatformList()
     platform_list.platforms = getattr(request.module, "PLATFORMS", [])
     compose.predefined_configuration.plat_conf = platform_list
-    # sim_config = SimulatorConfig(
-    #     world=getattr(request.module, "WORLD", "")
-    # )
-    compose.world = getattr(request.module, "WORLD", "")
+    sim_config = SimulatorConfig(world=getattr(request.module, "WORLD", "empty.sdf"))
+    compose.predefined_configuration.sim_conf = sim_config
     services = compose.create_compose("configuration", compose_file)
 
     subprocess.run(
