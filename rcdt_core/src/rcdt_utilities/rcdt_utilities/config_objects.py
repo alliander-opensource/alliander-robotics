@@ -348,7 +348,7 @@ class SimulatorConfig(Config):
         world (str): World file to load in the simulator.
     """
 
-    load_ui: bool = True
+    load_ui: bool = False
     world: str = "empty.sdf"
 
 
