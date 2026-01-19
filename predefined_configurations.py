@@ -114,7 +114,7 @@ class PredefinedConfigurations:
         arm = Arm("franka", gripper=True, moveit=True)
 
         self.plat_conf.platforms = [arm]
-        self.sim_conf.load_ui = True
+        self.viz_conf.gui = True
 
     @register_configuration("franka_rviz_motion_planning")
     def config_franka_rviz_motion_planning(self) -> None:  # noqa: D102
@@ -122,7 +122,7 @@ class PredefinedConfigurations:
         arm.moveit_config.load_rviz_motion_planning_plugin = True
 
         self.plat_conf.platforms = [arm]
-        self.sim_conf.load_ui = True
+        self.viz_conf.gui = True
 
     @register_configuration("franka_realsense")
     def config_franka_realsense(self) -> None:  # noqa: D102
@@ -220,7 +220,7 @@ class PredefinedConfigurations:
         link(vehicle, lidar)
         link(vehicle, gps)
         self.plat_conf.platforms = [vehicle, lidar, gps]
-        self.sim_conf.load_ui = True
+        self.viz_conf.gui = True
         self.sim_conf.world = "map_5.940906_51.966960"
 
     # Lynx:
