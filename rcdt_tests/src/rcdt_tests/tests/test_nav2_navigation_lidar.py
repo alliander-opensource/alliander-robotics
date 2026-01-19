@@ -24,7 +24,7 @@ link(vehicle, lidar)
 vehicle.nav2_config.navigation = True
 
 PLATFORMS = [vehicle, lidar]
-WORLD = "map_5.940906_51.966960"
+WORLD = "test_navigation.sdf"
 
 
 def test_goal_pose_lidar(
