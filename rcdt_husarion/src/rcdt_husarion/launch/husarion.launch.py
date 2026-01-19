@@ -57,7 +57,9 @@ def launch_setup(context: LaunchContext) -> list:
     sleep_infinity = ExecuteProcess(cmd=["sleep", "infinity"])
 
     return [
-        Register.on_start(state_publisher, context) if vehicle_config.simulation else SKIP,
+        Register.on_start(state_publisher, context)
+        if vehicle_config.simulation
+        else SKIP,
         Register.on_start(static_tf, context) if not vehicle_config.nav2 else SKIP,
         Register.group(controllers, context) if vehicle_config.simulation else SKIP,
         Register.on_start(sleep_infinity, context),

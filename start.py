@@ -61,9 +61,7 @@ if __name__ == "__main__":
     if isinstance(args.pytest, list):
         cmd = "python3 compose.py --pytest " + " ".join(args.pytest)
     elif isinstance(args.pytest_no_nvidia, list):
-        cmd = "python3 compose.py --pytest-no-nvidia " + " ".join(
-            args.pytest_no_nvidia
-        )
+        cmd = "python3 compose.py --pytest-no-nvidia " + " ".join(args.pytest_no_nvidia)
     elif args.linting:
         cmd = "python3 compose.py --linting"
     elif args.documentation:

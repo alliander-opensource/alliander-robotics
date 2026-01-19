@@ -31,7 +31,7 @@ class ApplyConfigurations:
 
         Args:
             config (VisualizationConfig): configuration for Visualization tool -- list of platforms and boolean flags.
-
+            platform_list (PlatformList): a list of all platforms required for the selected configuration.
 
         Raises:
             NotImplementedError: if platform.platform_type does not match any of the implemented types.
