@@ -4,6 +4,7 @@
 
 """Global pytest fixtures for ROS 2 integration testing."""
 
+import signal
 import subprocess
 import time
 from typing import Generator, Iterator
@@ -15,12 +16,13 @@ from _pytest.config.argparsing import Parser
 from _pytest.fixtures import SubRequest
 from rcdt_utilities.config_objects import PlatformList, SimulatorConfig
 from rclpy.node import Node
-from termcolor import colored
+from termcolor import cprint
 
 from compose import Compose
 from predefined_configurations import PredefinedConfigurations
 
 LAUNCH_TIMEOUT = 90  # seconds
+COMPOSE_FILE = "/rcdt_robotics/compose_pytest.yml"
 
 
 def pytest_addoption(parser: Parser) -> None:
@@ -32,17 +34,34 @@ def pytest_addoption(parser: Parser) -> None:
     parser.addoption("--simulation", action="store", default="True")
 
 
+@pytest.fixture(scope="session", autouse=True)
+def signal_handler() -> Generator:
+    """Fixture to ensure that Docker containers are stopped when Pytest is interrupted.
+
+    Yields:
+        Generator: Yields signal control to the test session.
+    """
+    orig = signal.signal(signal.SIGTERM, signal.getsignal(signal.SIGINT))
+    yield
+    cprint("Interrupt received, stopping Docker containers...", "yellow")
+    stop_containers(COMPOSE_FILE)
+    signal.signal(signal.SIGTERM, orig)
+
+
 @pytest.fixture(scope="function", autouse=True)
 def print_test_info(request: SubRequest) -> Generator:
     """Print the start and end of each test.
 
     Args:
         request (SubRequest): The pytest request object.
+
+    Yields:
+        Generator: Yields start and end of each test function.
     """
-    print(colored(f"Starting test: {request.node.name}", "blue"))
+    cprint(f"Starting test: {request.node.name}", "blue")
     yield
     print("")
-    print(colored(f"Finished test: {request.node.name}", "blue"))
+    cprint(f"Finished test: {request.node.name}", "blue")
 
 
 def stop_containers(compose_file: str) -> None:
@@ -95,9 +114,11 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
 
     Args:
         request (SubRequest): The pytest request object.
+
+    Yields:
+        Generator: Starts and stops Docker containers for each module.
     """
     # Execute before starting the tests in the module:
-    compose_file = "/rcdt_robotics/compose_pytest.yml"
     compose = Compose()
     compose.predefined_configuration = PredefinedConfigurations()
     compose.visualization = False
@@ -106,31 +127,31 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     compose.predefined_configuration.plat_conf = platform_list
     sim_config = SimulatorConfig(world=getattr(request.module, "WORLD", "empty.sdf"))
     compose.predefined_configuration.sim_conf = sim_config
-    services = compose.create_compose("configuration", compose_file)
+    services = compose.create_compose("configuration", COMPOSE_FILE)
 
     subprocess.run(
-        f"docker compose -f {compose_file} pull --policy missing",
+        f"docker compose -f {COMPOSE_FILE} pull --policy missing",
         timeout=3600,
         shell=True,
         check=True,
     )
 
-    process = subprocess.Popen([f"docker compose -f {compose_file} up"], shell=True)
+    process = subprocess.Popen([f"docker compose -f {COMPOSE_FILE} up"], shell=True)
 
     containers_started = False
     start_time = time.time()
     while not containers_started:
-        containers_started = check_containers_started(compose_file, services)
+        containers_started = check_containers_started(COMPOSE_FILE, services)
         if time.time() - start_time > LAUNCH_TIMEOUT:
-            stop_containers(compose_file)
+            stop_containers(COMPOSE_FILE)
             pytest.exit("Timeout waiting for containers to start. Exiting pytest.")
-    print(colored("All containers are started, start testing!", "green"))
+    cprint("All containers are started, start testing!", "green")
 
     # Yield to run the tests in the module:
     yield
 
     # Execute after all tests in module are done:
-    stop_containers(compose_file)
+    stop_containers(COMPOSE_FILE)
     process.wait()
 
 
