@@ -4,46 +4,27 @@
 
 
 import time
-from typing import Any, Callable, Type
+from typing import Any, Type
 
 import pytest
 import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
-from geometry_msgs.msg import Pose, PoseStamped
 from launch_testing_ros.wait_for_topics import WaitForTopics
 from rcdt_interfaces.action import TriggerAction
-from rcdt_interfaces.srv import StringSrv, TransformPoseToFrame
-from rcdt_utilities.register import Register
+from rcdt_interfaces.srv import StringSrv
 from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle
 from rclpy.client import Client
 from rclpy.logging import get_logger
 from rclpy.node import Node
 from rclpy.publisher import Publisher
-from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile
 from rclpy.task import Future
-from sensor_msgs.msg import JointState, Joy
-from std_msgs.msg import String
+from sensor_msgs.msg import JointState
 from std_srvs.srv import Trigger
-from termcolor import colored
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 logger = get_logger("test_utils")
-
-
-def add_tests_to_class(cls: type, tests: dict[str, Callable]) -> None:
-    """Add the defined tests to the given class.
-
-    Use of the pytest mark.launch decorator adapts the class functions, which makes it impossible to reuse tests with different fixtures.
-    However, by using this method in combination with a function that generates the test functions (tests), reuse is possible.
-
-    Args:
-        cls (type): The class to which the tests should be added.
-        tests (dict[str, Callable]): The test functions to add to the class.
-    """
-    for name, method in tests.items():
-        setattr(cls, name, method)
 
 
 def publish_for_duration(
@@ -242,44 +223,6 @@ def create_ready_action_client(
     return client
 
 
-def call_transform_pose_to_frame(
-    node: Node, pose: PoseStamped, target_frame: str, timeout: int
-) -> TransformPoseToFrame.Response:
-    """Calls the /pose_manipulator/transform_pose_to_frame service.
-
-    Args:
-        node (Node): An active rclpy Node.
-        pose (PoseStamped): The pose to transform.
-        target_frame (str): The frame to express the pose in.
-        timeout (int): Timeout for waiting on service and result.
-
-    Raises:
-        RuntimeError: If the service call fails or times out.
-
-    Returns:
-        TransformPoseToFrame.Response: The response containing the transformed pose.
-    """
-    client = create_ready_service_client(
-        node,
-        TransformPoseToFrame,
-        "/pose_manipulator/transform_pose_to_frame",
-        timeout_sec=timeout,
-    )
-
-    request = TransformPoseToFrame.Request()
-    request.pose = pose
-    request.target_frame = target_frame
-
-    future: Future = client.call_async(request)
-    rclpy.spin_until_future_complete(node, future, timeout_sec=timeout)
-
-    response = future.result()
-    if response is None:
-        raise RuntimeError("Service call failed or timed out")
-
-    return response
-
-
 def assert_for_message(message_type: type, topic: str, timeout: int) -> None:
     """Assert that a message of a specific type is received on a given topic within a timeout period.
 
@@ -293,118 +236,6 @@ def assert_for_message(message_type: type, topic: str, timeout: int) -> None:
     wait_for_topics.shutdown()
     assert received, (
         f"No message received of type {message_type.__name__} on topic {topic} within {timeout} seconds."
-    )
-
-
-def assert_joy_topic_switch(
-    node: Node,
-    expected_topic: str,
-    button_config: list[int],
-    timeout: int,
-    state_topic: str = "/joy_topic_manager/state",
-) -> None:
-    """Publishes a Joy message and asserts that the expected topic is published on state_topic.
-
-    Args:
-        node (Node): rclpy test node.
-        expected_topic (str): Expected topic that should be published by the JoyTopicManager.
-        button_config (list[int]): Joy message buttons to trigger the topic change.
-        timeout (int): Max time to wait for the result.
-        state_topic (str): Topic to listen for state updates from joy_topic_manager.
-
-    Raises:
-        TimeoutError: When a timeout occurs.
-    """
-    logger.info("Starting to assert joy topic switch")
-    qos = QoSProfile(
-        depth=1,
-        durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
-        history=QoSHistoryPolicy.KEEP_LAST,
-    )
-
-    result = {}
-
-    def callback_function(msg: String) -> None:
-        """Callback function to handle messages from the state topic.
-
-        Args:
-            msg (String): The message received from the state topic.
-        """
-        result["state"] = msg.data
-
-    node.create_subscription(
-        msg_type=String,
-        topic=state_topic,
-        callback=callback_function,
-        qos_profile=qos,
-    )
-
-    pub = node.create_publisher(Joy, "/joy", 10)
-    wait_for_subscriber(pub, timeout)
-
-    msg = Joy()
-    msg.buttons = button_config
-    publish_for_duration(
-        node=node, publisher=pub, msg=msg, publish_duration=1, rate_sec=0.1
-    )
-
-    start_time = time.time()
-    while result.get("state") != expected_topic:
-        rclpy.spin_once(node, timeout_sec=0)
-        if time.time() > (start_time + timeout):
-            raise TimeoutError(f"Did not receive {expected_topic} on {state_topic}.")
-
-    assert result.get("state") == expected_topic, (
-        f"Expected state '{expected_topic}', but got '{result.get('state')}'"
-    )
-
-
-def assert_movements_with_joy(  # noqa: PLR0913
-    node: Node,
-    joy_axes: list[float],
-    compare_fn: Callable[[Pose, Pose], float],
-    threshold: float,
-    description: str,
-    frame_base: str,
-    frame_target: str,
-    timeout: int,
-) -> None:
-    """Publishes a joystick message and asserts that movement occurs above a threshold.
-
-    Args:
-        node (Node): rclpy test node.
-        joy_axes (list[float]): Axes values to publish in the Joy message.
-        compare_fn (Callable[[Pose, Pose], float]): Function to compare poses.
-        threshold (float): Minimum change in pose to assert movement.
-        description (str): Description of the pose change being tested.
-        frame_base (str): Base frame of the platform.
-        frame_target (str): Target frame to express the pose in.
-        timeout (int): Max time to wait for the result.
-    """
-    pose = PoseStamped()
-    pose.header.frame_id = frame_base
-    first_pose = call_transform_pose_to_frame(
-        node=node, pose=pose, target_frame=frame_target, timeout=timeout
-    ).pose.pose
-
-    pub = node.create_publisher(Joy, "/joy", 10)
-    wait_for_subscriber(pub, timeout)
-
-    msg = Joy()
-    msg.axes = joy_axes
-    publish_for_duration(
-        node=node, publisher=pub, msg=msg, publish_duration=1, rate_sec=0.1
-    )
-
-    pose = PoseStamped()
-    pose.header.frame_id = frame_base
-    moved_pose = call_transform_pose_to_frame(
-        node=node, pose=pose, target_frame=frame_target, timeout=timeout
-    ).pose.pose
-    delta = compare_fn(first_pose, moved_pose)
-
-    assert abs(delta) > threshold, (
-        f"{description} did not change after input. Δ = {delta}"
     )
 
 
@@ -441,27 +272,6 @@ def wait_until_reached_joint(
 
         time.sleep(0.25)
     return (False, joint_value)
-
-
-def wait_for_register(timeout: int) -> None:
-    """Waits till all registerd actions are started.
-
-    This function should be called in every first test of a test file.
-    This ensures that all other tests are started after all actions are launched correctly.
-    If not all actions start correctly, pytest-timeout will cancel the test, but this does not stop the while loop.
-    Therefore, the while loop has it's own timeout which also uses the defined pytest-timeout variable.
-
-    Args:
-        timeout (int): The maximum time in seconds to wait for the register to be ready.
-
-    """
-    logger = get_logger("wait_for_register")
-    start = time.monotonic()
-    while not Register.all_started and time.monotonic() - start < timeout:
-        time.sleep(1)
-    if Register.all_started:
-        logger.info(colored("Register is ready, start testing!", "green"))
-    assert Register.all_started
 
 
 def call_move_to_configuration_service(
