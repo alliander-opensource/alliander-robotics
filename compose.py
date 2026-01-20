@@ -2,7 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import argparse
+import contextlib
 import os
+import subprocess
 import sys
 import typing
 from pathlib import Path
@@ -27,8 +29,6 @@ MODE = typing.Literal[
     "configuration", "pytest", "pytest-no-nvidia", "linting", "documentation"
 ]
 
-predefined_configurations = PredefinedConfigurations.get_names()
-
 dev_settings = {
     "volumes": [
         "${HOME}/.vscode-server:/root/.vscode-server",
@@ -48,10 +48,12 @@ class Compose:
 
     def __init__(self) -> None:
         """Initialize."""
-        self.predefined_configuration: PredefinedConfigurations = None
+        self.mode: MODE | None = None
+        self.predefined_configuration = PredefinedConfigurations()
         self.simulator = True
         self.visualization = True
         self.dev = False
+        self.gazebo_ui = False
 
     @staticmethod
     def get_src_mounts(package: str) -> list[str]:
@@ -99,10 +101,163 @@ class Compose:
         with open(filename, "w", encoding="utf-8") as f:
             yaml.safe_dump(content, f, default_flow_style=False, sort_keys=False)
 
+    def get_service_config(
+        self, service_type: SERVICE, platform: Platform | None, arguments: str
+    ) -> tuple[str, str, dict]:
+        """Gets the relevant package, the command, and additional config for a given service type.
+
+        Args:
+            service_type (SERVICE): service type to get config for.
+            platform (Platform | None): platform to get config for, or None if not a platform.
+            arguments (str): additional arguments for pytest.
+
+        Raises:
+            ValueError: if platform is not provided while a platform is needed (noqa added due to pydoclint giving false positive)
+
+        Returns:
+            tuple[str, str, dict]: tuple consisting of the RCDT package, the config for compose, and additional config.
+        """
+        needs_platform = service_type in {"platform", "moveit", "nav2"}
+        if needs_platform and platform is None:
+            raise ValueError(f"Platform required for '{service_type}'")
+
+        if platform and needs_platform:
+            platform.simulation = self.simulator
+
+        base_configs = {
+            "simulator": (
+                "rcdt_gazebo",
+                (
+                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
+                    f" sim_config:='{self.predefined_configuration.sim_conf.to_str()}'"
+                ),
+                {},
+            ),
+            "visualization": (
+                "rcdt_visualization",
+                (
+                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
+                    f" vis_config:='{self.predefined_configuration.viz_conf.to_str()}'"
+                ),
+                {},
+            ),
+            "linting": (
+                "rcdt_tests",
+                " && pre-commit run --all-files",
+                {"remove_nvidia": True},
+            ),
+            "documentation": (
+                "rcdt_tests",
+                " && sphinx-autobuild --port 0 docs docs/build/html",
+                {},
+            ),
+            "pytest": (
+                "rcdt_tests",
+                " && pytest -s -rsxf" + arguments,
+                {},
+            ),
+            "pytest-no-nvidia": (
+                "rcdt_tests",
+                " && pytest -s -rsxf" + arguments,
+                {"remove_nvidia": True},
+            ),
+        }
+
+        if platform is not None:
+            platform_configs = {
+                "platform": (
+                    platform.package(),
+                    f" platform_config:='{platform.to_str()}'",
+                    {"needs_dependency": False},
+                ),
+                "moveit": (
+                    "rcdt_moveit",
+                    f" platform_config:='{platform.to_str()}'",
+                    {"needs_dependency": True},
+                ),
+                "nav2": (
+                    "rcdt_nav2",
+                    f" platform_config:='{platform.to_str()}'",
+                    {"needs_dependency": True},
+                ),
+            }
+            configs = {**base_configs, **platform_configs}
+        else:
+            configs = base_configs
+
+        return configs[service_type]
+
+    def load_service_base(self, package: str, command: str) -> dict:
+        """Loads the base compose file for a certain package and adds a command.
+
+        Args:
+            package (str): RCDT package to get docker-compose.yml file from.
+            command (str): command to put in command field in docker-compose.yml file.
+
+        Returns:
+            dict: dictionary containing YAML data from docker-compose.yml, with added command.
+        """
+        service = self.load_compose(f"{package}/docker-compose.yml")["services"][
+            package
+        ]
+        service["command"][-1] += command
+        return service
+
+    @staticmethod
+    def apply_dependencies(
+        service: dict, config: dict, platform: Platform | None
+    ) -> None:
+        """Adds a depends_on to wait on the platform container being healthy before starting.
+
+        Args:
+            service (dict): dictionary containing Docker container's YAML config.
+            config (dict): additional config, in this case to specify if a depends_on is needed.
+            platform (Platform | None): platform that depends_on waits for, or None if not applicable.
+        """
+        if config.get("needs_dependency") and platform:
+            service["depends_on"] = {
+                platform.package(): {"condition": "service_healthy"}
+            }
+
+    def apply_dev_settings(self, service: dict, package: str) -> None:
+        """Adds dev mounts to a specific service, if applicable.
+
+        Args:
+            service (dict): dictionary containing Docker container's YAML config.
+            package (str): RCDT package to mount in container, such that live code updates are possible.
+        """
+        if self.dev:
+            src_mounts = self.get_src_mounts(package)
+            service["volumes"] = (
+                service["volumes"] + dev_settings["volumes"] + src_mounts
+            )
+
+    @staticmethod
+    def apply_runtime_settings(service: dict, config: dict) -> None:
+        """Removes NVIDIA runtime if necessary.
+
+        Args:
+            service (dict): dictionary containing Docker container's YAML config.
+            config (dict): additional config, in this case to specify if runtime: nvidia needs to be removed.
+        """
+        if config.get("remove_nvidia") and "runtime" in service:
+            del service["runtime"]
+
+    def apply_ui_settings(self, service: dict) -> None:
+        """Sets GAZEBO_UI to true if necessary.
+
+        Args:
+            service (dict): dictionary containing Docker container's YAML config.
+        """
+        if self.predefined_configuration.sim_conf.load_ui:
+            env_vars = service.get("environment", [])
+            env_vars.append("GAZEBO_UI=true")
+            service["environment"] = env_vars
+
     def add_service(
         self,
         content: dict,
-        mode: SERVICE,
+        service_type: SERVICE,
         platform: Platform | None = None,
         arguments: str = "",
     ) -> None:
@@ -110,76 +265,30 @@ class Compose:
 
         Args:
             content (dict): The existing compose content to update.
-            mode (MODE): The type of compose to create.
+            service_type (SERVICE): Type of service to add to the compose.
             platform (Platform | None): The platform object (required for 'platform' mode).
             arguments (str): Additional arguments that can be appended to the command.
-
-        Raises:
-            ValueError: If platform mode is selected but no platform is provided.
         """
-        match mode:
-            case "platform" | "moveit" | "nav2":
-                if platform is None:
-                    raise ValueError(f"Platform must be provided when mode is '{mode}'")
-                package = platform.package() if mode == "platform" else f"rcdt_{mode}"
-                platform.simulation = self.simulator
-                command = f" platform_config:='{platform.to_str()}'"
-            case "simulator":
-                package = "rcdt_gazebo"
-                command = (
-                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
-                    f" sim_config:='{self.predefined_configuration.sim_conf.to_str()}'"
-                )
-            case "visualization":
-                package = "rcdt_visualization"
-                command = (
-                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
-                    f" vis_config:='{self.predefined_configuration.viz_conf.to_str()}'"
-                )
-            case "linting":
-                package = "rcdt_tests"
-                command = " && pre-commit run --all-files"
-            case "pytest" | "pytest-no-nvidia":
-                package = "rcdt_tests"
-                command = " && pytest -s -rsxf" + arguments
-            case "documentation":
-                package = "rcdt_tests"
-                command = " && sphinx-autobuild --port 0 docs docs/build/html"
+        package, command, config = self.get_service_config(
+            service_type, platform, arguments
+        )
 
-        # General:
-        filename = f"{package}/docker-compose.yml"
-        service = self.load_compose(filename)["services"][package]
-        service["command"][-1] += command
+        service = self.load_service_base(package, command)
+        self.apply_dependencies(service, config, platform)
+        self.apply_dev_settings(service, package)
+        self.apply_runtime_settings(service, config)
+        self.apply_ui_settings(service)
 
-        # Dependencies:
-        if mode in {"moveit", "nav2"}:
-            if platform is None:
-                raise ValueError(f"Platform must be provided when mode is '{mode}'")
-            service["depends_on"] = {}
-            service["depends_on"][platform.package()] = {"condition": "service_healthy"}
-
-        # Dev settings:
-        if self.dev:
-            src_mounts = self.get_src_mounts(package)
-            service["volumes"] = (
-                service["volumes"] + dev_settings["volumes"] + src_mounts
-            )
-
-        # Remove runtime: nvidia if pytest-no-nvidia
-        if mode in {"linting", "pytest-no-nvidia"} and "runtime" in service:
-            del service["runtime"]
         content["services"][package] = service
 
     def create_compose(
         self,
-        mode: MODE,
         output_file: str = "compose.yml",
         arguments: str = "",
     ) -> list:
         """Create a combined compose file.
 
         Args:
-            mode: MODE: The use case for the compose file.
             output_file (str): The output compose file name.
             arguments (str): Additional arguments that can be passed to a service command.
 
@@ -189,9 +298,9 @@ class Compose:
         content = {"services": {}}
         services = content["services"]
 
-        match mode:
+        match self.mode:
             case "pytest" | "pytest-no-nvidia":
-                self.add_service(content, mode, arguments=arguments)
+                self.add_service(content, self.mode, arguments=arguments)
             case "linting":
                 self.add_service(content, "linting")
             case "documentation":
@@ -225,46 +334,44 @@ class Compose:
         self.write_compose(output_file, content)
         return list(services.keys())
 
+    def run_compose(self) -> int:
+        """Runs generated compose.yml file.
+
+        Returns:
+            int: return code from docker compose run.
+        """
+        cmd = "docker compose -f compose.yml up"
+        if self.mode in {"linting", "pytest", "pytest-no-nvidia"}:
+            cmd += " --abort-on-container-exit"
+
+        result = subprocess.CompletedProcess([], 0)
+        with contextlib.suppress(KeyboardInterrupt):
+            result = subprocess.run([cmd], shell=True, check=False)
+
+        # Stop containers:
+        cmd = ["docker compose -f compose.yml down -t 1"]
+        subprocess.run(cmd, shell=True, check=True)
+
+        # Stop containers started for pytest:
+        if self.mode in {"pytest", "pytest-no-nvidia"}:
+            cmd = ["docker compose -f compose_pytest.yml down -t 1"]
+            subprocess.run(cmd, shell=True, check=True)
+            cmd = ["docker compose -f compose_pytest.yml rm -fsv"]
+            subprocess.run(cmd, shell=True, check=True)
+
+        return result.returncode
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Creates a combined docker-compose.yml file from platform-specific composes."
+        description="Creates and runs a combined docker-compose.yml file from platform-specific composes."
     )
 
+    # RUNNABLES
     parser.add_argument(
-        "-p",
-        "--platforms",
-        required=False,
-        nargs="+",
-        help="List of platform components to include (e.g. panther franka) in a platforms.yaml compose file.",
-    )
-
-    parser.add_argument(
-        "-c",
-        "--configuration",
-        required=False,
+        "configuration",
+        nargs="?",
         help="Select a predefined configuration.",
-    )
-
-    parser.add_argument(
-        "--simulator",
-        required=False,
-        action="store_true",
-        help="Add this flag to build a simulator.yml compose file, indicating which platforms are present in the simulation with the '--platforms' tag.",
-    )
-
-    parser.add_argument(
-        "--visualization",
-        required=False,
-        action="store_true",
-        help="Add this flag to build a visualization.yml compose file, indicating which platforms are present in Rviz / Vizanti with the '--platforms' tag.",
-    )
-
-    parser.add_argument(
-        "--dev",
-        required=False,
-        action="store_true",
-        help="Add this flag to enable dev mode, where repo folders are mounted into the container.",
     )
 
     parser.add_argument(
@@ -295,24 +402,73 @@ if __name__ == "__main__":
         help="Add this flag to start a container serving the documentation with live reloading.",
     )
 
-    args = parser.parse_args()
+    # FLAGS
+    parser.add_argument(
+        "-w",
+        "--hardware",
+        required=False,
+        action="store_true",
+        help="Add this flag to indicate the configuration should run on hardware (as opposed to with Gazebo).",
+    )
 
+    parser.add_argument(
+        "-v",
+        "--visualization",
+        required=False,
+        action="store_true",
+        help="Add this flag to include visualization tools (Rviz, Vizanti) in the configuration.",
+    )
+
+    parser.add_argument(
+        "-d",
+        "--dev",
+        required=False,
+        action="store_true",
+        help="Add this flag to enable dev mode, where repo folders are mounted into the container.",
+    )
+
+    parser.add_argument(
+        "-u",
+        "--ui",
+        required=False,
+        action="store_true",
+        help="Add this flag to enable the Gazebo UI in containers.",
+    )
+
+    # Parse arguments:
+    args = parser.parse_args()
     compose = Compose()
+    arguments = ""
+
+    config_setup = PredefinedConfigurations()
+    config_setup.sim_conf.load_ui = args.ui
     if args.configuration:
-        config_setup = PredefinedConfigurations()
         config_setup.apply_configuration(args.configuration)
-        compose.predefined_configuration = config_setup
-        compose.simulator = args.simulator
+        compose.simulator = not args.hardware
         compose.visualization = args.visualization
         compose.dev = args.dev
-        compose.create_compose("configuration")
+        compose.mode = "configuration"
     elif isinstance(args.pytest, list):
         arguments = " " + " ".join(args.pytest)
-        compose.create_compose("pytest", arguments=arguments)
+        compose.gazebo_ui = args.ui
+        compose.mode = "pytest"
     elif isinstance(args.pytest_no_nvidia, list):
         arguments = " " + " ".join(args.pytest_no_nvidia)
-        compose.create_compose("pytest-no-nvidia", arguments=arguments)
+        compose.mode = "pytest-no-nvidia"
     elif args.linting:
-        compose.create_compose("linting")
+        compose.mode = "linting"
     elif args.documentation:
-        compose.create_compose("documentation")
+        compose.mode = "documentation"
+    else:
+        print(
+            "Invalid configuration. Please check your arguments. Run with --help to see your options."
+        )
+        sys.exit(1)
+    compose.predefined_configuration = config_setup
+
+    # Create compose file:
+    compose.create_compose(arguments=arguments)
+
+    # Spin up containers:
+    ret = compose.run_compose()
+    sys.exit(ret)
