@@ -32,19 +32,7 @@ Runs code documentation checks for .cpp, .hpp, and .h files, using the rules spe
 
 ### Local Development
 
-You can run these checks locally before committing by using the [`pre-commit`](https://pre-commit.com/) framework:
-
-1. Set it up in your working folder:
-
-   ```bash
-   pre-commit install
-   ```
-
-2. (Optional) Run all hooks manually on all files:
-
-   ```bash
-   pre-commit run --all-files
-   ```
+You can run these checks locally before committing by running `uv run start.py --linting` which uses the [`pre-commit`](https://pre-commit.com/) framework.
 
 This will help you catch issues early and avoid failing commits in CI.
 

@@ -13,10 +13,10 @@ This page gives an overview of the structure and mechanisms we use in our system
 We created a modular launch system that can be used to launch any combination of the 'platforms' we support. We see both sensors and robots as platforms and divide them in the categories *arm*, *vehicle*, *camera*, *lidar* and *gps*. Any desired combination of platforms can be launched using:
 
 ```bash
-ros2 launch rcdt_launch robots.launch
+uv run start.py <configuration_name>
 ```
 
-When we directly launch this file without passing a desired configuration, the system won't start. We can select a predefined configuration using the `configuration` launch argument. Another option is to include the above launch file in a new launch file, where we first create a configuration using the different platform classes, which are defined in `rcdt_launch/robot.py`. The launch file works both when using simulation or real platforms, using the `simulation` launch argument
+When we directly execute this file without passing a desired configuration, the system won't start. We can select a predefined configuration using the `configuration` argument.
 
 ### Modular Configuration
 

@@ -16,47 +16,50 @@ We try to follow this folder structure for the ROS packages:
 
 ```text
 ros_package/
-|   CMakeLists.txt
-|   package.xml
+|   docker-compose.yml
+|   ros_package.Dockerfile
 |
 └───src/
-|   |   cpp_node.cpp
-|
-└───include/
-|   └───ros_package/
-|       |   cpp_header.hpp
-|
-└───src_py/
-|   |   py_node.py
-|
-└───ros_package/
-|   |   __init__.py
-|   |   py_module.py
-│   └── test/
-│       ├── conftest.py
-│       ├── unit/
-│       │   └── test_py_module.py
-│       ├── integration/
-│       │   └── test_service_client.py
-│       └── end_to_end/
-│           └── test_full_launch.py
-└───launch/
-    |   launch_file.launch.py
+    |
+    └───ros_package/
+        |   CMakeLists.txt
+        |   package.xml
+        |
+        └───src/
+        |   |   cpp_node.cpp
+        |
+        └───include/
+        |   └───ros_package/
+        |       |   cpp_header.hpp
+        |
+        └───src_py/
+        |   |   py_node.py
+        |
+        └── test/
+            |   __init__.py
+            |   test_feature.py
+        |
+        └───ros_package/
+        |   |   __init__.py
+        |   |   py_module.py
+        |
+        └───launch/
+            |   launch_file.launch.py
 ```
-
-- Every ROS package contains the `CMakeLists.txt` and `package.xml` in the root directory.
+- Every overall ROS package contains the `docker-compose.yml` and `ros_package.Dockerfile` in the root directory.
+- Every "sub"-ROS package contains the `CMakeLists.txt` and `package.xml` in the directory.
 - In case of development using C++, the executables are located in the `src/` directory. The corresponding headers are located in the `include/` directory, inside a sub-directory that equals the package name.
 - In case of development using Python, the executables are located in the `src_py/` directory.
 - A sub-directory `ros_package/` with the same name as the ROS package can be used to create a Python package. This directory contains an `__init__.py` file and the Python modules of the Python package.
 - Possible launch files are located in the `launch/` directory.
 - More directories are possible, like `urdf/` for urdf files or `config/` for config files.
-- The testing layout is placed alongside the Python package, with these subfolders:
+- The testing layout is placed alongside the Python package, with optionally these subfolders:
 
   - `unit/` for fast, logic-only tests
   - `integration/` for multi-component or ROS client/server tests
   - `end_to_end/` for full launch/simulation tests
 
-  Use a top-level `test/conftest.py` to define shared fixtures, and name your files/functions `test_*` so pytest auto-discovers them. The most general fixtures are defined in the `conftest.py` in the root of the repository.
+  A top-level `test/conftest.py` can be used to define shared fixtures, and name your files/functions `test_*` so pytest auto-discovers them. The most general fixtures are defined in the `conftest.py` in the root of the repository.
 
 ### CMakeLists.txt
 

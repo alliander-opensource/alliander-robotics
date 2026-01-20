@@ -8,6 +8,16 @@ SPDX-License-Identifier: Apache-2.0
 
 This page describes the use of the different platforms we support.
 
+The general rule we apply for assigning IP addresses follows the following numbering order:
+
+> 1 - Router \
+2 - Low-level computer (Raspberry Pi) \
+3 - High-level computer \
+4 - Additional component (e.g. Franka Arm) \
+5 - LiDAR
+
+So for example, if we connect the Ouster LiDAR to the Lynx, we assign the Ouster with IP address `10.15.20.5`.
+
 ## Franka
 
 ![Franka](../img/franka/franka.png)
@@ -38,14 +48,6 @@ We created a fork with robot-specific enhancements: [https://github.com/alliande
 ## Panther
 
 ![Panther](../img/panther/panther.png)
-
-Regarding all vehicles, the general rule we apply for assigning IP addresses follows the following numbering order:
-
-> 1 - Router \
-2 - Low-level computer (Raspberry Pi) \
-3 - High-level computer \
-4 - Additional component (e.g. Franka Arm) \
-5 - LiDAR
 
 ### Simulation Panther
 
