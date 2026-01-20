@@ -135,8 +135,8 @@ class Platform(Config):
 
     initialized: bool = False
 
-    def __post_init__(self):
-        """Initialize the platform configuration."""  # noqa: DOC201
+    def __post_init__(self) -> None:
+        """Initialize the platform configuration."""
         if self.initialized:
             return
         self.orientation = tuple(map(math.radians, self.orientation))
@@ -301,7 +301,7 @@ class Lidar(Platform):
     Attributes:
         platform_type (str): Type identifier for the platform.
         ip_address (str): IP address of the Lidar sensor.
-        ip_destination (str): Destination IP address for Lidar data.
+        ip_udp_destination (str): Destination IP address for Lidar data.
     """
 
     platform_type: str = "Lidar"
