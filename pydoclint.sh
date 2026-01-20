@@ -7,4 +7,4 @@
 DIRS=$(ls | grep rcdt_ | tr '\n' ' ')
 echo "Scanning $DIRS..."
 
-pydoclint *.py $DIRS
+pydoclint *.py $DIRS -q
