@@ -31,13 +31,9 @@ MODE = typing.Literal[
 
 dev_settings = {
     "volumes": [
-        "${HOME}/.vscode-server:/root/.vscode-server",
-        "./.personal.bashrc:/root/.personal.bashrc",
         "${HOME}/.nix-profile/bin/nvim:/usr/bin/nvim",
         "/nix/store:/nix/store",
         "./pyproject.toml:/rcdt/pyproject.toml",
-        "./.config:/rcdt/.config",
-        "./clangd:/rcdt/clangd",
         "./rcdt_core/src/rcdt_utilities:/rcdt/ros/src/rcdt_utilities",
     ],
 }
@@ -112,7 +108,7 @@ class Compose:
             arguments (str): additional arguments for pytest.
 
         Raises:
-            ValueError: if platform is not provided while a platform is needed (noqa added due to pydoclint giving false positive)
+            ValueError: if platform is not provided while a platform is needed.
 
         Returns:
             tuple[str, str, dict]: tuple consisting of the RCDT package, the config for compose, and additional config.
