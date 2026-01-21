@@ -17,12 +17,12 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
     outputs:
-      matrix_base: ${{ steps.set-matrix.outputs.matrix_base }}
+      matrix_ubuntu: ${{ steps.set-matrix.outputs.matrix_ubuntu }}
       matrix_cuda: ${{ steps.set-matrix.outputs.matrix_cuda }}
-      expanded_matrix_base: ${{ steps.set-matrix.outputs.expanded_matrix_base }}
+      expanded_matrix_ubuntu: ${{ steps.set-matrix.outputs.expanded_matrix_ubuntu }}
       expanded_matrix_cuda: ${{ steps.set-matrix.outputs.expanded_matrix_cuda }}
       has_core_changes: ${{ steps.set-matrix.outputs.has_core_changes }}
-      has_changes_base: ${{ steps.set-matrix.outputs.has_changes_base }}
+      has_changes_ubuntu: ${{ steps.set-matrix.outputs.has_changes_ubuntu }}
       has_changes_cuda: ${{ steps.set-matrix.outputs.has_changes_cuda }}
     steps:
       - uses: actions/checkout@v4
@@ -51,9 +51,9 @@ jobs:
           echo "Changed directories: ${CHANGED_DIRS[*]}"
 
           if [ ${#CHANGED_DIRS[@]} -eq 0 ]; then
-            echo "has_changes_base=false" >> $GITHUB_OUTPUT
+            echo "has_changes_ubuntu=false" >> $GITHUB_OUTPUT
             echo "has_changes_cuda=false" >> $GITHUB_OUTPUT
-            echo "matrix_base={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "matrix_ubuntu={\"include\":[]}" >> $GITHUB_OUTPUT
             echo "matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
             echo "No components have changes."
             exit 0
@@ -80,7 +80,7 @@ jobs:
             ] | map(select(.name as $n | $changed | index($n)))'
           }
 
-          # TODO remove if-statement after realsense-arm64 is supported
+          # TODO remove if-statement after zed/realsense-arm64 is supported
           expand_matrix() {
             local original_matrix=$1
             echo "$original_matrix" | jq -c '[
@@ -94,23 +94,23 @@ jobs:
             ]'
           }
 
-          MATRIX_BASE=$(parse_section "base")
-          MATRIX_CUDA=$(parse_section "cuda")
+          MATRIX_UBUNTU=$(parse_section "ubuntu_images")
+          MATRIX_CUDA=$(parse_section "cuda_images")
 
-          EXPANDED_MATRIX_BASE=$(expand_matrix "$MATRIX_BASE")
+          EXPANDED_MATRIX_UBUNTU=$(expand_matrix "$MATRIX_UBUNTU")
           EXPANDED_MATRIX_CUDA=$(expand_matrix "$MATRIX_CUDA")
 
-          echo "Base change matrix: $EXPANDED_MATRIX_BASE"
+          echo "Base change matrix: $EXPANDED_MATRIX_UBUNTU"
           echo "CUDA change matrix: $EXPANDED_MATRIX_CUDA"
 
-          if [ "$MATRIX_BASE" == "[]" ] || [ "$MATRIX_BASE" == "null" ]; then
-            echo "has_changes_base=false" >> $GITHUB_OUTPUT
-            echo "matrix_base={\"include\":[]}" >> $GITHUB_OUTPUT
-            echo "expanded_matrix_base={\"include\":[]}" >> $GITHUB_OUTPUT
+          if [ "$MATRIX_UBUNTU" == "[]" ] || [ "$MATRIX_UBUNTU" == "null" ]; then
+            echo "has_changes_ubuntu=false" >> $GITHUB_OUTPUT
+            echo "matrix_ubuntu={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_ubuntu={\"include\":[]}" >> $GITHUB_OUTPUT
           else
-            echo "has_changes_base=true" >> $GITHUB_OUTPUT
-            echo "matrix_base={\"include\":$MATRIX_BASE}" >> $GITHUB_OUTPUT
-            echo "expanded_matrix_base={\"include\":$EXPANDED_MATRIX_BASE}" >> $GITHUB_OUTPUT
+            echo "has_changes_ubuntu=true" >> $GITHUB_OUTPUT
+            echo "matrix_ubuntu={\"include\":$MATRIX_UBUNTU}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_ubuntu={\"include\":$EXPANDED_MATRIX_UBUNTU}" >> $GITHUB_OUTPUT
           fi
 
           if [ "$MATRIX_CUDA" == "[]" ] || [ "$MATRIX_CUDA" == "null" ]; then
@@ -125,7 +125,8 @@ jobs:
 
   build-ubuntu:
     strategy:
-      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_base) }}
+      matrix: 
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     if: needs.detect-changes.outputs.has_core_changes == 'true'
     needs: detect-changes
@@ -145,21 +146,29 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build and push base-${{ matrix.arch }}
+      - name: Set architecture tag
+        id: arch
+        run: |
+          if [[ "${{ matrix.runner }}" == *"-arm"* ]]; then
+            echo "tag=arm64" >> $GITHUB_OUTPUT
+          else
+            echo "tag=amd64" >> $GITHUB_OUTPUT
+          fi
+      - name: Build and push base-${{ steps.arch.outputs.tag }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: rcdt_core/rcdt_core.Dockerfile
-          tags: rcdt/robotics:base-${{ matrix.arch }}
+          tags: rcdt/robotics:base-${{ steps.arch.outputs.tag }}
           build-args: |
-            BASE_IMAGE=rcdt/robotics:ubuntu-noble-${{ matrix.arch }}
+            BASE_IMAGE=rcdt/robotics:ubuntu-noble-${{ steps.arch.outputs.tag }}
           cache-from: |
             type=gha
-            type=registry,ref=rcdt/robotics:base-buildcache-${{ matrix.arch }}
+            type=registry,ref=rcdt/robotics:base-buildcache-${{ steps.arch.outputs.tag }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=rcdt/robotics:base-buildcache-${{ matrix.arch }},mode=max
+            type=registry,ref=rcdt/robotics:base-buildcache-${{ steps.arch.outputs.tag }}
       - run: df -h /
 
   build-ubuntu-images:
@@ -231,7 +240,8 @@ jobs:
 
   build-cuda:
     strategy:
-      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_cuda) }}
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     if: needs.detect-changes.outputs.has_core_changes == 'true'
     needs: [detect-changes, build-ubuntu-images]
@@ -251,21 +261,29 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build and push cuda-${{ matrix.arch }}
+      - name: Set architecture tag
+        id: arch
+        run: |
+          if [[ "${{ matrix.runner }}" == *"-arm"* ]]; then
+            echo "tag=arm64" >> $GITHUB_OUTPUT
+          else
+            echo "tag=amd64" >> $GITHUB_OUTPUT
+          fi
+      - name: Build and push cuda-${{ steps.arch.outputs.tag }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: rcdt_core/rcdt_core.Dockerfile
-          tags: rcdt/robotics:cuda-${{ matrix.arch }}
+          tags: rcdt/robotics:cuda-${{ steps.arch.outputs.tag }}
           build-args: |
-            BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ matrix.arch }}
+            BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ steps.arch.outputs.tag }}
           cache-from: |
             type=gha
-            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ matrix.arch }}
+            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ steps.arch.outputs.tag }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ matrix.arch }},mode=max
+            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ steps.arch.outputs.tag }},mode=max
       - run: df -h /
 
   build-cuda-images:
@@ -349,8 +367,8 @@ jobs:
   test:
     strategy:
       matrix:
-        arch: [ubuntu-24.04, ubuntu-24.04-arm]
-    runs-on: ${{ matrix.arch }}
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
     needs: linting
     steps:
       - uses: actions/checkout@v4
