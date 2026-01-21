@@ -39,8 +39,8 @@ class ImageManager:
                 sys.exit(1)
 
         # Create flat directory combining base and cuda components with tag as key:
-        for idx in components.keys():
-            for component in components[idx].values():
+        for key in components:
+            for component in components[key].values():
                 self.components[component["tag"]] = component
 
     def select_tags(self, tags: list[str]) -> None:

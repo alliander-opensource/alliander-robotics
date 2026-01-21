@@ -19,8 +19,8 @@ from rcdt_utilities.config_objects import PlatformList, SimulatorConfig
 from rclpy.node import Node
 from termcolor import cprint
 
-from compose import Compose
 from predefined_configurations import PredefinedConfigurations
+from start import Compose
 
 LAUNCH_TIMEOUT = 90  # seconds
 COMPOSE_FILE = "/rcdt_robotics/compose_pytest.yml"
