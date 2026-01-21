@@ -15,12 +15,13 @@ on:
 jobs:
   detect-changes:
     if: github.event_name == 'push' || github.event.pull_request.draft == false
-    runs-on: ubuntu-24.04 
+    runs-on: ubuntu-24.04
     outputs:
       matrix_base: ${{ steps.set-matrix.outputs.matrix_base }}
       matrix_cuda: ${{ steps.set-matrix.outputs.matrix_cuda }}
       expanded_matrix_base: ${{ steps.set-matrix.outputs.expanded_matrix_base }}
       expanded_matrix_cuda: ${{ steps.set-matrix.outputs.expanded_matrix_cuda }}
+      has_core_changes: ${{ steps.set-matrix.outputs.has_core_changes }}
       has_changes_base: ${{ steps.set-matrix.outputs.has_changes_base }}
       has_changes_cuda: ${{ steps.set-matrix.outputs.has_changes_cuda }}
     steps:
@@ -36,6 +37,7 @@ jobs:
           CORE_CHANGED=false
           if [[ "$CHANGES" == *"rcdt_core/"* ]] ; then
             CORE_CHANGED=true
+            echo "has_core_changes=true" >> $GITHUB_OUTPUT
             echo "rcdt_core changed -- will rebuild all components"
           fi
 
@@ -100,7 +102,7 @@ jobs:
 
           echo "Base change matrix: $EXPANDED_MATRIX_BASE"
           echo "CUDA change matrix: $EXPANDED_MATRIX_CUDA"
-          
+
           if [ "$MATRIX_BASE" == "[]" ] || [ "$MATRIX_BASE" == "null" ]; then
             echo "has_changes_base=false" >> $GITHUB_OUTPUT
             echo "matrix_base={\"include\":[]}" >> $GITHUB_OUTPUT
@@ -110,7 +112,7 @@ jobs:
             echo "matrix_base={\"include\":$MATRIX_BASE}" >> $GITHUB_OUTPUT
             echo "expanded_matrix_base={\"include\":$EXPANDED_MATRIX_BASE}" >> $GITHUB_OUTPUT
           fi
-          
+
           if [ "$MATRIX_CUDA" == "[]" ] || [ "$MATRIX_CUDA" == "null" ]; then
             echo "has_changes_cuda=false" >> $GITHUB_OUTPUT
             echo "matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
@@ -121,23 +123,60 @@ jobs:
             echo "expanded_matrix_cuda={\"include\":$EXPANDED_MATRIX_CUDA}" >> $GITHUB_OUTPUT
           fi
 
-  build-base:
+  build-ubuntu:
+    runs-on: ${{ matrix.runner }}
+    if: needs.detect-changes.outputs.has_core_changes == 'true'
+    needs: detect-changes
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        uses: ./.github/actions/free-disk-space
+        with:
+          tool-cache: true
+      - name: Clear disk space
+        uses: ./.github/actions/clear-disk-space
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Build and push base-${{ matrix.arch }}
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: rcdt_core/rcdt_core.Dockerfile
+          tags: rcdt/robotics:base-${{ matrix.arch }}
+          build-args: |
+            BASE_IMAGE=rcdt/robotics:ubuntu-noble-${{ matrix.arch }}
+          cache-from: |
+            type=gha
+            type=registry,ref=rcdt/robotics:base-buildcache-${{ matrix.arch }}
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=rcdt/robotics:base-buildcache-${{ matrix.arch }},mode=max
+      - run: df -h /
+
+  build-ubuntu-images:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_base) }}
     runs-on: ${{ matrix.runner }}
-    needs: detect-changes
+    needs: [detect-changes, build-ubuntu]
     if: needs.detect-changes.outputs.has_changes_base == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - uses: actions/checkout@v4
-      - name: Free disk space 
+      - name: Free disk space
         uses: ./.github/actions/free-disk-space
         with:
           tool-cache: true
-      - name: Clear disk space 
+      - name: Clear disk space
         uses: ./.github/actions/clear-disk-space
       - name: Docker login
         uses: docker/login-action@v3
@@ -161,10 +200,10 @@ jobs:
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
-  create-manifests-base:
+  create-manifests-ubuntu:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
-    needs: [detect-changes, build-base]
+    needs: [detect-changes, build-ubuntu-images]
     if: needs.detect-changes.outputs.has_changes_base == 'true'
     runs-on: ubuntu-24.04
     steps:
@@ -173,7 +212,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      
+
       - name: Create manifest for ${{ matrix.tag }}
         run: |
           # TODO remove this when realsense-arm64 is supported
@@ -189,22 +228,59 @@ jobs:
           fi
 
   build-cuda:
+    runs-on: ${{ matrix.runner }}
+    if: needs.detect-changes.outputs.has_core_changes == 'true'
+    needs: [detect-changes, build-ubuntu-images]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        uses: ./.github/actions/free-disk-space
+        with:
+          tool-cache: true
+      - name: Clear disk space
+        uses: ./.github/actions/clear-disk-space
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Build and push cuda-${{ matrix.arch }}
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: rcdt_core/rcdt_core.Dockerfile
+          tags: rcdt/robotics:cuda-${{ matrix.arch }}
+          build-args: |
+            BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ matrix.arch }}
+          cache-from: |
+            type=gha
+            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ matrix.arch }}
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ matrix.arch }},mode=max
+      - run: df -h /
+
+  build-cuda-images:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_cuda) }}
-    runs-on: ${{ matrix.runner }} 
-    needs: [detect-changes, build-base]
+    runs-on: ${{ matrix.runner }}
+    needs: [detect-changes, build-cuda]
     if: needs.detect-changes.outputs.has_changes_cuda == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - uses: actions/checkout@v4
-      - name: Free disk space 
+      - name: Free disk space
         uses: ./.github/actions/free-disk-space
         with:
           tool-cache: true
-      - name: Clear disk space 
+      - name: Clear disk space
         uses: ./.github/actions/clear-disk-space
       - name: Docker login
         uses: docker/login-action@v3
@@ -236,7 +312,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      
+
       - name: Create manifest for ${{ matrix.tag }}
         run: |
           # TODO fix this once zed-arm64 is supported
@@ -250,17 +326,17 @@ jobs:
               -t rcdt/robotics:${{ matrix.tag }} \
               rcdt/robotics:${{ matrix.tag }}-amd64
           fi
-  
+
   linting:
     runs-on: ubuntu-24.04
-    needs: [build-base, build-cuda] 
-    steps: 
+    needs: [build-ubuntu-images, build-cuda-images]
+    steps:
       - uses: actions/checkout@v4
       - name: Set up python3
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: "3.12"
+          cache: "pip"
       - name: Install dependencies
         run: pip install pyyaml mashumaro
       - name: Run linting in rcdt_tests container
@@ -274,19 +350,19 @@ jobs:
     needs: linting
     steps:
       - uses: actions/checkout@v4
-      - name: Free disk space 
+      - name: Free disk space
         uses: ./.github/actions/free-disk-space
         with:
           tool-cache: true
-      - name: Clear disk space 
+      - name: Clear disk space
         uses: ./.github/actions/clear-disk-space
       - name: Set up python3
         uses: actions/setup-python@v5
         with:
           # need to specify version to circumvent externally-managed act python
           # which won't let us install dependencies
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: "3.12"
+          cache: "pip"
       - name: Install dependencies
         run: pip install pyyaml mashumaro
       - name: Install xvfb
