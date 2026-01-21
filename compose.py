@@ -29,18 +29,26 @@ MODE = typing.Literal[
     "configuration", "pytest", "pytest-no-nvidia", "linting", "documentation"
 ]
 
-dev_settings = {
-    "volumes": [
-        "${HOME}/.nix-profile/bin/nvim:/usr/bin/nvim",
-        "/nix/store:/nix/store",
-        "./pyproject.toml:/rcdt/pyproject.toml",
-        "./rcdt_core/src/rcdt_utilities:/rcdt/ros/src/rcdt_utilities",
-    ],
-}
-
 
 class Compose:
-    """Class to create docker-compose files."""
+    """Class to create docker-compose files.
+
+    Attributes:
+        dev_settings (dict): dictionary of additional settings to include if self.dev is set to True.
+        host_cwd (str): current working directory on host machine, needed to propagate mounts inside test containers.
+        home_dir (str): home directory on host machine, needed to propagate mounts inside test containers.
+    """
+
+    dev_settings: dict = {
+        "volumes": [
+            "${HOME}/.nix-profile/bin/nvim:/usr/bin/nvim",
+            "/nix/store:/nix/store",
+            "./pyproject.toml:/rcdt/pyproject.toml",
+            "./rcdt_core/src/rcdt_utilities:/rcdt/ros/src/rcdt_utilities",
+        ],
+    }
+    host_cwd: str = os.path.abspath(os.getcwd())
+    home_dir: str = os.path.expanduser("~")
 
     def __init__(self) -> None:
         """Initialize."""
@@ -224,9 +232,16 @@ class Compose:
         """
         if self.dev:
             src_mounts = self.get_src_mounts(package)
-            service["volumes"] = (
-                service["volumes"] + dev_settings["volumes"] + src_mounts
+            all_mounts = (
+                service["volumes"] + Compose.dev_settings["volumes"] + src_mounts
             )
+
+            # abslute host path so mounts persist in pytest containers
+            all_mounts = [m.replace("./", f"{Compose.host_cwd}/") for m in all_mounts]
+            all_mounts = [
+                m.replace("${HOME}", f"{Compose.home_dir}") for m in all_mounts
+            ]
+            service["volumes"] = all_mounts
 
     @staticmethod
     def apply_runtime_settings(service: dict, config: dict) -> None:
@@ -239,16 +254,24 @@ class Compose:
         if config.get("remove_nvidia") and "runtime" in service:
             del service["runtime"]
 
-    def apply_ui_settings(self, service: dict) -> None:
-        """Sets GAZEBO_UI to true if necessary.
+    def apply_env_settings(self, service: dict, service_type: SERVICE) -> None:
+        """Applies environment variables to the pytest container, so that they can being propagated to the containers started inside the pytest container.
 
         Args:
             service (dict): dictionary containing Docker container's YAML config.
+            service_type (SERVICE): type of service being created.
         """
+        if service_type not in {"pytest", "pytest-no-nvidia"}:
+            return
+
+        env_vars = service.get("environment", [])
         if self.predefined_configuration.sim_conf.load_ui:
-            env_vars = service.get("environment", [])
             env_vars.append("GAZEBO_UI=true")
-            service["environment"] = env_vars
+        if self.dev:
+            env_vars.append("DEV_MOUNTS=true")
+            env_vars.append(f"HOST_CWD={Compose.host_cwd}")
+            env_vars.append(f"HOME_DIR={Compose.home_dir}")
+        service["environment"] = env_vars
 
     def add_service(
         self,
@@ -273,7 +296,7 @@ class Compose:
         self.apply_dependencies(service, config, platform)
         self.apply_dev_settings(service, package)
         self.apply_runtime_settings(service, config)
-        self.apply_ui_settings(service)
+        self.apply_env_settings(service, service_type)
 
         content["services"][package] = service
 
@@ -438,11 +461,11 @@ if __name__ == "__main__":
 
     config_setup = PredefinedConfigurations()
     config_setup.sim_conf.load_ui = args.ui
+    compose.dev = args.dev
     if args.configuration:
         config_setup.apply_configuration(args.configuration)
         compose.simulator = not args.hardware
         compose.visualization = args.visualization
-        compose.dev = args.dev
         compose.mode = "configuration"
     elif isinstance(args.pytest, list):
         arguments = " " + " ".join(args.pytest)

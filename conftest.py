@@ -24,6 +24,7 @@ from predefined_configurations import PredefinedConfigurations
 
 LAUNCH_TIMEOUT = 90  # seconds
 COMPOSE_FILE = "/rcdt_robotics/compose_pytest.yml"
+HOST_COMPOSE_FILE = "/rcdt_robotics/compose.yml"
 
 
 def pytest_addoption(parser: Parser) -> None:
@@ -132,6 +133,14 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     world = getattr(request.module, "WORLD", "empty.sdf")
     load_ui = os.getenv("GAZEBO_UI", default="false").lower() == "true"
 
+    # Propagate dev mounts
+    dev_mounts = os.getenv("DEV_MOUNTS", default="false") == "true"
+    if dev_mounts:
+        compose.dev = True
+        host_cwd = os.getenv("HOST_CWD", default="/rcdt")
+        home_dir = os.getenv("HOME_DIR", default="/root")
+        Compose.host_cwd = host_cwd
+        Compose.home_dir = home_dir
     sim_config = SimulatorConfig(load_ui=load_ui, world=world)
     compose.predefined_configuration.sim_conf = sim_config
 
