@@ -124,6 +124,8 @@ jobs:
           fi
 
   build-ubuntu:
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_base) }}
     runs-on: ${{ matrix.runner }}
     if: needs.detect-changes.outputs.has_core_changes == 'true'
     needs: detect-changes
@@ -228,6 +230,8 @@ jobs:
           fi
 
   build-cuda:
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_cuda) }}
     runs-on: ${{ matrix.runner }}
     if: needs.detect-changes.outputs.has_core_changes == 'true'
     needs: [detect-changes, build-ubuntu-images]
