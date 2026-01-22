@@ -174,10 +174,10 @@ jobs:
   build-ubuntu-images:
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_base) }}
+      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_ubuntu) }}
     runs-on: ${{ matrix.runner }}
     needs: [detect-changes, build-ubuntu]
-    if: needs.detect-changes.outputs.has_changes_base == 'true'
+    if: needs.detect-changes.outputs.has_changes_ubuntu == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -213,9 +213,9 @@ jobs:
 
   create-manifests-ubuntu:
     strategy:
-      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_base) }}
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_ubuntu) }}
     needs: [detect-changes, build-ubuntu-images]
-    if: needs.detect-changes.outputs.has_changes_base == 'true'
+    if: needs.detect-changes.outputs.has_changes_ubuntu == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Docker login
