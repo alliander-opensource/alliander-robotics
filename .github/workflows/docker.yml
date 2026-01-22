@@ -135,12 +135,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - uses: actions/checkout@v4
-      - name: Free disk space
-        uses: ./.github/actions/free-disk-space
-        with:
-          tool-cache: true
-      - name: Clear disk space
-        uses: ./.github/actions/clear-disk-space
       - name: Docker login
         uses: docker/login-action@v3
         with:
@@ -183,12 +177,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - uses: actions/checkout@v4
-      - name: Free disk space
-        uses: ./.github/actions/free-disk-space
-        with:
-          tool-cache: true
-      - name: Clear disk space
-        uses: ./.github/actions/clear-disk-space
       - name: Docker login
         uses: docker/login-action@v3
         with:
@@ -206,6 +194,7 @@ jobs:
           cache-from: |
             type=gha
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }}
+            type=registry,ref=rcdt/robotics:base-buildcache-${{ matrix.arch }}
           cache-to: |
             type=gha,mode=max
             type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
@@ -298,12 +287,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - uses: actions/checkout@v4
-      - name: Free disk space
-        uses: ./.github/actions/free-disk-space
-        with:
-          tool-cache: true
-      - name: Clear disk space
-        uses: ./.github/actions/clear-disk-space
       - name: Docker login
         uses: docker/login-action@v3
         with:
@@ -318,8 +301,10 @@ jobs:
           tags: rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}
           build-args: |
             BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
-          cache-from: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}-buildcache
-          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}-buildcache,mode=max
+          cache-from: |
+            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }}
+            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ matrix.arch }}
+          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
   create-manifests-cuda:
@@ -371,13 +356,6 @@ jobs:
     runs-on: ${{ matrix.runner }}
     needs: linting
     steps:
-      - uses: actions/checkout@v4
-      - name: Free disk space
-        uses: ./.github/actions/free-disk-space
-        with:
-          tool-cache: true
-      - name: Clear disk space
-        uses: ./.github/actions/clear-disk-space
       - name: Set up python3
         uses: actions/setup-python@v5
         with:
