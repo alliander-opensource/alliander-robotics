@@ -6,11 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Conventions
 
-## ROS packages
-
-ROS packages are defined in the *ros2_ws/src* directory.
-
-### Folder Structure
+## Folder Structure
 
 We try to follow this folder structure for the ROS packages:
 
@@ -46,6 +42,7 @@ ros_package/
         └───launch/
             |   launch_file.launch.py
 ```
+
 - Every overall ROS package contains the `docker-compose.yml` and `ros_package.Dockerfile` in the root directory.
 - Every "sub"-ROS package contains the `CMakeLists.txt` and `package.xml` in the directory.
 - In case of development using C++, the executables are located in the `src/` directory. The corresponding headers are located in the `include/` directory, inside a sub-directory that equals the package name.
@@ -61,7 +58,7 @@ ros_package/
 
   A top-level `test/conftest.py` can be used to define shared fixtures, and name your files/functions `test_*` so pytest auto-discovers them. The most general fixtures are defined in the `conftest.py` in the root of the repository.
 
-### CMakeLists.txt
+## CMakeLists.txt
 
 This CMakeLists.txt file shows the different parts required to build a ROS package:
 
@@ -91,7 +88,7 @@ All shared folders are installed into the share directory. This includes the dir
 **39-45**:\
 The file always ends with a default test and the *ament_package()* command.
 
-### package.xml
+## package.xml
 
 The package.xml file is related to the CMakeLists.txt file:
 
@@ -115,7 +112,7 @@ Next, we define other packages where our package depends on.
 **23-28**:\
 The file ends with the default test dependency and an export definition.
 
-### Custom Messages, Services and Actions
+## Custom Messages, Services and Actions
 
 We define custom messages, services and actions in our *rcdt_interfaces* package. This package has the following folder structure:
 
@@ -148,8 +145,10 @@ To generate custom messages successfully, we also need to specify the following 
   <member_of_group>rosidl_interface_packages</member_of_group>
 ```
 
-#### The Service Structure
+### The Service Structure
+
 Unless more data is required, the `Response` of our services contains the following data by default:
+
 ```text
 ---
 bool success
@@ -160,8 +159,10 @@ When our service only requires a single request datatype, and the default respon
 
 In case the service is more complex, the name of the service will represent its purpose. E.g., if the intention of the service is to add an object to a scene, the name of the service will be `AddObject.srv`.
 
-#### The Action Structure
+### The Action Structure
+
 Unless more data is required, the `Response` and `Feedback` of our actions contains the following data by default:
+
 ```text
 ---
 bool success

@@ -20,7 +20,7 @@ When we directly execute this file without passing a desired configuration, the 
 
 ### Modular Configuration
 
-Each platform class will be initialized by at least defining the specific **platform** type. For example, for a camera we support the types *realsense* or *Zed*, related to the different camera types we support. Furthermore we need to specify the **position** of the platform. Optionally, we can also specify an **orientation** as `[roll, pitch, yaw]` in degrees. Next, we can choose to pass a desired **namespace** for the platform, but when not given, a unique namespace will be defined automatically. Finally, we can pass another created platform as a **parent**, where our system will automatically make the required links to combine the two platforms. Some platforms have additional parameters the can be used during initialization. For example: we can define whether we like to use MoveIt or Navigation for an arm or a vehicle respectively.
+Each platform class will be initialized by at least defining the specific **platform** type. For example, for a camera we support the types *realsense* or *Zed*, related to the different camera types we support. Furthermore we can specify the **position** and the **orientation** as `[roll, pitch, yaw]` in degrees. Next, we can choose to pass a desired **namespace** for the platform. Finally, we can link two platforms as a **parent** and a **child** of each other. Some platforms have additional parameters the can be used during initialization. For example: we can define whether we like to use MoveIt or Navigation for an arm or a vehicle respectively.
 
 ### Nodes Started
 
