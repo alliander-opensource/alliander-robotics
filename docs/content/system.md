@@ -16,7 +16,7 @@ We created a modular launch system that can be used to launch any combination of
 uv run start.py <configuration_name>
 ```
 
-When we directly execute this file without passing a desired configuration, the system won't start. We can select a predefined configuration using the `configuration` argument.
+When we directly execute this file without passing a desired configuration, the system won't start. We can select a predefined configuration using the `configuration` argument. Running this command creates a `compose.yml` file with all the necessary configuration settings.
 
 ### Modular Configuration
 
@@ -24,7 +24,7 @@ Each platform class will be initialized by at least defining the specific **plat
 
 ### Nodes Started
 
- All the nodes required for the selected configuration are automatically started by the launch file. For each platform, the following nodes are started:
+ All the nodes required for the selected configuration are automatically started by the relevant `compose.yml` file. For each platform, the following nodes are started:
 
  **robot_state_publisher:**
 
@@ -52,7 +52,7 @@ With these nodes, a correct *tf tree* is created for the whole system. The other
 
 ### Visualization Libraries
 
-To visualize the state of our platforms, we use [RViz](https://github.com/ros2/rviz) and [Vizanti](https://github.com/MoffKalast/vizanti). When RViz is used, a window is automatically opens during launch. When using Vizanti, a server is started wherafter the interface can be reached on [http://127.0.0.1:5000](http://127.0.0.1:5000/):
+To visualize the state of our platforms, we use [RViz](https://github.com/ros2/rviz) and [Vizanti](https://github.com/MoffKalast/vizanti). When RViz is used, a window is automatically opened during launch. When using Vizanti, a server is started wherafter the interface can be reached on [http://127.0.0.1:5000](http://127.0.0.1:5000/):
 
 ![Vizanti](../img/system/vizanti.png)
 
@@ -72,7 +72,7 @@ To overcome this problem, we have created a register system, defined in `rcdt_la
 | `Register.on_exit(node)`     | When this node is finished (exited).         |
 | `Register.on_log(node, log)` | When this node logs the defined log message. |
 
-To still support the possibility to include launch files in other launch files, we also defined the `RegisteredLaunchDescription` class, which extends on the default `IncludeLaunchDescription` class. This new class adds a mechanism to give a launch file a group id. This group id is used in the register system to ensure that the launch order of nodes is still respected, even with included launch files. Besides from the four methods described above, a fourth method is available to use with registered launch descriptions: `Register.group(registered_launch_description)`.
+To still support the possibility to include launch files in other launch files, we also defined the `RegisteredLaunchDescription` class, which extends the default `IncludeLaunchDescription` class. This new class adds a mechanism to give a launch file a group id. This group id is used in the register system to ensure that the launch order of nodes is still respected, even with included launch files. Besides the four methods described above, a fourth method is available to use with registered launch descriptions: `Register.group(registered_launch_description)`.
 
 ## Overview
 

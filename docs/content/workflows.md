@@ -40,18 +40,22 @@ This will help you catch issues early and avoid failing commits in CI.
 
 The Documentation workflow automatically builds HTML pages form the files in the docs folder of this repository using Sphinx. Next, the HTML pages are automatically pushed to the Github Pages of this repository.
 
-## Docker and Workspace
+## Docker
 
-The Docker and Workspace workflow is the most extensive workflow of this repository. This workflow can also be tested locally using [Act](https://github.com/nektos/act) with the command:
+The Docker workflow is the most extensive workflow of this repository. This workflow can also be tested locally using [Act](https://github.com/nektos/act) with the command:
 
 ```bash
-act --rm -W .github/workflows/linting.yml
+act --rm -W .github/workflows/docker.yml
 ```
 
-The workflow contains the following steps:
+The workflow contains the following steps, both for the `amd64` and `arm64` architectures:
 
-- Check wether the workflow is executed on Github or locally.
-- Define the git branch in use.
-- Check wether files are changed in the *dockerfiles* directory compared to the main branch.
-  - If changes are made, a new docker image gets build and pushed to the Docker Hub.
-- The correct docker image gets pulled and used to build the ros-workspace and run the tests using Pytest.
+1. Check where there are changes compared to last commit for each of the `rcdt_<package>` folders.
+2. If `rcdt_core` is changed, a new `base` image is built.
+3. For all other packages with changes that are based on `rcdt/robotics:base`, new images are built.
+4. For all built images based on `rcdt/robotics:base`, a manifest is created. This combines the `amd64` and `arm64` images into one multi-arch image.
+5. If `rcdt_core` is changed, a new `cuda` image is built.
+6. For all other packages with changes that are based on `rcdt/robotics:cuda`, new images are built.
+7. For all built images based on `rcdt/robotics:cuda`, a manifest is created.
+8. The `rcdt_tests` container is run with the `--linting` flag, which runs the *Linting* as outlined above.
+9. The `rcdt_tests` container is run with the `--pytest-no-nvidia` flag, which runs integration and end-to-end tests. Any tests requiring a GPU are not run, as the currently available GitHub runners do not have a GPU.
