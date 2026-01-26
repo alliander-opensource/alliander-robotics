@@ -8,6 +8,16 @@ SPDX-License-Identifier: Apache-2.0
 
 This page describes the use of the different platforms we support.
 
+The general rule we apply for assigning IP addresses follows the following numbering order:
+
+> 1 - Router \
+2 - Low-level computer (Raspberry Pi) \
+3 - High-level computer \
+4 - Additional component (e.g. Franka Arm) \
+5 - LiDAR
+
+So for example, if we connect the Ouster LiDAR to the Lynx, we assign the Ouster with IP address `10.15.20.5`.
+
 ## Franka
 
 ![Franka](../img/franka/franka.png)
@@ -24,28 +34,11 @@ A Franka arm can be launched in simulation by creating a configuration with an *
 - By default, we connect the control box with the router of the Panther.
 - The web interface can be reached on the statically assigned address: `10.15.20.4`.
 
-In the web-interface, settings can be changed and the joints can be (un)locked. The mode can also be changed to the required FCI mode. It is also possible to unlock and activate the FCI entirely from the command line by dropping a `.env` file in your workspace root:
-
-```text
-# .env
-FRANKA_USERNAME=your-username
-FRANKA_PASSWORD=your-password
-```
-
-This functionality is based on [jk-ethz/franka\_lock\_unlock](https://github.com/jk-ethz/franka_lock_unlock).
-We created a fork with robot-specific enhancements: [https://github.com/alliander-opensource/franka\_lock\_unlock.git](https://github.com/alliander-opensource/franka_lock_unlock.git)
+In the web-interface, settings can be changed and the joints can be (un)locked. The mode can also be changed to the required FCI mode.
 
 ## Panther
 
 ![Panther](../img/panther/panther.png)
-
-Regarding all vehicles, the general rule we apply for assigning IP addresses follows the following numbering order:
-
-> 1 - Router \
-2 - Low-level computer (Raspberry Pi) \
-3 - High-level computer \
-4 - Additional component (e.g. Franka Arm) \
-5 - LiDAR
 
 ### Simulation Panther
 
@@ -110,7 +103,7 @@ A Lynx vehicle can be launched in simulation by creating a configuration with a 
 
 ### Hardware & Configuration Lynx
 
-This section is equivalent to the [Hardware Panther](#hardware-panther) and [Configuration Panther](#configuration-panther) sections, except for the namespace here being `lynx` and the _Lenovo ThinkStation P360_ will be replaced with a different computer.
+This section is equivalent to the [Hardware Panther](#hardware-panther) and [Configuration Panther](#configuration-panther) sections, except for the namespace here being `lynx` and the *Lenovo ThinkStation P360* will be replaced with a different computer.
 
 ## Realsense
 
@@ -152,7 +145,7 @@ When using the Ouster lidar, make sure that the IP-address of the host device (w
 
 Additionally, it is important to assign the correct UDP destination IP address for the Ouster LiDAR. This can both be done via the Ouster's configuration interface at `http://os-{serial_number}.local/`, or it can be done via the launch file of the Ouster (`ouster.launch.py` in the `rcdt_sensors` package).
 
-_Note:_ If the firewall is enabled in Ubuntu, communication with the LiDAR is most likely blocked. Unblock it by allowing the IP-address of the LiDAR:
+*Note:* If the firewall is enabled in Ubuntu, communication with the LiDAR is most likely blocked. Unblock it by allowing the IP-address of the LiDAR:
 
 ```bash
 sudo ufw allow to {IPv4_address}
@@ -164,9 +157,9 @@ sudo ufw allow from {IPv4_address}
 The [Ouster driver](https://github.com/ouster-lidar/ouster-ros/tree/ros2) runs as a [LifeCycle node](https://design.ros2.org/articles/node_lifecycle.html), meaning that once created, the node starts in an `Unconfigured` state. It needs to be `configured` and `activated` to start the driver.
 
 Find all of the connected Ouster's information at `http://os-{serial_number}.local/`, where the following parameters for the driver node can be found:
-- `sensor_hostname`: Dashboard > System Information > IPv4 _(Remove the prefix length)_
-- `udp_dest`: Dashboard > System Status > Web Client Address
 
+- `sensor_hostname`: Dashboard > System Information > IPv4 *(Remove the prefix length)*
+- `udp_dest`: Dashboard > System Status > Web Client Address
 
 ## Velodyne
 

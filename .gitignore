@@ -3,10 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 __pycache__/
-ros2_ws/build/
-ros2_ws/install/
-ros2_ws/log/
-ros2_ws/.cache/
 ignore/
 .config/
 .vscode/
@@ -22,11 +18,13 @@ ignore/
 build/
 clangd/
 
-.env
-!.devcontainer/.env
 .cache
 .venv
 
 # for LSP in neovim
 .clangd-build/
 **/compile_commands.json
+
+# generated compose files
+compose.yml
+compose_pytest.yml

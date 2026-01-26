@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+services:
+  rcdt_gps:
+    image: rcdt/robotics:gps
+    container_name: rcdt_gps
+    network_mode: host
+    privileged: true
+    mem_limit: 6gb
+    tty: true
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "/dev:/dev"
+    env_file:
+      - .env
+    command: ["/bin/bash", "-c", "ros2 launch rcdt_gps gps.launch.py"]

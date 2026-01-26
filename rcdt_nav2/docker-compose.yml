@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+services:
+  rcdt_nav2:
+    image: rcdt/robotics:nav2
+    container_name: rcdt_nav2
+    network_mode: host
+    privileged: true
+    mem_limit: 6gb
+    tty: true
+    env_file:
+      - .env
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "/dev:/dev"
+    command: ["/bin/bash", "-c", "ros2 launch rcdt_nav2 nav2.launch.py"]
+

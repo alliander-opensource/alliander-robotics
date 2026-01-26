@@ -1,0 +1,378 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: docker
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  detect-changes:
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix_ubuntu: ${{ steps.set-matrix.outputs.matrix_ubuntu }}
+      matrix_cuda: ${{ steps.set-matrix.outputs.matrix_cuda }}
+      expanded_matrix_ubuntu: ${{ steps.set-matrix.outputs.expanded_matrix_ubuntu }}
+      expanded_matrix_cuda: ${{ steps.set-matrix.outputs.expanded_matrix_cuda }}
+      has_core_changes: ${{ steps.set-matrix.outputs.has_core_changes }}
+      has_changes_ubuntu: ${{ steps.set-matrix.outputs.has_changes_ubuntu }}
+      has_changes_cuda: ${{ steps.set-matrix.outputs.has_changes_cuda }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changed subdirectories
+        id: set-matrix
+        run: |
+          CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+
+          CHANGED_DIRS=()
+          CORE_CHANGED=false
+          if [[ "$CHANGES" == *"rcdt_core/"* ]] ; then
+            CORE_CHANGED=true
+            echo "has_core_changes=true" >> $GITHUB_OUTPUT
+            echo "rcdt_core changed -- will rebuild all components"
+          fi
+
+          for d in *rcdt_* ; do
+            # If rcdt_core has changes, we want to build all images anew
+            if [[ "$CORE_CHANGED" == true ]] || [[ "$CHANGES" ==  *"${d}/"* ]] ; then 
+              CHANGED_DIRS+=("$d")
+            fi
+          done
+
+          echo "Changed directories: ${CHANGED_DIRS[*]}"
+
+          if [ ${#CHANGED_DIRS[@]} -eq 0 ]; then
+            echo "has_changes_ubuntu=false" >> $GITHUB_OUTPUT
+            echo "has_changes_cuda=false" >> $GITHUB_OUTPUT
+            echo "matrix_ubuntu={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "No components have changes."
+            exit 0
+          fi
+
+          CHANGED_JSON=$(printf '%s\n' "${CHANGED_DIRS[@]}" | jq -R . | jq -s -c '.')
+
+          parse_section() {
+            local section=$1
+            yq -o=json ".${section}" components.yml | jq -c --argjson changed "$CHANGED_JSON" '[
+              to_entries[] |
+                .key as $name |
+                if (.value | type) == "array" then
+                  .value[] | . + {"name": $name}
+                else
+                  .value + {"name": $name}
+                end |
+                {
+                  "name": .name,
+                  "base_image": .base_image,
+                  "tag": .tag,
+                  "dockerfile": .dockerfile
+                }
+            ] | map(select(.name as $n | $changed | index($n)))'
+          }
+
+          # TODO remove if-statement after zed/realsense-arm64 is supported
+          expand_matrix() {
+            local original_matrix=$1
+            echo "$original_matrix" | jq -c '[
+              .[] |
+              if .name == "rcdt_realsense" or .name == "rcdt_zed" then
+                . + {"arch": "amd64", "runner": "ubuntu-24.04"}
+              else
+                (. + {"arch": "amd64", "runner": "ubuntu-24.04"}),
+                (. + {"arch": "arm64", "runner": "ubuntu-24.04-arm"})
+              end
+            ]'
+          }
+
+          MATRIX_UBUNTU=$(parse_section "ubuntu_images")
+          MATRIX_CUDA=$(parse_section "cuda_images")
+
+          EXPANDED_MATRIX_UBUNTU=$(expand_matrix "$MATRIX_UBUNTU")
+          EXPANDED_MATRIX_CUDA=$(expand_matrix "$MATRIX_CUDA")
+
+          echo "Base change matrix: $EXPANDED_MATRIX_UBUNTU"
+          echo "CUDA change matrix: $EXPANDED_MATRIX_CUDA"
+
+          if [ "$MATRIX_UBUNTU" == "[]" ] || [ "$MATRIX_UBUNTU" == "null" ]; then
+            echo "has_changes_ubuntu=false" >> $GITHUB_OUTPUT
+            echo "matrix_ubuntu={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_ubuntu={\"include\":[]}" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes_ubuntu=true" >> $GITHUB_OUTPUT
+            echo "matrix_ubuntu={\"include\":$MATRIX_UBUNTU}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_ubuntu={\"include\":$EXPANDED_MATRIX_UBUNTU}" >> $GITHUB_OUTPUT
+          fi
+
+          if [ "$MATRIX_CUDA" == "[]" ] || [ "$MATRIX_CUDA" == "null" ]; then
+            echo "has_changes_cuda=false" >> $GITHUB_OUTPUT
+            echo "matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_cuda={\"include\":[]}" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes_cuda=true" >> $GITHUB_OUTPUT
+            echo "matrix_cuda={\"include\":$MATRIX_CUDA}" >> $GITHUB_OUTPUT
+            echo "expanded_matrix_cuda={\"include\":$EXPANDED_MATRIX_CUDA}" >> $GITHUB_OUTPUT
+          fi
+
+  build-ubuntu:
+    strategy:
+      matrix: 
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    if: false #needs.detect-changes.outputs.has_core_changes == 'true'
+    needs: detect-changes
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Set architecture tag
+        id: arch
+        run: |
+          if [[ "${{ matrix.runner }}" == *"-arm"* ]]; then
+            echo "tag=arm64" >> $GITHUB_OUTPUT
+          else
+            echo "tag=amd64" >> $GITHUB_OUTPUT
+          fi
+      - name: Build and push base-${{ steps.arch.outputs.tag }}
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: rcdt_core/rcdt_core.Dockerfile
+          tags: rcdt/robotics:base-${{ steps.arch.outputs.tag }}
+          build-args: |
+            BASE_IMAGE=rcdt/robotics:ubuntu-noble-${{ steps.arch.outputs.tag }}
+          cache-from: |
+            type=gha
+            type=registry,ref=rcdt/robotics:base-buildcache-${{ steps.arch.outputs.tag }}
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=rcdt/robotics:base-buildcache-${{ steps.arch.outputs.tag }}
+      - run: df -h /
+
+  build-ubuntu-images:
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_ubuntu) }}
+    runs-on: ${{ matrix.runner }}
+    needs: [detect-changes, build-ubuntu]
+    if: false #needs.detect-changes.outputs.has_changes_ubuntu == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Build and push ${{ matrix.tag }}-${{ matrix.arch }}
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: ${{ matrix.dockerfile }}
+          tags: rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}
+          build-args: |
+            BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
+          cache-from: |
+            type=gha
+            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }}
+            type=registry,ref=rcdt/robotics:base-buildcache-${{ matrix.arch }}
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
+      - run: df -h /
+
+  create-manifests-ubuntu:
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_ubuntu) }}
+    needs: [detect-changes, build-ubuntu-images]
+    if: false #needs.detect-changes.outputs.has_changes_ubuntu == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Create manifest for ${{ matrix.tag }}
+        run: |
+          # TODO remove this when realsense-arm64 is supported
+          if docker manifest inspect rcdt/robotics:${{ matrix.tag }}-arm64 > /dev/null 2>&1; then
+            docker buildx imagetools create \
+              -t rcdt/robotics:${{ matrix.tag }} \
+              rcdt/robotics:${{ matrix.tag }}-amd64 \
+              rcdt/robotics:${{ matrix.tag }}-arm64
+          else
+            docker buildx imagetools create \
+              -t rcdt/robotics:${{ matrix.tag }} \
+              rcdt/robotics:${{ matrix.tag }}-amd64
+          fi
+
+  build-cuda:
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    if: false #needs.detect-changes.outputs.has_core_changes == 'true'
+    needs: [detect-changes, build-ubuntu-images]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        uses: ./.github/actions/free-disk-space
+        with:
+          tool-cache: true
+      - name: Clear disk space
+        uses: ./.github/actions/clear-disk-space
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Set architecture tag
+        id: arch
+        run: |
+          if [[ "${{ matrix.runner }}" == *"-arm"* ]]; then
+            echo "tag=arm64" >> $GITHUB_OUTPUT
+          else
+            echo "tag=amd64" >> $GITHUB_OUTPUT
+          fi
+      - name: Build and push cuda-${{ steps.arch.outputs.tag }}
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: rcdt_core/rcdt_core.Dockerfile
+          tags: rcdt/robotics:cuda-${{ steps.arch.outputs.tag }}
+          build-args: |
+            BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ steps.arch.outputs.tag }}
+          cache-from: |
+            type=gha
+            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ steps.arch.outputs.tag }}
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ steps.arch.outputs.tag }},mode=max
+      - run: df -h /
+
+  build-cuda-images:
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_cuda) }}
+    runs-on: ${{ matrix.runner }}
+    needs: [detect-changes, build-cuda]
+    if: false #needs.detect-changes.outputs.has_changes_cuda == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        uses: ./.github/actions/free-disk-space
+        with:
+          tool-cache: true
+      - name: Clear disk space
+        uses: ./.github/actions/clear-disk-space
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Build and push ${{ matrix.tag }}-${{ matrix.arch }}
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: ${{ matrix.dockerfile }}
+          tags: rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}
+          build-args: |
+            BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
+          cache-from: |
+            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }}
+            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ matrix.arch }}
+          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
+      - run: df -h /
+
+  create-manifests-cuda:
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
+    needs: [detect-changes, build-cuda-images]
+    if: false #needs.detect-changes.outputs.has_changes_cuda == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Create manifest for ${{ matrix.tag }}
+        run: |
+          # TODO fix this once zed-arm64 is supported
+          if docker manifest inspect rcdt/robotics:${{ matrix.tag }}-arm64 > /dev/null 2>&1; then
+            docker buildx imagetools create \
+              -t rcdt/robotics:${{ matrix.tag }} \
+              rcdt/robotics:${{ matrix.tag }}-amd64 \
+              rcdt/robotics:${{ matrix.tag }}-arm64
+          else
+            docker buildx imagetools create \
+              -t rcdt/robotics:${{ matrix.tag }} \
+              rcdt/robotics:${{ matrix.tag }}-amd64
+          fi
+
+  linting:
+    runs-on: ubuntu-24.04
+    # needs: [build-ubuntu-images, build-cuda-images]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up python3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install pyyaml mashumaro
+      - name: Run linting in rcdt_tests container
+        run: python3 start.py --linting
+
+  test:
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    needs: linting
+    if: false
+    steps:
+      - name: Set up python3
+        uses: actions/setup-python@v5
+        with:
+          # need to specify version to circumvent externally-managed act python
+          # which won't let us install dependencies
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install pyyaml mashumaro
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Run tests in rcdt_tests container
+        run: xvfb-run -a python3 start.py --pytest-no-nvidia

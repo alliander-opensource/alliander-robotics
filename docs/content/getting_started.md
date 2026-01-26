@@ -28,79 +28,55 @@ If you only want to use the repository without contributing, you can clone via H
 git clone https://github.com/alliander-opensource/rcdt_robotics.git
 ```
 
-## Run the container
+## Python dependencies installed with uv
 
-To run a container from our Docker image, simply execute the run command in the root of the repository:
-
-```bash
-. run
-```
-
-This will pull an image from our [Docker Hub](https://hub.docker.com/r/rcdt/robotics). If this is the first time, it can take quite some time to pull the image. When pulling is finished, the image is started which can be seen by the user-name changing to white in the terminal. You can now execute commands inside the docker container.
-
-After starting, the terminal is located in the home directory: `/home/rcdt`. The repository you you cloned is [*mounted*](https://docs.docker.com/engine/storage/bind-mounts/) and can be found at `/home/rcdt/rcdt_robotics`. Got to this directory by executing:
+This project uses [uv](https://docs.astral.sh/uv/) to manage Python packages, and [can be installed](https://docs.astral.sh/uv/getting-started/installation/) locally on your computer using a single command:
 
 ```bash
-cd rcdt_robotics
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-:::{note}
-The image that is pulled is automatically determined based on your current local branch. If the main branch is selected, it will use `rcdt/robotics:latest`. If you are on a branch that contains changes in the Docker files and a pull request is made, a corresponding Docker Image is automatically build by Github and pushed to Docker Hub. The run script will now use this new image when available.
-:::
-
-## Install Python dependencies with uv
-
-This project uses [uv](https://docs.astral.sh/uv/) to manage Python packages. To install everything needed for the ROS packages, run the following command from the `rcdt_robotics` repository root:
+Next, you can sync our project dependencies in a virtual environment using:
 
 ```bash
 uv sync
 ```
 
-This will install all the Python dependencies in the `.venv` directory in the root of the repository. The `.venv` directory is automatically created if it does not exist yet. You can now use these dependencies in your ROS packages. To learn more about all the available features of uv, please refer to the [uv feature documentation](https://docs.astral.sh/uv/getting-started/features/).
+This will install all the Python dependencies in the `.venv` directory in the root of the repository. The `.venv` directory is automatically created if it does not exist yet. To learn more about all the available features of uv, please refer to the [uv feature documentation](https://docs.astral.sh/uv/getting-started/features/).
 
-## Build ROS packages
+## Get the Docker images
 
-The ROS packages are located in the `ros2_ws/src` directory inside the repository. It is recommend to build the ROS package inside the `ros2_ws` directory. First go to this directory:
-
-```bash
-cd ros2_ws
-```
-
-To build the ROS packages, we use colcon. We recommend to build with the `--symlink-install` flag. This will make symlinks between the build files and source files. Changes to Python, YAML or Launch files are now automatically applied without the need of rebuilding. Run the command to build the ROS packages:
+This repository support different robot and sensor platforms, which are described in the [Platforms](platforms) section. We provide docker images for the different platforms and for dependencies like Gazebo, MoveIt and Nav2. One can build these containers using:
 
 ```bash
-uv run colcon build --symlink-install
+uv run image_manager.py --build
 ```
 
-After building, you need to source the files you build:
+Or, when you haven't made changes yet to the code, you can also pull the existing docker images from our [Docker Hub](https://hub.docker.com/r/rcdt/robotics) by using the `--pull` flag. If this is the first time, it can take quite some time to pull the image.
 
 ```bash
-source /home/rcdt/rcdt_robotics/ros2_ws/install/setup.bash
+uv run image_manager.py --pull
 ```
 
-:::{note}
-With the `--symlink-install` flag, only changes to files that did exist while building are automatically applied. If you make changes to the file structure (rename or create files), you still need to build again.
-:::
+In both cases it is possible to execute the task for a selected list of packages by adding the `--components` flag to the command.
 
-:::{note}
-To simplify the process of building, you can add an alias to your personal bashrc file in the root of the repository (`.personal.bashrc`). You could for example add:
+## Run a configuration
+
+This repository support the use of many combinations of robots and sensors (called configurations), which are defined in `predefined_configurations.py` where the name of each configuration being noted above each function in `@register_configuration(...)`. To run a configuration, simply execute the following command in the root of the repository:
 
 ```bash
-alias cb="cd /home/rcdt/rcdt_robotics/ros2_ws; uv run colcon build --symlink-install; source install/setup.bash"
+uv run start.py [-h] [--pytest ...] [--pytest-no-nvidia ...] [--linting]
+                [--documentation] [-w] [-v] [-d] [-u]
+                [configuration]
 ```
 
-From now on, when you open a new terminal, this alias is available and you can simply build and source using the `cb` command.
-:::
-
-## Launch
-
-You can now launch our system using:
+Note that the system won't start if no configuration is provided. Instead of launching a configuration, one can also run pytest, linting or the creation of our documentation using the associated flags. As an example, the configuration of just the Panther (without other platforms) can be launched as:
 
 ```bash
-ros2 launch rcdt_launch bringup.launch.py
+uv run start.py panther
 ```
 
-Note that the system won't start if no configuration is provided. The possible launch arguments can be acquired by adding the `-s` flag. More information about launching the system and selecting a configuration can be found on the [](system) page.
+This will first create a docker compose file (`compose.yml`) in the root of the repository. This compose file contains the different docker images required to start the selected configuration, whereafter the whole compose file can be started to run all the images as docker containers.
 
 ## Firewall
 
@@ -117,7 +93,7 @@ sudo ufw allow to 224.0.0.0/4
 sudo ufw allow from 224.0.0.0/4
 ```
 
-When connected with the Panther network, communication with its ip-addresses in the 10.15.20.0/24 range should be allowed:
+When connected with the Lynx or Panther network, communication with its ip-addresses in the 10.15.20.0/24 range should be allowed:
 
 ```bash
 sudo ufw allow to 10.15.20.0/24

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 PROJECT_NAME = "RCDT Robotics"
 
-INPUT = ros2_ws/src
+EXCLUDE = clangd
 RECURSIVE = YES
 QUIET = YES
 
@@ -19,9 +19,8 @@ EXTRACT_LOCAL_CLASSES = YES
 
 # If no output is generated, Doxygen seems to not fully parse documentation.
 # This can lead to erroneous warnings that are not present if any type of output is generated. 
+GENERATE_HTML = YES
 GENERATE_LATEX = NO
-GENERATE_HTML = NO
-GENERATE_RTF = YES
 
 FILE_PATTERNS = *.cpp \
 		*.h \

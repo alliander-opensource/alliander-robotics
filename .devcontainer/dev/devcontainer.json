@@ -1,0 +1,36 @@
+//SPDX-FileCopyrightText: Alliander N. V.
+//
+//SPDX-License-Identifier: Apache-2.0
+{
+  "name": "dev",
+  "remoteUser": "ubuntu",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "../..",
+    "args": {
+      "REMOTE_USER": "ubuntu"
+    }
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/rcdt_robotics,type=bind",
+  "workspaceFolder": "/rcdt_robotics",
+  "overrideCommand": true,
+  "runArgs": [
+    "--rm"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "charliermarsh.ruff",
+        "astral-sh.ty",
+        "kevinglasson.cornflakes-linter",
+        "tamasfe.even-better-toml",
+        "ms-azuretools.vscode-docker",
+        "twxs.cmake",
+        "kylinideteam.cmake-intellisence",
+        "redhat.vscode-yaml"
+      ]
+    }
+  }
+}

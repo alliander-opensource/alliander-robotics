@@ -16,16 +16,10 @@ The *README.md* file is the "home" page of our documentation page and our GitHub
 
 ## Adding Documentation
 
-Documentation can be added by creating a new *.md* file in the content directory. After creating the file, it also needs to be added to *index.rst*. To check your changes locally, you can use the *sphinx-autobuild* tool. First, make sure to run our Docker image and go to the *docs* folder:
+Documentation can be added by creating a new *.md* file in the content directory. After creating the file, it also needs to be added to *index.rst*. To check your changes locally, you can use the *sphinx-autobuild* tool. Run the following command to start automatic building using Sphinx:
 
 ```bash
-cd /home/rcdt/rcdt_robotics/docs
+uv run start.py --documentation
 ```
 
-Next, run the following command to start automatic building using Sphinx:
-
-```bash
-sphinx-autobuild . build/
-```
-
-You can now view a live version, by default at [http://127.0.0.1:8000](http://127.0.0.1:8000). Every time you change a file and save, the tool builds the new HTML files and refreshes the page.
+You can now view a live version, of which the URL can be found in the terminal. Every time you change a file and save, the tool builds the new HTML files and refreshes the page.

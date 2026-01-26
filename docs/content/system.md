@@ -13,18 +13,18 @@ This page gives an overview of the structure and mechanisms we use in our system
 We created a modular launch system that can be used to launch any combination of the 'platforms' we support. We see both sensors and robots as platforms and divide them in the categories *arm*, *vehicle*, *camera*, *lidar* and *gps*. Any desired combination of platforms can be launched using:
 
 ```bash
-ros2 launch rcdt_launch robots.launch
+uv run start.py <configuration_name>
 ```
 
-When we directly launch this file without passing a desired configuration, the system won't start. We can select a predefined configuration using the `configuration` launch argument. Another option is to include the above launch file in a new launch file, where we first create a configuration using the different platform classes, which are defined in `rcdt_launch/robot.py`. The launch file works both when using simulation or real platforms, using the `simulation` launch argument
+When we directly execute this file without passing a desired configuration, the system won't start. We can select a predefined configuration using the `configuration` argument. Running this command creates a `compose.yml` file with all the necessary configuration settings.
 
 ### Modular Configuration
 
-Each platform class will be initialized by at least defining the specific **platform** type. For example, for a camera we support the types *realsense* or *Zed*, related to the different camera types we support. Furthermore we need to specify the **position** of the platform. Optionally, we can also specify an **orientation** as `[roll, pitch, yaw]` in degrees. Next, we can choose to pass a desired **namespace** for the platform, but when not given, a unique namespace will be defined automatically. Finally, we can pass another created platform as a **parent**, where our system will automatically make the required links to combine the two platforms. Some platforms have additional parameters the can be used during initialization. For example: we can define whether we like to use MoveIt or Navigation for an arm or a vehicle respectively.
+Each platform class will be initialized by at least defining the specific **platform** type. For example, for a camera we support the types *realsense* or *Zed*, related to the different camera types we support. Furthermore we can specify the **position** and the **orientation** as `[roll, pitch, yaw]` in degrees. Next, we can choose to pass a desired **namespace** for the platform. Finally, we can link two platforms as a **parent** and a **child** of each other. Some platforms have additional parameters the can be used during initialization. For example: we can define whether we like to use MoveIt or Navigation for an arm or a vehicle respectively.
 
 ### Nodes Started
 
- All the nodes required for the selected configuration are automatically started by the launch file. For each platform, the following nodes are started:
+ All the nodes required for the selected configuration are automatically started by the relevant `compose.yml` file. For each platform, the following nodes are started:
 
  **robot_state_publisher:**
 
@@ -52,7 +52,7 @@ With these nodes, a correct *tf tree* is created for the whole system. The other
 
 ### Visualization Libraries
 
-To visualize the state of our platforms, we use [RViz](https://github.com/ros2/rviz) and [Vizanti](https://github.com/MoffKalast/vizanti). When RViz is used, a window is automatically opens during launch. When using Vizanti, a server is started wherafter the interface can be reached on [http://127.0.0.1:5000](http://127.0.0.1:5000/):
+To visualize the state of our platforms, we use [RViz](https://github.com/ros2/rviz) and [Vizanti](https://github.com/MoffKalast/vizanti). When RViz is used, a window is automatically opened during launch. When using Vizanti, a server is started wherafter the interface can be reached on [http://127.0.0.1:5000](http://127.0.0.1:5000/):
 
 ![Vizanti](../img/system/vizanti.png)
 
@@ -72,7 +72,7 @@ To overcome this problem, we have created a register system, defined in `rcdt_la
 | `Register.on_exit(node)`     | When this node is finished (exited).         |
 | `Register.on_log(node, log)` | When this node logs the defined log message. |
 
-To still support the possibility to include launch files in other launch files, we also defined the `RegisteredLaunchDescription` class, which extends on the default `IncludeLaunchDescription` class. This new class adds a mechanism to give a launch file a group id. This group id is used in the register system to ensure that the launch order of nodes is still respected, even with included launch files. Besides from the four methods described above, a fourth method is available to use with registered launch descriptions: `Register.group(registered_launch_description)`.
+To still support the possibility to include launch files in other launch files, we also defined the `RegisteredLaunchDescription` class, which extends the default `IncludeLaunchDescription` class. This new class adds a mechanism to give a launch file a group id. This group id is used in the register system to ensure that the launch order of nodes is still respected, even with included launch files. Besides the four methods described above, a fourth method is available to use with registered launch descriptions: `Register.group(registered_launch_description)`.
 
 ## Overview
 
