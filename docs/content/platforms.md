@@ -40,14 +40,6 @@ In the web-interface, settings can be changed and the joints can be (un)locked. 
 
 ![Panther](../img/panther/panther.png)
 
-Regarding all vehicles, the general rule we apply for assigning IP addresses follows the following numbering order:
-
-> 1 - Router \
-2 - Low-level computer (Raspberry Pi) \
-3 - High-level computer \
-4 - Additional component (e.g. Franka Arm) \
-5 - LiDAR
-
 ### Simulation Panther
 
 A Panther vehicle can be launched in simulation by creating a configuration with a `Vehicle` of type `Panther`. Note that the E-Stop is triggered by default and needs to be released before driving is possible. This can be done by a service call:
