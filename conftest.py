@@ -191,7 +191,7 @@ def test_node() -> Iterator[Node]:
 
 @pytest.fixture(scope="module")
 def timeout(pytestconfig: Config) -> int:
-    """Fixture to get the timeout value from pytest config and return half of it.
+    """Fixture to get the timeout value from pytest config return it.
 
     Args:
         pytestconfig (Config): The pytest configuration object.

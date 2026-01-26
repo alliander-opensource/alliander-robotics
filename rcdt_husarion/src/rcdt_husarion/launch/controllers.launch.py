@@ -5,7 +5,10 @@
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
+<<<<<<<< HEAD:rcdt_husarion/src/rcdt_husarion/launch/controllers.launch.py
 from rcdt_utilities.config_objects import Vehicle
+========
+>>>>>>>> main:ros2_ws/src/rcdt_husarion/launch/panther_controllers.launch.py
 from rcdt_utilities.launch_argument import LaunchArgument
 from rcdt_utilities.register import Register
 
@@ -30,6 +33,7 @@ def launch_setup(context: LaunchContext) -> list:
         executable="spawner",
         arguments=[
             "joint_state_broadcaster",
+<<<<<<<< HEAD:rcdt_husarion/src/rcdt_husarion/launch/controllers.launch.py
             "--switch-timeout",
             str(TIMEOUT),
             "--controller-ros-args",
@@ -37,6 +41,12 @@ def launch_setup(context: LaunchContext) -> list:
         ],
         name="joint_state_broadcaster",
         namespace=vehicle_config.namespace,
+========
+            "--controller-ros-args",
+            "--remap joint_state_broadcaster/transition_event:=joint_state_broadcaster/_transition_event",
+        ],
+        namespace=namespace,
+>>>>>>>> main:ros2_ws/src/rcdt_husarion/launch/panther_controllers.launch.py
     )
 
     imu_broadcaster_spawner = Node(
@@ -44,19 +54,30 @@ def launch_setup(context: LaunchContext) -> list:
         executable="spawner",
         arguments=[
             "imu_broadcaster",
+<<<<<<<< HEAD:rcdt_husarion/src/rcdt_husarion/launch/controllers.launch.py
             "--switch-timeout",
             str(TIMEOUT),
             "--controller-ros-args",
             f"--ros-args -p sensor_name:={vehicle_config.namespace}/imu",
             "--controller-ros-args",
             f"--ros-args -p frame_id:={vehicle_config.namespace}/imu_link",
+========
+            "--controller-ros-args",
+            f"--ros-args -p sensor_name:={namespace}/imu",
+            "--controller-ros-args",
+            f"--ros-args -p frame_id:={namespace}/imu_link",
+>>>>>>>> main:ros2_ws/src/rcdt_husarion/launch/panther_controllers.launch.py
             "--controller-ros-args",
             "--remap imu_broadcaster/imu:=imu/data",
             "--controller-ros-args",
             "--remap imu_broadcaster/transition_event:=imu_broadcaster/_transition_event",
         ],
+<<<<<<<< HEAD:rcdt_husarion/src/rcdt_husarion/launch/controllers.launch.py
         name="imu_broadcaster",
         namespace=vehicle_config.namespace,
+========
+        namespace=namespace,
+>>>>>>>> main:ros2_ws/src/rcdt_husarion/launch/panther_controllers.launch.py
     )
 
     drive_controller_spawner = Node(

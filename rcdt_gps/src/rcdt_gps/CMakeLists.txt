@@ -8,6 +8,28 @@ project(rcdt_gps)
 # CMake dependencies:
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(franka_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
+find_package(rcdt_interfaces REQUIRED)
+
+# C++ executables:
+include_directories(include)
+add_executable(fr3_gripper_simulation src/fr3_gripper_simulation.cpp)
+ament_target_dependencies(fr3_gripper_simulation
+  rclcpp
+  rclcpp_action
+  franka_msgs
+  control_msgs
+)
+add_executable(gripper src/gripper.cpp)
+ament_target_dependencies(gripper
+  rclcpp
+  rclcpp_action
+  franka_msgs
+  rcdt_interfaces
+)
 
 # Shared folders:
 install(
