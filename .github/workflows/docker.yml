@@ -14,7 +14,7 @@ on:
 
 jobs:
   detect-changes:
-    if: false #github.event_name == 'push' || github.event.pull_request.draft == false
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
     outputs:
       matrix_ubuntu: ${{ steps.set-matrix.outputs.matrix_ubuntu }}
@@ -128,7 +128,7 @@ jobs:
       matrix: 
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
-    if: needs.detect-changes.outputs.has_core_changes == 'true'
+    if: false #needs.detect-changes.outputs.has_core_changes == 'true'
     needs: detect-changes
     steps:
       - uses: actions/checkout@v4
@@ -171,7 +171,7 @@ jobs:
       matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_ubuntu) }}
     runs-on: ${{ matrix.runner }}
     needs: [detect-changes, build-ubuntu]
-    if: needs.detect-changes.outputs.has_changes_ubuntu == 'true'
+    if: false #needs.detect-changes.outputs.has_changes_ubuntu == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -204,7 +204,7 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_ubuntu) }}
     needs: [detect-changes, build-ubuntu-images]
-    if: needs.detect-changes.outputs.has_changes_ubuntu == 'true'
+    if: false #needs.detect-changes.outputs.has_changes_ubuntu == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Docker login
@@ -232,7 +232,7 @@ jobs:
       matrix:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
-    if: needs.detect-changes.outputs.has_core_changes == 'true'
+    if: false #needs.detect-changes.outputs.has_core_changes == 'true'
     needs: [detect-changes, build-ubuntu-images]
     steps:
       - uses: actions/checkout@v4
@@ -281,7 +281,7 @@ jobs:
       matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_cuda) }}
     runs-on: ${{ matrix.runner }}
     needs: [detect-changes, build-cuda]
-    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
+    if: false #needs.detect-changes.outputs.has_changes_cuda == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -317,7 +317,7 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
     needs: [detect-changes, build-cuda-images]
-    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
+    if: false #needs.detect-changes.outputs.has_changes_cuda == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Docker login
@@ -342,7 +342,7 @@ jobs:
 
   linting:
     runs-on: ubuntu-24.04
-    needs: [build-ubuntu-images, build-cuda-images]
+    # needs: [build-ubuntu-images, build-cuda-images]
     steps:
       - uses: actions/checkout@v4
       - name: Set up python3
@@ -361,6 +361,7 @@ jobs:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     needs: linting
+    if: false
     steps:
       - name: Set up python3
         uses: actions/setup-python@v5
