@@ -10,11 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 <package format="3">
   <name>rcdt_husarion</name>
   <version>0.1.0</version>
-<<<<<<<< HEAD:rcdt_husarion/src/rcdt_husarion/package.xml
   <description>Contains the RCDT ros2 software for the Husarion bases.</description>
-========
-  <description>Contains the RCDT ros2 software for the husarion robot bases.</description>
->>>>>>>> main:ros2_ws/src/rcdt_husarion/package.xml
   <maintainer email="researchcenter@alliander.com">RCDT</maintainer>
   <license>Apache 2.0</license>
 

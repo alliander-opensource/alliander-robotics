@@ -32,7 +32,7 @@ https://code.visualstudio.com/docs/editing/codebasics#_compare-files
           </xacro:if>
 
           <xacro:if value="${gazebo}">
-            <plugin>franka_gz_ros2_control/GZSystem</plugin>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
           </xacro:if>
 
           <xacro:if value="${use_fake_hardware == 0 and gazebo == 0}">
