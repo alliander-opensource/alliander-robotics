@@ -262,3 +262,18 @@ class PredefinedConfigurations:
         vehicle = Vehicle("panther", (0, -0.5, 0.2))
         arm = Arm("franka", (0, 0.5, 0))
         self.plat_conf.platforms = [vehicle, arm]
+
+    # Demo configurations:
+    @register_configuration("demo_panther_franka")
+    def config_demo_panther_franka(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        arm = Arm(
+            "franka",
+            (1, 0, 0.14),
+            gripper=True,
+            moveit=True,
+            controller="demo_controller",
+        )
+
+        link(vehicle, arm)
+        self.plat_conf.platforms = [vehicle, arm]

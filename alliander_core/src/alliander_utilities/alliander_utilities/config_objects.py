@@ -244,6 +244,7 @@ class Arm(Platform):
         gripper (bool): Whether the arm has a gripper attached.
         moveit (bool) : Whether to enable MoveIt motion planning.
         ip_address (str): IP address of the arm controller.
+        controller (Literal["fr3_arm_controller", "demo_controller"]): Arm controller to run.
         moveit_config (MoveitConfig): MoveIt configuration settings.
     """
 
@@ -251,6 +252,10 @@ class Arm(Platform):
     gripper: bool = False
     moveit: bool = False
     ip_address: str = "10.15.20.4"
+    controller: Literal[
+        "fr3_arm_controller",
+        "demo_controller",
+    ] = "fr3_arm_controller"
 
     moveit_config: MoveitConfig = field(default_factory=MoveitConfig)
 

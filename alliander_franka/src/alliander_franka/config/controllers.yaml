@@ -14,6 +14,9 @@
       fr3_arm_controller:
         type: joint_trajectory_controller/JointTrajectoryController
 
+      demo_controller:
+        type: franka_example_controllers/JointImpedanceExampleController
+
   fr3_arm_controller:
     ros__parameters:
       type: joint_trajectory_controller/JointTrajectoryController
@@ -61,3 +64,23 @@
         fr3_joint7:
           goal: 0.01
           trajectory: 0.1
+
+  demo_controller:
+    ros__parameters:
+      arm_id: "fr3"
+      k_gains:
+        - 24.0
+        - 24.0
+        - 24.0
+        - 24.0
+        - 10.0
+        - 6.0
+        - 2.0
+      d_gains:
+        - 2.0
+        - 2.0
+        - 2.0
+        - 1.0
+        - 1.0
+        - 1.0
+        - 0.5
