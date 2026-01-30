@@ -322,6 +322,23 @@ class GPS(Platform):
     ip_address: str = ""
 
 
+@dataclass
+class Joystick(Platform):
+    """Configuration for a Joystick platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+        arm_cmd_topic (str): Topic for publishing the arm's twist message.
+        arm_frame_id (str): Frame ID for the arm topic.
+        vehicle_cmd_topic (str): Topic for publishing the vehicle's twist message.
+    """
+
+    platform_type: str = "Joystick"
+    arm_cmd_topic: str = "arm/cmd_vel"
+    arm_frame_id: str = "base_link"
+    vehicle_cmd_topic: str = "vehicle/cmd_vel"
+
+
 # Configurations containing lists of platforms:
 @dataclass
 class PlatformList(Config):
@@ -333,7 +350,7 @@ class PlatformList(Config):
 
     platforms: List[
         Annotated[
-            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS],
+            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS, Joystick],
             Discriminator(field="platform_type", include_supertypes=True),
         ]
     ] = field(default_factory=list)

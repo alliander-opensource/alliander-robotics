@@ -12,6 +12,7 @@ from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
     GPS,
     Arm,
     Camera,
+    Joystick,
     Lidar,
     Platform,
     PlatformList,
@@ -262,3 +263,15 @@ class PredefinedConfigurations:
         vehicle = Vehicle("panther", (0, -0.5, 0.2))
         arm = Arm("franka", (0, 0.5, 0))
         self.plat_conf.platforms = [vehicle, arm]
+
+    # Multiple non-connected platforms:
+    @register_configuration("joystick")
+    def config_joystick(self) -> None:  # noqa: D102
+        joystick = Joystick(
+            "joystick",
+            arm_cmd_topic="/franka/servo_node/delta_twist_cmds",
+            arm_frame_id="franka/fr3_hand",
+            simulation=False,
+            vehicle_cmd_topic="/panther/cmd_vel"
+        )
+        self.plat_conf.platforms = [joystick]

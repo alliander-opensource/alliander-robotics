@@ -23,6 +23,10 @@ ubuntu_images:
     base_image: rcdt/robotics:base
     tag: husarion
     dockerfile: rcdt_husarion/rcdt_husarion.Dockerfile
+  rcdt_joystick:
+    base_image: rcdt/robotics:base
+    tag: joystick
+    dockerfile: rcdt_joystick/rcdt_joystick.Dockerfile
   rcdt_moveit:
     base_image: rcdt/robotics:base
     tag: moveit
