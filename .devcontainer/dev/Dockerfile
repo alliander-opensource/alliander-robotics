@@ -47,6 +47,7 @@ RUN echo "source /.dev_bashrc" >> /home/$REMOTE_USER/.bashrc
 
 # Copy repo packages:
 COPY rcdt_core/src/ /rcdt/ros/src
+COPY rcdt_joystick/src/ /rcdt/ros/src
 COPY rcdt_moveit/src/ /rcdt/ros/src
 
 # Build repo packages:
