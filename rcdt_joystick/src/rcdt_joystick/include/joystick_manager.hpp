@@ -6,18 +6,28 @@
 #define JOYSTICK_MANAGER_HPP_
 
 #include <cstdint>
+#include <rclcpp/client.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_options.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/client.hpp>
+#include <rclcpp_action/rclcpp_action.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <sensor_msgs/msg/joy.hpp>
+#include <std_srvs/srv/trigger.hpp>
+
+#include <rcdt_interfaces/action/trigger_action.hpp>
 
 using std::placeholders::_1;
-using std::placeholders::_2;
+// using std::placeholders::_2;
+typedef rcdt_interfaces::action::TriggerAction TriggerAction;
 
-struct Button {
-  int key_id;
-  int key_value;
+enum Button {
+  A  = 0,  // Switch between platform modes
+  X  = 2,  // Trigger E-stop
+  Y  = 3,  // Reset E-stop
+  LT = 9,  // Open gripper
+  RT = 10  // Close gripper
 };
 
 /// Class to interact with the joystick.
@@ -48,6 +58,11 @@ class JoystickManager {
   void handle_button_input(const std::vector<int32_t>& buttons);
 
   /**
+   * @brief Check whether a button has been pressed or not.
+   */
+  bool check_btn_pressed(size_t idx, const std::vector<int32_t>& curr, const std::vector<int32_t>& prev);
+
+  /**
    * @brief publish TwistStamped message based on linear and angular value. 
    */
   void handle_driving(const float& linear, const float& angular);
@@ -61,6 +76,10 @@ class JoystickManager {
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr sub_joy;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pub_arm_vel;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pub_vehicle_vel;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_trigger;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_reset;
+  rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_open;
+  rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_close;
 
   std::string arm_topic;
   std::string arm_frame_id;

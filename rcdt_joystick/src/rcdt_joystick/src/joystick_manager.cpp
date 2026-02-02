@@ -9,7 +9,10 @@ JoystickManager::JoystickManager(rclcpp::Node::SharedPtr node)
   arm_topic = node->get_parameter("arm_cmd_topic").as_string();
   arm_frame_id = node->get_parameter("arm_frame_id").as_string();
   vehicle_topic = node->get_parameter("vehicle_cmd_topic").as_string();
+
   initialize_joystick_manager();
+
+  RCLCPP_INFO(node->get_logger(), "Joystick Manager initialized.");
 };
 
 JoystickManager::~JoystickManager() {
@@ -38,6 +41,15 @@ void JoystickManager::initialize_joystick_manager(){
     10
   );
 
+  // Service clients
+  srv_client_estop_trigger = node->create_client<std_srvs::srv::Trigger>("/panther/hardware/e_stop_trigger");
+  srv_client_estop_reset = node->create_client<std_srvs::srv::Trigger>("/panther/hardware/e_stop_reset");
+
+  // Action clients
+  action_client_gripper_open = rclcpp_action::create_client<TriggerAction>(node, "/franka/gripper/open");
+  action_client_gripper_close = rclcpp_action::create_client<TriggerAction>(node, "/franka/gripper/close");
+
+  // Log initial mode
   switch(current_mode){
     case arm_mode:
       RCLCPP_INFO(node->get_logger(), "Initial mode: ARM mode.");
@@ -51,8 +63,6 @@ void JoystickManager::initialize_joystick_manager(){
   }
 
   prev_joy_input = std::make_shared<sensor_msgs::msg::Joy>();
-
-  RCLCPP_INFO(node->get_logger(), "Joystick Manager initialized.");
 }
 
 void JoystickManager::joy_cb(const sensor_msgs::msg::Joy::SharedPtr msg) {
@@ -81,12 +91,8 @@ void JoystickManager::joy_cb(const sensor_msgs::msg::Joy::SharedPtr msg) {
 }
 
 void JoystickManager::handle_button_input(const std::vector<int32_t>& buttons) {
-  int32_t btn_change_platform = buttons[0];  // A
-  int32_t btn_estop_trigger = buttons[2];    // X
-  int32_t btn_estop_reset = buttons[3];      // Y
-
-  // Don't do anything when the button's value hasn't changed.
-  if (prev_joy_input->buttons[0] != btn_change_platform){
+  // Switch between platform modes
+  if (check_btn_pressed(Button::A, buttons, prev_joy_input->buttons)){
     switch(current_mode){
       case arm_mode:
         RCLCPP_INFO(node->get_logger(), "Switch to VEHICLE mode.");
@@ -103,6 +109,30 @@ void JoystickManager::handle_button_input(const std::vector<int32_t>& buttons) {
         break;
     }
   }
+
+  // Trigger E-stop
+  if (check_btn_pressed(Button::X, buttons, prev_joy_input->buttons)){
+    RCLCPP_INFO(node->get_logger(), "Trigger E-stop");
+  }
+
+  // Reset E-stop
+  if (check_btn_pressed(Button::Y, buttons, prev_joy_input->buttons)){
+    RCLCPP_INFO(node->get_logger(), "Reset E-stop");
+  }
+
+  // Open gripper
+  if (check_btn_pressed(Button::LT, buttons, prev_joy_input->buttons)){
+    RCLCPP_INFO(node->get_logger(), "Open gripper");
+  }
+
+  // Close gripper
+  if (check_btn_pressed(Button::RT, buttons, prev_joy_input->buttons)){
+    RCLCPP_INFO(node->get_logger(), "Close gripper");
+  }
+}
+
+bool JoystickManager::check_btn_pressed(size_t idx, const std::vector<int32_t>& curr, const std::vector<int32_t>& prev){
+  return curr[idx] != prev[idx];
 }
 
 void JoystickManager::handle_driving(const float& linear, const float& angular) {

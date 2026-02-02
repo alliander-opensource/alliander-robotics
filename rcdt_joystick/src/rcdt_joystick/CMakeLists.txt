@@ -10,8 +10,11 @@ find_package(ament_cmake REQUIRED)
 
 # Other dependencies:
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(rcdt_interfaces REQUIRED)
 
 # C++ executables:
 include_directories(include)
@@ -24,8 +27,11 @@ target_include_directories(joystick_manager PUBLIC
   $<INSTALL_INTERFACE:include>)
 ament_target_dependencies(joystick_manager
   rclcpp
+  rclcpp_action
   geometry_msgs
   sensor_msgs
+  std_srvs
+  rcdt_interfaces
 )
 
 install(
