@@ -1,17 +1,22 @@
 #include <sys/resource.h>
+#include <rclcpp/executors/multi_threaded_executor.hpp>
+#include <rclcpp/node_options.hpp>
 
-#include "rcdt_joystick/joystick_manager.hpp"
+#include "joystick_manager.hpp"
 
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-
-  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("rcdt_joystick");
-  
+  rclcpp::NodeOptions node_options;
+  node_options.automatically_declare_parameters_from_overrides(true);
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("rcdt_joystick", node_options);
   JoystickManager joystick_manager(node);
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(node);
+  executor.spin();
 
-  rclcpp::spin(node);
+  // rclcpp::spin(node);
 
   rclcpp::shutdown();
   return 0;

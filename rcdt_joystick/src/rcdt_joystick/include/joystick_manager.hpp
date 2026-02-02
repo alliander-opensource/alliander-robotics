@@ -38,22 +38,22 @@ class JoystickManager {
   void initialize_joystick_manager();
 
   /**
-   * @brief callback method that handles the data received from the joystick
+   * @brief callback method that handles the data received from the joystick.
    */
   void joy_cb(const sensor_msgs::msg::Joy::SharedPtr msg);
 
   /**
-   * @brief ...
+   * @brief based on the button input, activate corresponding behaviour.
    */
   void handle_button_input(const std::vector<int32_t>& buttons);
 
   /**
-   * @brief ...
+   * @brief publish TwistStamped message based on linear and angular value. 
    */
   void handle_driving(const float& linear, const float& angular);
 
   /**
-   * @brief ...
+   * @brief publish TwistStamped message based on [x, y, z] translation and a rotation value.
    */
   void handle_arm_movement(const float& x, const float& y, const float& z, const float& rotation);
 
@@ -62,13 +62,9 @@ class JoystickManager {
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pub_arm_vel;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pub_vehicle_vel;
 
-  // std::string arm_topic;
-  // std::string arm_frame_id;
-  // std::string vehicle_topic;
-
-  const std::string arm_topic = "/franka/servo_node/delta_twist_cmds";
-  const std::string arm_frame_id = "franka/fr3_hand";
-  const std::string vehicle_topic = "/panther/cmd_vel";
+  std::string arm_topic;
+  std::string arm_frame_id;
+  std::string vehicle_topic;
 
   sensor_msgs::msg::Joy::SharedPtr prev_joy_input;
 
@@ -76,7 +72,7 @@ class JoystickManager {
   static constexpr int vehicle_mode = 1;
   int current_mode = arm_mode;
 
-  const float dead_axis_zone = 0.3;
+  const float dead_axis_zone = 0.3;  // Make response to changes in joystick values less sensitive.
 
 };
 

@@ -15,7 +15,7 @@ RUN /rcdt/colcon_build.sh
 
 # Install python dependencies:
 COPY pyproject.toml /rcdt/pyproject.toml
-RUN uv sync  --all-groups
+RUN uv sync
 
 WORKDIR /rcdt
 ENTRYPOINT ["/entrypoint.sh"]

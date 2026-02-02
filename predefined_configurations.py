@@ -270,7 +270,7 @@ class PredefinedConfigurations:
         joystick = Joystick(
             "joystick",
             arm_cmd_topic="/franka/servo_node/delta_twist_cmds",
-            arm_frame_id="franka/fr3_hand",
+            arm_frame_id="franka/fr3_link1",
             simulation=False,
             vehicle_cmd_topic="/panther/cmd_vel"
         )

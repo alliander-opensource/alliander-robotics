@@ -2,13 +2,13 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
-#include "rcdt_joystick/joystick_manager.hpp"
+#include "joystick_manager.hpp"
 
 JoystickManager::JoystickManager(rclcpp::Node::SharedPtr node)
     : node(node) {
-  // arm_topic = this->get_parameter("arm_cmd_topic").as_string();
-  // arm_frame_id = this->get_parameter("arm_frame_id").as_string();
-  // vehicle_topic = this->get_parameter("vehicle_cmd_topic").as_string();
+  arm_topic = node->get_parameter("arm_cmd_topic").as_string();
+  arm_frame_id = node->get_parameter("arm_frame_id").as_string();
+  vehicle_topic = node->get_parameter("vehicle_cmd_topic").as_string();
   initialize_joystick_manager();
 };
 
