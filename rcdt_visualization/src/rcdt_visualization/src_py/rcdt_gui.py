@@ -11,7 +11,7 @@ from geographic_msgs.msg import GeoPath, GeoPoseStamped
 from geometry_msgs.msg import PoseStamped
 from nicegui import app, events, ui
 from rcdt_interfaces.srv import PoseStampedSrv, StringSrv
-from rcdt_utilities.config_objects import PlatformList
+from rcdt_utilities.config_objects import Arm, PlatformList, Vehicle
 from rcdt_utilities.ros_utils import spin_node
 from rclpy.node import Node
 from std_srvs.srv import Empty, SetBool, Trigger
@@ -35,13 +35,19 @@ class UserInterfaceNode(Node):
         """Initialize the node."""
         super().__init__("graphical_user_interface")
         self.declare_parameter("platform_list", "")
-        platforms = PlatformList.from_str(
+        platform_list_json = (
             self.get_parameter("platform_list").get_parameter_value().string_value
-        ).platforms
+        )
+        if not platform_list_json:
+            platform_list = PlatformList()
+            platform_list.platforms.append(Vehicle("mock"))
+            platform_list.platforms.append(Arm("mock"))
+        else:
+            platform_list = PlatformList.from_str(platform_list_json)
 
         connected = 0
         controllers = 3 * [None]
-        for platform in platforms:
+        for platform in platform_list.platforms:
             if connected == COLS:
                 self.get_logger().warn(
                     f"Maximum number of platforms to control is {COLS}. Extra platforms will be ignored."
@@ -334,29 +340,45 @@ class UserInterface:
 
                     ui.label("Waypoints").classes("text-lg")
 
-                    grid = ui.aggrid({
-                        "columnDefs": [
-                            {"headerName": "Entry Order", "field": "order", "width": 80},
-                            {"headerName": "GeoPose", "field": "geopose", "rowDrag": True}
-                        ],
-                        "rowData": [],
-                        "rowDragManaged": True,
-                        "animateRows": True,
-                        "rowSelection": {"mode": "multiRow"},
-                    })
+                    grid = ui.aggrid(
+                        {
+                            "columnDefs": [
+                                {
+                                    "headerName": "Entry Order",
+                                    "field": "order",
+                                    "width": 80,
+                                },
+                                {
+                                    "headerName": "GeoPose",
+                                    "field": "geopose",
+                                    "rowDrag": True,
+                                },
+                            ],
+                            "rowData": [],
+                            "rowDragManaged": True,
+                            "animateRows": True,
+                            "rowSelection": {"mode": "multiRow"},
+                        }
+                    )
 
                     def add_waypoint() -> None:
                         waypoint = self.marker.latlng
                         vehicle_control.add_waypoint(waypoint)
-                        grid.options["rowData"].append({
-                            "order": len(vehicle_control.waypoints.poses),
-                            "geopose": f"[{round(waypoint[0], 5)}, {round(waypoint[1], 5)}]"
-                        })
-                        grid.run_grid_method("ensureIndexVisible", len(grid.options["rowData"]) - 1)
+                        grid.options["rowData"].append(
+                            {
+                                "order": len(vehicle_control.waypoints.poses),
+                                "geopose": f"[{round(waypoint[0], 5)}, {round(waypoint[1], 5)}]",
+                            }
+                        )
+                        grid.run_grid_method(
+                            "ensureIndexVisible", len(grid.options["rowData"]) - 1
+                        )
 
                     async def on_row_drag_end(e) -> None:
                         row_count = await grid.run_grid_method("getDisplayedRowCount")
-                        row = await grid.run_grid_method("g => g.getDisplayedRowAtIndex(0).data")
+                        row = await grid.run_grid_method(
+                            "g => g.getDisplayedRowAtIndex(0).data"
+                        )
                         ui.notify(row)
 
                         # new_row_order = []
@@ -368,8 +390,12 @@ class UserInterface:
                         counter = 1
                         new_rows = []
                         for row_id in range(0, row_count):
-                            row_data = await grid.run_grid_method(f"g => g.getDisplayedRowAtIndex({row_id}).data")
-                            new_rows.append({"order": counter, "geopose": row_data["geopose"]})
+                            row_data = await grid.run_grid_method(
+                                f"g => g.getDisplayedRowAtIndex({row_id}).data"
+                            )
+                            new_rows.append(
+                                {"order": counter, "geopose": row_data["geopose"]}
+                            )
                             counter += 1
                         ui.notify(new_rows)
 
