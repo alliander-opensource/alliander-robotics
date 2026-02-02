@@ -17,7 +17,7 @@ find_package(sensor_msgs REQUIRED)
 include_directories(include)
 add_executable(joystick_manager 
   src/main.cpp
-  src/joystick_smanager.cpp
+  src/joystick_manager.cpp
 )
 target_include_directories(joystick_manager PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
