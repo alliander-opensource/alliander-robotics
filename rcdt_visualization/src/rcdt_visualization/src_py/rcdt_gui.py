@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import threading
 from dataclasses import dataclass
 
@@ -26,7 +27,7 @@ EXAMPLE_POSE.pose.position.z = 0.1
 EXAMPLE_POSE.pose.orientation.x = 1.0
 EXAMPLE_POSE.pose.orientation.w = 0.0
 
-COLS = 3  # Number of columns in the UI and maximum number of platforms to control
+COLS = 2  # Number of columns in the UI and maximum number of platforms to control
 CENTER_DEFAULT = (51.966960, 5.940906)  # Default map center (latitude, longitude)
 
 
@@ -408,6 +409,8 @@ class UserInterface:
                     with ui.row():
                         ui.button("Add", on_click=self.add)
                         ui.button("Remove", on_click=self.remove)
+                        ui.button("Save", on_click=self.save)
+                        ui.button("Load", on_click=self.load)
 
     async def leaflet_ui(self) -> None:
         """Setup the leaflet map UI."""
@@ -455,12 +458,20 @@ class UserInterface:
         """Add a waypoint at the current marker position."""
         if not self.marker:
             return
-        marker = ui.leaflet.marker(latlng=self.marker.latlng)
+        self.add_waypoint(self.marker.latlng)
+        self.clear_selection_marker()
+
+    def add_waypoint(self, latlong: tuple[float, float]) -> None:
+        """Add a waypoint at the specified latitude and longitude.
+
+        Args:
+            latlong (tuple[float, float]): The latitude and longitude of the waypoint.
+        """
+        marker = ui.leaflet.marker(latlng=latlong)
         waypoint = Waypoint(marker)
         waypoint.order = len(self.waypoints)
 
         self.waypoints[waypoint.id] = waypoint
-        self.clear_selection_marker()
         self.update()
 
     async def remove(self) -> None:
@@ -470,6 +481,48 @@ class UserInterface:
             self.leaflet.remove_layer(self.waypoints[row["id"]].marker)
             self.waypoints.pop(row["id"])
         self.update()
+
+    def save(self) -> None:
+        """Save the current waypoints to a JSON file."""
+        with ui.dialog() as dialog, ui.card():
+            ui.label("Save as...")
+            filename = ui.input("filename", value="waypoints.json")
+
+            def save() -> None:
+                data: list[tuple[float, float]] = []
+                for waypoint in self.waypoints_ordered:
+                    data.append((waypoint.lat(), waypoint.long()))
+                try:
+                    with open(filename.value, "w", encoding="utf-8") as stream:
+                        json.dump(data, stream)
+                    ui.notify("Waypoints saved.", type="positive")
+                except Exception as e:
+                    ui.notify(f"Failed to save waypoints: {e}", type="negative")
+                dialog.close()
+
+            ui.button("Save", on_click=save)
+        dialog.open()
+
+    def load(self) -> None:
+        """Load waypoints from a JSON file."""
+        with ui.dialog() as dialog, ui.card():
+            ui.label("Load from...")
+            filename = ui.input("filename", value="waypoints.json")
+
+            def load() -> None:
+                try:
+                    with open(filename.value, "r", encoding="utf-8") as stream:
+                        data = json.load(stream)
+
+                    for latlong in data:
+                        self.add_waypoint(latlong)
+                    ui.notify("Waypoints Loaded.", type="positive")
+                except Exception as e:
+                    ui.notify(f"Failed to load waypoints: {e}", type="negative")
+                dialog.close()
+
+            ui.button("Load", on_click=load)
+        dialog.open()
 
     async def change_order(self) -> None:
         """Change the order of the waypoints after a drag-and-drop action."""
