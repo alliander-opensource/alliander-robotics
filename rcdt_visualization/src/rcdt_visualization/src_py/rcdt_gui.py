@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import threading
+from dataclasses import dataclass
 
 import rclpy
 from geographic_msgs.msg import GeoPath, GeoPoseStamped
@@ -26,6 +27,43 @@ EXAMPLE_POSE.pose.orientation.x = 1.0
 EXAMPLE_POSE.pose.orientation.w = 0.0
 
 COLS = 3  # Number of columns in the UI and maximum number of platforms to control
+CENTER_DEFAULT = (51.966960, 5.940906)  # Default map center (latitude, longitude)
+
+
+@dataclass
+class Waypoint:
+    """Contains the marker and order of a waypoint.
+
+    Attributes:
+        marker (ui.leaflet.marker): The marker of the waypoint.
+        id (int): The unique ID of the waypoint.
+        order (int): The order of the waypoint.
+    """
+
+    marker: ui.leaflet.marker
+    id: int = 0
+    order: int = 0
+
+    def __post_init__(self):
+        """Initialize the waypoint ID."""
+        Waypoint.id += 1
+        self.id = Waypoint.id
+
+    def lat(self) -> str:
+        """Get the latitude string of the waypoint.
+
+        Returns:
+            str: The latitude string.
+        """
+        return f"{round(self.marker.latlng[0], 5)}"
+
+    def long(self) -> str:
+        """Get the longitude string of the waypoint.
+
+        Returns:
+            str: The longitude string.
+        """
+        return f"{round(self.marker.latlng[1], 5)}"
 
 
 class UserInterfaceNode(Node):
@@ -223,16 +261,10 @@ class VehicleControl:
             GeoPath, "/gps_waypoints", 10
         )
 
-    def start_navigation(self, latlng: tuple[float, float]) -> None:
-        """Start vehicle navigation.
-
-        Args:
-            latlng (tuple[float, float]): Latitude and longitude to navigate to.
-        """
+    def start_navigation(self) -> None:
+        """Start vehicle navigation."""
         goal = GeoPath()
         geo_pose_stamped = GeoPoseStamped()
-        geo_pose_stamped.pose.position.latitude = latlng[0]
-        geo_pose_stamped.pose.position.longitude = latlng[1]
         goal.poses.append(geo_pose_stamped)
         self.gps_waypoints_publisher.publish(goal)
 
@@ -252,9 +284,13 @@ class UserInterface:
             controllers (list): List of platform controllers.
         """
         self.node = node
+        self.leaflet: ui.leaflet
+        self.grid: ui.aggrid
+        self.marker: ui.leaflet.marker | None = None
+        self.waypoints: dict[int, Waypoint] = {}
 
         @ui.page("/")
-        def page() -> None:
+        async def page() -> None:
             """Setup the page of the UI."""
             ui.query(".nicegui-content").classes("p-0")
             with ui.card().tight().classes("w-full"):  # noqa: PLR1702
@@ -270,7 +306,7 @@ class UserInterface:
                                     self.not_connected_ui()
                 with ui.card().tight().classes("w-full"):  # noqa: SIM117
                     with ui.card().classes("w-full h-[50vh]"):
-                        self.map_ui()
+                        await self.leaflet_ui()
 
     @staticmethod
     def not_connected_ui() -> None:
@@ -330,100 +366,120 @@ class UserInterface:
                     ui.label("Navigation").classes("text-lg")
 
                     with ui.row():
-                        ui.button(
-                            "Start",
-                            on_click=lambda: vehicle_control.start_navigation(
-                                self.marker.latlng
-                            ),
-                        )
+                        ui.button("Start", on_click=vehicle_control.start_navigation)
                         ui.button("Stop", on_click=vehicle_control.stop_navigation)
 
+                with ui.card().classes("items-center w-full"):
                     ui.label("Waypoints").classes("text-lg")
 
-                    grid = ui.aggrid(
+                    self.grid = ui.aggrid(
                         {
                             "columnDefs": [
-                                {
-                                    "headerName": "Entry Order",
-                                    "field": "order",
-                                    "width": 80,
-                                },
-                                {
-                                    "headerName": "GeoPose",
-                                    "field": "geopose",
-                                    "rowDrag": True,
-                                },
+                                {"headerName": "#", "field": "order", "rowDrag": True},
+                                {"headerName": "lat", "field": "lat"},
+                                {"headerName": "long", "field": "long"},
+                                {"headerName": "id", "field": "id", "hide": True},
                             ],
                             "rowData": [],
                             "rowDragManaged": True,
                             "animateRows": True,
                             "rowSelection": {"mode": "multiRow"},
-                        }
+                        },
                     )
-
-                    def add_waypoint() -> None:
-                        waypoint = self.marker.latlng
-                        vehicle_control.add_waypoint(waypoint)
-                        grid.options["rowData"].append(
-                            {
-                                "order": len(vehicle_control.waypoints.poses),
-                                "geopose": f"[{round(waypoint[0], 5)}, {round(waypoint[1], 5)}]",
-                            }
-                        )
-                        grid.run_grid_method(
-                            "ensureIndexVisible", len(grid.options["rowData"]) - 1
-                        )
-
-                    async def on_row_drag_end(e) -> None:
-                        row_count = await grid.run_grid_method("getDisplayedRowCount")
-                        row = await grid.run_grid_method(
-                            "g => g.getDisplayedRowAtIndex(0).data"
-                        )
-                        ui.notify(row)
-
-                        # new_row_order = []
-                        # for row_id in range(0, row_count):
-                        #     row_data = await grid.run_grid_method(f"g => g.getDisplayedRowAtIndex({row_id}).data")
-                        #     new_row_order.append(row_data["order"])
-                        # ui.notify(f"{new_row_order}, type: {type(new_row_order[0])}")
-
-                        counter = 1
-                        new_rows = []
-                        for row_id in range(0, row_count):
-                            row_data = await grid.run_grid_method(
-                                f"g => g.getDisplayedRowAtIndex({row_id}).data"
-                            )
-                            new_rows.append(
-                                {"order": counter, "geopose": row_data["geopose"]}
-                            )
-                            counter += 1
-                        ui.notify(new_rows)
-
-                        grid.options["rowData"] = new_rows
-                        grid.update()
-
-                    grid.on("rowDragEnd", on_row_drag_end)
+                    self.waypoints = {}
+                    self.grid.on("rowDragEnd", self.change_order)
 
                     with ui.row():
-                        ui.button("Add", on_click=add_waypoint)
+                        ui.button("Add", on_click=self.add)
+                        ui.button("Remove", on_click=self.remove)
 
-    def map_ui(self) -> None:
-        """Setup the map control UI."""
-        center_default = (51.966960, 5.940906)
-        leaflet = ui.leaflet(center=center_default, zoom=19).classes("w-full h-full")
-        self.marker = leaflet.marker(latlng=center_default)
+    async def leaflet_ui(self) -> None:
+        """Setup the leaflet map UI."""
+        self.leaflet = ui.leaflet(center=CENTER_DEFAULT, zoom=19).classes(
+            "w-full h-full"
+        )
+        self.leaflet.on("map-click", self.place_selection_marker)
+        self.leaflet.on("contextmenu.prevent", self.clear_selection_marker)
+        await self.leaflet.initialized()
 
-        def handle_click(e: events.GenericEventArguments) -> None:
-            """Handle map click events to place or move a marker.
+    def place_selection_marker(self, e: events.GenericEventArguments) -> None:
+        """Handle map click events to place or move the selection marker.
 
-            Args:
-                e (events.GenericEventArguments): The event arguments.
-            """
-            lat = e.args["latlng"]["lat"]
-            lng = e.args["latlng"]["lng"]
+        Args:
+            e (events.GenericEventArguments): The event arguments.
+        """
+        lat = e.args["latlng"]["lat"]
+        lng = e.args["latlng"]["lng"]
+
+        if not self.marker:
+            self.marker = ui.leaflet.marker(latlng=(lat, lng))
+        else:
             self.marker.move(lat, lng)
 
-        leaflet.on("map-click", handle_click)
+    def clear_selection_marker(self) -> None:
+        """Clear the current selection marker."""
+        if self.marker:
+            self.leaflet.remove_layer(self.marker)
+            self.marker = None
+
+    @staticmethod
+    def set_marker(marker: ui.leaflet.marker, color: str, number: int) -> None:
+        """Set the marker icon based on color and number.
+
+        Args:
+            marker (ui.leaflet.marker): The marker to set the icon for.
+            color (str): The color of the marker.
+            number (int): The number on the marker.
+        """
+        url = f"https://raw.githubusercontent.com/sheiun/leaflet-color-number-markers/main/dist/img/{color}/marker-icon-2x-{color}-{number}.png"
+        icon = f"L.icon({{iconUrl: '{url}'}})"
+        marker.run_method(":setIcon", icon)
+
+    def add(self) -> None:
+        """Add a waypoint at the current marker position."""
+        if not self.marker:
+            return
+        marker = ui.leaflet.marker(latlng=self.marker.latlng)
+        waypoint = Waypoint(marker)
+        waypoint.order = len(self.waypoints)
+
+        self.waypoints[waypoint.id] = waypoint
+        self.clear_selection_marker()
+        self.update()
+
+    async def remove(self) -> None:
+        """Remove all selected waypoints."""
+        selected_rows = await self.grid.get_selected_rows()
+        for row in selected_rows:
+            self.leaflet.remove_layer(self.waypoints[row["id"]].marker)
+            self.waypoints.pop(row["id"])
+        self.update()
+
+    async def change_order(self) -> None:
+        """Change the order of the waypoints after a drag-and-drop action."""
+        for n in range(len(self.grid.options["rowData"])):
+            row_data = await self.grid.run_grid_method(
+                f"g => g.getDisplayedRowAtIndex({n}).data"
+            )
+            row_id = row_data["id"]
+            self.waypoints[row_id].order = n
+        self.update()
+
+    def update(self) -> None:
+        """Update the waypoints after a change was made."""
+        ordered_waypoints = sorted(self.waypoints.values(), key=lambda wp: wp.order)
+
+        # Fill gaps for possibly removed waypoints:
+        for index, waypoint in enumerate(ordered_waypoints):
+            if waypoint.order != index:
+                waypoint.order = index
+            self.set_marker(waypoint.marker, "red", waypoint.order)
+
+        # Update grid ui:
+        self.grid.options["rowData"] = [
+            {"order": wp.order, "lat": wp.lat(), "long": wp.long(), "id": wp.id}
+            for wp in ordered_waypoints
+        ]
 
 
 def ros_main(args: list | None = None) -> None:
