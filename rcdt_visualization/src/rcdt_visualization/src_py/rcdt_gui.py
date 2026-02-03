@@ -49,21 +49,37 @@ class Waypoint:
         Waypoint.id += 1
         self.id = Waypoint.id
 
-    def lat(self) -> str:
+    def lat(self) -> float:
+        """Get the latitude of the waypoint.
+
+        Returns:
+            float: The latitude.
+        """
+        return self.marker.latlng[0]
+
+    def long(self) -> float:
+        """Get the longitude of the waypoint.
+
+        Returns:
+            float: The longitude.
+        """
+        return self.marker.latlng[1]
+
+    def lat_str(self) -> str:
         """Get the latitude string of the waypoint.
 
         Returns:
             str: The latitude string.
         """
-        return f"{round(self.marker.latlng[0], 5)}"
+        return f"{round(self.lat(), 5)}"
 
-    def long(self) -> str:
+    def long_str(self) -> str:
         """Get the longitude string of the waypoint.
 
         Returns:
             str: The longitude string.
         """
-        return f"{round(self.marker.latlng[1], 5)}"
+        return f"{round(self.long(), 5)}"
 
 
 class UserInterfaceNode(Node):
@@ -234,19 +250,7 @@ class VehicleControl:
         """
         self.node = node
         self.namespace = namespace
-        self.waypoints = GeoPath()
         self.connect_vehicle(namespace)
-
-    def add_waypoint(self, latlng: tuple[float, float]) -> None:
-        """Add currently selected waypoint to the waypoint list.
-
-        Args:
-            latlng (tuple[float, float]): Latitude and longitude to navigate to.
-        """
-        geo_pose_stamped = GeoPoseStamped()
-        geo_pose_stamped.pose.position.latitude = latlng[0]
-        geo_pose_stamped.pose.position.longitude = latlng[1]
-        self.waypoints.poses.append(geo_pose_stamped)
 
     def connect_vehicle(self, namespace: str) -> None:
         """Connected with vehicle-related topics, services, and actions.
@@ -261,11 +265,18 @@ class VehicleControl:
             GeoPath, "/gps_waypoints", 10
         )
 
-    def start_navigation(self) -> None:
-        """Start vehicle navigation."""
+    def start_navigation(self, waypoints: list[Waypoint]) -> None:
+        """Start vehicle navigation.
+
+        Args:
+            waypoints (list[Waypoint]): The list of waypoints to navigate to.
+        """
         goal = GeoPath()
-        geo_pose_stamped = GeoPoseStamped()
-        goal.poses.append(geo_pose_stamped)
+        for waypoint in waypoints:
+            geo_pose_stamped = GeoPoseStamped()
+            geo_pose_stamped.pose.position.latitude = waypoint.lat()
+            geo_pose_stamped.pose.position.longitude = waypoint.long()
+            goal.poses.append(geo_pose_stamped)
         self.gps_waypoints_publisher.publish(goal)
 
     def stop_navigation(self) -> None:
@@ -366,7 +377,12 @@ class UserInterface:
                     ui.label("Navigation").classes("text-lg")
 
                     with ui.row():
-                        ui.button("Start", on_click=vehicle_control.start_navigation)
+                        ui.button(
+                            "Start",
+                            on_click=lambda: vehicle_control.start_navigation(
+                                self.waypoints_ordered
+                            ),
+                        )
                         ui.button("Stop", on_click=vehicle_control.stop_navigation)
 
                 with ui.card().classes("items-center w-full"):
@@ -467,19 +483,26 @@ class UserInterface:
 
     def update(self) -> None:
         """Update the waypoints after a change was made."""
-        ordered_waypoints = sorted(self.waypoints.values(), key=lambda wp: wp.order)
-
         # Fill gaps for possibly removed waypoints:
-        for index, waypoint in enumerate(ordered_waypoints):
+        for index, waypoint in enumerate(self.waypoints_ordered):
             if waypoint.order != index:
                 waypoint.order = index
             self.set_marker(waypoint.marker, "red", waypoint.order)
 
         # Update grid ui:
         self.grid.options["rowData"] = [
-            {"order": wp.order, "lat": wp.lat(), "long": wp.long(), "id": wp.id}
-            for wp in ordered_waypoints
+            {"order": wp.order, "lat": wp.lat_str(), "long": wp.long(), "id": wp.id}
+            for wp in self.waypoints_ordered
         ]
+
+    @property
+    def waypoints_ordered(self) -> list[Waypoint]:
+        """Get the waypoints ordered.
+
+        Returns:
+            list[Waypoint]: The ordered list of waypoints.
+        """
+        return sorted(self.waypoints.values(), key=lambda wp: wp.order)
 
 
 def ros_main(args: list | None = None) -> None:
