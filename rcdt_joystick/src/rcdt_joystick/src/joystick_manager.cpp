@@ -4,8 +4,7 @@
 
 #include "joystick_manager.hpp"
 
-JoystickManager::JoystickManager(rclcpp::Node::SharedPtr node)
-    : node(node) {
+JoystickManager::JoystickManager(rclcpp::Node::SharedPtr node) : node(node) {
   arm_topic = node->get_parameter("arm_cmd_topic").as_string();
   arm_frame_id = node->get_parameter("arm_frame_id").as_string();
   vehicle_topic = node->get_parameter("vehicle_cmd_topic").as_string();
@@ -22,35 +21,32 @@ JoystickManager::~JoystickManager() {
   RCLCPP_INFO(node->get_logger(), "Shutdown complete.");
 }
 
-void JoystickManager::initialize_joystick_manager(){
-
+void JoystickManager::initialize_joystick_manager() {
   // Subscibers
   sub_joy = node->create_subscription<sensor_msgs::msg::Joy>(
-    "/joy",
-    rclcpp::SensorDataQoS(),
-    std::bind(&JoystickManager::joy_cb, this, _1)
-  );
+      "/joy", rclcpp::SensorDataQoS(),
+      std::bind(&JoystickManager::joy_cb, this, _1));
 
   // Publishers
-  pub_arm_vel = node->create_publisher<geometry_msgs::msg::TwistStamped>(
-    arm_topic, 
-    10
-  );
+  pub_arm_vel =
+      node->create_publisher<geometry_msgs::msg::TwistStamped>(arm_topic, 10);
   pub_vehicle_vel = node->create_publisher<geometry_msgs::msg::TwistStamped>(
-    vehicle_topic, 
-    10
-  );
+      vehicle_topic, 10);
 
   // Service clients
-  srv_client_estop_trigger = node->create_client<std_srvs::srv::Trigger>("/panther/hardware/e_stop_trigger");
-  srv_client_estop_reset = node->create_client<std_srvs::srv::Trigger>("/panther/hardware/e_stop_reset");
+  srv_client_estop_trigger = node->create_client<std_srvs::srv::Trigger>(
+      "/panther/hardware/e_stop_trigger");
+  srv_client_estop_reset = node->create_client<std_srvs::srv::Trigger>(
+      "/panther/hardware/e_stop_reset");
 
   // Action clients
-  action_client_gripper_open = rclcpp_action::create_client<TriggerAction>(node, "/franka/gripper/open");
-  action_client_gripper_close = rclcpp_action::create_client<TriggerAction>(node, "/franka/gripper/close");
+  action_client_gripper_open =
+      rclcpp_action::create_client<TriggerAction>(node, "/franka/gripper/open");
+  action_client_gripper_close = rclcpp_action::create_client<TriggerAction>(
+      node, "/franka/gripper/close");
 
   // Log initial mode
-  switch(current_mode){
+  switch (current_mode) {
     case arm_mode:
       RCLCPP_INFO(node->get_logger(), "Initial mode: ARM mode.");
       break;
@@ -74,9 +70,10 @@ void JoystickManager::joy_cb(const sensor_msgs::msg::Joy::SharedPtr msg) {
 
   handle_button_input(msg->buttons);
 
-  switch(current_mode){
+  switch (current_mode) {
     case arm_mode:
-      handle_arm_movement(msg->axes[1], msg->axes[0], msg->axes[3], msg->axes[2]);
+      handle_arm_movement(msg->axes[1], msg->axes[0], msg->axes[3],
+                          msg->axes[2]);
       break;
     case vehicle_mode:
       handle_driving(msg->axes[1], msg->axes[0]);
@@ -92,8 +89,8 @@ void JoystickManager::joy_cb(const sensor_msgs::msg::Joy::SharedPtr msg) {
 
 void JoystickManager::handle_button_input(const std::vector<int32_t>& buttons) {
   // Switch between platform modes
-  if (check_btn_pressed(Button::A, buttons, prev_joy_input->buttons)){
-    switch(current_mode){
+  if (check_btn_pressed(Button::A, buttons, prev_joy_input->buttons)) {
+    switch (current_mode) {
       case arm_mode:
         RCLCPP_INFO(node->get_logger(), "Switch to VEHICLE mode.");
         current_mode = vehicle_mode;
@@ -111,36 +108,123 @@ void JoystickManager::handle_button_input(const std::vector<int32_t>& buttons) {
   }
 
   // Trigger E-stop
-  if (check_btn_pressed(Button::X, buttons, prev_joy_input->buttons)){
+  if (check_btn_pressed(Button::X, buttons, prev_joy_input->buttons)) {
     RCLCPP_INFO(node->get_logger(), "Trigger E-stop");
+    send_trigger_request(srv_client_estop_trigger);
   }
 
   // Reset E-stop
-  if (check_btn_pressed(Button::Y, buttons, prev_joy_input->buttons)){
+  if (check_btn_pressed(Button::Y, buttons, prev_joy_input->buttons)) {
     RCLCPP_INFO(node->get_logger(), "Reset E-stop");
+    send_trigger_request(srv_client_estop_reset);
   }
 
   // Open gripper
-  if (check_btn_pressed(Button::LT, buttons, prev_joy_input->buttons)){
+  if (check_btn_pressed(Button::LT, buttons, prev_joy_input->buttons) &&
+      !gripper_busy) {
+    gripper_busy = true;
     RCLCPP_INFO(node->get_logger(), "Open gripper");
+    send_gripper_goal(action_client_gripper_open);
+    RCLCPP_INFO(node->get_logger(), "Finish open gripper");
   }
 
   // Close gripper
-  if (check_btn_pressed(Button::RT, buttons, prev_joy_input->buttons)){
+  if (check_btn_pressed(Button::RT, buttons, prev_joy_input->buttons) &&
+      !gripper_busy) {
+    gripper_busy = true;
     RCLCPP_INFO(node->get_logger(), "Close gripper");
+    send_gripper_goal(action_client_gripper_close);
   }
 }
 
-bool JoystickManager::check_btn_pressed(size_t idx, const std::vector<int32_t>& curr, const std::vector<int32_t>& prev){
+void JoystickManager::send_trigger_request(const rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr& client){
+  auto trigger_request = std::make_shared<std_srvs::srv::Trigger::Request>();
+  auto future = client->async_send_request(trigger_request);
+  // Wait for the result.
+
+  if (future.wait_for(std::chrono::seconds(1)) == std::future_status::ready) {
+    if (future.get()->success) {
+      RCLCPP_INFO(node->get_logger(), "Success");
+    } else {
+      RCLCPP_INFO(node->get_logger(), "No success");
+    }
+  } else {
+    RCLCPP_INFO(node->get_logger(), "Not ready");
+  }
+}
+
+void JoystickManager::send_gripper_goal(
+    const rclcpp_action::Client<TriggerAction>::SharedPtr& client) {
+  auto trigger_action_goal =
+      std::make_shared<rcdt_interfaces::action::TriggerAction::Goal>();
+  RCLCPP_INFO(node->get_logger(), "Sending goal");
+
+  auto send_goal_options =
+      rclcpp_action::Client<TriggerAction>::SendGoalOptions();
+
+  send_goal_options.goal_response_callback = [this](auto goal_handle) {
+    this->gripper_goal_response_callback(goal_handle);
+  };
+
+  send_goal_options.feedback_callback = [this](auto goal_handle, auto feedback) {
+    this->gripper_feedback_callback(goal_handle, feedback);
+  };
+
+  send_goal_options.result_callback = [this](auto result) {
+    this->gripper_result_callback(result);
+  };
+  client->async_send_goal(*trigger_action_goal, send_goal_options);
+}
+
+bool JoystickManager::check_btn_pressed(size_t idx,
+                                        const std::vector<int32_t>& curr,
+                                        const std::vector<int32_t>& prev) {
   return curr[idx] != prev[idx];
 }
 
-void JoystickManager::handle_driving(const float& linear, const float& angular) {
+void JoystickManager::gripper_goal_response_callback(
+    std::shared_ptr<rclcpp_action::ClientGoalHandle<TriggerAction>>
+        goal_handle) {
+  if (!goal_handle) {
+    RCLCPP_ERROR(node->get_logger(), "Goal was rejected");
+  } else {
+    RCLCPP_INFO(node->get_logger(), "Goal accepted");
+  }
+}
+
+void JoystickManager::gripper_feedback_callback(
+    std::shared_ptr<rclcpp_action::ClientGoalHandle<TriggerAction>>,
+    const std::shared_ptr<const TriggerAction::Feedback> feedback) {
+  RCLCPP_INFO(node->get_logger(), "Open gripper status: %s",
+              feedback->status.c_str());
+}
+
+void JoystickManager::gripper_result_callback(
+    rclcpp_action::ClientGoalHandle<TriggerAction>::WrappedResult& result) {
+  switch (result.code) {
+    case rclcpp_action::ResultCode::SUCCEEDED:
+      RCLCPP_INFO(node->get_logger(), "Goal was succeeded");
+      break;
+    case rclcpp_action::ResultCode::ABORTED:
+      RCLCPP_ERROR(node->get_logger(), "Goal was aborted");
+      break;
+    case rclcpp_action::ResultCode::CANCELED:
+      RCLCPP_ERROR(node->get_logger(), "Goal was canceled");
+      break;
+    default:
+      RCLCPP_ERROR(node->get_logger(), "Unknown result code");
+      break;
+  }
+  gripper_busy = false;
+}
+
+void JoystickManager::handle_driving(const float& linear,
+                                     const float& angular) {
   float prev_angular = prev_joy_input->axes[0];
   float prev_linear = prev_joy_input->axes[1];
 
-  // Only act if something changed, TODO: do the husarions need a constant stream of input?
-  // if (angular == prev_angular && linear == prev_linear) {
+  // Only act if something changed, TODO: do the husarions need a constant
+  // stream of input? if (angular == prev_angular && linear == prev_linear) {
   //   return;
   // }
 
@@ -157,17 +241,24 @@ void JoystickManager::handle_driving(const float& linear, const float& angular) 
   pub_vehicle_vel->publish(twist);
 }
 
-void JoystickManager::handle_arm_movement(const float& x, const float& y, const float& z, const float& rotation) {
+void JoystickManager::handle_arm_movement(const float& x, const float& y,
+                                          const float& z,
+                                          const float& rotation) {
   geometry_msgs::msg::TwistStamped twist;
   twist.header.stamp = node->now();
   twist.header.frame_id = arm_frame_id;
 
-  twist.twist.linear.x = (std::abs(x) > dead_axis_zone) ? x : 0.0;  // Forward/backward
-  twist.twist.linear.y = (std::abs(y) > dead_axis_zone) ? y : 0.0;  // Left/right
+  twist.twist.linear.x =
+      (std::abs(x) > dead_axis_zone) ? x : 0.0;  // Forward/backward
+  twist.twist.linear.y =
+      (std::abs(y) > dead_axis_zone) ? y : 0.0;  // Left/right
   twist.twist.linear.z = (std::abs(z) > dead_axis_zone) ? z : 0.0;  // Up/down
 
   // Turning
-  twist.twist.angular.z = (std::abs(rotation) > dead_axis_zone) ? rotation : 0.0;  // TODO: I want to rotate just joint7, this does not work
+  twist.twist.angular.z =
+      (std::abs(rotation) > dead_axis_zone)
+          ? rotation
+          : 0.0;  // TODO: I want to rotate just joint7, this does not work
 
   pub_arm_vel->publish(twist);
 }
