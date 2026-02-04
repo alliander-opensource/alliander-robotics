@@ -95,37 +95,39 @@ void JoystickManager::handle_button_input(const std::vector<int32_t>& buttons) {
         RCLCPP_INFO(node->get_logger(), "Switch to VEHICLE mode.");
         current_mode = vehicle_mode;
         pub_arm_vel->publish(geometry_msgs::msg::TwistStamped{});
-        break;
+        return;
       case vehicle_mode:
         RCLCPP_INFO(node->get_logger(), "Switch to ARM mode.");
         current_mode = arm_mode;
         pub_vehicle_vel->publish(geometry_msgs::msg::TwistStamped{});
-        break;
+        return;
       default:
         RCLCPP_ERROR(node->get_logger(), "Unknown platform mode.");
-        break;
+        return;
     }
   }
 
-  // Trigger E-stop
-  if (check_btn_pressed(Button::X, buttons, prev_joy_input->buttons)) {
-    RCLCPP_INFO(node->get_logger(), "Trigger E-stop");
-    send_trigger_request(srv_client_estop_trigger);
+  // Mode-specific behaviour
+  switch (current_mode) {
+    case arm_mode:
+      handle_buttons_arm(buttons);
+      return;
+    case vehicle_mode:
+      handle_buttons_vehicle(buttons);
+      return;
+    default:
+      RCLCPP_ERROR(node->get_logger(), "Unknown platform mode.");
+      return;
   }
+}
 
-  // Reset E-stop
-  if (check_btn_pressed(Button::Y, buttons, prev_joy_input->buttons)) {
-    RCLCPP_INFO(node->get_logger(), "Reset E-stop");
-    send_trigger_request(srv_client_estop_reset);
-  }
-
+void JoystickManager::handle_buttons_arm(const std::vector<int32_t>& buttons) {
   // Open gripper
   if (check_btn_pressed(Button::LT, buttons, prev_joy_input->buttons) &&
       !gripper_busy) {
     gripper_busy = true;
     RCLCPP_INFO(node->get_logger(), "Open gripper");
     send_gripper_goal(action_client_gripper_open);
-    RCLCPP_INFO(node->get_logger(), "Finish open gripper");
   }
 
   // Close gripper
@@ -137,14 +139,29 @@ void JoystickManager::handle_button_input(const std::vector<int32_t>& buttons) {
   }
 }
 
-void JoystickManager::send_trigger_request(const rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr& client){
+void JoystickManager::handle_buttons_vehicle(
+    const std::vector<int32_t>& buttons) {
+  // Trigger E-stop
+  if (check_btn_pressed(Button::X, buttons, prev_joy_input->buttons)) {
+    RCLCPP_INFO(node->get_logger(), "Trigger E-stop");
+    send_trigger_request(srv_client_estop_trigger);
+  }
+
+  // Reset E-stop
+  if (check_btn_pressed(Button::Y, buttons, prev_joy_input->buttons)) {
+    RCLCPP_INFO(node->get_logger(), "Reset E-stop");
+    send_trigger_request(srv_client_estop_reset);
+  }
+}
+
+void JoystickManager::send_trigger_request(
+    const rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr& client) {
   auto trigger_request = std::make_shared<std_srvs::srv::Trigger::Request>();
   auto future = client->async_send_request(trigger_request);
   // Wait for the result.
 
   if (future.wait_for(std::chrono::seconds(1)) == std::future_status::ready) {
     if (future.get()->success) {
-      RCLCPP_INFO(node->get_logger(), "Success");
     } else {
       RCLCPP_INFO(node->get_logger(), "No success");
     }
@@ -166,7 +183,8 @@ void JoystickManager::send_gripper_goal(
     this->gripper_goal_response_callback(goal_handle);
   };
 
-  send_goal_options.feedback_callback = [this](auto goal_handle, auto feedback) {
+  send_goal_options.feedback_callback = [this](auto goal_handle,
+                                               auto feedback) {
     this->gripper_feedback_callback(goal_handle, feedback);
   };
 
@@ -222,11 +240,6 @@ void JoystickManager::handle_driving(const float& linear,
                                      const float& angular) {
   float prev_angular = prev_joy_input->axes[0];
   float prev_linear = prev_joy_input->axes[1];
-
-  // Only act if something changed, TODO: do the husarions need a constant
-  // stream of input? if (angular == prev_angular && linear == prev_linear) {
-  //   return;
-  // }
 
   geometry_msgs::msg::TwistStamped twist;
   twist.header.stamp = node->now();

@@ -55,6 +55,10 @@ class JoystickManager {
    */
   void handle_button_input(const std::vector<int32_t>& buttons);
 
+  void handle_buttons_arm(const std::vector<int32_t>& buttons);
+
+  void handle_buttons_vehicle(const std::vector<int32_t>& buttons);
+
   /**
    * @brief Check whether a button has been pressed or not.
    */
