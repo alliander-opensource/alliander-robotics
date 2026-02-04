@@ -240,7 +240,7 @@ class PredefinedConfigurations:
     @register_configuration("mm")
     def config_mm(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
-        arm = Arm("franka", (0.15, 0, 0.20), gripper=True, moveit=True)
+        arm = Arm("franka", (0.25, 0, 0.10), gripper=True, moveit=True)
 
         link(vehicle, arm)
         self.plat_conf.platforms = [vehicle, arm]
@@ -249,7 +249,7 @@ class PredefinedConfigurations:
     def config_mm_velodyne(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
         vehicle.nav2_config.navigation = True
-        arm = Arm("franka", (0.15, 0, 0.20), gripper=True, moveit=True)
+        arm = Arm("franka", (0.25, 0, 0.10), gripper=True, moveit=True)
         lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
 
         link(vehicle, arm)
@@ -269,7 +269,7 @@ class PredefinedConfigurations:
         vehicle = Vehicle("panther", (0, 0, 0.2))
         arm = Arm(
             "franka",
-            (0.15, 0, 0.20),
+            (0.25, 0, 0.10),
             gripper=True,
             moveit=True,
             controller="demo_controller",
