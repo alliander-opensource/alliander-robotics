@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rcdt_interfaces/action/trigger_action.hpp>
+#include <rcdt_interfaces/srv/string_srv.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_options.hpp>
@@ -23,6 +24,7 @@ typedef rcdt_interfaces::action::TriggerAction TriggerAction;
 
 enum Button {
   A = 0,   // Switch between platform modes
+  B = 1,   // Move arm back to home position
   X = 2,   // Trigger E-stop
   Y = 3,   // Reset E-stop
   LT = 9,  // Open gripper
@@ -77,6 +79,8 @@ class JoystickManager {
   void handle_arm_movement(const float& x, const float& y, const float& z,
                            const float& rotation);
 
+  void move_arm_to_home();
+
   void send_trigger_request(
       const rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr& client);
 
@@ -98,11 +102,9 @@ class JoystickManager {
       pub_vehicle_vel;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_trigger;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_reset;
+  rclcpp::Client<rcdt_interfaces::srv::StringSrv>::SharedPtr srv_client_arm_home;
   rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_open;
   rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_close;
-
-  // std::shared_ptr<std_srvs::srv::Trigger::Request> trigger_request =
-  // std::make_shared<std_srvs::srv::Trigger::Request>();
 
   std::string arm_topic;
   std::string arm_frame_id;

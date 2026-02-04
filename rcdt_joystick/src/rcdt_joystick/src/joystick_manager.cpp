@@ -38,6 +38,8 @@ void JoystickManager::initialize_joystick_manager() {
       "/panther/hardware/e_stop_trigger");
   srv_client_estop_reset = node->create_client<std_srvs::srv::Trigger>(
       "/panther/hardware/e_stop_reset");
+  srv_client_arm_home = node->create_client<rcdt_interfaces::srv::StringSrv>(
+      "/franka/moveit_manager/move_to_configuration");
 
   // Action clients
   action_client_gripper_open =
@@ -137,6 +139,13 @@ void JoystickManager::handle_buttons_arm(const std::vector<int32_t>& buttons) {
     RCLCPP_INFO(node->get_logger(), "Close gripper");
     send_gripper_goal(action_client_gripper_close);
   }
+
+  // Move back home
+  if (check_btn_pressed(Button::B, buttons, prev_joy_input->buttons)){
+    // ros2 service call /franka/moveit_manager/move_to_configuration rcdt_interfaces/srv/StringSrv "{text: 'home'}"
+    RCLCPP_INFO(node->get_logger(), "Move back to home position");
+    move_arm_to_home();
+  }
 }
 
 void JoystickManager::handle_buttons_vehicle(
@@ -152,6 +161,24 @@ void JoystickManager::handle_buttons_vehicle(
     RCLCPP_INFO(node->get_logger(), "Reset E-stop");
     send_trigger_request(srv_client_estop_reset);
   }
+}
+
+void JoystickManager::move_arm_to_home(){
+  auto move_home_request = std::make_shared<rcdt_interfaces::srv::StringSrv::Request>();
+  move_home_request->text = "home";
+
+  auto future = srv_client_arm_home->async_send_request(move_home_request);
+  // Wait for the result.
+
+  if (future.wait_for(std::chrono::seconds(1)) == std::future_status::ready) {
+    if (future.get()->success) {
+    } else {
+      RCLCPP_INFO(node->get_logger(), "No success");
+    }
+  } else {
+    RCLCPP_INFO(node->get_logger(), "Not ready");
+  }
+
 }
 
 void JoystickManager::send_trigger_request(
