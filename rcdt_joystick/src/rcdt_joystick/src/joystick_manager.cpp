@@ -7,7 +7,13 @@
 JoystickManager::JoystickManager(rclcpp::Node::SharedPtr node) : node(node) {
   arm_topic = node->get_parameter("arm_cmd_topic").as_string();
   arm_frame_id = node->get_parameter("arm_frame_id").as_string();
+  arm_gripper_name = node->get_parameter("arm_gripper_name").as_string();
+  arm_home_service = node->get_parameter("arm_home_service").as_string();
   vehicle_topic = node->get_parameter("vehicle_cmd_topic").as_string();
+  vehicle_estop_reset_service =
+      node->get_parameter("vehicle_estop_reset").as_string();
+  vehicle_estop_trigger_service =
+      node->get_parameter("vehicle_estop_trigger").as_string();
 
   initialize_joystick_manager();
 
@@ -35,17 +41,17 @@ void JoystickManager::initialize_joystick_manager() {
 
   // Service clients
   srv_client_estop_trigger = node->create_client<std_srvs::srv::Trigger>(
-      "/panther/hardware/e_stop_trigger");
-  srv_client_estop_reset = node->create_client<std_srvs::srv::Trigger>(
-      "/panther/hardware/e_stop_reset");
-  srv_client_arm_home = node->create_client<rcdt_interfaces::srv::StringSrv>(
-      "/franka/moveit_manager/move_to_configuration");
+      vehicle_estop_trigger_service);
+  srv_client_estop_reset =
+      node->create_client<std_srvs::srv::Trigger>(vehicle_estop_reset_service);
+  srv_client_arm_home =
+      node->create_client<rcdt_interfaces::srv::StringSrv>(arm_home_service);
 
   // Action clients
-  action_client_gripper_open =
-      rclcpp_action::create_client<TriggerAction>(node, "/franka/gripper/open");
+  action_client_gripper_open = rclcpp_action::create_client<TriggerAction>(
+      node, arm_gripper_name + "/open");
   action_client_gripper_close = rclcpp_action::create_client<TriggerAction>(
-      node, "/franka/gripper/close");
+      node, arm_gripper_name + "/close");
 
   // Log initial mode
   switch (current_mode) {
@@ -55,6 +61,10 @@ void JoystickManager::initialize_joystick_manager() {
     case vehicle_mode:
       RCLCPP_INFO(node->get_logger(), "Initial mode: VEHICLE mode.");
       break;
+    case no_mode:
+      RCLCPP_INFO(
+          node->get_logger(),
+          "Initial mode: NO MODE, press 'A'/ CROSS to switch to ARM mode.");
     default:
       RCLCPP_ERROR(node->get_logger(), "Unknown platform mode.");
       break;
@@ -178,10 +188,14 @@ void JoystickManager::handle_driving(const float& linear,
   twist.header.frame_id = "base_link";
 
   // Forward/backward
-  twist.twist.linear.x = (std::abs(linear) > dead_axis_zone) ? linear : 0.0;
+  twist.twist.linear.x = (std::abs(linear) > dead_axis_zone)
+                             ? (linear * vehicle_speed_scale)
+                             : 0.0;
 
   // Turning
-  twist.twist.angular.z = (std::abs(angular) > dead_axis_zone) ? angular : 0.0;
+  twist.twist.angular.z = (std::abs(angular) > dead_axis_zone)
+                              ? (angular * vehicle_speed_scale)
+                              : 0.0;
 
   pub_vehicle_vel->publish(twist);
 }

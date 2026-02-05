@@ -336,7 +336,11 @@ class Joystick(Platform):
     platform_type: str = "Joystick"
     arm_cmd_topic: str = "arm/cmd_vel"
     arm_frame_id: str = "base_link"
+    arm_gripper_name: str = "/arm/gripper"
+    arm_home_service: str = "/arm/move_home"
     vehicle_cmd_topic: str = "vehicle/cmd_vel"
+    vehicle_estop_reset: str = "vehicle/estop_reset"
+    vehicle_estop_trigger: str = "vehicle/estop_trigger"
 
 
 # Configurations containing lists of platforms:

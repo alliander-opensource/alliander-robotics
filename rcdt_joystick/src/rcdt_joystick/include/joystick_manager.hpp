@@ -164,21 +164,27 @@ class JoystickManager {
   rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_open;
   rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_close;
 
-  // ROS2 topic variables
+  // ROS2 get parameter variables
   std::string arm_topic;
   std::string arm_frame_id;
+  std::string arm_gripper_name;
+  std::string arm_home_service;
   std::string vehicle_topic;
+  std::string vehicle_estop_reset_service;
+  std::string vehicle_estop_trigger_service;
 
   // Other variables
   sensor_msgs::msg::Joy::SharedPtr prev_joy_input;
-  int current_mode = arm_mode;
+  int current_mode = no_mode;
   bool gripper_busy = false;
 
   // constant variables
   static constexpr int arm_mode = 0;
   static constexpr int vehicle_mode = 1;
+  static constexpr int no_mode = 99;
   const float dead_axis_zone =
       0.3;  // Make response to changes in joystick values less sensitive.
+  const float vehicle_speed_scale = 0.4;
 };
 
 #endif  // JOYSTICK_MANAGER_HPP_
