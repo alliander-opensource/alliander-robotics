@@ -127,7 +127,6 @@ void JoystickManager::handle_buttons_arm(const std::vector<int32_t>& buttons) {
   // Open gripper
   if (check_btn_pressed(Button::LT, buttons, prev_joy_input->buttons) &&
       !gripper_busy) {
-    gripper_busy = true;
     RCLCPP_INFO(node->get_logger(), "Open gripper");
     send_gripper_goal(action_client_gripper_open);
   }
@@ -135,14 +134,12 @@ void JoystickManager::handle_buttons_arm(const std::vector<int32_t>& buttons) {
   // Close gripper
   if (check_btn_pressed(Button::RT, buttons, prev_joy_input->buttons) &&
       !gripper_busy) {
-    gripper_busy = true;
     RCLCPP_INFO(node->get_logger(), "Close gripper");
     send_gripper_goal(action_client_gripper_close);
   }
 
   // Move back home
-  if (check_btn_pressed(Button::B, buttons, prev_joy_input->buttons)){
-    // ros2 service call /franka/moveit_manager/move_to_configuration rcdt_interfaces/srv/StringSrv "{text: 'home'}"
+  if (check_btn_pressed(Button::B, buttons, prev_joy_input->buttons)) {
     RCLCPP_INFO(node->get_logger(), "Move back to home position");
     move_arm_to_home();
   }
@@ -163,8 +160,9 @@ void JoystickManager::handle_buttons_vehicle(
   }
 }
 
-void JoystickManager::move_arm_to_home(){
-  auto move_home_request = std::make_shared<rcdt_interfaces::srv::StringSrv::Request>();
+void JoystickManager::move_arm_to_home() {
+  auto move_home_request =
+      std::make_shared<rcdt_interfaces::srv::StringSrv::Request>();
   move_home_request->text = "home";
 
   auto future = srv_client_arm_home->async_send_request(move_home_request);
@@ -178,7 +176,6 @@ void JoystickManager::move_arm_to_home(){
   } else {
     RCLCPP_INFO(node->get_logger(), "Not ready");
   }
-
 }
 
 void JoystickManager::send_trigger_request(
@@ -199,6 +196,7 @@ void JoystickManager::send_trigger_request(
 
 void JoystickManager::send_gripper_goal(
     const rclcpp_action::Client<TriggerAction>::SharedPtr& client) {
+  gripper_busy = true;
   auto trigger_action_goal =
       std::make_shared<rcdt_interfaces::action::TriggerAction::Goal>();
   RCLCPP_INFO(node->get_logger(), "Sending goal");
@@ -232,6 +230,7 @@ void JoystickManager::gripper_goal_response_callback(
         goal_handle) {
   if (!goal_handle) {
     RCLCPP_ERROR(node->get_logger(), "Goal was rejected");
+    gripper_busy = false;
   } else {
     RCLCPP_INFO(node->get_logger(), "Goal accepted");
   }
