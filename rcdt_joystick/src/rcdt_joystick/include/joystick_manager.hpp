@@ -184,7 +184,8 @@ class JoystickManager {
   static constexpr int no_mode = 99;
   const float dead_axis_zone =
       0.3;  // Make response to changes in joystick values less sensitive.
-  const float vehicle_speed_scale = 0.4;
+  const float vehicle_speed_scale =
+      0.4;  // Max possible value provided by the joystick: 1.0 m/s
 };
 
 #endif  // JOYSTICK_MANAGER_HPP_
