@@ -237,8 +237,8 @@ void JoystickManager::move_arm_to_home() {
   move_home_request->text = "home";
 
   auto future = srv_client_arm_home->async_send_request(move_home_request);
-  // Wait for the result.
 
+  // TODO: this layout does not seem to work yet nicely, aka constantly goes to "Not ready", fix!!
   if (future.wait_for(std::chrono::seconds(1)) == std::future_status::ready) {
     if (future.get()->success) {
     } else {
@@ -253,8 +253,8 @@ void JoystickManager::send_trigger_request(
     const rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr& client) {
   auto trigger_request = std::make_shared<std_srvs::srv::Trigger::Request>();
   auto future = client->async_send_request(trigger_request);
-  // Wait for the result.
 
+  // TODO: this layout does not seem to work yet nicely, aka constantly goes to "Not ready", fix!!
   if (future.wait_for(std::chrono::seconds(1)) == std::future_status::ready) {
     if (future.get()->success) {
     } else {
