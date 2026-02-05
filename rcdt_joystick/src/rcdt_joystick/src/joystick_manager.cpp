@@ -64,7 +64,8 @@ void JoystickManager::initialize_joystick_manager() {
     case no_mode:
       RCLCPP_INFO(
           node->get_logger(),
-          "Initial mode: NO MODE, press 'A'/ CROSS to switch to ARM mode.");
+          "Initial mode: NO MODE, press 'A'/CROSS to switch to ARM mode.");
+      break;
     default:
       RCLCPP_ERROR(node->get_logger(), "Unknown platform mode.");
       break;
@@ -92,6 +93,9 @@ void JoystickManager::joy_cb(const sensor_msgs::msg::Joy::SharedPtr msg) {
     case vehicle_mode:
       handle_driving(msg->axes[1], msg->axes[0]);
       break;
+    case no_mode:
+      // Don't do anything.
+      break;
     default:
       RCLCPP_ERROR(node->get_logger(), "Unknown platform mode.");
       break;
@@ -115,6 +119,10 @@ void JoystickManager::handle_button_input(const std::vector<int32_t>& buttons) {
         current_mode = arm_mode;
         pub_vehicle_vel->publish(geometry_msgs::msg::TwistStamped{});
         return;
+      case no_mode:
+        RCLCPP_INFO(node->get_logger(), "Switch to ARM mode.");
+        current_mode = arm_mode;
+        return;
       default:
         RCLCPP_ERROR(node->get_logger(), "Unknown platform mode.");
         return;
@@ -128,6 +136,9 @@ void JoystickManager::handle_button_input(const std::vector<int32_t>& buttons) {
       return;
     case vehicle_mode:
       handle_buttons_vehicle(buttons);
+      return;
+    case no_mode:
+      // Don't do anything.
       return;
     default:
       RCLCPP_ERROR(node->get_logger(), "Unknown platform mode.");
