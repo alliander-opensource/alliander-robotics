@@ -42,6 +42,66 @@ class JoystickManager {
   ~JoystickManager();
 
  private:
+  // ROS2 communication variables:
+  /// The ROS2 node
+  rclcpp::Node::SharedPtr node;
+  /// Subsciber for the Joy topic
+  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr sub_joy;
+  /// Publisher for the arm movement velocities
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pub_arm_vel;
+  /// Publisher for the vehicle driving velocities
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr
+      pub_vehicle_vel;
+  /// Client to trigger the vehicle's E-stop
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_trigger;
+  /// Client to reset the vehicle's E-stop
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_reset;
+  /// Client to move the arm back to home position
+  rclcpp::Client<rcdt_interfaces::srv::StringSrv>::SharedPtr
+      srv_client_arm_home;
+  /// Client to trigger the arm's gripper to open
+  rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_open;
+  /// Client to trigger the arm's gripper to close
+  rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_close;
+
+  // ROS2 get parameter variables:
+  /// The arm twist topic
+  std::string arm_topic;
+  /// Frame ID of the arm
+  std::string arm_frame_id;
+  /// Name of the arm's gripper
+  std::string arm_gripper_name;
+  /// Service name with which the arm can be moved back to its home position
+  std::string arm_home_service;
+  /// The vehicle twist topic
+  std::string vehicle_topic;
+  /// Service name for resetting the vehicle's E-stop.
+  std::string vehicle_estop_reset_service;
+  /// Service name for triggering the vehicle's E-stop.
+  std::string vehicle_estop_trigger_service;
+
+  // Other variables:
+  /// Previous input values of the Joy message
+  sensor_msgs::msg::Joy::SharedPtr prev_joy_input;
+  /// Current platform mode of the joystick
+  int current_mode = no_mode;
+  /// Indication whether the gripper is busy or not
+  bool gripper_busy = false;
+
+  // constant variables:
+  /// Arm platform mode code
+  static constexpr int arm_mode = 0;
+  /// Vehicle platform mode code
+  static constexpr int vehicle_mode = 1;
+  /// No platform mode code
+  static constexpr int no_mode = 99;
+  /// Makes response to changes in joystick values less sensitive with a 'dead
+  /// zone'.
+  const float dead_axis_zone = 0.3;
+  /// Scale the vehicles speed, max possible value provided by the joystick: 1.0
+  /// m/s
+  const float vehicle_speed_scale = 0.4;
+
   /**
    * @brief initialize the joystick manager.
    */
@@ -83,6 +143,8 @@ class JoystickManager {
    * topic.
    * @param prev all previous button input values as received on the joystick
    * topic.
+   * @return boolean indicating whether the button is pressed (True) or not
+   * (False).
    */
   bool check_btn_pressed(size_t idx, const std::vector<int32_t>& curr,
                          const std::vector<int32_t>& prev);
@@ -150,42 +212,6 @@ class JoystickManager {
    */
   void gripper_result_callback(
       rclcpp_action::ClientGoalHandle<TriggerAction>::WrappedResult& result);
-
-  // ROS2 communication variables
-  rclcpp::Node::SharedPtr node;
-  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr sub_joy;
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pub_arm_vel;
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr
-      pub_vehicle_vel;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_trigger;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_reset;
-  rclcpp::Client<rcdt_interfaces::srv::StringSrv>::SharedPtr
-      srv_client_arm_home;
-  rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_open;
-  rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_close;
-
-  // ROS2 get parameter variables
-  std::string arm_topic;
-  std::string arm_frame_id;
-  std::string arm_gripper_name;
-  std::string arm_home_service;
-  std::string vehicle_topic;
-  std::string vehicle_estop_reset_service;
-  std::string vehicle_estop_trigger_service;
-
-  // Other variables
-  sensor_msgs::msg::Joy::SharedPtr prev_joy_input;
-  int current_mode = no_mode;
-  bool gripper_busy = false;
-
-  // constant variables
-  static constexpr int arm_mode = 0;
-  static constexpr int vehicle_mode = 1;
-  static constexpr int no_mode = 99;
-  const float dead_axis_zone =
-      0.3;  // Make response to changes in joystick values less sensitive.
-  const float vehicle_speed_scale =
-      0.4;  // Max possible value provided by the joystick: 1.0 m/s
 };
 
 #endif  // JOYSTICK_MANAGER_HPP_

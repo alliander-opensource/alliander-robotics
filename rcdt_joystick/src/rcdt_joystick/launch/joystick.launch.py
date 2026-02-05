@@ -37,7 +37,7 @@ def launch_setup(context: LaunchContext) -> list:
             {"vehicle_cmd_topic": joystick_config.vehicle_cmd_topic},
             {"vehicle_estop_reset": joystick_config.vehicle_estop_reset},
             {"vehicle_estop_trigger": joystick_config.vehicle_estop_trigger},
-        ]
+        ],
     )
 
     joystick_controller = Node(

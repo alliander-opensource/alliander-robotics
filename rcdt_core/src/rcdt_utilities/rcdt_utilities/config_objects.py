@@ -330,7 +330,11 @@ class Joystick(Platform):
         platform_type (str): Type identifier for the platform.
         arm_cmd_topic (str): Topic for publishing the arm's twist message.
         arm_frame_id (str): Frame ID for the arm topic.
+        arm_gripper_name (str): Name of the arm's gripper.
+        arm_home_service (str): Service name with which the arm can be moved back to home position.
         vehicle_cmd_topic (str): Topic for publishing the vehicle's twist message.
+        vehicle_estop_reset (str): Service name for resetting the vehicle's E-stop.
+        vehicle_estop_trigger (str): Service name for triggering the vehicle's E-stop.
     """
 
     platform_type: str = "Joystick"
