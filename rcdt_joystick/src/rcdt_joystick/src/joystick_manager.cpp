@@ -64,12 +64,14 @@ void JoystickManager::initialize_joystick_manager() {
 }
 
 void JoystickManager::joy_cb(const sensor_msgs::msg::Joy::SharedPtr msg) {
-  // First message: just store and return
+  // First message: only store and return
   if (!prev_joy_input || prev_joy_input->buttons.empty()) {
     prev_joy_input = msg;
     return;
   }
 
+  // First handle joystick input since e.g. and e-stop trigger should have
+  // hightest priority.
   handle_button_input(msg->buttons);
 
   switch (current_mode) {
@@ -160,6 +162,50 @@ void JoystickManager::handle_buttons_vehicle(
   }
 }
 
+bool JoystickManager::check_btn_pressed(size_t idx,
+                                        const std::vector<int32_t>& curr,
+                                        const std::vector<int32_t>& prev) {
+  return curr[idx] != prev[idx];
+}
+
+void JoystickManager::handle_driving(const float& linear,
+                                     const float& angular) {
+  float prev_angular = prev_joy_input->axes[0];
+  float prev_linear = prev_joy_input->axes[1];
+
+  geometry_msgs::msg::TwistStamped twist;
+  twist.header.stamp = node->now();
+  twist.header.frame_id = "base_link";
+
+  // Forward/backward
+  twist.twist.linear.x = (std::abs(linear) > dead_axis_zone) ? linear : 0.0;
+
+  // Turning
+  twist.twist.angular.z = (std::abs(angular) > dead_axis_zone) ? angular : 0.0;
+
+  pub_vehicle_vel->publish(twist);
+}
+
+void JoystickManager::handle_arm_movement(const float& x, const float& y,
+                                          const float& z,
+                                          const float& rotation) {
+  geometry_msgs::msg::TwistStamped twist;
+  twist.header.stamp = node->now();
+  twist.header.frame_id = arm_frame_id;
+
+  twist.twist.linear.x =
+      (std::abs(x) > dead_axis_zone) ? x : 0.0;  // Forward/backward
+  twist.twist.linear.y =
+      (std::abs(y) > dead_axis_zone) ? y : 0.0;  // Left/right
+  twist.twist.linear.z = (std::abs(z) > dead_axis_zone) ? z : 0.0;  // Up/down
+
+  // Turning
+  twist.twist.angular.z =
+      (std::abs(rotation) > dead_axis_zone) ? rotation : 0.0;
+
+  pub_arm_vel->publish(twist);
+}
+
 void JoystickManager::move_arm_to_home() {
   auto move_home_request =
       std::make_shared<rcdt_interfaces::srv::StringSrv::Request>();
@@ -219,12 +265,6 @@ void JoystickManager::send_gripper_goal(
   client->async_send_goal(*trigger_action_goal, send_goal_options);
 }
 
-bool JoystickManager::check_btn_pressed(size_t idx,
-                                        const std::vector<int32_t>& curr,
-                                        const std::vector<int32_t>& prev) {
-  return curr[idx] != prev[idx];
-}
-
 void JoystickManager::gripper_goal_response_callback(
     std::shared_ptr<rclcpp_action::ClientGoalHandle<TriggerAction>>
         goal_handle) {
@@ -260,44 +300,4 @@ void JoystickManager::gripper_result_callback(
       break;
   }
   gripper_busy = false;
-}
-
-void JoystickManager::handle_driving(const float& linear,
-                                     const float& angular) {
-  float prev_angular = prev_joy_input->axes[0];
-  float prev_linear = prev_joy_input->axes[1];
-
-  geometry_msgs::msg::TwistStamped twist;
-  twist.header.stamp = node->now();
-  twist.header.frame_id = "base_link";
-
-  // Forward/backward
-  twist.twist.linear.x = (std::abs(linear) > dead_axis_zone) ? linear : 0.0;
-
-  // Turning
-  twist.twist.angular.z = (std::abs(angular) > dead_axis_zone) ? angular : 0.0;
-
-  pub_vehicle_vel->publish(twist);
-}
-
-void JoystickManager::handle_arm_movement(const float& x, const float& y,
-                                          const float& z,
-                                          const float& rotation) {
-  geometry_msgs::msg::TwistStamped twist;
-  twist.header.stamp = node->now();
-  twist.header.frame_id = arm_frame_id;
-
-  twist.twist.linear.x =
-      (std::abs(x) > dead_axis_zone) ? x : 0.0;  // Forward/backward
-  twist.twist.linear.y =
-      (std::abs(y) > dead_axis_zone) ? y : 0.0;  // Left/right
-  twist.twist.linear.z = (std::abs(z) > dead_axis_zone) ? z : 0.0;  // Up/down
-
-  // Turning
-  twist.twist.angular.z =
-      (std::abs(rotation) > dead_axis_zone)
-          ? rotation
-          : 0.0;  // TODO: I want to rotate just joint7, this does not work
-
-  pub_arm_vel->publish(twist);
 }
