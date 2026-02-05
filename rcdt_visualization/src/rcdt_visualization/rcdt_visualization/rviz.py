@@ -251,11 +251,12 @@ class Rviz:
         )
 
     @staticmethod
-    def add_polygon(topic: str) -> None:
+    def add_polygon(topic: str, color: str) -> None:
         """Add a polygon to the RViz configuration.
 
         Args:
             topic (str): The topic of the polygon.
+            color (str): RGB values for the display color.
         """
         Rviz.displays.append(
             {
@@ -263,7 +264,7 @@ class Rviz:
                 "Class": "rviz_default_plugins/Polygon",
                 "Name": topic,
                 "Topic": {"Value": topic},
-                "Color": "25; 255; 0",
+                "Color": color,
             }
         )
 

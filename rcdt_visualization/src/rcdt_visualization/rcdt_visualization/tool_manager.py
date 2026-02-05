@@ -142,8 +142,8 @@ class ApplyConfigurations:
             Rviz.set_grid_frame(f"/{ns}/base_footprint")
 
         if nav2.collision_monitor:
-            Rviz.add_polygon(f"/{ns}/polygon_slower")
-            Rviz.add_polygon(f"/{ns}/velocity_polygon_stop")
+            Rviz.add_polygon(f"/{ns}/polygon_slower", "255; 255; 0")
+            Rviz.add_polygon(f"/{ns}/velocity_polygon_stop", "255; 0; 0")
 
     @staticmethod
     def add_lidar(platform: Lidar) -> None:

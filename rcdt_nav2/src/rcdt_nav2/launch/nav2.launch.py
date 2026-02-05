@@ -4,7 +4,7 @@
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import LifecycleNode, Node, SetParameter, SetRemap
+from launch_ros.actions import LifecycleNode, Node, SetParameter
 from rcdt_utilities.adapted_yaml import AdaptedYaml
 from rcdt_utilities.config_objects import Vehicle
 from rcdt_utilities.launch_argument import LaunchArgument
@@ -44,9 +44,11 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     lifecycle_nodes_names = []
     use_map_localization = True
     plugins = ["static_layer", "obstacle_layer", "inflation_layer"]
+    cmd_vel_topic = f"/{namespace_vehicle}/cmd_vel"
 
     if nav2.collision_monitor:
         lifecycle_nodes_names.append("collision_monitor")
+        cmd_vel_topic += "_raw"
     if nav2.slam:
         lifecycle_nodes_names.append("slam_toolbox")
         use_map_localization = False
@@ -239,6 +241,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
             follow_path_params.file,
         ],
         namespace=namespace_vehicle,
+        remappings=[("cmd_vel", cmd_vel_topic)],
     )
 
     all_lifecycle_nodes["planner_server"] = LifecycleNode(
@@ -258,6 +261,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         name="behavior_server",
         parameters=[behavior_server_params.file],
         namespace=namespace_vehicle,
+        remappings=[("cmd_vel", cmd_vel_topic)],
     )
 
     all_lifecycle_nodes["bt_navigator"] = LifecycleNode(
@@ -296,19 +300,12 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         remappings=remappings,
     )
 
-    pub_topic = (
-        f"/{namespace_vehicle}/cmd_vel"
-        if not nav2.collision_monitor
-        else f"/{namespace_vehicle}/cmd_vel_raw"
-    )
-
     register_lifecycle_nodes = []
     for node_name in lifecycle_nodes_names:
         register_lifecycle_nodes.append(all_lifecycle_nodes[node_name])
 
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
-        SetRemap(src="/cmd_vel", dst=pub_topic),
         *[Register.on_start(node, context) for node in register_lifecycle_nodes],
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
         Register.on_log(nav2_manager, "Controller is ready.", context)
