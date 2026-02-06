@@ -29,7 +29,8 @@
         "ms-azuretools.vscode-docker",
         "twxs.cmake",
         "kylinideteam.cmake-intellisence",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "github.vscode-pull-request-github"
       ]
     }
   }
