@@ -13,9 +13,10 @@ from geographic_msgs.msg import GeoPath, GeoPoseStamped
 from geometry_msgs.msg import PoseStamped
 from nicegui import app, events, ui
 from rcdt_interfaces.srv import PoseStampedSrv, StringSrv
-from rcdt_utilities.config_objects import Arm, PlatformList, Vehicle
+from rcdt_utilities.config_objects import Arm, Platform, PlatformList, Vehicle
 from rcdt_utilities.ros_utils import spin_node
 from rclpy.node import Node
+from sensor_msgs.msg import NavSatFix
 from std_srvs.srv import Empty, SetBool, Trigger
 
 TIMEOUT = 3
@@ -100,6 +101,7 @@ class UserInterfaceNode(Node):
         else:
             platform_list = PlatformList.from_str(platform_list_json)
 
+        self.ui = UserInterface(self)
         connected = 0
         controllers = 3 * [None]
         for platform in platform_list.platforms:
@@ -111,13 +113,13 @@ class UserInterfaceNode(Node):
                 case "Arm":
                     controller = ArmControl(self, platform.namespace)
                 case "Vehicle":
-                    controller = VehicleControl(self, platform.namespace)
+                    controller = VehicleControl(self, platform, self.ui)
                 case _:
                     continue
             controllers[connected] = controller
             connected += 1
 
-        self.ui = UserInterface(self, controllers)
+        self.ui.load_controllers(controllers)
 
 
 class ArmControl:
@@ -130,7 +132,7 @@ class ArmControl:
             node (UserInterfaceNode): The main UI node.
             namespace (str): The namespace of the arm platform.
         """
-        self.node = node
+        self.node: Node = node
         self.namespace = namespace
         self.connect_arm(namespace)
 
@@ -242,25 +244,31 @@ class ArmControl:
 class VehicleControl:
     """Contains the vehicle control functions."""
 
-    def __init__(self, node: UserInterfaceNode, namespace: str):
+    def __init__(
+        self, node: UserInterfaceNode, platform: Platform, ui: "UserInterface"
+    ):
         """Initialize the vehicle control.
 
         Args:
             node (UserInterfaceNode): The main UI node.
-            namespace (str): The namespace of the vehicle platform.
+            platform (Platform): The vehicle platform.
+            ui (UserInterface): The user interface instance.
         """
-        self.node = node
-        self.namespace = namespace
-        self.connect_vehicle(namespace)
+        self.node: Node = node
+        self.namespace = platform.namespace
+        self.ui = ui
+        self.connect_vehicle()
 
-    def connect_vehicle(self, namespace: str) -> None:
-        """Connected with vehicle-related topics, services, and actions.
+        for child in platform.childs:
+            if child.platform_type == "GPS":
+                node.create_subscription(
+                    NavSatFix, f"/{child.namespace}/gps/fix", self.update_position, 10
+                )
 
-        Args:
-            namespace (str): The namespace of the vehicle platform.
-        """
+    def connect_vehicle(self) -> None:
+        """Connected with vehicle-related topics, services, and actions."""
         self.stop_navigation_client = self.node.create_client(
-            Trigger, f"/{namespace}/nav2_manager/stop"
+            Trigger, f"/{self.namespace}/nav2_manager/stop"
         )
         self.gps_waypoints_publisher = self.node.create_publisher(
             GeoPath, "/gps_waypoints", 10
@@ -284,22 +292,46 @@ class VehicleControl:
         """Stop vehicle navigation."""
         self.stop_navigation_client.call(Trigger.Request(), TIMEOUT)
 
+    def update_position(self, msg: NavSatFix) -> None:
+        """Update the vehicle position on the map.
+
+        Args:
+            msg (NavSatFix): The ROS message containing the GPS location.
+        """
+        if not self.ui.leaflet or not self.ui.leaflet.is_initialized:
+            return
+        if self.ui.vehicle_marker is None:
+            marker = ui.leaflet.marker(latlng=(msg.latitude, msg.longitude))
+            self.ui.set_marker(marker, "red")
+            self.ui.vehicle_marker = marker
+        else:
+            self.ui.vehicle_marker.move(msg.latitude, msg.longitude)
+
 
 class UserInterface:
     """Defines the user interface."""
 
-    def __init__(self, node: UserInterfaceNode, controllers: list):
+    def __init__(self, node: UserInterfaceNode):
         """Initialize the UI.
 
         Args:
             node (UserInterfaceNode): The main UI node.
-            controllers (list): List of platform controllers.
         """
         self.node = node
-        self.leaflet: ui.leaflet
+        self.leaflet: ui.leaflet | None = None
         self.grid: ui.aggrid
-        self.marker: ui.leaflet.marker | None = None
+        self.selection_marker: ui.leaflet.marker | None = None
+        self.vehicle_marker: ui.leaflet.marker | None = None
         self.waypoints: dict[int, Waypoint] = {}
+
+    def load_controllers(
+        self, controllers: list[ArmControl | VehicleControl | None]
+    ) -> None:
+        """Load the controllers into the UI.
+
+        Args:
+            controllers (list[ArmControl | VehicleControl | None]): The list of controllers to load.
+        """
 
         @ui.page("/")
         async def page() -> None:
@@ -417,6 +449,11 @@ class UserInterface:
         self.leaflet = ui.leaflet(center=CENTER_DEFAULT, zoom=19).classes(
             "w-full h-full"
         )
+        self.leaflet.clear_layers()
+        self.leaflet.tile_layer(
+            url_template=r"https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+            options={"maxZoom": 30, "maxNativeZoom": 19},
+        )
         self.leaflet.on("map-click", self.place_selection_marker)
         self.leaflet.on("contextmenu.prevent", self.clear_selection_marker)
         await self.leaflet.initialized()
@@ -430,35 +467,40 @@ class UserInterface:
         lat = e.args["latlng"]["lat"]
         lng = e.args["latlng"]["lng"]
 
-        if not self.marker:
-            self.marker = ui.leaflet.marker(latlng=(lat, lng))
+        if not self.selection_marker:
+            self.selection_marker = ui.leaflet.marker(latlng=(lat, lng))
         else:
-            self.marker.move(lat, lng)
+            self.selection_marker.move(lat, lng)
 
     def clear_selection_marker(self) -> None:
         """Clear the current selection marker."""
-        if self.marker:
-            self.leaflet.remove_layer(self.marker)
-            self.marker = None
+        if self.selection_marker and self.leaflet:
+            self.leaflet.remove_layer(self.selection_marker)
+            self.selection_marker = None
 
     @staticmethod
-    def set_marker(marker: ui.leaflet.marker, color: str, number: int) -> None:
+    def set_marker(
+        marker: ui.leaflet.marker, color: str, number: int | None = None
+    ) -> None:
         """Set the marker icon based on color and number.
 
         Args:
             marker (ui.leaflet.marker): The marker to set the icon for.
             color (str): The color of the marker.
-            number (int): The number on the marker.
+            number (int | None): The number on the marker.
         """
-        url = f"https://raw.githubusercontent.com/sheiun/leaflet-color-number-markers/main/dist/img/{color}/marker-icon-2x-{color}-{number}.png"
+        if number is not None:
+            url = f"https://raw.githubusercontent.com/sheiun/leaflet-color-number-markers/main/dist/img/{color}/marker-icon-2x-{color}-{number}.png"
+        else:
+            url = f"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-{color}.png"
         icon = f"L.icon({{iconUrl: '{url}'}})"
         marker.run_method(":setIcon", icon)
 
     def add(self) -> None:
         """Add a waypoint at the current marker position."""
-        if not self.marker:
+        if not self.selection_marker:
             return
-        self.add_waypoint(self.marker.latlng)
+        self.add_waypoint(self.selection_marker.latlng)
         self.clear_selection_marker()
 
     def add_waypoint(self, latlong: tuple[float, float]) -> None:
@@ -478,8 +520,9 @@ class UserInterface:
         """Remove all selected waypoints."""
         selected_rows = await self.grid.get_selected_rows()
         for row in selected_rows:
-            self.leaflet.remove_layer(self.waypoints[row["id"]].marker)
-            self.waypoints.pop(row["id"])
+            if self.leaflet:
+                self.leaflet.remove_layer(self.waypoints[row["id"]].marker)
+                self.waypoints.pop(row["id"])
         self.update()
 
     def save(self) -> None:
@@ -540,7 +583,7 @@ class UserInterface:
         for index, waypoint in enumerate(self.waypoints_ordered):
             if waypoint.order != index:
                 waypoint.order = index
-            self.set_marker(waypoint.marker, "red", waypoint.order)
+            self.set_marker(waypoint.marker, "grey", waypoint.order)
 
         # Update grid ui:
         self.grid.options["rowData"] = [
