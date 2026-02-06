@@ -15,7 +15,7 @@ import rclpy
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
 from _pytest.fixtures import SubRequest
-from rcdt_utilities.config_objects import PlatformList, SimulatorConfig
+from alliander_utilities.config_objects import PlatformList, SimulatorConfig
 from rclpy.node import Node
 from termcolor import cprint
 

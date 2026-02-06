@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [project]
-name = "rcdt_robotics"
+name = "alliander_robotics"
 version = "0.1.0"
 requires-python = "==3.12.*"
 dependencies = [
@@ -31,23 +31,23 @@ linting = [
     "ruff>=0.14.13",
     "ty>=0.0.12",
 ]
-rcdt-franka = [
+alliander-franka = [
     "numpy>=2.4.1",
 ]
-rcdt-gazebo = [
+alliander-gazebo = [
     "numpy>=2.4.1",
     "pyproj>=3.7.2",
     "scipy>=1.17.0",
     "xmltodict>=1.0.2",
 ]
-rcdt-moveit = [
+alliander-moveit = [
     "xmltodict>=1.0.2",
 ]
-rcdt-nav2 = [
+alliander-nav2 = [
     "numpy>=2.4.1",
     "pydantic>=2.12.5",
 ]
-rcdt-visualization = [
+alliander-visualization = [
     "nicegui>=3.5.0",
     "numpy>=2.4.1",
 ]

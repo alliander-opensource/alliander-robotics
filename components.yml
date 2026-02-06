@@ -2,62 +2,62 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 ubuntu:
-  rcdt_core:
+  alliander_core:
     base_image: rcdt/robotics:ubuntu-noble
     tag: base
-    dockerfile: rcdt_core/rcdt_core.Dockerfile
+    dockerfile: alliander_core/alliander_core.Dockerfile
 ubuntu_images:
-  rcdt_franka:
+  alliander_franka:
     base_image: rcdt/robotics:base
     tag: franka
-    dockerfile: rcdt_franka/rcdt_franka.Dockerfile
-  rcdt_gazebo:
+    dockerfile: alliander_franka/alliander_franka.Dockerfile
+  alliander_gazebo:
     base_image: rcdt/robotics:base
     tag: gazebo
-    dockerfile: rcdt_gazebo/rcdt_gazebo.Dockerfile
-  rcdt_gps:
+    dockerfile: alliander_gazebo/alliander_gazebo.Dockerfile
+  alliander_gps:
     base_image: rcdt/robotics:base
     tag: gps
-    dockerfile: rcdt_gps/rcdt_gps.Dockerfile
-  rcdt_husarion:
+    dockerfile: alliander_gps/alliander_gps.Dockerfile
+  alliander_husarion:
     base_image: rcdt/robotics:base
     tag: husarion
-    dockerfile: rcdt_husarion/rcdt_husarion.Dockerfile
-  rcdt_moveit:
+    dockerfile: alliander_husarion/alliander_husarion.Dockerfile
+  alliander_moveit:
     base_image: rcdt/robotics:base
     tag: moveit
-    dockerfile: rcdt_moveit/rcdt_moveit.Dockerfile
-  rcdt_nav2:
+    dockerfile: alliander_moveit/alliander_moveit.Dockerfile
+  alliander_nav2:
     base_image: rcdt/robotics:base
     tag: nav2
-    dockerfile: rcdt_nav2/rcdt_nav2.Dockerfile
-  rcdt_ouster:
+    dockerfile: alliander_nav2/alliander_nav2.Dockerfile
+  alliander_ouster:
     base_image: rcdt/robotics:base
     tag: ouster
-    dockerfile: rcdt_ouster/rcdt_ouster.Dockerfile
-  rcdt_realsense:
+    dockerfile: alliander_ouster/alliander_ouster.Dockerfile
+  alliander_realsense:
     base_image: rcdt/robotics:base
     tag: realsense
-    dockerfile: rcdt_realsense/rcdt_realsense.Dockerfile
-  rcdt_tests:
+    dockerfile: alliander_realsense/alliander_realsense.Dockerfile
+  alliander_tests:
     base_image: rcdt/robotics:base
     tag: tests
-    dockerfile: rcdt_tests/rcdt_tests.Dockerfile
-  rcdt_velodyne:
+    dockerfile: alliander_tests/alliander_tests.Dockerfile
+  alliander_velodyne:
     base_image: rcdt/robotics:base
     tag: velodyne
-    dockerfile: rcdt_velodyne/rcdt_velodyne.Dockerfile
-  rcdt_visualization:
+    dockerfile: alliander_velodyne/alliander_velodyne.Dockerfile
+  alliander_visualization:
     base_image: rcdt/robotics:base
     tag: visualization
-    dockerfile: rcdt_visualization/rcdt_visualization.Dockerfile
+    dockerfile: alliander_visualization/alliander_visualization.Dockerfile
 cuda:
-  rcdt_core:
+  alliander_core:
     base_image: rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
     tag: cuda
-    dockerfile: rcdt_core/rcdt_core.Dockerfile
+    dockerfile: alliander_core/alliander_core.Dockerfile
 cuda_images:
-  rcdt_zed:
+  alliander_zed:
     base_image: rcdt/robotics:cuda
     tag: zed
-    dockerfile: rcdt_zed/rcdt_zed.Dockerfile
+    dockerfile: alliander_zed/alliander_zed.Dockerfile

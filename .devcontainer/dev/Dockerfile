@@ -46,8 +46,8 @@ COPY .devcontainer/dev/.dev_bashrc /.dev_bashrc
 RUN echo "source /.dev_bashrc" >> /home/$REMOTE_USER/.bashrc
 
 # Copy repo packages:
-COPY rcdt_core/src/ /rcdt/ros/src
-COPY rcdt_moveit/src/ /rcdt/ros/src
+COPY alliander_core/src/ /rcdt/ros/src
+COPY alliander_moveit/src/ /rcdt/ros/src
 
 # Build repo packages:
 ENV DCMAKE_EXPORT_COMPILE_COMMANDS=1

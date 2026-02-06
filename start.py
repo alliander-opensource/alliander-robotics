@@ -11,8 +11,10 @@ from pathlib import Path
 
 import yaml
 
+from alliander_core.src.alliander_utilities.alliander_utilities.config_objects import (
+    Platform,
+)
 from predefined_configurations import PredefinedConfigurations
-from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import Platform
 
 SERVICE = typing.Literal[
     "platform",
@@ -44,7 +46,7 @@ class Compose:
             "${HOME}/.nix-profile/bin/nvim:/usr/bin/nvim",
             "/nix/store:/nix/store",
             "./pyproject.toml:/rcdt/pyproject.toml",
-            "./rcdt_core/src/rcdt_utilities:/rcdt/ros/src/rcdt_utilities",
+            "./alliander_core/src/alliander_utilities:/rcdt/ros/src/alliander_utilities",
         ],
     }
     host_cwd: str = os.path.abspath(os.getcwd())
@@ -119,7 +121,7 @@ class Compose:
             ValueError: if platform is not provided while a platform is needed.
 
         Returns:
-            tuple[str, str, dict]: tuple consisting of the RCDT package, the config for compose, and additional config.
+            tuple[str, str, dict]: tuple consisting of the package, the config for compose, and additional config.
         """
         needs_platform = service_type in {"platform", "moveit", "nav2"}
         if needs_platform and platform is None:
@@ -130,7 +132,7 @@ class Compose:
 
         base_configs = {
             "simulator": (
-                "rcdt_gazebo",
+                "alliander_gazebo",
                 (
                     f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
                     f" sim_config:='{self.predefined_configuration.sim_conf.to_str()}'"
@@ -138,7 +140,7 @@ class Compose:
                 {},
             ),
             "visualization": (
-                "rcdt_visualization",
+                "alliander_visualization",
                 (
                     f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
                     f" vis_config:='{self.predefined_configuration.viz_conf.to_str()}'"
@@ -146,22 +148,22 @@ class Compose:
                 {},
             ),
             "linting": (
-                "rcdt_tests",
+                "alliander_tests",
                 " && pre-commit run --all-files",
                 {"remove_nvidia": True},
             ),
             "documentation": (
-                "rcdt_tests",
+                "alliander_tests",
                 " && sphinx-autobuild --port 0 docs docs/build/html",
                 {},
             ),
             "pytest": (
-                "rcdt_tests",
+                "alliander_tests",
                 " && pytest -s -rsxf" + arguments,
                 {},
             ),
             "pytest-no-nvidia": (
-                "rcdt_tests",
+                "alliander_tests",
                 " && pytest -s -rsxf" + arguments,
                 {"remove_nvidia": True},
             ),
@@ -175,12 +177,12 @@ class Compose:
                     {"needs_dependency": False},
                 ),
                 "moveit": (
-                    "rcdt_moveit",
+                    "alliander_moveit",
                     f" platform_config:='{platform.to_str()}'",
                     {"needs_dependency": True},
                 ),
                 "nav2": (
-                    "rcdt_nav2",
+                    "alliander_nav2",
                     f" platform_config:='{platform.to_str()}'",
                     {"needs_dependency": True},
                 ),
@@ -195,7 +197,7 @@ class Compose:
         """Loads the base compose file for a certain package and adds a command.
 
         Args:
-            package (str): RCDT package to get docker-compose.yml file from.
+            package (str): package to get docker-compose.yml file from.
             command (str): command to put in command field in docker-compose.yml file.
 
         Returns:
@@ -228,7 +230,7 @@ class Compose:
 
         Args:
             service (dict): dictionary containing Docker container's YAML config.
-            package (str): RCDT package to mount in container, such that live code updates are possible.
+            package (str): package to mount in container, such that live code updates are possible.
         """
         if self.dev:
             src_mounts = self.get_src_mounts(package)
@@ -335,7 +337,7 @@ class Compose:
                     self.add_service(content, "simulator")
                 if self.visualization:
                     self.add_service(content, "visualization")
-                    services["rcdt_visualization"]["depends_on"] = {}
+                    services["alliander_visualization"]["depends_on"] = {}
 
         # Add healthchecks to all services:
         for name, service in services.items():
@@ -345,8 +347,11 @@ class Compose:
                 "retries": 1000,
             }
             # Make visualization depenend on all other services:
-            if "rcdt_visualization" in services and name != "rcdt_visualization":
-                services["rcdt_visualization"]["depends_on"][name] = {
+            if (
+                "alliander_visualization" in services
+                and name != "alliander_visualization"
+            ):
+                services["alliander_visualization"]["depends_on"][name] = {
                     "condition": "service_healthy"
                 }
 

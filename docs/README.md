@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: Alliander N. V.
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# RCDT Robotics
+# Alliander Robotics
 
 This repository shares all developments happening within the Alliander Robotics team. Projects include inspection robotics, gas leak detection, and operating robots under voltage. 
 

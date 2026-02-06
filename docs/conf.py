@@ -12,9 +12,9 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "rcdt_robotics"
-copyright = "2025, RCDT"
-author = "RCDT"
+project = "alliander_robotics"
+copyright = "2025, Alliander"
+author = "Alliander"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

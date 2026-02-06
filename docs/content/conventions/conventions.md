@@ -114,7 +114,7 @@ The file ends with the default test dependency and an export definition.
 
 ## Custom Messages, Services and Actions
 
-We define custom messages, services and actions in our *rcdt_interfaces* package. This package has the following folder structure:
+We define custom messages, services and actions in our *alliander_interfaces* package. This package has the following folder structure:
 
 ```text
 ros_package/
