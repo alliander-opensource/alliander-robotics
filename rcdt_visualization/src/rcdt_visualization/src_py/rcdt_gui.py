@@ -59,7 +59,7 @@ class Waypoint:
         """
         return self.marker.latlng[0]
 
-    def long(self) -> float:
+    def lng(self) -> float:
         """Get the longitude of the waypoint.
 
         Returns:
@@ -75,13 +75,13 @@ class Waypoint:
         """
         return f"{round(self.lat(), 5)}"
 
-    def long_str(self) -> str:
+    def lng_str(self) -> str:
         """Get the longitude string of the waypoint.
 
         Returns:
             str: The longitude string.
         """
-        return f"{round(self.long(), 5)}"
+        return f"{round(self.lng(), 5)}"
 
 
 class UserInterfaceNode(Node):
@@ -284,7 +284,7 @@ class VehicleControl:
         for waypoint in waypoints:
             geo_pose_stamped = GeoPoseStamped()
             geo_pose_stamped.pose.position.latitude = waypoint.lat()
-            geo_pose_stamped.pose.position.longitude = waypoint.long()
+            geo_pose_stamped.pose.position.longitude = waypoint.lng()
             goal.poses.append(geo_pose_stamped)
         self.gps_waypoints_publisher.publish(goal)
 
@@ -426,7 +426,7 @@ class UserInterface:
                             "columnDefs": [
                                 {"headerName": "#", "field": "order", "rowDrag": True},
                                 {"headerName": "lat", "field": "lat"},
-                                {"headerName": "long", "field": "long"},
+                                {"headerName": "lng", "field": "lng"},
                                 {"headerName": "id", "field": "id", "hide": True},
                             ],
                             "rowData": [],
@@ -503,13 +503,13 @@ class UserInterface:
         self.add_waypoint(self.selection_marker.latlng)
         self.clear_selection_marker()
 
-    def add_waypoint(self, latlong: tuple[float, float]) -> None:
+    def add_waypoint(self, latlng: tuple[float, float]) -> None:
         """Add a waypoint at the specified latitude and longitude.
 
         Args:
-            latlong (tuple[float, float]): The latitude and longitude of the waypoint.
+            latlng (tuple[float, float]): The latitude and longitude of the waypoint.
         """
-        marker = ui.leaflet.marker(latlng=latlong)
+        marker = ui.leaflet.marker(latlng=latlng)
         waypoint = Waypoint(marker)
         waypoint.order = len(self.waypoints)
 
@@ -527,44 +527,39 @@ class UserInterface:
 
     def save(self) -> None:
         """Save the current waypoints to a JSON file."""
+
+        def save() -> None:
+            data = {"waypoints": []}
+            for waypoint in self.waypoints_ordered:
+                data["waypoints"].append((waypoint.lat(), waypoint.lng()))
+            try:
+                ui.download.content(json.dumps(data), filename.value)
+                ui.notify("Waypoints Saved.", type="positive")
+            except Exception as e:
+                ui.notify(f"Failed to save waypoints: {e}", type="negative")
+            dialog.close()
+
         with ui.dialog() as dialog, ui.card():
             ui.label("Save as...")
             filename = ui.input("filename", value="waypoints.json")
-
-            def save() -> None:
-                data: list[tuple[float, float]] = []
-                for waypoint in self.waypoints_ordered:
-                    data.append((waypoint.lat(), waypoint.long()))
-                try:
-                    with open(filename.value, "w", encoding="utf-8") as stream:
-                        json.dump(data, stream)
-                    ui.notify("Waypoints saved.", type="positive")
-                except Exception as e:
-                    ui.notify(f"Failed to save waypoints: {e}", type="negative")
-                dialog.close()
-
             ui.button("Save", on_click=save)
         dialog.open()
 
     def load(self) -> None:
         """Load waypoints from a JSON file."""
+
+        async def load(upload_event: events.UploadEventArguments) -> None:
+            try:
+                data = await upload_event.file.json()
+                for latlng in data["waypoints"]:
+                    self.add_waypoint(latlng)
+                ui.notify("Waypoints Loaded.", type="positive")
+            except Exception as e:
+                ui.notify(f"Failed to load waypoints: {e}", type="negative")
+            dialog.close()
+
         with ui.dialog() as dialog, ui.card():
-            ui.label("Load from...")
-            filename = ui.input("filename", value="waypoints.json")
-
-            def load() -> None:
-                try:
-                    with open(filename.value, "r", encoding="utf-8") as stream:
-                        data = json.load(stream)
-
-                    for latlong in data:
-                        self.add_waypoint(latlong)
-                    ui.notify("Waypoints Loaded.", type="positive")
-                except Exception as e:
-                    ui.notify(f"Failed to load waypoints: {e}", type="negative")
-                dialog.close()
-
-            ui.button("Load", on_click=load)
+            ui.upload(on_upload=load)
         dialog.open()
 
     async def change_order(self) -> None:
@@ -587,7 +582,7 @@ class UserInterface:
 
         # Update grid ui:
         self.grid.options["rowData"] = [
-            {"order": wp.order, "lat": wp.lat_str(), "long": wp.long(), "id": wp.id}
+            {"order": wp.order, "lat": wp.lat_str(), "lng": wp.lng(), "id": wp.id}
             for wp in self.waypoints_ordered
         ]
 
