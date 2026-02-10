@@ -36,12 +36,11 @@ RUN apt update && apt install -y --no-install-recommends \
 
 # Install custom msgs:
 RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
-  https://github.com/frankarobotics/franka_ros2.git src/franka_ros2 \
-  && cd src/franka_ros2 \
-  && git sparse-checkout set franka_msgs
+    https://github.com/frankarobotics/franka_ros2.git src/franka_ros2 \
+    && cd src/franka_ros2 \
+    && git sparse-checkout set franka_msgs
 
 # Setup configuration files:
-COPY common/colcon_build.sh /alliander/colcon_build.sh
 COPY .devcontainer/dev/.dev_bashrc /.dev_bashrc
 RUN echo "source /.dev_bashrc" >> /home/$REMOTE_USER/.bashrc
 
@@ -50,7 +49,6 @@ COPY alliander_core/src/ /alliander/ros/src
 COPY alliander_moveit/src/ /alliander/ros/src
 
 # Build repo packages:
-ENV DCMAKE_EXPORT_COMPILE_COMMANDS=1
 RUN /alliander/colcon_build.sh
 
 # Install python dependencies:

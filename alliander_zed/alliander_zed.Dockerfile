@@ -26,27 +26,30 @@ RUN echo "CUDA Version ${CUDA_MAJOR}.${CUDA_MINOR}.0" > /usr/local/cuda/version.
   && rm -rf /var/lib/apt/lists/*
 
 # Install ZED Wrapper:
-WORKDIR /rcdt/external
+WORKDIR /$WORKDIR/external
 RUN apt update \
   && git clone -b jazzy https://github.com/stereolabs/zed-ros2-wrapper.git src/zed_ros2_wrapper \
   && cd src/zed_ros2_wrapper \
   && git checkout 2efb1a33a40d399b9019165df2400cf3ad682fc5 \
-  && cd /rcdt/external \
+  && cd /$WORKDIR/external \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
-RUN /rcdt/colcon_build.sh
+RUN /$WORKDIR/colcon_build.sh
 
 # Install repo packages:
-WORKDIR /rcdt/ros
-COPY alliander_core/src/ /rcdt/ros/src
-COPY alliander_zed/src/ /rcdt/ros/src
-RUN /rcdt/colcon_build.sh
+WORKDIR /$WORKDIR/ros
+COPY alliander_core/src/ /$WORKDIR/ros/src
+COPY alliander_zed/src/ /$WORKDIR/ros/src
+RUN /$WORKDIR/colcon_build.sh
 
 # Install python dependencies:
-COPY pyproject.toml /rcdt/pyproject.toml
-RUN uv sync
+WORKDIR $WORKDIR
+COPY pyproject.toml /$WORKDIR/pyproject.toml
+RUN uv sync \
+  && echo "export PYTHONPATH=\"$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH\"" >> /root/.bashrc \
+  && echo "export PATH=\"$(dirname $(dirname $(uv python find)))/bin:\$PATH\"" >> /root/.bashrc
 
 # Finalize
-WORKDIR /rcdt
+WORKDIR /$WORKDIR
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]

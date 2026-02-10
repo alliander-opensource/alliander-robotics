@@ -8,7 +8,7 @@ ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
 
 # Install Husarion packages
-WORKDIR /rcdt/external
+WORKDIR /$WORKDIR/external
 RUN apt update \
   && git clone -b 2.3.1 https://github.com/husarion/husarion_ugv_ros.git src/husarion_ugv_ros \
   && export HUSARION_ROS_BUILD_TYPE=simulation \ 
@@ -22,18 +22,21 @@ RUN apt update \
   husarion_ugv_description \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \ 
   --event-handlers console_direct+
-RUN /rcdt/colcon_build.sh
+RUN /$WORKDIR/colcon_build.sh
 
 # Install repo packages:
-WORKDIR /rcdt/ros
-COPY alliander_core/src/ /rcdt/ros/src
-COPY alliander_husarion/src/ /rcdt/ros/src
-RUN /rcdt/colcon_build.sh
+WORKDIR /$WORKDIR/ros
+COPY alliander_core/src/ /$WORKDIR/ros/src
+COPY alliander_husarion/src/ /$WORKDIR/ros/src
+RUN /$WORKDIR/colcon_build.sh
 
 # Install python dependencies:
-COPY pyproject.toml /rcdt/pyproject.toml
-RUN uv sync
+WORKDIR $WORKDIR
+COPY pyproject.toml /$WORKDIR/pyproject.toml
+RUN uv sync  \
+  && echo "export PYTHONPATH=\"$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH\"" >> /root/.bashrc \
+  && echo "export PATH=\"$(dirname $(dirname $(uv python find)))/bin:\$PATH\"" >> /root/.bashrc
 
-WORKDIR /rcdt
+WORKDIR /$WORKDIR
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]

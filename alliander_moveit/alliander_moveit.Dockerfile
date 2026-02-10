@@ -19,21 +19,24 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Get required descriptions:
-WORKDIR /rcdt/external
+WORKDIR /$WORKDIR/external
 RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git src/franka_description
-RUN /rcdt/colcon_build.sh
+RUN /$WORKDIR/colcon_build.sh
 
 # Install repo packages
-WORKDIR /rcdt/ros
-COPY alliander_core/src/ /rcdt/ros/src
-COPY alliander_moveit/src/ /rcdt/ros/src
-RUN /rcdt/colcon_build.sh
+WORKDIR /$WORKDIR/ros
+COPY alliander_core/src/ /$WORKDIR/ros/src
+COPY alliander_moveit/src/ /$WORKDIR/ros/src
+RUN /$WORKDIR/colcon_build.sh
 
 # Install python dependencies:
-COPY pyproject.toml /rcdt/pyproject.toml
-RUN uv sync --group alliander-moveit
+WORKDIR $WORKDIR
+COPY pyproject.toml /$WORKDIR/pyproject.toml
+RUN uv sync --group alliander-moveit \
+  && echo "export PYTHONPATH=\"$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH\"" >> /root/.bashrc \
+  && echo "export PATH=\"$(dirname $(dirname $(uv python find)))/bin:\$PATH\"" >> /root/.bashrc
 
 # Finalize
-WORKDIR /rcdt
+WORKDIR /$WORKDIR
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]

@@ -18,28 +18,31 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Install osm2world
-RUN mkdir -p /rcdt/osm2world \
-  && cd /rcdt/osm2world \
+RUN mkdir -p /$WORKDIR/osm2world \
+  && cd /$WORKDIR/osm2world \
   && wget https://osm2world.org/download/files/latest/OSM2World-latest-bin.zip \
   && unzip OSM2World-latest-bin.zip \
   && rm OSM2World-latest-bin.zip
 
 # Install vendor descriptions:
-WORKDIR /rcdt/external
-COPY common/get_vendor_descriptions.sh /rcdt/get_vendor_descriptions.sh
-RUN /rcdt/get_vendor_descriptions.sh && rm /rcdt/get_vendor_descriptions.sh
-RUN /rcdt/colcon_build.sh
+WORKDIR /$WORKDIR/external
+COPY common/get_vendor_descriptions.sh /$WORKDIR/get_vendor_descriptions.sh
+RUN /$WORKDIR/get_vendor_descriptions.sh && rm /$WORKDIR/get_vendor_descriptions.sh
+RUN /$WORKDIR/colcon_build.sh
 
 # Install repo packages:
-WORKDIR /rcdt/ros
-COPY alliander_core/src/ /rcdt/ros/src
-COPY alliander_gazebo/src/ /rcdt/ros/src
-RUN /rcdt/colcon_build.sh
+WORKDIR /$WORKDIR/ros
+COPY alliander_core/src/ /$WORKDIR/ros/src
+COPY alliander_gazebo/src/ /$WORKDIR/ros/src
+RUN /$WORKDIR/colcon_build.sh
 
 # Install python dependencies:
-COPY pyproject.toml /rcdt/pyproject.toml
-RUN uv sync --group alliander-gazebo
+WORKDIR $WORKDIR
+COPY pyproject.toml /$WORKDIR/pyproject.toml
+RUN uv sync --group alliander-gazebo  \
+  && echo "export PYTHONPATH=\"$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH\"" >> /root/.bashrc \
+  && echo "export PATH=\"$(dirname $(dirname $(uv python find)))/bin:\$PATH\"" >> /root/.bashrc
 
-WORKDIR /rcdt
+WORKDIR /$WORKDIR
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]

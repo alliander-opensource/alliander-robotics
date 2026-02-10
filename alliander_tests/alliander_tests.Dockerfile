@@ -6,7 +6,6 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-WORKDIR /rcdt/ros
 
 # Install Docker CLI: 
 RUN curl -fsSL https://get.docker.com | sh
@@ -27,22 +26,25 @@ RUN apt update && apt install -y --no-install-recommends \
     && apt clean
 
 # Non-apt dependencies:
-WORKDIR /rcdt/external
+WORKDIR /$WORKDIR/external
 RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
     https://github.com/frankarobotics/franka_ros2.git src/franka_ros2 \
     && cd src/franka_ros2 \
     && git sparse-checkout set franka_msgs
-RUN /rcdt/colcon_build.sh
+RUN /$WORKDIR/colcon_build.sh
 
 # Install repo packages:
-WORKDIR /rcdt/ros
-COPY alliander_core/src/ /rcdt/ros/src
-RUN /rcdt/colcon_build.sh
+WORKDIR /$WORKDIR/ros
+COPY alliander_core/src/ /$WORKDIR/ros/src
+RUN /$WORKDIR/colcon_build.sh
 
 # Install python dependencies:
-COPY pyproject.toml /rcdt/pyproject.toml
-RUN uv sync --all-groups
+WORKDIR $WORKDIR
+COPY pyproject.toml /$WORKDIR/pyproject.toml
+RUN uv sync --all-groups \
+    && echo "export PYTHONPATH=\"$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH\"" >> /root/.bashrc \
+    && echo "export PATH=\"$(dirname $(dirname $(uv python find)))/bin:\$PATH\"" >> /root/.bashrc
 
-WORKDIR /rcdt
+WORKDIR /$WORKDIR
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]

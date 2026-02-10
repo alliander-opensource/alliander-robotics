@@ -7,11 +7,12 @@
 import time
 
 import rclpy
-from alliander_utilities.ros_utils import spin_node
+from alliander_utilities.ros_utils import spin_executor
 from geographic_msgs.msg import GeoPath, GeoPoseStamped
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator
 from nav_msgs.msg import Path
+from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 
@@ -22,7 +23,7 @@ class Nav2Manager(Node):
     def __init__(self) -> None:
         """Initialize the Nav2Manager node."""
         super().__init__("nav2_manager")
-        self.basic_navigator = BasicNavigator()
+        self.basic_navigator: BasicNavigator = BasicNavigator()
 
         self.create_subscription(PoseStamped, "/goal_pose", self.cb_goal_pose, 10)
         self.create_subscription(Path, "/waypoints", self.cb_waypoints, 10)
@@ -105,7 +106,11 @@ def main(args: list | None = None) -> None:
     """
     rclpy.init(args=args)
     node = Nav2Manager()
-    spin_node(node)
+
+    # Use an executor to avoid problems with BasicNavigator's internal spinning:
+    executor = SingleThreadedExecutor()
+    executor.add_node(node)
+    spin_executor(executor)
 
 
 if __name__ == "__main__":

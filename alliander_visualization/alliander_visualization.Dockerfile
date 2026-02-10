@@ -21,7 +21,7 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt clean
 
 # Get vizanti and install its dependencies
-WORKDIR /rcdt/external
+WORKDIR /$WORKDIR/external
 RUN apt update \
   && git clone -b ros2 https://github.com/MoffKalast/vizanti.git src/vizanti \
   && git clone -b jazzy https://github.com/alliander-opensource/rws.git src/rws \
@@ -29,23 +29,26 @@ RUN apt update \
   && rosdep install --from-paths src -y -i
 
 # Get vendor descriptions
-COPY common/get_vendor_descriptions.sh /rcdt/get_vendor_descriptions.sh
-RUN /rcdt/get_vendor_descriptions.sh && rm /rcdt/get_vendor_descriptions.sh
+COPY common/get_vendor_descriptions.sh /$WORKDIR/get_vendor_descriptions.sh
+RUN /$WORKDIR/get_vendor_descriptions.sh && rm /$WORKDIR/get_vendor_descriptions.sh
 
 # Build vizanti and vendor descriptions
-RUN /rcdt/colcon_build.sh
+RUN /$WORKDIR/colcon_build.sh
 
 # Install repo packages:
-WORKDIR /rcdt/ros
-COPY alliander_core/src/ /rcdt/ros/src
-COPY alliander_visualization/src/ /rcdt/ros/src
-RUN /rcdt/colcon_build.sh
+WORKDIR /$WORKDIR/ros
+COPY alliander_core/src/ /$WORKDIR/ros/src
+COPY alliander_visualization/src/ /$WORKDIR/ros/src
+RUN /$WORKDIR/colcon_build.sh
 
 # Install python dependencies:
-COPY pyproject.toml /rcdt/pyproject.toml
-RUN uv sync --group alliander-visualization
+WORKDIR $WORKDIR
+COPY pyproject.toml /$WORKDIR/pyproject.toml
+RUN uv sync --group alliander-visualization \
+  && echo "export PYTHONPATH=\"$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH\"" >> /root/.bashrc \
+  && echo "export PATH=\"$(dirname $(dirname $(uv python find)))/bin:\$PATH\"" >> /root/.bashrc
 
 # Finalize
-WORKDIR /rcdt
+WORKDIR /$WORKDIR
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]

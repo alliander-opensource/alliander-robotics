@@ -48,7 +48,7 @@ alliander-nav2 = [
     "pydantic>=2.12.5",
 ]
 alliander-visualization = [
-    "nicegui>=3.5.0",
+    "nicegui>=3.7.0",
     "numpy>=2.4.1",
 ]
 ros = [

@@ -6,11 +6,7 @@ FROM $BASE_IMAGE
 
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
-
-# Create bashrc file:
-RUN mkdir /rcdt \
-  && echo "if test -f ~/.personal.bashrc; then\nsource ~/.personal.bashrc\nfi" >> /root/.bashrc \
-  && echo "if test -f ~/.env; then\nset -a && source ~/.env && set +a\nfi" >> /root/.bashrc
+ENV WORKDIR=alliander
 
 # Install basic packages & add ROS2 to apt sources
 RUN apt update && apt install -y -qq --no-install-recommends \
@@ -67,19 +63,14 @@ RUN apt update \
   && apt autoremove -y \
   && apt clean
 
-# Python dependencies
+# Install uv
 RUN pip install uv --break-system-packages
-RUN echo "export PYTHONPATH=\"/rcdt/.venv/lib/python3.12/site-packages:\$PYTHONPATH\"" \
-  >> /root/.bashrc \
-  && echo "export PATH=\"/rcdt/.venv/bin:\$PATH\"" \
-  >> /root/.bashrc
 
 # Prepare ROS workspace for child images
-RUN mkdir -p /rcdt/ros/src
-COPY common/colcon_build.sh /rcdt/colcon_build.sh
+COPY common/colcon_build.sh /$WORKDIR/colcon_build.sh
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc
 
 COPY entrypoint.sh /entrypoint.sh
-WORKDIR /rcdt
+WORKDIR /$WORKDIR
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]

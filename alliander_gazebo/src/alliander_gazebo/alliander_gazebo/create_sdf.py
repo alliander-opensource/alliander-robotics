@@ -66,14 +66,14 @@ def convert_map() -> None:
     logger.info(colored("Converting map data to glb format...", "dark_grey"))
     shutil.copy(
         get_file_path("alliander_gazebo", ["config"], "osm2world.properties"),
-        "/rcdt/osm2world/osm2world.properties",
+        "/alliander/osm2world/osm2world.properties",
     )
     cmd_convert = [
         "bash",
-        "/rcdt/osm2world/osm2world.sh",
+        "/alliander/osm2world/osm2world.sh",
         "convert",
         "--config",
-        "/rcdt/osm2world/osm2world.properties",
+        "/alliander/osm2world/osm2world.properties",
         "-i",
         "/tmp/map.osm",
         "-o",
