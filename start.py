@@ -45,8 +45,8 @@ class Compose:
         "volumes": [
             "${HOME}/.nix-profile/bin/nvim:/usr/bin/nvim",
             "/nix/store:/nix/store",
-            "./pyproject.toml:/rcdt/pyproject.toml",
-            "./alliander_core/src/alliander_utilities:/rcdt/ros/src/alliander_utilities",
+            "./pyproject.toml:/alliander/pyproject.toml",
+            "./alliander_core/src/alliander_utilities:/alliander/ros/src/alliander_utilities",
         ],
     }
     host_cwd: str = os.path.abspath(os.getcwd())
@@ -74,7 +74,7 @@ class Compose:
         cwd = Path.cwd()
         src_dir = cwd.joinpath(f"{package}", "src")
         return [
-            f"./{str(p.relative_to(cwd))}:/rcdt/ros/src/{p.name}"
+            f"./{str(p.relative_to(cwd))}:/alliander/ros/src/{p.name}"
             for p in src_dir.iterdir()
             if p.is_dir()
         ]

@@ -4,6 +4,7 @@
 
 import os
 from os import environ
+from pathlib import Path
 from typing import Iterable, Optional
 
 from ament_index_python.packages import get_package_share_directory
@@ -73,8 +74,8 @@ class GazeboRosPaths:
     @staticmethod
     def get_env() -> Optional[
         dict[
-            Iterable[str | Substitution] | Substitution,
-            Iterable[str | Substitution] | Substitution,
+            Iterable[str | Path | Substitution] | Path | Substitution,
+            Iterable[str | Path | Substitution] | Path | Substitution,
         ]
     ]:
         """Get the environment variables for Gazebo.

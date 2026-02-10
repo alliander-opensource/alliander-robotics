@@ -16,6 +16,6 @@ services:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./:/rcdt_robotics/"
+      - "./:/alliander_robotics/"
     command:
-      ["/bin/bash", "-c", "cd /rcdt_robotics"]
+      ["/bin/bash", "-c", "cd /alliander_robotics"]

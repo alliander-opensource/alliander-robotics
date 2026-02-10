@@ -23,8 +23,8 @@ from predefined_configurations import PredefinedConfigurations
 from start import Compose
 
 LAUNCH_TIMEOUT = 90  # seconds
-COMPOSE_FILE = "/rcdt_robotics/compose_pytest.yml"
-HOST_COMPOSE_FILE = "/rcdt_robotics/compose.yml"
+COMPOSE_FILE = "/alliander_robotics/compose_pytest.yml"
+HOST_COMPOSE_FILE = "/alliander_robotics/compose.yml"
 
 
 def pytest_addoption(parser: Parser) -> None:
@@ -102,7 +102,10 @@ def check_containers_started(compose_file: str, services: list) -> bool:
     lines = stdout.split("\n")
     statuses = {}
     for line in lines:
-        name, status = line.strip("/").split()
+        try:
+            name, status = line.strip("/").split()
+        except ValueError:
+            continue
         if name in services:
             statuses[name] = status == "healthy"
     if len(statuses) < len(services):
@@ -137,7 +140,7 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     dev_mounts = os.getenv("DEV_MOUNTS", default="false") == "true"
     if dev_mounts:
         compose.dev = True
-        host_cwd = os.getenv("HOST_CWD", default="/rcdt")
+        host_cwd = os.getenv("HOST_CWD", default="/alliander")
         home_dir = os.getenv("HOME_DIR", default="/root")
         Compose.host_cwd = host_cwd
         Compose.home_dir = home_dir
@@ -199,7 +202,7 @@ def timeout(pytestconfig: Config) -> int:
     Returns:
         int: The timeout value in seconds.
     """
-    return int(pytestconfig.getini("timeout"))
+    return int(int(pytestconfig.getini("timeout")) / 2)
 
 
 @pytest.fixture(scope="session")
