@@ -74,7 +74,7 @@ jobs:
                 {
                   "name": .name,
                   "base_image": .base_image,
-                  "repository": .tag,
+                  "tag": .repository,
                   "dockerfile": .dockerfile
                 }
             ] | map(select(.name as $n | $changed | index($n)))'
