@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_gazebo:
-    image: rcdt/robotics:gazebo
+    image: allianderrobotics/gazebo
     container_name: alliander_gazebo
     runtime: nvidia
     network_mode: host

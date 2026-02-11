@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-FROM rcdt/robotics:base
+FROM allianderrobotics/base
 
 ARG REMOTE_USER
 ARG COLCON_BUILD_SEQUENTIAL

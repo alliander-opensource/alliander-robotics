@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_franka:
-    image: rcdt/robotics:franka
+    image: allianderrobotics/franka
     container_name: alliander_franka
     network_mode: host
     privileged: true

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_ouster:
-    image: rcdt/robotics:ouster
+    image: allianderrobotics/ouster
     container_name: alliander_ouster
     runtime: nvidia
     network_mode: host

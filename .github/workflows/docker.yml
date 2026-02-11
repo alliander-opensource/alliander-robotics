@@ -41,7 +41,7 @@ jobs:
             echo "alliander_core changed -- will rebuild all components"
           fi
 
-          for d in *rcdt_* ; do
+          for d in *alliander_* ; do
             # If alliander_core has changes, we want to build all images anew
             if [[ "$CORE_CHANGED" == true ]] || [[ "$CHANGES" ==  *"${d}/"* ]] ; then 
               CHANGED_DIRS+=("$d")
@@ -125,7 +125,7 @@ jobs:
 
   build-ubuntu:
     strategy:
-      matrix: 
+      matrix:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     if: false #needs.detect-changes.outputs.has_core_changes == 'true'
@@ -154,15 +154,15 @@ jobs:
           push: true
           context: .
           file: alliander_core/alliander_core.Dockerfile
-          tags: rcdt/robotics:base-${{ steps.arch.outputs.tag }}
+          tags: allianderrobotics/base:latest-${{ steps.arch.outputs.tag }}
           build-args: |
             BASE_IMAGE=rcdt/robotics:ubuntu-noble-${{ steps.arch.outputs.tag }}
           cache-from: |
             type=gha
-            type=registry,ref=rcdt/robotics:base-buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/base:buildcache-${{ steps.arch.outputs.tag }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=rcdt/robotics:base-buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/base:buildcache-${{ steps.arch.outputs.tag }}
       - run: df -h /
 
   build-ubuntu-images:
@@ -188,16 +188,16 @@ jobs:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}
+          tags: allianderrobotics/${{ matrix.tag }}:latest-${{ matrix.arch }}
           build-args: |
             BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
           cache-from: |
             type=gha
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }}
-            type=registry,ref=rcdt/robotics:base-buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/${{ matrix.tag }}-buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/base:buildcache-${{ matrix.arch }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
+            type=registry,ref=allianderrobotics/${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
   create-manifests-ubuntu:
@@ -216,15 +216,15 @@ jobs:
       - name: Create manifest for ${{ matrix.tag }}
         run: |
           # TODO remove this when realsense-arm64 is supported
-          if docker manifest inspect rcdt/robotics:${{ matrix.tag }}-arm64 > /dev/null 2>&1; then
+          if docker manifest inspect allianderrobotics/${{ matrix.tag }}:latest-arm64 > /dev/null 2>&1; then
             docker buildx imagetools create \
-              -t rcdt/robotics:${{ matrix.tag }} \
-              rcdt/robotics:${{ matrix.tag }}-amd64 \
-              rcdt/robotics:${{ matrix.tag }}-arm64
+              -t allianderrobotics/${{ matrix.tag }}:latest \
+              allianderrobotics/${{ matrix.tag }}:latest-amd64 \
+              allianderrobotics/${{ matrix.tag }}:latest-arm64
           else
             docker buildx imagetools create \
-              -t rcdt/robotics:${{ matrix.tag }} \
-              rcdt/robotics:${{ matrix.tag }}-amd64
+              -t allianderrobotics/${{ matrix.tag }}:latest \
+              allianderrobotics/${{ matrix.tag }}:latest-amd64
           fi
 
   build-cuda:
@@ -264,15 +264,15 @@ jobs:
           push: true
           context: .
           file: alliander_core/alliander_core.Dockerfile
-          tags: rcdt/robotics:cuda-${{ steps.arch.outputs.tag }}
+          tags: allianderrobotics/cuda:latest-${{ steps.arch.outputs.tag }}
           build-args: |
             BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ steps.arch.outputs.tag }}
           cache-from: |
             type=gha
-            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/cuda:latest-buildcache-${{ steps.arch.outputs.tag }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ steps.arch.outputs.tag }},mode=max
+            type=registry,ref=allianderrobotics/cuda:latest-buildcache-${{ steps.arch.outputs.tag }},mode=max
       - run: df -h /
 
   build-cuda-images:
@@ -304,13 +304,13 @@ jobs:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}
+          tags: allianderrobotics/${{ matrix.tag }}:latest-${{ matrix.arch }}
           build-args: |
             BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
           cache-from: |
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }}
-            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ matrix.arch }}
-          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
+            type=registry,ref=allianderrobotics/${{ matrix.tag }}:latest-buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/cuda:latest-buildcache-${{ matrix.arch }}
+          cache-to: type=registry,ref=allianderrobotics/${{ matrix.tag }}:latest-buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
   create-manifests-cuda:
@@ -329,15 +329,15 @@ jobs:
       - name: Create manifest for ${{ matrix.tag }}
         run: |
           # TODO fix this once zed-arm64 is supported
-          if docker manifest inspect rcdt/robotics:${{ matrix.tag }}-arm64 > /dev/null 2>&1; then
+          if docker manifest inspect allianderrobotics/${{ matrix.tag }}:latest-arm64 > /dev/null 2>&1; then
             docker buildx imagetools create \
-              -t rcdt/robotics:${{ matrix.tag }} \
-              rcdt/robotics:${{ matrix.tag }}-amd64 \
-              rcdt/robotics:${{ matrix.tag }}-arm64
+              -t allianderrobotics/${{ matrix.tag }}:latest \
+              allianderrobotics/${{ matrix.tag }}:latest-amd64 \
+              allianderrobotics/${{ matrix.tag }}:latest-arm64
           else
             docker buildx imagetools create \
-              -t rcdt/robotics:${{ matrix.tag }} \
-              rcdt/robotics:${{ matrix.tag }}-amd64
+              -t allianderrobotics/${{ matrix.tag }}:latest \
+              allianderrobotics/${{ matrix.tag }}:latest-amd64
           fi
 
   linting:

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_zed:
-    image: rcdt/robotics:zed
+    image: allianderrobotics/zed
     container_name: alliander_zed
     runtime: nvidia
     network_mode: host

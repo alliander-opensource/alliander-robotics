@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_cuda:
-    image: rcdt/robotics:cuda
+    image: allianderrobotics/cuda
     container_name: alliander_cuda
     runtime: nvidia
     network_mode: host

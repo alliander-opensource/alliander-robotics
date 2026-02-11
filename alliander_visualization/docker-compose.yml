@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_visualization:
-    image: rcdt/robotics:visualization
+    image: allianderrobotics/visualization
     container_name: alliander_visualization
     runtime: nvidia
     network_mode: host

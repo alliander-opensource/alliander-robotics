@@ -8,6 +8,8 @@ import sys
 import yaml
 from termcolor import colored, cprint
 
+DOCKER_ORGANIZATION = "allianderrobotics"
+
 
 class ImageManager:
     """Class to pull or build Docker images."""
@@ -33,33 +35,33 @@ class ImageManager:
         """Loads components.yml file into a dictionary."""
         with open("components.yml", encoding="utf-8") as stream:
             try:
-                components = yaml.safe_load(stream)
+                components: dict[str, dict] = yaml.safe_load(stream)
             except yaml.YAMLError as e:
                 print(e)
                 sys.exit(1)
 
-        # Create flat directory combining base and cuda components with tag as key:
-        for key in components:
-            for component in components[key].values():
-                self.components[component["tag"]] = component
+        # Create flat directory combining all components with repository as key:
+        for group in components.values():
+            for component in group.values():
+                self.components[component["repository"]] = component
 
-    def select_tags(self, tags: list[str]) -> None:
-        """Selects tags to pull or build. If no tags are provided, all tags are selected.
+    def select_repositories(self, repositories: list[str]) -> None:
+        """Selects repositories to pull or build. If no repositories are provided, all repositories are selected.
 
         Args:
-            tags (list[str]): list of tags to select.
+            repositories (list[str]): list of repositories to select.
         """
-        if not tags:
+        if not repositories:
             self.selected = list(self.components.keys())
             return
-        for tag in tags:
-            if tag not in self.components:
-                print(f"Tag {tag} not found in components.yml.")
+        for repository in repositories:
+            if repository not in self.components:
+                print(f"Repository {repository} not found in components.yml.")
                 sys.exit(1)
-        self.selected = tags
+        self.selected = repositories
 
     def run(self, pull: bool, build: bool) -> None:
-        """Pull or build the docker images for all selected tags.
+        """Pull or build the docker images for all selected repositories.
 
         Args:
             pull (bool): whether to pull the images.
@@ -70,43 +72,51 @@ class ImageManager:
             return colored(str(value), "green" if value else "red")
 
         print(f"pull: {colored_bool(pull)}, build: {colored_bool(build)}")
-        print(f"tags: {self.selected}")
+        print(f"repositories: {self.selected}")
 
-        for tag in self.selected:
+        for repository in self.selected:
             if pull:
-                self.run_pull_subprocess(tag)
+                self.run_pull_subprocess(repository)
             if build:
-                self.run_build_subprocess(tag)
+                self.run_build_subprocess(repository)
 
     @staticmethod
-    def run_pull_subprocess(tag: str) -> None:
-        """Runs a docker pull command to pull a specific rcdt/robotics tag.
+    def run_pull_subprocess(repository: str, tag: str = "latest") -> None:
+        """Runs a docker pull command to pull a specific image.
 
         Args:
+            repository (str): repository of the docker image to build.
             tag (str): tag of the docker image to pull.
         """
-        cprint(f"\n\n\n---------- Pulling rcdt/robotics:{tag} ----------", "blue")
+        cprint(
+            f"\n\n\n---------- Pulling {DOCKER_ORGANIZATION}/{repository}:{tag} ----------",
+            "blue",
+        )
 
-        cmd = f"docker pull rcdt/robotics:{tag}"
+        cmd = f"docker pull {DOCKER_ORGANIZATION}/{repository}:{tag}"
         subprocess.run(cmd, shell=True, check=True)
 
-    def run_build_subprocess(self, tag: str) -> None:
-        """Runs a docker build command to build a specific rcdt/robotics image.
+    def run_build_subprocess(self, repository: str, tag: str = "latest") -> None:
+        """Runs a docker build command to build a specific image.
 
         Args:
+            repository (str): repository of the docker image to build.
             tag (str): tag of the docker image to build.
         """
-        cprint(f"\n\n\n---------- Building rcdt/robotics:{tag} ----------", "blue")
+        cprint(
+            f"\n\n\n---------- Building {DOCKER_ORGANIZATION}/{repository}:{tag} ----------",
+            "blue",
+        )
 
         cache_str = ""
         if self.no_cache:
             cache_str = "--no-cache"
 
         cmd = f"docker build \
-            -f {self.components[tag]['dockerfile']} \
-            --build-arg BASE_IMAGE={self.components[tag]['base_image']} \
+            -f {self.components[repository]['dockerfile']} \
+            --build-arg BASE_IMAGE={self.components[repository]['base_image']} \
             --platform linux/{self.arch} \
-            -t rcdt/robotics:{tag} {cache_str} \
+            -t {DOCKER_ORGANIZATION}/{repository}:{tag} {cache_str} \
             ."
         subprocess.run(cmd, shell=True, check=True)
 
@@ -143,11 +153,11 @@ if __name__ == "__main__":
         required=False,
         default=[],
         nargs="+",
-        help="List of components to pull or build. Use the tags as defined in components.yml.",
+        help="List of components to pull or build. Use the repository names as defined in components.yml.",
     )
 
     args = parser.parse_args()
 
     image_manager = ImageManager(args.no_cache)
-    image_manager.select_tags(args.components)
+    image_manager.select_repositories(args.components)
     image_manager.run(args.pull, args.build)

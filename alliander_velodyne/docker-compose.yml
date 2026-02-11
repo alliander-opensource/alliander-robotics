@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_velodyne:
-    image: rcdt/robotics:velodyne
+    image: allianderrobotics/velodyne
     container_name: alliander_velodyne
     runtime: nvidia
     network_mode: host

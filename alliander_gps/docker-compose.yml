@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_gps:
-    image: rcdt/robotics:gps
+    image: allianderrobotics/gps
     container_name: alliander_gps
     network_mode: host
     privileged: true

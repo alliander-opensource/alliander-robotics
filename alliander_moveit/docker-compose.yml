@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_moveit:
-    image: rcdt/robotics:moveit
+    image: allianderrobotics/moveit
     container_name: alliander_moveit
     network_mode: host
     privileged: true

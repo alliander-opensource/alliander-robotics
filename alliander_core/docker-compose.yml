@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_base:
-    image: rcdt/robotics:base
+    image: allianderrobotics/base
     container_name: alliander_base
     network_mode: host
     privileged: true

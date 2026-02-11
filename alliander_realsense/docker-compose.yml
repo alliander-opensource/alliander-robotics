@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 services:
   alliander_realsense:
-    image: rcdt/robotics:realsense
+    image: allianderrobotics/realsense
     container_name: alliander_realsense
     runtime: nvidia
     network_mode: host
