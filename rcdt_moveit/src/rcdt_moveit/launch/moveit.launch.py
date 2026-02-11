@@ -123,7 +123,7 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
-        SetParameter(name="use_sim_time", value=True),
+        SetParameter(name="use_sim_time", value=arm_config.simulation),
         Register.group(utilities, context),
         Register.on_log(
             move_group, "MoveGroup context initialization complete", context
