@@ -20,7 +20,7 @@ RUN apt update && apt install -y --no-install-recommends \
 
 # Get required descriptions:
 WORKDIR /rcdt/external
-RUN git clone -b jazzy https://github.com/frankarobotics/franka_description.git src/franka_description
+RUN git clone -b 2.1.0 https://github.com/frankarobotics/franka_description.git src/franka_description
 RUN /rcdt/colcon_build.sh
 
 # Install repo packages
