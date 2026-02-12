@@ -4,7 +4,7 @@
 
 # Based on: https://docs.ros.org/en/humble/p/nav2_map_server/
 
-image: simulation_map.png
+image: simulation_map.pgm
 resolution: 0.1
 origin: [-10, -10, 0]
 negate: 0
