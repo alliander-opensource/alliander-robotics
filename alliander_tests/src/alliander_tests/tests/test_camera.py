@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import random
+import subprocess
 
+import pytest
 from alliander_utilities.config_objects import Camera
 from sensor_msgs.msg import CameraInfo, Image
 
@@ -11,6 +13,13 @@ from ..utils import assert_for_message
 
 camera = Camera(random.choice(["realsense", "zed"]), (0, 0, 0.5))
 PLATFORMS = [camera]
+
+system_architecture = subprocess.getoutput("dpkg --print-architecture")
+if system_architecture != "amd64":
+    pytest.skip(
+        f"Camera tests skipped, not supported on {system_architecture} yet.",
+        allow_module_level=True,
+    )
 
 
 def test_color_image_published(timeout: int) -> None:
