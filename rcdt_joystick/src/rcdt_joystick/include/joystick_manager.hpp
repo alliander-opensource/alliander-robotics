@@ -85,6 +85,8 @@ class JoystickManager {
   sensor_msgs::msg::Joy::SharedPtr prev_joy_input;
   /// Current platform mode of the joystick
   int current_mode = no_mode;
+  /// Indication whether the arm is following a trajectory or not
+  bool arm_busy = false;
   /// Indication whether the gripper is busy or not
   bool gripper_busy = false;
 
@@ -97,9 +99,12 @@ class JoystickManager {
   static constexpr int no_mode = 99;
   /// Makes response to changes in joystick values less sensitive with a 'dead
   /// zone'.
-  const float dead_axis_zone = 0.3;
-  /// Scale the vehicles speed, max possible value provided by the joystick: 1.0
+  const float dead_axis_zone = 0.2;
+  /// Scale the arm's speed, max possible value provided by the joystick: 1.0
   /// m/s
+  const float arm_speed_scale = 0.2;
+  /// Scale the vehicle's speed, max possible value provided by the
+  /// joystick: 1.0 m/s
   const float vehicle_speed_scale = 0.4;
 
   /**

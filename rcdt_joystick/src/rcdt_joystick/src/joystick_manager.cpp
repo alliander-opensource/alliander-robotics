@@ -86,7 +86,8 @@ void JoystickManager::joy_cb(const sensor_msgs::msg::Joy::SharedPtr msg) {
   handle_button_input(msg->buttons);
 
   switch (current_mode) {
-    case arm_mode:
+    case arm_mode && !arm_busy:  // Don't send arm messages while it's already
+                                 // following a trajectory
       handle_arm_movement(msg->axes[1], msg->axes[0], msg->axes[3],
                           msg->axes[2]);
       break;
@@ -218,11 +219,13 @@ void JoystickManager::handle_arm_movement(const float& x, const float& y,
   twist.header.stamp = node->now();
   twist.header.frame_id = arm_frame_id;
 
-  twist.twist.linear.x =
-      (std::abs(x) > dead_axis_zone) ? x : 0.0;  // Forward/backward
-  twist.twist.linear.y =
-      (std::abs(y) > dead_axis_zone) ? y : 0.0;  // Left/right
-  twist.twist.linear.z = (std::abs(z) > dead_axis_zone) ? z : 0.0;  // Up/down
+  twist.twist.linear.x = (std::abs(x) > dead_axis_zone)
+                             ? (x * arm_speed_scale)
+                             : 0.0;  // Forward/backward
+  twist.twist.linear.y = (std::abs(y) > dead_axis_zone) ? (y * arm_speed_scale)
+                                                        : 0.0;  // Left/right
+  twist.twist.linear.z =
+      (std::abs(z) > dead_axis_zone) ? (z * arm_speed_scale) : 0.0;  // Up/down
 
   // Turning
   twist.twist.angular.z =
@@ -232,39 +235,71 @@ void JoystickManager::handle_arm_movement(const float& x, const float& y,
 }
 
 void JoystickManager::move_arm_to_home() {
-  auto move_home_request =
-      std::make_shared<rcdt_interfaces::srv::StringSrv::Request>();
-  move_home_request->text = "home";
-
-  auto future = srv_client_arm_home->async_send_request(move_home_request);
-
-  // TODO: this layout does not seem to work yet nicely, aka constantly goes to
-  // "Not ready", fix!!
-  if (future.wait_for(std::chrono::seconds(1)) == std::future_status::ready) {
-    if (future.get()->success) {
-    } else {
-      RCLCPP_INFO(node->get_logger(), "No success");
-    }
-  } else {
-    RCLCPP_INFO(node->get_logger(), "Not ready");
+  // Prevent retriggering while already running
+  if (arm_busy) {
+    RCLCPP_INFO(node->get_logger(), "Arm already moving.");
+    return;
   }
+
+  arm_busy = true;
+
+  auto request = std::make_shared<rcdt_interfaces::srv::StringSrv::Request>();
+  request->text = "home";
+
+  if (!srv_client_arm_home->service_is_ready()) {
+    RCLCPP_WARN(node->get_logger(), "'Move arm' service not available.");
+    arm_busy = false;
+    return;
+  }
+
+  srv_client_arm_home->async_send_request(
+      request,
+      [this](rclcpp::Client<rcdt_interfaces::srv::StringSrv>::SharedFuture
+                 future) {
+        try {
+          auto response = future.get();
+
+          if (response->success) {
+            RCLCPP_INFO(node->get_logger(), "Arm moved home successfully.");
+          } else {
+            RCLCPP_WARN(node->get_logger(), "Move home failed.");
+          }
+        } catch (const std::exception& e) {
+          RCLCPP_ERROR(node->get_logger(), "'Move arm' service call failed: %s",
+                       e.what());
+        }
+
+        // Unblock arm once service call finishes
+        arm_busy = false;
+      });
 }
 
 void JoystickManager::send_trigger_request(
     const rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr& client) {
   auto trigger_request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  auto future = client->async_send_request(trigger_request);
 
-  // TODO: this layout does not seem to work yet nicely, aka constantly goes to
-  // "Not ready", fix!!
-  if (future.wait_for(std::chrono::seconds(1)) == std::future_status::ready) {
-    if (future.get()->success) {
-    } else {
-      RCLCPP_INFO(node->get_logger(), "No success");
-    }
-  } else {
-    RCLCPP_INFO(node->get_logger(), "Not ready");
+  if (!client->service_is_ready()) {
+    RCLCPP_WARN(node->get_logger(), "Trigger service not available.");
+    arm_busy = false;
+    return;
   }
+
+  client->async_send_request(
+      trigger_request,
+      [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future) {
+        try {
+          auto response = future.get();
+
+          if (response->success) {
+            RCLCPP_INFO(node->get_logger(), "Trigger service successful.");
+          } else {
+            RCLCPP_WARN(node->get_logger(), "Trigger service failed.");
+          }
+        } catch (const std::exception& e) {
+          RCLCPP_ERROR(node->get_logger(), "Trigger service call failed: %s",
+                       e.what());
+        }
+      });
 }
 
 void JoystickManager::send_gripper_goal(
