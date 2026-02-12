@@ -193,11 +193,11 @@ jobs:
             BASE_IMAGE=${{ matrix.base_image }}:latest-${{ matrix.arch }}
           cache-from: |
             type=gha
-            type=registry,ref=allianderrobotics/${{ matrix.tag }}-buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/${{ matrix.tag }}:buildcache-${{ matrix.arch }}
             type=registry,ref=allianderrobotics/base:buildcache-${{ matrix.arch }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=allianderrobotics/${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
+            type=registry,ref=allianderrobotics/${{ matrix.tag }}:buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
   create-manifests-ubuntu:
@@ -269,10 +269,10 @@ jobs:
             BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ steps.arch.outputs.tag }}
           cache-from: |
             type=gha
-            type=registry,ref=allianderrobotics/cuda:latest-buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/cuda:buildcache-${{ steps.arch.outputs.tag }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=allianderrobotics/cuda:latest-buildcache-${{ steps.arch.outputs.tag }},mode=max
+            type=registry,ref=allianderrobotics/cuda:buildcache-${{ steps.arch.outputs.tag }},mode=max
       - run: df -h /
 
   build-cuda-images:
@@ -308,9 +308,9 @@ jobs:
           build-args: |
             BASE_IMAGE=${{ matrix.base_image }}:latest-${{ matrix.arch }}
           cache-from: |
-            type=registry,ref=allianderrobotics/${{ matrix.tag }}:latest-buildcache-${{ matrix.arch }}
-            type=registry,ref=allianderrobotics/cuda:latest-buildcache-${{ matrix.arch }}
-          cache-to: type=registry,ref=allianderrobotics/${{ matrix.tag }}:latest-buildcache-${{ matrix.arch }},mode=max
+            type=registry,ref=allianderrobotics/${{ matrix.tag }}:buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/cuda:buildcache-${{ matrix.arch }}
+          cache-to: type=registry,ref=allianderrobotics/${{ matrix.tag }}:buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
   create-manifests-cuda:
