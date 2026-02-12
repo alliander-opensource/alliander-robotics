@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Install xvfb and xeyes
-        run: sudo apt-get update && sudo apt-get install -y xvfb xeyes
+        run: sudo apt-get update && sudo apt-get install -y xvfb x11-apps
       - name: Run xeyes
         run: xvfb-run -a xeyes
   test-without-xvfb:
     runs-on: ubuntu-24.04
     steps:
       - name: Install xeyes
-        run: sudo apt-get update && sudo apt-get install -y xeyes
+        run: sudo apt-get update && sudo apt-get install -y x11-apps
       - name: Run xeyes
         run: xeyes
