@@ -28,9 +28,7 @@ RUN echo "CUDA Version ${CUDA_MAJOR}.${CUDA_MINOR}.0" > /usr/local/cuda/version.
 # Install ZED Wrapper:
 WORKDIR /$WORKDIR/external
 RUN apt update \
-  && git clone -b jazzy https://github.com/stereolabs/zed-ros2-wrapper.git src/zed_ros2_wrapper \
-  && cd src/zed_ros2_wrapper \
-  && git checkout 2efb1a33a40d399b9019165df2400cf3ad682fc5 \
+  && git clone -b humble-v5.0.0 https://github.com/stereolabs/zed-ros2-wrapper.git src/zed_ros2_wrapper \
   && cd /$WORKDIR/external \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
