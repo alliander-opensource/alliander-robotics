@@ -190,7 +190,7 @@ jobs:
           file: ${{ matrix.dockerfile }}
           tags: allianderrobotics/${{ matrix.tag }}:latest-${{ matrix.arch }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
+            BASE_IMAGE=${{ matrix.base_image }}:latest-${{ matrix.arch }}
           cache-from: |
             type=gha
             type=registry,ref=allianderrobotics/${{ matrix.tag }}-buildcache-${{ matrix.arch }}
@@ -306,7 +306,7 @@ jobs:
           file: ${{ matrix.dockerfile }}
           tags: allianderrobotics/${{ matrix.tag }}:latest-${{ matrix.arch }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
+            BASE_IMAGE=${{ matrix.base_image }}:latest-${{ matrix.arch }}
           cache-from: |
             type=registry,ref=allianderrobotics/${{ matrix.tag }}:latest-buildcache-${{ matrix.arch }}
             type=registry,ref=allianderrobotics/cuda:latest-buildcache-${{ matrix.arch }}
