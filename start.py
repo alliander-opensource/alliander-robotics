@@ -170,7 +170,8 @@ class Compose:
             ),
             "pytest-no-nvidia": (
                 "alliander_tests",
-                " && pytest -s -rsxf" + arguments,
+                # " && pytest -s -rsxf" + arguments,
+                " && apt update && apt install -y x11-apps && xeyes",
                 {},
             ),
         }

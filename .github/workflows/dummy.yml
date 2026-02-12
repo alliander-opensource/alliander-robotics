@@ -4,7 +4,7 @@
 
 # TODO: REMOVE THIS FILE IF BRANCH PROTECTION RULES ARE UPDATED
 
-name: dummy 
+name: dummy
 
 on:
   push:
@@ -18,14 +18,32 @@ jobs:
   test-with-xvfb:
     runs-on: ubuntu-24.04
     steps:
-      - name: Install xvfb and xeyes
-        run: sudo apt-get update && sudo apt-get install -y xvfb x11-apps
-      - name: Run xeyes
-        run: xvfb-run -a xeyes
+      - uses: actions/checkout@v4
+      - name: Set up python3
+        uses: actions/setup-python@v5
+        with:
+          # need to specify version to circumvent externally-managed act python
+          # which won't let us install dependencies
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install pyyaml mashumaro
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Run tests in alliander_tests container
+        run: xvfb-run -a python3 start.py --pytest-no-nvidia
   test-without-xvfb:
     runs-on: ubuntu-24.04
     steps:
-      - name: Install xeyes
-        run: sudo apt-get update && sudo apt-get install -y x11-apps
-      - name: Run xeyes
-        run: xeyes
+      - uses: actions/checkout@v4
+      - name: Set up python3
+        uses: actions/setup-python@v5
+        with:
+          # need to specify version to circumvent externally-managed act python
+          # which won't let us install dependencies
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install pyyaml mashumaro
+      - name: Run tests in alliander_tests container
+        run: python3 start.py --pytest-no-nvidia
