@@ -214,7 +214,7 @@ class Compose:
         ]
         if self.mode == "configuration-no-nvidia":
             service["init"] = True
-            service["command"][-1] = f"xvfb-run -a {service["command"][-1]}"
+            service["command"][-1] = f"xvfb-run -a {service['command'][-1]}"
         service["command"][-1] += command
         return service
 
