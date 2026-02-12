@@ -52,7 +52,7 @@ This repository support different robot and sensor platforms, which are describe
 uv run image_manager.py --build
 ```
 
-Or, when you haven't made changes yet to the code, you can also pull the existing docker images from our [Docker Hub](https://hub.docker.com/r/rcdt/robotics) by using the `--pull` flag. If this is the first time, it can take quite some time to pull the image.
+Or, when you haven't made changes yet to the code, you can also pull the existing docker images from our [Docker Hub](https://hub.docker.com/u/allianderrobotics) by using the `--pull` flag. If this is the first time, it can take quite some time to pull the image.
 
 ```bash
 uv run image_manager.py --pull

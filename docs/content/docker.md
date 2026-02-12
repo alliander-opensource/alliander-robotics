@@ -26,7 +26,7 @@ The vscode window should be reloaded and connected to the docker container (whic
 
 A Docker image is build based on a Dockerfile. We use the `Dockerfile` files located in each `alliander_{package_name}`. These files contain the steps that Docker should execute to create our Docker images for each individual package. Almost all steps are commands to install the (ROS) software, required in our projects.
 
-When changes are made and a pull request is made, Github will automatically build the new image and push it to our [Docker hub](https://hub.docker.com/r/rcdt/robotics).
+When changes are made and a pull request is made, Github will automatically build the new image and push it to our [Docker hub](https://hub.docker.com/u/allianderrobotics).
 
 When you run a Docker image, note that all changes (installing software, creating files, defining environment variables) will be lost when closing it. The only exception are changes to files in the `alliander_{package_name}` directories that match with the docker image.
 
