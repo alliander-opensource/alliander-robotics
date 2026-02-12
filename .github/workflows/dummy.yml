@@ -15,15 +15,17 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-  ruff:
+  test-with-xvfb:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-  reuse:
+      - name: Install xvfb and xeyes
+        run: sudo apt-get update && sudo apt-get install -y xvfb xeyes
+      - name: Run xeyes
+        run: xvfb-run -a xeyes
+  test-without-xvfb:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Install xeyes
+        run: sudo apt-get update && sudo apt-get install -y xeyes
+      - name: Run xeyes
+        run: xeyes
