@@ -376,6 +376,12 @@ jobs:
     needs: linting
     steps:
       - uses: actions/checkout@v4
+      - name: Free disk space
+        uses: ./.github/actions/free-disk-space
+        with:
+          tool-cache: true
+      - name: Clear disk space
+        uses: ./.github/actions/clear-disk-space
       - name: Set up python3
         uses: actions/setup-python@v5
         with:
