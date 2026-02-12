@@ -74,7 +74,7 @@ jobs:
                 {
                   "name": .name,
                   "base_image": .base_image,
-                  "tag": .repository,
+                  "repository": .repository,
                   "dockerfile": .dockerfile
                 }
             ] | map(select(.name as $n | $changed | index($n)))'
@@ -140,29 +140,29 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Set architecture tag
+      - name: Set architecture
         id: arch
         run: |
           if [[ "${{ matrix.runner }}" == *"-arm"* ]]; then
-            echo "tag=arm64" >> $GITHUB_OUTPUT
+            echo "arch=arm64" >> $GITHUB_OUTPUT
           else
-            echo "tag=amd64" >> $GITHUB_OUTPUT
+            echo "arch=amd64" >> $GITHUB_OUTPUT
           fi
-      - name: Build and push base-${{ steps.arch.outputs.tag }}
+      - name: Build and push base-${{ steps.arch.outputs.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: alliander_core/alliander_core.Dockerfile
-          tags: allianderrobotics/base:latest-${{ steps.arch.outputs.tag }}
+          tags: allianderrobotics/base:latest-${{ steps.arch.outputs.arch }}
           build-args: |
-            BASE_IMAGE=rcdt/robotics:ubuntu-noble-${{ steps.arch.outputs.tag }}
+            BASE_IMAGE=rcdt/robotics:ubuntu-noble-${{ steps.arch.outputs.arch }}
           cache-from: |
             type=gha
-            type=registry,ref=allianderrobotics/base:buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/base:buildcache-${{ steps.arch.outputs.arch }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=allianderrobotics/base:buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/base:buildcache-${{ steps.arch.outputs.arch }}
       - run: df -h /
 
   build-ubuntu-images:
@@ -182,22 +182,22 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build and push ${{ matrix.tag }}-${{ matrix.arch }}
+      - name: Build and push ${{ matrix.repository }}-${{ matrix.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: allianderrobotics/${{ matrix.tag }}:latest-${{ matrix.arch }}
+          tags: allianderrobotics/${{ matrix.repository }}:latest-${{ matrix.arch }}
           build-args: |
             BASE_IMAGE=${{ matrix.base_image }}:latest-${{ matrix.arch }}
           cache-from: |
             type=gha
-            type=registry,ref=allianderrobotics/${{ matrix.tag }}:buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/${{ matrix.repository }}:buildcache-${{ matrix.arch }}
             type=registry,ref=allianderrobotics/base:buildcache-${{ matrix.arch }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=allianderrobotics/${{ matrix.tag }}:buildcache-${{ matrix.arch }},mode=max
+            type=registry,ref=allianderrobotics/${{ matrix.repository }}:buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
   create-manifests-ubuntu:
@@ -213,18 +213,18 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Create manifest for ${{ matrix.tag }}
+      - name: Create manifest for ${{ matrix.repository }}
         run: |
           # TODO remove this when realsense-arm64 is supported
-          if docker manifest inspect allianderrobotics/${{ matrix.tag }}:latest-arm64 > /dev/null 2>&1; then
+          if docker manifest inspect allianderrobotics/${{ matrix.repository }}:latest-arm64 > /dev/null 2>&1; then
             docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.tag }}:latest \
-              allianderrobotics/${{ matrix.tag }}:latest-amd64 \
-              allianderrobotics/${{ matrix.tag }}:latest-arm64
+              -t allianderrobotics/${{ matrix.repository }}:latest \
+              allianderrobotics/${{ matrix.repository }}:latest-amd64 \
+              allianderrobotics/${{ matrix.repository }}:latest-arm64
           else
             docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.tag }}:latest \
-              allianderrobotics/${{ matrix.tag }}:latest-amd64
+              -t allianderrobotics/${{ matrix.repository }}:latest \
+              allianderrobotics/${{ matrix.repository }}:latest-amd64
           fi
 
   build-cuda:
@@ -250,29 +250,29 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Set architecture tag
+      - name: Set architecture
         id: arch
         run: |
           if [[ "${{ matrix.runner }}" == *"-arm"* ]]; then
-            echo "tag=arm64" >> $GITHUB_OUTPUT
+            echo "arch=arm64" >> $GITHUB_OUTPUT
           else
-            echo "tag=amd64" >> $GITHUB_OUTPUT
+            echo "arch=amd64" >> $GITHUB_OUTPUT
           fi
-      - name: Build and push cuda-${{ steps.arch.outputs.tag }}
+      - name: Build and push cuda-${{ steps.arch.outputs.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: alliander_core/alliander_core.Dockerfile
-          tags: allianderrobotics/cuda:latest-${{ steps.arch.outputs.tag }}
+          tags: allianderrobotics/cuda:latest-${{ steps.arch.outputs.arch }}
           build-args: |
-            BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ steps.arch.outputs.tag }}
+            BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ steps.arch.outputs.arch }}
           cache-from: |
             type=gha
-            type=registry,ref=allianderrobotics/cuda:buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/cuda:buildcache-${{ steps.arch.outputs.arch }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=allianderrobotics/cuda:buildcache-${{ steps.arch.outputs.tag }},mode=max
+            type=registry,ref=allianderrobotics/cuda:buildcache-${{ steps.arch.outputs.arch }},mode=max
       - run: df -h /
 
   build-cuda-images:
@@ -298,19 +298,19 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build and push ${{ matrix.tag }}-${{ matrix.arch }}
+      - name: Build and push ${{ matrix.repository }}-${{ matrix.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: allianderrobotics/${{ matrix.tag }}:latest-${{ matrix.arch }}
+          tags: allianderrobotics/${{ matrix.repository }}:latest-${{ matrix.arch }}
           build-args: |
             BASE_IMAGE=${{ matrix.base_image }}:latest-${{ matrix.arch }}
           cache-from: |
-            type=registry,ref=allianderrobotics/${{ matrix.tag }}:buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/${{ matrix.repository }}:buildcache-${{ matrix.arch }}
             type=registry,ref=allianderrobotics/cuda:buildcache-${{ matrix.arch }}
-          cache-to: type=registry,ref=allianderrobotics/${{ matrix.tag }}:buildcache-${{ matrix.arch }},mode=max
+          cache-to: type=registry,ref=allianderrobotics/${{ matrix.repository }}:buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
   create-manifests-cuda:
@@ -326,18 +326,18 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Create manifest for ${{ matrix.tag }}
+      - name: Create manifest for ${{ matrix.repository }}
         run: |
           # TODO fix this once zed-arm64 is supported
-          if docker manifest inspect allianderrobotics/${{ matrix.tag }}:latest-arm64 > /dev/null 2>&1; then
+          if docker manifest inspect allianderrobotics/${{ matrix.repository }}:latest-arm64 > /dev/null 2>&1; then
             docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.tag }}:latest \
-              allianderrobotics/${{ matrix.tag }}:latest-amd64 \
-              allianderrobotics/${{ matrix.tag }}:latest-arm64
+              -t allianderrobotics/${{ matrix.repository }}:latest \
+              allianderrobotics/${{ matrix.repository }}:latest-amd64 \
+              allianderrobotics/${{ matrix.repository }}:latest-arm64
           else
             docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.tag }}:latest \
-              allianderrobotics/${{ matrix.tag }}:latest-amd64
+              -t allianderrobotics/${{ matrix.repository }}:latest \
+              allianderrobotics/${{ matrix.repository }}:latest-amd64
           fi
 
   linting:
