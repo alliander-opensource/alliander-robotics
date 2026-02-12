@@ -125,7 +125,10 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     """
     # Execute before starting the tests in the module:
     compose = Compose()
-    compose.mode = "configuration"
+    if os.getenv("NO_NVIDIA", default="false").lower() == "true":
+        compose.mode = "configuration-no-nvidia"
+    else:
+        compose.mode = "configuration"
     compose.predefined_configuration = PredefinedConfigurations()
     compose.visualization = False
 

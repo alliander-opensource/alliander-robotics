@@ -28,7 +28,12 @@ SERVICE = typing.Literal[
     "documentation",
 ]
 MODE = typing.Literal[
-    "configuration", "pytest", "pytest-no-nvidia", "linting", "documentation"
+    "configuration",
+    "configuration-no-nvidia",
+    "pytest",
+    "pytest-no-nvidia",
+    "linting",
+    "documentation",
 ]
 
 
@@ -55,6 +60,7 @@ class Compose:
     def __init__(self) -> None:
         """Initialize."""
         self.mode: MODE | None = None
+        self.remove_nvidia = False
         self.predefined_configuration = PredefinedConfigurations()
         self.simulator = True
         self.visualization = True
@@ -150,7 +156,7 @@ class Compose:
             "linting": (
                 "alliander_tests",
                 " && pre-commit run --all-files",
-                {"remove_nvidia": True},
+                {},
             ),
             "documentation": (
                 "alliander_tests",
@@ -165,7 +171,7 @@ class Compose:
             "pytest-no-nvidia": (
                 "alliander_tests",
                 " && pytest -s -rsxf" + arguments,
-                {"remove_nvidia": True},
+                {},
             ),
         }
 
@@ -245,15 +251,13 @@ class Compose:
             ]
             service["volumes"] = all_mounts
 
-    @staticmethod
-    def apply_runtime_settings(service: dict, config: dict) -> None:
+    def apply_runtime_settings(self, service: dict) -> None:
         """Removes NVIDIA runtime if necessary.
 
         Args:
             service (dict): dictionary containing Docker container's YAML config.
-            config (dict): additional config, in this case to specify if runtime: nvidia needs to be removed.
         """
-        if config.get("remove_nvidia") and "runtime" in service:
+        if self.remove_nvidia and "runtime" in service:
             del service["runtime"]
 
     def apply_env_settings(self, service: dict, service_type: SERVICE) -> None:
@@ -273,6 +277,8 @@ class Compose:
             env_vars.append("DEV_MOUNTS=true")
             env_vars.append(f"HOST_CWD={Compose.host_cwd}")
             env_vars.append(f"HOME_DIR={Compose.home_dir}")
+        if service_type == "pytest-no-nvidia":
+            env_vars.append("NO_NVIDIA=true")
         service["environment"] = env_vars
 
     def add_service(
@@ -297,7 +303,7 @@ class Compose:
         service = self.load_service_base(package, command)
         self.apply_dependencies(service, config, platform)
         self.apply_dev_settings(service, package)
-        self.apply_runtime_settings(service, config)
+        self.apply_runtime_settings(service)
         self.apply_env_settings(service, service_type)
 
         content["services"][package] = service
@@ -319,6 +325,10 @@ class Compose:
         content = {"services": {}}
         services = content["services"]
 
+        # Remove NVIDIA runtime for linting or no-nvidia runs:
+        if self.mode in {"linting", "configuration-no-nvidia", "pytest-no-nvidia"}:
+            self.remove_nvidia = True
+
         match self.mode:
             case "pytest" | "pytest-no-nvidia":
                 self.add_service(content, self.mode, arguments=arguments)
@@ -326,7 +336,7 @@ class Compose:
                 self.add_service(content, "linting")
             case "documentation":
                 self.add_service(content, "documentation")
-            case "configuration":
+            case "configuration" | "configuration-no-nvidia":
                 for platform in self.predefined_configuration.plat_conf.platforms:
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
