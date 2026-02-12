@@ -170,8 +170,7 @@ class Compose:
             ),
             "pytest-no-nvidia": (
                 "alliander_tests",
-                # " && pytest -s -rsxf" + arguments,
-                " && apt update && apt install -y x11-apps && xeyes",
+                " && pytest -s -rsxf" + arguments,
                 {},
             ),
         }
@@ -213,6 +212,9 @@ class Compose:
         service = self.load_compose(f"{package}/docker-compose.yml")["services"][
             package
         ]
+        if self.mode == "configuration-no-nvidia":
+            service["init"] = True
+            service["command"][-1] = f"xvfb-run -a {service["command"][-1]}"
         service["command"][-1] += command
         return service
 
