@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 ubuntu:
   alliander_core:
-    base_image: rcdt/robotics:ubuntu-noble
+    base_image: allianderrobotics/ubuntu-noble
     repository: base
     dockerfile: alliander_core/alliander_core.Dockerfile
 ubuntu_images:
@@ -53,7 +53,7 @@ ubuntu_images:
     dockerfile: alliander_visualization/alliander_visualization.Dockerfile
 cuda:
   alliander_core:
-    base_image: rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
+    base_image: allianderrobotics/nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
     repository: cuda
     dockerfile: alliander_core/alliander_core.Dockerfile
 cuda_images:

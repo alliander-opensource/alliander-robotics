@@ -156,7 +156,7 @@ jobs:
           file: alliander_core/alliander_core.Dockerfile
           tags: allianderrobotics/base:latest-${{ steps.arch.outputs.arch }}
           build-args: |
-            BASE_IMAGE=rcdt/robotics:ubuntu-noble-${{ steps.arch.outputs.arch }}
+            BASE_IMAGE=allianderrobotics/ubuntu-noble
           cache-from: |
             type=gha
             type=registry,ref=allianderrobotics/base:buildcache-${{ steps.arch.outputs.arch }}
@@ -272,7 +272,7 @@ jobs:
           file: alliander_core/alliander_core.Dockerfile
           tags: allianderrobotics/cuda:latest-${{ steps.arch.outputs.arch }}
           build-args: |
-            BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ steps.arch.outputs.arch }}
+            BASE_IMAGE=allianderrobotics/nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
           cache-from: |
             type=gha
             type=registry,ref=allianderrobotics/cuda:buildcache-${{ steps.arch.outputs.arch }}
