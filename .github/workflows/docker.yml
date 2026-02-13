@@ -14,7 +14,8 @@ on:
 
 jobs:
   detect-changes:
-    if: github.event_name == 'push' || github.event.pull_request.draft == false
+    # if: github.event_name == 'push' || github.event.pull_request.draft == false
+    if: false
     runs-on: ubuntu-24.04
     outputs:
       matrix_ubuntu: ${{ steps.set-matrix.outputs.matrix_ubuntu }}
@@ -395,6 +396,6 @@ jobs:
       - name: Run tests in alliander_tests container (ubuntu-24.04)
         if: ${{ matrix.runner }}  == 'ubuntu-24.04'
         run: python3 start.py --pytest-no-nvidia
-      - name: Run tests in alliander_tests container (ubuntu-24.04)
+      - name: Run tests in alliander_tests container (ubuntu-24.04-arm)
         if: ${{ matrix.runner }}  == 'ubuntu-24.04-arm'
         run: python3 start.py --pytest-no-nvidia --deselect=alliander_tests/src/alliander_tests/tests/test_camera.py

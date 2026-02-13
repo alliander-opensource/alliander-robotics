@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: docker
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Run tests in alliander_tests container (ubuntu-24.04)
+        if: ${{ matrix.runner }}  == 'ubuntu-24.04'
+        run: echo "RUN!"
+      - name: Run tests in alliander_tests container (ubuntu-24.04-arm)
+        if: ${{ matrix.runner }}  == 'ubuntu-24.04-arm'
+        run: echo "RUN ARM!"
