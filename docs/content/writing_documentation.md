@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## File Structure
 
-This documentation is generated using [Sphinx](https://www.sphinx-doc.org). The source files are located in `rcdt_robotics/docs`. If changes are made in this directory and merged to the main branch, a GitHub workflow automatically generates HTML from the source file and deploys these at the documentation [page](https://alliander-opensource.github.io/rcdt_robotics/).
+This documentation is generated using [Sphinx](https://www.sphinx-doc.org). The source files are located in `alliander-robotics/docs`. If changes are made in this directory and merged to the main branch, a GitHub workflow automatically generates HTML from the source file and deploys these at the documentation [page](https://alliander-opensource.github.io/alliander-robotics/).
 
 Although *.rst* (reStructuredText) is the default format for Sphinx documentation, we only use *index.rst* to define the structure of our documentation. All other documentation files are *.md* (Markdown) because of the simpler syntax.  
 

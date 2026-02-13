@@ -19,13 +19,13 @@ The repository uses git LFS for large files, in particular for 3D simulation ass
 To use this repository, first clone it. If you are a contributor with an SSH-key linked, clone via SSH:
 
 ```bash
-git clone git@github.com:alliander-opensource/rcdt_robotics.git
+git clone git@github.com:alliander-opensource/alliander-robotics.git
 ```
 
 If you only want to use the repository without contributing, you can clone via HTTP:
 
 ```bash
-git clone https://github.com/alliander-opensource/rcdt_robotics.git
+git clone https://github.com/alliander-opensource/alliander-robotics.git
 ```
 
 ## Python dependencies installed with uv
