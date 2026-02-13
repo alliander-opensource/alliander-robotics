@@ -14,8 +14,7 @@ on:
 
 jobs:
   detect-changes:
-    # if: github.event_name == 'push' || github.event.pull_request.draft == false
-    if: false
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
     outputs:
       matrix_ubuntu: ${{ steps.set-matrix.outputs.matrix_ubuntu }}
