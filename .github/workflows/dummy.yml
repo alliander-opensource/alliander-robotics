@@ -21,10 +21,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Run tests in alliander_tests container (ubuntu-24.04)
-        # if: ${{ matrix.runner }}  == 'ubuntu-24.04'
-        if: false
+        if: ${{ matrix.runner == 'ubuntu-24.04' }} 
         run: echo "RUN!"
       - name: Run tests in alliander_tests container (ubuntu-24.04-arm)
-        # if: ${{ matrix.runner }}  == 'ubuntu-24.04-arm'
-        if: true
+        if: ${{ matrix.runner == 'ubuntu-24.04-arm' }} 
         run: echo "RUN ARM!"
