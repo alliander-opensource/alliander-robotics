@@ -11,8 +11,10 @@ from pathlib import Path
 
 import yaml
 
+from alliander_core.src.alliander_utilities.alliander_utilities.config_objects import (
+    Platform,
+)
 from predefined_configurations import PredefinedConfigurations
-from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import Platform
 
 SERVICE = typing.Literal[
     "platform",
@@ -26,7 +28,12 @@ SERVICE = typing.Literal[
     "documentation",
 ]
 MODE = typing.Literal[
-    "configuration", "pytest", "pytest-no-nvidia", "linting", "documentation"
+    "configuration",
+    "configuration-no-nvidia",
+    "pytest",
+    "pytest-no-nvidia",
+    "linting",
+    "documentation",
 ]
 
 
@@ -43,8 +50,8 @@ class Compose:
         "volumes": [
             "${HOME}/.nix-profile/bin/nvim:/usr/bin/nvim",
             "/nix/store:/nix/store",
-            "./pyproject.toml:/rcdt/pyproject.toml",
-            "./rcdt_core/src/rcdt_utilities:/rcdt/ros/src/rcdt_utilities",
+            "./pyproject.toml:/alliander/pyproject.toml",
+            "./alliander_core/src/alliander_utilities:/alliander/ros/src/alliander_utilities",
         ],
     }
     host_cwd: str = os.path.abspath(os.getcwd())
@@ -53,6 +60,7 @@ class Compose:
     def __init__(self) -> None:
         """Initialize."""
         self.mode: MODE | None = None
+        self.remove_nvidia = False
         self.predefined_configuration = PredefinedConfigurations()
         self.simulator = True
         self.visualization = True
@@ -72,7 +80,7 @@ class Compose:
         cwd = Path.cwd()
         src_dir = cwd.joinpath(f"{package}", "src")
         return [
-            f"./{str(p.relative_to(cwd))}:/rcdt/ros/src/{p.name}"
+            f"./{str(p.relative_to(cwd))}:/alliander/ros/src/{p.name}"
             for p in src_dir.iterdir()
             if p.is_dir()
         ]
@@ -119,7 +127,7 @@ class Compose:
             ValueError: if platform is not provided while a platform is needed.
 
         Returns:
-            tuple[str, str, dict]: tuple consisting of the RCDT package, the config for compose, and additional config.
+            tuple[str, str, dict]: tuple consisting of the package, the config for compose, and additional config.
         """
         needs_platform = service_type in {"platform", "moveit", "nav2"}
         if needs_platform and platform is None:
@@ -130,7 +138,7 @@ class Compose:
 
         base_configs = {
             "simulator": (
-                "rcdt_gazebo",
+                "alliander_gazebo",
                 (
                     f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
                     f" sim_config:='{self.predefined_configuration.sim_conf.to_str()}'"
@@ -138,7 +146,7 @@ class Compose:
                 {},
             ),
             "visualization": (
-                "rcdt_visualization",
+                "alliander_visualization",
                 (
                     f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
                     f" vis_config:='{self.predefined_configuration.viz_conf.to_str()}'"
@@ -146,24 +154,24 @@ class Compose:
                 {},
             ),
             "linting": (
-                "rcdt_tests",
+                "alliander_tests",
                 " && pre-commit run --all-files",
-                {"remove_nvidia": True},
+                {},
             ),
             "documentation": (
-                "rcdt_tests",
+                "alliander_tests",
                 " && sphinx-autobuild --port 0 docs docs/build/html",
                 {},
             ),
             "pytest": (
-                "rcdt_tests",
+                "alliander_tests",
                 " && pytest -s -rsxf" + arguments,
                 {},
             ),
             "pytest-no-nvidia": (
-                "rcdt_tests",
+                "alliander_tests",
                 " && pytest -s -rsxf" + arguments,
-                {"remove_nvidia": True},
+                {},
             ),
         }
 
@@ -175,12 +183,12 @@ class Compose:
                     {"needs_dependency": False},
                 ),
                 "moveit": (
-                    "rcdt_moveit",
+                    "alliander_moveit",
                     f" platform_config:='{platform.to_str()}'",
                     {"needs_dependency": True},
                 ),
                 "nav2": (
-                    "rcdt_nav2",
+                    "alliander_nav2",
                     f" platform_config:='{platform.to_str()}'",
                     {"needs_dependency": True},
                 ),
@@ -195,7 +203,7 @@ class Compose:
         """Loads the base compose file for a certain package and adds a command.
 
         Args:
-            package (str): RCDT package to get docker-compose.yml file from.
+            package (str): package to get docker-compose.yml file from.
             command (str): command to put in command field in docker-compose.yml file.
 
         Returns:
@@ -204,6 +212,9 @@ class Compose:
         service = self.load_compose(f"{package}/docker-compose.yml")["services"][
             package
         ]
+        if self.mode == "configuration-no-nvidia":
+            service["init"] = True
+            service["command"][-1] = f"xvfb-run -a {service['command'][-1]}"
         service["command"][-1] += command
         return service
 
@@ -228,7 +239,7 @@ class Compose:
 
         Args:
             service (dict): dictionary containing Docker container's YAML config.
-            package (str): RCDT package to mount in container, such that live code updates are possible.
+            package (str): package to mount in container, such that live code updates are possible.
         """
         if self.dev:
             src_mounts = self.get_src_mounts(package)
@@ -243,15 +254,13 @@ class Compose:
             ]
             service["volumes"] = all_mounts
 
-    @staticmethod
-    def apply_runtime_settings(service: dict, config: dict) -> None:
+    def apply_runtime_settings(self, service: dict) -> None:
         """Removes NVIDIA runtime if necessary.
 
         Args:
             service (dict): dictionary containing Docker container's YAML config.
-            config (dict): additional config, in this case to specify if runtime: nvidia needs to be removed.
         """
-        if config.get("remove_nvidia") and "runtime" in service:
+        if self.remove_nvidia and "runtime" in service:
             del service["runtime"]
 
     def apply_env_settings(self, service: dict, service_type: SERVICE) -> None:
@@ -271,6 +280,8 @@ class Compose:
             env_vars.append("DEV_MOUNTS=true")
             env_vars.append(f"HOST_CWD={Compose.host_cwd}")
             env_vars.append(f"HOME_DIR={Compose.home_dir}")
+        if service_type == "pytest-no-nvidia":
+            env_vars.append("NO_NVIDIA=true")
         service["environment"] = env_vars
 
     def add_service(
@@ -295,7 +306,7 @@ class Compose:
         service = self.load_service_base(package, command)
         self.apply_dependencies(service, config, platform)
         self.apply_dev_settings(service, package)
-        self.apply_runtime_settings(service, config)
+        self.apply_runtime_settings(service)
         self.apply_env_settings(service, service_type)
 
         content["services"][package] = service
@@ -317,6 +328,10 @@ class Compose:
         content = {"services": {}}
         services = content["services"]
 
+        # Remove NVIDIA runtime for linting or no-nvidia runs:
+        if self.mode in {"linting", "configuration-no-nvidia", "pytest-no-nvidia"}:
+            self.remove_nvidia = True
+
         match self.mode:
             case "pytest" | "pytest-no-nvidia":
                 self.add_service(content, self.mode, arguments=arguments)
@@ -324,7 +339,7 @@ class Compose:
                 self.add_service(content, "linting")
             case "documentation":
                 self.add_service(content, "documentation")
-            case "configuration":
+            case "configuration" | "configuration-no-nvidia":
                 for platform in self.predefined_configuration.plat_conf.platforms:
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
@@ -335,7 +350,7 @@ class Compose:
                     self.add_service(content, "simulator")
                 if self.visualization:
                     self.add_service(content, "visualization")
-                    services["rcdt_visualization"]["depends_on"] = {}
+                    services["alliander_visualization"]["depends_on"] = {}
 
         # Add healthchecks to all services:
         for name, service in services.items():
@@ -345,8 +360,11 @@ class Compose:
                 "retries": 1000,
             }
             # Make visualization depenend on all other services:
-            if "rcdt_visualization" in services and name != "rcdt_visualization":
-                services["rcdt_visualization"]["depends_on"][name] = {
+            if (
+                "alliander_visualization" in services
+                and name != "alliander_visualization"
+            ):
+                services["alliander_visualization"]["depends_on"][name] = {
                     "condition": "service_healthy"
                 }
 

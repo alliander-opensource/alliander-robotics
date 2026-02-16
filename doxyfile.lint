@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 # 
 # SPDX-License-Identifier: Apache-2.0
-PROJECT_NAME = "RCDT Robotics"
+PROJECT_NAME = "Alliander Robotics"
 
 EXCLUDE = clangd
 RECURSIVE = YES

@@ -5,7 +5,7 @@
 set -e
 
 # Franka
-git clone -b jazzy https://github.com/frankarobotics/franka_description.git src/franka_description
+git clone -b 2.1.0 https://github.com/frankarobotics/franka_description.git src/franka_description
 
 # Husarion
 git clone --depth=1 --filter=blob:none --sparse -b ros2 \

@@ -18,11 +18,11 @@ The Technical Steering Committee (TSC) is responsible for:
 1. Raise subjects/issues that are important for the direction/development of this project
 
 The community council consists of the following members:
-1. Product Owner - Team RCDT
-1. Solution Architect - Team RCDT
-1. Lead Developer - Team RCDT
+1. Product Owner - Alliander Robotics
+1. Solution Architect - Alliander Robotics
+1. Lead Developer - Alliander Robotics
 
-Product Owner - Team RCDT will chair the TSC.
+Product Owner - Team Alliander Robotics will chair the TSC.
 
 ## Maintainers
 
@@ -36,9 +36,9 @@ Maintainers are responsible for maintaining parts of the code-base. Maintainers 
 1. In case of long discussions or arguments, maintainers or other can request a community council decision.
 
 The current maintainers of this project are:
- 1. Jelmer de Wolde - Team RCDT
- 1. Peter Geurts - Team RCDT
- 1. Rosalie van Ark - Team RCDT
+ 1. Jelmer de Wolde - Alliander Robotics
+ 1. Peter Geurts - Alliander Robotics
+ 1. Rosalie van Ark - Alliander Robotics
 
  ## Contributors
 

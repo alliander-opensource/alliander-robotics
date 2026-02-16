@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Callable, Dict
 
-from rcdt_core.src.rcdt_utilities.rcdt_utilities.config_objects import (
+from alliander_core.src.alliander_utilities.alliander_utilities.config_objects import (
     GPS,
     Arm,
     Camera,

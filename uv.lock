@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = "==3.12.*"
 
 [[package]]
@@ -74,6 +74,115 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a6/f8/d9c74d0daf3f742840fd818d69cfae176fa332022fd44e3469487d5a9420/alabaster-1.0.0.tar.gz", hash = "sha256:c00dca57bca26fa62a6d7d0a9fcce65f3e026e9bfe33e9c538fd3fbb2144fd9e", size = 24210, upload-time = "2024-07-26T18:15:03.762Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/b3/6b4067be973ae96ba0d615946e314c5ae35f9f993eca561b356540bb0c2b/alabaster-1.0.0-py3-none-any.whl", hash = "sha256:fc6786402dc3fcb2de3cabd5fe455a2db534b371124f1f21de8731783dec828b", size = 13929, upload-time = "2024-07-26T18:15:02.05Z" },
+]
+
+[[package]]
+name = "alliander-robotics"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "mashumaro" },
+    { name = "pyyaml" },
+    { name = "termcolor" },
+    { name = "xacro" },
+]
+
+[package.dev-dependencies]
+alliander-franka = [
+    { name = "numpy" },
+]
+alliander-gazebo = [
+    { name = "numpy" },
+    { name = "pyproj" },
+    { name = "scipy" },
+    { name = "xmltodict" },
+]
+alliander-moveit = [
+    { name = "xmltodict" },
+]
+alliander-nav2 = [
+    { name = "numpy" },
+    { name = "pydantic" },
+]
+alliander-visualization = [
+    { name = "nicegui" },
+    { name = "numpy" },
+]
+documentation = [
+    { name = "myst-parser" },
+    { name = "sphinx" },
+    { name = "sphinx-autobuild" },
+    { name = "sphinx-copybutton" },
+    { name = "sphinx-rtd-theme" },
+    { name = "sphinxcontrib-mermaid" },
+    { name = "sphinxcontrib-video" },
+]
+linting = [
+    { name = "flake8" },
+    { name = "flake8-pyproject" },
+    { name = "pre-commit" },
+    { name = "pydoclint" },
+    { name = "ruff" },
+    { name = "ty" },
+]
+ros = [
+    { name = "catkin-pkg" },
+    { name = "lark" },
+]
+testing = [
+    { name = "pytest" },
+    { name = "pytest-timeout" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "mashumaro", specifier = ">=3.17" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "termcolor", specifier = ">=3.3.0" },
+    { name = "xacro", specifier = ">=2.1.1" },
+]
+
+[package.metadata.requires-dev]
+alliander-franka = [{ name = "numpy", specifier = ">=2.4.1" }]
+alliander-gazebo = [
+    { name = "numpy", specifier = ">=2.4.1" },
+    { name = "pyproj", specifier = ">=3.7.2" },
+    { name = "scipy", specifier = ">=1.17.0" },
+    { name = "xmltodict", specifier = ">=1.0.2" },
+]
+alliander-moveit = [{ name = "xmltodict", specifier = ">=1.0.2" }]
+alliander-nav2 = [
+    { name = "numpy", specifier = ">=2.4.1" },
+    { name = "pydantic", specifier = ">=2.12.5" },
+]
+alliander-visualization = [
+    { name = "nicegui", specifier = ">=3.7.0" },
+    { name = "numpy", specifier = ">=2.4.1" },
+]
+documentation = [
+    { name = "myst-parser", specifier = ">=5.0.0" },
+    { name = "sphinx", specifier = ">=9.1.0" },
+    { name = "sphinx-autobuild", specifier = ">=2025.8.25" },
+    { name = "sphinx-copybutton", specifier = ">=0.5.2" },
+    { name = "sphinx-rtd-theme", specifier = ">=3.1.0" },
+    { name = "sphinxcontrib-mermaid", specifier = ">=2.0.0" },
+    { name = "sphinxcontrib-video", specifier = ">=0.4.2" },
+]
+linting = [
+    { name = "flake8", specifier = ">=7.3.0" },
+    { name = "flake8-pyproject", specifier = ">=1.2.4" },
+    { name = "pre-commit", specifier = ">=4.5.1" },
+    { name = "pydoclint", specifier = ">=0.8.3" },
+    { name = "ruff", specifier = ">=0.14.13" },
+    { name = "ty", specifier = ">=0.0.12" },
+]
+ros = [
+    { name = "catkin-pkg", specifier = ">=1.1.0" },
+    { name = "lark", specifier = ">=1.3.1" },
+]
+testing = [
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pytest-timeout", specifier = ">=2.4.0" },
 ]
 
 [[package]]
@@ -570,7 +679,7 @@ wheels = [
 
 [[package]]
 name = "nicegui"
-version = "3.5.0"
+version = "3.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -595,9 +704,9 @@ dependencies = [
     { name = "uvicorn", extra = ["standard"] },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2f/09/ace5c379c1bcd4e454fe01e32f14e4649456b5f60efb5f73c5737e8cd208/nicegui-3.5.0.tar.gz", hash = "sha256:de802505d76ac3235088b19a32dba0f15cf51caf0d5b0fa6e196bfa0bc247af6", size = 21177233, upload-time = "2026-01-08T09:18:26.646Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/76/0fe2a54f0ba6141747fc1413ffd1657dd809bf5c8105f6832628d9b5f86e/nicegui-3.7.1.tar.gz", hash = "sha256:dc6ef68083ce15d92848e91908eb5313962dc0cd8a3350536b18c425ad5d5ca5", size = 21343701, upload-time = "2026-02-05T14:39:21.818Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/24/ff7ebfc2da4336687ba86813f96791dbd42e6d23a15301105d8353cc4652/nicegui-3.5.0-py3-none-any.whl", hash = "sha256:27d1659bbeeb543c96a9dad0c4da586896becbfec117bf8ed122a6e5b696340c", size = 21839035, upload-time = "2026-01-08T09:18:23.953Z" },
+    { url = "https://files.pythonhosted.org/packages/13/a8/91f47b20368bdfb4c818416df0d5cbd867a07364d05cff56d095d248b81e/nicegui-3.7.1-py3-none-any.whl", hash = "sha256:202c39b415eb6aa08cc74b29cadc8b9357c5ba1bf67840c989437caf111c54b4", size = 22008333, upload-time = "2026-02-05T14:39:17.209Z" },
 ]
 
 [[package]]
@@ -935,115 +1044,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/74/93/7baea19427dcfbe1e5a372d81473250b379f04b1bd3c4c5ff825e2327202/pyyaml-6.0.3-cp312-cp312-win32.whl", hash = "sha256:96b533f0e99f6579b3d4d4995707cf36df9100d67e0c8303a0c55b27b5f99bc5", size = 137658, upload-time = "2025-09-25T21:32:20.209Z" },
     { url = "https://files.pythonhosted.org/packages/86/bf/899e81e4cce32febab4fb42bb97dcdf66bc135272882d1987881a4b519e9/pyyaml-6.0.3-cp312-cp312-win_amd64.whl", hash = "sha256:5fcd34e47f6e0b794d17de1b4ff496c00986e1c83f7ab2fb8fcfe9616ff7477b", size = 154003, upload-time = "2025-09-25T21:32:21.167Z" },
     { url = "https://files.pythonhosted.org/packages/1a/08/67bd04656199bbb51dbed1439b7f27601dfb576fb864099c7ef0c3e55531/pyyaml-6.0.3-cp312-cp312-win_arm64.whl", hash = "sha256:64386e5e707d03a7e172c0701abfb7e10f0fb753ee1d773128192742712a98fd", size = 140344, upload-time = "2025-09-25T21:32:22.617Z" },
-]
-
-[[package]]
-name = "rcdt-robotics"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "mashumaro" },
-    { name = "pyyaml" },
-    { name = "termcolor" },
-    { name = "xacro" },
-]
-
-[package.dev-dependencies]
-documentation = [
-    { name = "myst-parser" },
-    { name = "sphinx" },
-    { name = "sphinx-autobuild" },
-    { name = "sphinx-copybutton" },
-    { name = "sphinx-rtd-theme" },
-    { name = "sphinxcontrib-mermaid" },
-    { name = "sphinxcontrib-video" },
-]
-linting = [
-    { name = "flake8" },
-    { name = "flake8-pyproject" },
-    { name = "pre-commit" },
-    { name = "pydoclint" },
-    { name = "ruff" },
-    { name = "ty" },
-]
-rcdt-franka = [
-    { name = "numpy" },
-]
-rcdt-gazebo = [
-    { name = "numpy" },
-    { name = "pyproj" },
-    { name = "scipy" },
-    { name = "xmltodict" },
-]
-rcdt-moveit = [
-    { name = "xmltodict" },
-]
-rcdt-nav2 = [
-    { name = "numpy" },
-    { name = "pydantic" },
-]
-rcdt-visualization = [
-    { name = "nicegui" },
-    { name = "numpy" },
-]
-ros = [
-    { name = "catkin-pkg" },
-    { name = "lark" },
-]
-testing = [
-    { name = "pytest" },
-    { name = "pytest-timeout" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "mashumaro", specifier = ">=3.17" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "termcolor", specifier = ">=3.3.0" },
-    { name = "xacro", specifier = ">=2.1.1" },
-]
-
-[package.metadata.requires-dev]
-documentation = [
-    { name = "myst-parser", specifier = ">=5.0.0" },
-    { name = "sphinx", specifier = ">=9.1.0" },
-    { name = "sphinx-autobuild", specifier = ">=2025.8.25" },
-    { name = "sphinx-copybutton", specifier = ">=0.5.2" },
-    { name = "sphinx-rtd-theme", specifier = ">=3.1.0" },
-    { name = "sphinxcontrib-mermaid", specifier = ">=2.0.0" },
-    { name = "sphinxcontrib-video", specifier = ">=0.4.2" },
-]
-linting = [
-    { name = "flake8", specifier = ">=7.3.0" },
-    { name = "flake8-pyproject", specifier = ">=1.2.4" },
-    { name = "pre-commit", specifier = ">=4.5.1" },
-    { name = "pydoclint", specifier = ">=0.8.3" },
-    { name = "ruff", specifier = ">=0.14.13" },
-    { name = "ty", specifier = ">=0.0.12" },
-]
-rcdt-franka = [{ name = "numpy", specifier = ">=2.4.1" }]
-rcdt-gazebo = [
-    { name = "numpy", specifier = ">=2.4.1" },
-    { name = "pyproj", specifier = ">=3.7.2" },
-    { name = "scipy", specifier = ">=1.17.0" },
-    { name = "xmltodict", specifier = ">=1.0.2" },
-]
-rcdt-moveit = [{ name = "xmltodict", specifier = ">=1.0.2" }]
-rcdt-nav2 = [
-    { name = "numpy", specifier = ">=2.4.1" },
-    { name = "pydantic", specifier = ">=2.12.5" },
-]
-rcdt-visualization = [
-    { name = "nicegui", specifier = ">=3.5.0" },
-    { name = "numpy", specifier = ">=2.4.1" },
-]
-ros = [
-    { name = "catkin-pkg", specifier = ">=1.1.0" },
-    { name = "lark", specifier = ">=1.3.1" },
-]
-testing = [
-    { name = "pytest", specifier = ">=9.0.2" },
-    { name = "pytest-timeout", specifier = ">=2.4.0" },
 ]
 
 [[package]]

@@ -50,12 +50,12 @@ act --rm -W .github/workflows/docker.yml
 
 The workflow contains the following steps, both for the `amd64` and `arm64` architectures:
 
-1. Check where there are changes compared to last commit for each of the `rcdt_<package>` folders.
-2. If `rcdt_core` is changed, a new `base` image is built.
-3. For all other packages with changes that are based on `rcdt/robotics:base`, new images are built.
-4. For all built images based on `rcdt/robotics:base`, a manifest is created. This combines the `amd64` and `arm64` images into one multi-arch image.
-5. If `rcdt_core` is changed, a new `cuda` image is built.
-6. For all other packages with changes that are based on `rcdt/robotics:cuda`, new images are built.
-7. For all built images based on `rcdt/robotics:cuda`, a manifest is created.
-8. The `rcdt_tests` container is run with the `--linting` flag, which runs the *Linting* as outlined above.
-9. The `rcdt_tests` container is run with the `--pytest-no-nvidia` flag, which runs integration and end-to-end tests. Any tests requiring a GPU are not run, as the currently available GitHub runners do not have a GPU.
+1. Check where there are changes compared to last commit for each of the `alliander_<package>` folders.
+2. If `alliander_core` is changed, a new `base` image is built.
+3. For all other packages with changes that are based on `allianderrobotics/base`, new images are built.
+4. For all built images based on `allianderrobotics/base`, a manifest is created. This combines the `amd64` and `arm64` images into one multi-arch image.
+5. If `alliander_core` is changed, a new `cuda` image is built.
+6. For all other packages with changes that are based on `allianderrobotics/cuda`, new images are built.
+7. For all built images based on `allianderrobotics/cuda`, a manifest is created.
+8. The `alliander_tests` container is run with the `--linting` flag, which runs the *Linting* as outlined above.
+9. The `alliander_tests` container is run with the `--pytest-no-nvidia` flag, which runs integration and end-to-end tests. Any tests requiring a GPU are not run, as the currently available GitHub runners do not have a GPU.
