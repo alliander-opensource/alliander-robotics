@@ -1,11 +1,11 @@
 classDiagram
 
-class joystick{
+class joystick_manager{
     mapping parameters
 
-    joy_topic_manager()
-    joy_to_twist(franka)
-    joy_to_twist(panther)
+    handle_button_input()
+    handle_arm_movement()
+    handle_driving()
 }
 
 class moveit_manager:::moveit_manager{

@@ -12,6 +12,7 @@ from alliander_core.src.alliander_utilities.alliander_utilities.config_objects i
     GPS,
     Arm,
     Camera,
+    Joystick,
     Lidar,
     Platform,
     PlatformList,
@@ -107,6 +108,21 @@ class PredefinedConfigurations:
     @register_configuration("zed")
     def config_zed(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("zed", (0, 0, 0.5), namespace="zed")]
+
+    @register_configuration("joystick")
+    def config_joystick(self) -> None:  # noqa: D102
+        joystick = Joystick(
+            "joystick",
+            arm_cmd_topic="/franka/servo_node/delta_twist_cmds",
+            arm_frame_id="franka/fr3_link1",
+            arm_gripper_name="/franka/gripper",
+            arm_home_service="/franka/moveit_manager/move_to_configuration",
+            simulation=False,
+            vehicle_cmd_topic="/panther/cmd_vel",
+            vehicle_estop_reset="/panther/hardware/e_stop_reset",
+            vehicle_estop_trigger="/panther/hardware/e_stop_trigger",
+        )
+        self.plat_conf.platforms = [joystick]
 
     # Franka:
     @register_configuration("franka")
