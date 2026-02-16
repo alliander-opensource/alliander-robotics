@@ -64,7 +64,7 @@ Both libraries use their own configuration files to define what kind of visualiz
 
 In ROS, a launch file can be used to launch multiple nodes at the same time. Unfortunately, the ROS launch system provides no mechanisms to ensure the order or moment of launch of the individual nodes. This can occur problems when nodes depend on other nodes.
 
-To overcome this problem, we have created a register system, defined in `rcdt_launch/register.py`. With this system, we can 'register' each node in our launch files. With use of event handler mechanism of ROS, we can ensure that the nodes are started in the registered order. We can also define when a node should start, based on three methods:
+To overcome this problem, we have created a register system, defined in `alliander_utilities/register.py`. With this system, we can 'register' each node in our launch files. With use of event handler mechanism of ROS, we can ensure that the nodes are started in the registered order. We can also define when a node should start, based on three methods:
 
 | method:                      | The next node can be started:                |
 |------------------------------|----------------------------------------------|

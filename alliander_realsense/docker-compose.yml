@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+services:
+  alliander_realsense:
+    image: allianderrobotics/realsense
+    container_name: alliander_realsense
+    runtime: nvidia
+    network_mode: host
+    privileged: true
+    mem_limit: 6gb
+    tty: true
+    env_file:
+      - .env
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "/dev:/dev"
+    command: ["/bin/bash", "-c", "ros2 launch alliander_realsense realsense.launch.py"]

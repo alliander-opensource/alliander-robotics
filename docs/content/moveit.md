@@ -31,7 +31,7 @@ If more complexity is required, one can also use the C++ API of Moveit. This ski
 
 ## How do we use Moveit?
 
-As mentioned before, we make use of the MoveGroup interface. One can start the `move_group` as a ros node of the `moveit_ros_move_group` package. However, the node requires many parameters to start and function correctly. Therefore, we always start the node using the launch file `moveit.launch.py`, located in our package `rcdt_moveit`, where we can easily pass the configuration parameters. Moveit configurations are defined in a separate package, which can be created for a desired robot arm using the [Moveit setup assistant](https://moveit.picknik.ai/main/doc/examples/setup_assistant/setup_assistant_tutorial.html). For example, for the Franka robot arm, we created the `rcdt_franka_moveit_config` package.
+As mentioned before, we make use of the MoveGroup interface. One can start the `move_group` as a ros node of the `moveit_ros_move_group` package. However, the node requires many parameters to start and function correctly. Therefore, we always start the node using the launch file `moveit.launch.py`, located in our package `alliander_moveit`, where we can easily pass the configuration parameters. Moveit configurations are defined in a separate package, which can be created for a desired robot arm using the [Moveit setup assistant](https://moveit.picknik.ai/main/doc/examples/setup_assistant/setup_assistant_tutorial.html). For example, for the Franka robot arm, we created the `alliander_franka_moveit_config` package.
 
 ## Control in Rviz
 
@@ -43,7 +43,7 @@ If a robot and the move_group are launched correctly, we can load the *MotionPla
 
 ## Moveit Manager
 
-Using the tool in Rviz, we can simply move the robot. However, our goal is to make the robot work autonomously and therefore we also need another way to interact with Moveit. To do this, we have created the `moveit_manager` node, located in the `rcdt_moveit` package. The `moveit.launch.py` launch file discussed earlier launches both the `move_group` node and our `moveit_manager` node. Our moveit_manager interacts with the move_group, similarly as that the plugin in Rviz can interact with the move group.
+Using the tool in Rviz, we can simply move the robot. However, our goal is to make the robot work autonomously and therefore we also need another way to interact with Moveit. To do this, we have created the `moveit_manager` node, located in the `alliander_moveit` package. The `moveit.launch.py` launch file discussed earlier launches both the `move_group` node and our `moveit_manager` node. Our moveit_manager interacts with the move_group, similarly as that the plugin in Rviz can interact with the move group.
 
 We have developed functionality to plan movements to a pose or to predefined configurations, to visualize markers in Rviz, to add or remove obstacles or to execute sequences of actions, for example to pick something at a given pose and drop it at another pose. All these functionalities are exposed as ROS services, and can therefore easily be integrated in a broader autonomous task that the robot will perform. This video shows an example where multiple actions are performed using Moveit to grab a brick and drop it at the side of the robot:
 
@@ -69,7 +69,7 @@ As you can see in the video above, the two paths to move around the object are v
 
 Besides the interaction with Moveit using the plugin in Rviz and our developed Moveit Manager node, we also support direct interaction using a gamepad. To achieve this, we make use of the `servo_node` from the `moveit_servo` package. This node, provided by Moveit, facilitates realtime control of the robot arm, based on the input of the gamepad. More information can be found [here](https://moveit.picknik.ai/main/doc/examples/realtime_servo/realtime_servo_tutorial.html).
 
-The `moveit.launch.py` launch file discussed earlier launches also the `servo_node`, next to the `move_group` node and our `moveit_manager` node. The servo_node does not use the move_group, but communicates directly with Moveit. We use our `joy_topic_manager_node.py`, located in the `rcdt_mobile_manipulator` package to enable or disable moveit_servo. When a X-Box controller is connected, we can press the A-button to start gamepad control for the arm:
+The `moveit.launch.py` launch file discussed earlier launches also the `servo_node`, next to the `move_group` node and our `moveit_manager` node. The servo_node does not use the move_group, but communicates directly with Moveit. When a X-Box controller is connected, we can press the A-button to start gamepad control for the arm:
 
 :::{video} ../vid/moveit/gamepad.mp4
 :width: 100%

@@ -26,7 +26,7 @@ You can file bugs against and feature requests for the project via github issues
 information on using github issues.
 
 If you think you've found a potential vulnerability in this project, please
-email researchcenter@alliander.com to responsibly disclose it.
+email robots@alliander.com to responsibly disclose it.
 
 ## Community Guidelines
 

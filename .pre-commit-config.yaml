@@ -17,16 +17,14 @@
 # See https://github.com/pre-commit/pre-commit
 
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.12
+  - repo: local
     hooks:
       - id: ruff
         name: ruff format
         entry: uv run ruff format
         language: system
         pass_filenames: false
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.12
+  - repo: local
     hooks:
       - id: ruff
         name: ruff check

@@ -11,8 +11,8 @@
       "REMOTE_USER": "ubuntu"
     }
   },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/rcdt_robotics,type=bind",
-  "workspaceFolder": "/rcdt_robotics",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/alliander_robotics,type=bind",
+  "workspaceFolder": "/alliander_robotics",
   "overrideCommand": true,
   "runArgs": [
     "--rm"

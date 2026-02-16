@@ -143,7 +143,7 @@ An Ouster lidar can be launched in simulation by creating a configuration with a
 \
 When using the Ouster lidar, make sure that the IP-address of the host device (where the Ouster node is running) is set correctly in the settings of the Teltonika router. One can assign a static IP address to the Ouster via the Teltonika interface. In case of the Husarion vehicles, this interface is reachable via `http://10.15.20.1/`, and the static IP address should be set to `10.15.20.5` as number 5 is reserved for LiDARs.
 
-Additionally, it is important to assign the correct UDP destination IP address for the Ouster LiDAR. This can both be done via the Ouster's configuration interface at `http://os-{serial_number}.local/`, or it can be done via the launch file of the Ouster (`ouster.launch.py` in the `rcdt_sensors` package).
+Additionally, it is important to assign the correct UDP destination IP address for the Ouster LiDAR. This can both be done via the Ouster's configuration interface at `http://os-{serial_number}.local/`, or it can be done via the launch file of the Ouster (`ouster.launch.py` in the `alliander_ouster` package).
 
 *Note:* If the firewall is enabled in Ubuntu, communication with the LiDAR is most likely blocked. Unblock it by allowing the IP-address of the LiDAR:
 

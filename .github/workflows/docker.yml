@@ -35,14 +35,14 @@ jobs:
 
           CHANGED_DIRS=()
           CORE_CHANGED=false
-          if [[ "$CHANGES" == *"rcdt_core/"* ]] ; then
+          if [[ "$CHANGES" == *"alliander_core/"* ]] ; then
             CORE_CHANGED=true
             echo "has_core_changes=true" >> $GITHUB_OUTPUT
-            echo "rcdt_core changed -- will rebuild all components"
+            echo "alliander_core changed -- will rebuild all components"
           fi
 
-          for d in *rcdt_* ; do
-            # If rcdt_core has changes, we want to build all images anew
+          for d in *alliander_* ; do
+            # If alliander_core has changes, we want to build all images anew
             if [[ "$CORE_CHANGED" == true ]] || [[ "$CHANGES" ==  *"${d}/"* ]] ; then 
               CHANGED_DIRS+=("$d")
             fi
@@ -74,7 +74,7 @@ jobs:
                 {
                   "name": .name,
                   "base_image": .base_image,
-                  "tag": .tag,
+                  "repository": .repository,
                   "dockerfile": .dockerfile
                 }
             ] | map(select(.name as $n | $changed | index($n)))'
@@ -85,7 +85,7 @@ jobs:
             local original_matrix=$1
             echo "$original_matrix" | jq -c '[
               .[] |
-              if .name == "rcdt_realsense" or .name == "rcdt_zed" then
+              if .name == "alliander_realsense" or .name == "alliander_zed" then
                 . + {"arch": "amd64", "runner": "ubuntu-24.04"}
               else
                 (. + {"arch": "amd64", "runner": "ubuntu-24.04"}),
@@ -125,10 +125,10 @@ jobs:
 
   build-ubuntu:
     strategy:
-      matrix: 
+      matrix:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
-    if: false #needs.detect-changes.outputs.has_core_changes == 'true'
+    if: needs.detect-changes.outputs.has_core_changes == 'true'
     needs: detect-changes
     steps:
       - uses: actions/checkout@v4
@@ -140,29 +140,35 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Set architecture tag
+      - name: Set architecture
         id: arch
         run: |
           if [[ "${{ matrix.runner }}" == *"-arm"* ]]; then
-            echo "tag=arm64" >> $GITHUB_OUTPUT
+            echo "arch=arm64" >> $GITHUB_OUTPUT
           else
-            echo "tag=amd64" >> $GITHUB_OUTPUT
+            echo "arch=amd64" >> $GITHUB_OUTPUT
           fi
-      - name: Build and push base-${{ steps.arch.outputs.tag }}
+      - name: Build and push base-${{ steps.arch.outputs.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
-          file: rcdt_core/rcdt_core.Dockerfile
-          tags: rcdt/robotics:base-${{ steps.arch.outputs.tag }}
+          file: alliander_core/alliander_core.Dockerfile
+          tags: allianderrobotics/base:latest-${{ steps.arch.outputs.arch }}
           build-args: |
-            BASE_IMAGE=rcdt/robotics:ubuntu-noble-${{ steps.arch.outputs.tag }}
+            BASE_IMAGE=allianderrobotics/ubuntu-noble
           cache-from: |
             type=gha
-            type=registry,ref=rcdt/robotics:base-buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/base:buildcache-${{ steps.arch.outputs.arch }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=rcdt/robotics:base-buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/base:buildcache-${{ steps.arch.outputs.arch }}
+      - name: Create manifest for base
+        run: |
+          docker buildx imagetools create \
+            -t allianderrobotics/base:latest \
+            allianderrobotics/base:latest-amd64 \
+            allianderrobotics/base:latest-arm64
       - run: df -h /
 
   build-ubuntu-images:
@@ -171,7 +177,7 @@ jobs:
       matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_ubuntu) }}
     runs-on: ${{ matrix.runner }}
     needs: [detect-changes, build-ubuntu]
-    if: false #needs.detect-changes.outputs.has_changes_ubuntu == 'true'
+    if: needs.detect-changes.outputs.has_changes_ubuntu == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -182,29 +188,29 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build and push ${{ matrix.tag }}-${{ matrix.arch }}
+      - name: Build and push ${{ matrix.repository }}-${{ matrix.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}
+          tags: allianderrobotics/${{ matrix.repository }}:latest-${{ matrix.arch }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
+            BASE_IMAGE=${{ matrix.base_image }}:latest-${{ matrix.arch }}
           cache-from: |
             type=gha
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }}
-            type=registry,ref=rcdt/robotics:base-buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/${{ matrix.repository }}:buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/base:buildcache-${{ matrix.arch }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
+            type=registry,ref=allianderrobotics/${{ matrix.repository }}:buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
   create-manifests-ubuntu:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_ubuntu) }}
     needs: [detect-changes, build-ubuntu-images]
-    if: false #needs.detect-changes.outputs.has_changes_ubuntu == 'true'
+    if: needs.detect-changes.outputs.has_changes_ubuntu == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Docker login
@@ -213,18 +219,18 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Create manifest for ${{ matrix.tag }}
+      - name: Create manifest for ${{ matrix.repository }}
         run: |
           # TODO remove this when realsense-arm64 is supported
-          if docker manifest inspect rcdt/robotics:${{ matrix.tag }}-arm64 > /dev/null 2>&1; then
+          if docker manifest inspect allianderrobotics/${{ matrix.repository }}:latest-arm64 > /dev/null 2>&1; then
             docker buildx imagetools create \
-              -t rcdt/robotics:${{ matrix.tag }} \
-              rcdt/robotics:${{ matrix.tag }}-amd64 \
-              rcdt/robotics:${{ matrix.tag }}-arm64
+              -t allianderrobotics/${{ matrix.repository }}:latest \
+              allianderrobotics/${{ matrix.repository }}:latest-amd64 \
+              allianderrobotics/${{ matrix.repository }}:latest-arm64
           else
             docker buildx imagetools create \
-              -t rcdt/robotics:${{ matrix.tag }} \
-              rcdt/robotics:${{ matrix.tag }}-amd64
+              -t allianderrobotics/${{ matrix.repository }}:latest \
+              allianderrobotics/${{ matrix.repository }}:latest-amd64
           fi
 
   build-cuda:
@@ -232,7 +238,7 @@ jobs:
       matrix:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
-    if: false #needs.detect-changes.outputs.has_core_changes == 'true'
+    if: needs.detect-changes.outputs.has_core_changes == 'true'
     needs: [detect-changes, build-ubuntu-images]
     steps:
       - uses: actions/checkout@v4
@@ -250,29 +256,35 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Set architecture tag
+      - name: Set architecture
         id: arch
         run: |
           if [[ "${{ matrix.runner }}" == *"-arm"* ]]; then
-            echo "tag=arm64" >> $GITHUB_OUTPUT
+            echo "arch=arm64" >> $GITHUB_OUTPUT
           else
-            echo "tag=amd64" >> $GITHUB_OUTPUT
+            echo "arch=amd64" >> $GITHUB_OUTPUT
           fi
-      - name: Build and push cuda-${{ steps.arch.outputs.tag }}
+      - name: Build and push cuda-${{ steps.arch.outputs.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
-          file: rcdt_core/rcdt_core.Dockerfile
-          tags: rcdt/robotics:cuda-${{ steps.arch.outputs.tag }}
+          file: alliander_core/alliander_core.Dockerfile
+          tags: allianderrobotics/cuda:latest-${{ steps.arch.outputs.arch }}
           build-args: |
-            BASE_IMAGE=rcdt/robotics:nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04-${{ steps.arch.outputs.tag }}
+            BASE_IMAGE=allianderrobotics/nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
           cache-from: |
             type=gha
-            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ steps.arch.outputs.tag }}
+            type=registry,ref=allianderrobotics/cuda:buildcache-${{ steps.arch.outputs.arch }}
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ steps.arch.outputs.tag }},mode=max
+            type=registry,ref=allianderrobotics/cuda:buildcache-${{ steps.arch.outputs.arch }},mode=max
+      - name: Create manifest for cuda
+        run: |
+          docker buildx imagetools create \
+            -t allianderrobotics/cuda:latest \
+            allianderrobotics/cuda:latest-amd64 \
+            allianderrobotics/cuda:latest-arm64
       - run: df -h /
 
   build-cuda-images:
@@ -281,7 +293,7 @@ jobs:
       matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_cuda) }}
     runs-on: ${{ matrix.runner }}
     needs: [detect-changes, build-cuda]
-    if: false #needs.detect-changes.outputs.has_changes_cuda == 'true'
+    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -298,26 +310,26 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build and push ${{ matrix.tag }}-${{ matrix.arch }}
+      - name: Build and push ${{ matrix.repository }}-${{ matrix.arch }}
         uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: ${{ matrix.dockerfile }}
-          tags: rcdt/robotics:${{ matrix.tag }}-${{ matrix.arch }}
+          tags: allianderrobotics/${{ matrix.repository }}:latest-${{ matrix.arch }}
           build-args: |
-            BASE_IMAGE=${{ matrix.base_image }}-${{ matrix.arch }}
+            BASE_IMAGE=${{ matrix.base_image }}:latest-${{ matrix.arch }}
           cache-from: |
-            type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }}
-            type=registry,ref=rcdt/robotics:cuda-buildcache-${{ matrix.arch }}
-          cache-to: type=registry,ref=rcdt/robotics:${{ matrix.tag }}-buildcache-${{ matrix.arch }},mode=max
+            type=registry,ref=allianderrobotics/${{ matrix.repository }}:buildcache-${{ matrix.arch }}
+            type=registry,ref=allianderrobotics/cuda:buildcache-${{ matrix.arch }}
+          cache-to: type=registry,ref=allianderrobotics/${{ matrix.repository }}:buildcache-${{ matrix.arch }},mode=max
       - run: df -h /
 
   create-manifests-cuda:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
     needs: [detect-changes, build-cuda-images]
-    if: false #needs.detect-changes.outputs.has_changes_cuda == 'true'
+    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Docker login
@@ -326,23 +338,23 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Create manifest for ${{ matrix.tag }}
+      - name: Create manifest for ${{ matrix.repository }}
         run: |
           # TODO fix this once zed-arm64 is supported
-          if docker manifest inspect rcdt/robotics:${{ matrix.tag }}-arm64 > /dev/null 2>&1; then
+          if docker manifest inspect allianderrobotics/${{ matrix.repository }}:latest-arm64 > /dev/null 2>&1; then
             docker buildx imagetools create \
-              -t rcdt/robotics:${{ matrix.tag }} \
-              rcdt/robotics:${{ matrix.tag }}-amd64 \
-              rcdt/robotics:${{ matrix.tag }}-arm64
+              -t allianderrobotics/${{ matrix.repository }}:latest \
+              allianderrobotics/${{ matrix.repository }}:latest-amd64 \
+              allianderrobotics/${{ matrix.repository }}:latest-arm64
           else
             docker buildx imagetools create \
-              -t rcdt/robotics:${{ matrix.tag }} \
-              rcdt/robotics:${{ matrix.tag }}-amd64
+              -t allianderrobotics/${{ matrix.repository }}:latest \
+              allianderrobotics/${{ matrix.repository }}:latest-amd64
           fi
 
   linting:
     runs-on: ubuntu-24.04
-    # needs: [build-ubuntu-images, build-cuda-images]
+    needs: [build-ubuntu-images, build-cuda-images]
     steps:
       - uses: actions/checkout@v4
       - name: Set up python3
@@ -352,17 +364,24 @@ jobs:
           cache: "pip"
       - name: Install dependencies
         run: pip install pyyaml mashumaro
-      - name: Run linting in rcdt_tests container
+      - name: Run linting in alliander_tests container
         run: python3 start.py --linting
 
   test:
     strategy:
+      fail-fast: false
       matrix:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
-    needs: linting
-    if: false
+    needs: [build-ubuntu-images, build-cuda-images]
     steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        uses: ./.github/actions/free-disk-space
+        with:
+          tool-cache: true
+      - name: Clear disk space
+        uses: ./.github/actions/clear-disk-space
       - name: Set up python3
         uses: actions/setup-python@v5
         with:
@@ -372,7 +391,10 @@ jobs:
           cache: "pip"
       - name: Install dependencies
         run: pip install pyyaml mashumaro
-      - name: Install xvfb
-        run: sudo apt-get update && sudo apt-get install -y xvfb
-      - name: Run tests in rcdt_tests container
-        run: xvfb-run -a python3 start.py --pytest-no-nvidia
+      # TODO remove difference between ARM and non-ARM when zed/realsense-arm64 is supported:
+      - name: Run tests in alliander_tests container (ubuntu-24.04)
+        if: ${{ matrix.runner == 'ubuntu-24.04' }} 
+        run: python3 start.py --pytest-no-nvidia
+      - name: Run tests in alliander_tests container (ubuntu-24.04-arm)
+        if: ${{ matrix.runner == 'ubuntu-24.04-arm' }} 
+        run: python3 start.py --pytest-no-nvidia --deselect=alliander_tests/src/alliander_tests/tests/test_camera.py

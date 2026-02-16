@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+services:
+  alliander_zed:
+    image: allianderrobotics/zed
+    container_name: alliander_zed
+    runtime: nvidia
+    network_mode: host
+    privileged: true
+    mem_limit: 6gb
+    tty: true
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "/dev:/dev"
+    environment:
+      - "DISPLAY"
+      - "RCUTILS_COLORIZED_OUTPUT=1"
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    command: ["/bin/bash", "-c", "ros2 launch alliander_zed zed.launch.py"]

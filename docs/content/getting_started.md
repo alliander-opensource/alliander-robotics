@@ -19,13 +19,13 @@ The repository uses git LFS for large files, in particular for 3D simulation ass
 To use this repository, first clone it. If you are a contributor with an SSH-key linked, clone via SSH:
 
 ```bash
-git clone git@github.com:alliander-opensource/rcdt_robotics.git
+git clone git@github.com:alliander-opensource/alliander-robotics.git
 ```
 
 If you only want to use the repository without contributing, you can clone via HTTP:
 
 ```bash
-git clone https://github.com/alliander-opensource/rcdt_robotics.git
+git clone https://github.com/alliander-opensource/alliander-robotics.git
 ```
 
 ## Python dependencies installed with uv
@@ -52,7 +52,7 @@ This repository support different robot and sensor platforms, which are describe
 uv run image_manager.py --build
 ```
 
-Or, when you haven't made changes yet to the code, you can also pull the existing docker images from our [Docker Hub](https://hub.docker.com/r/rcdt/robotics) by using the `--pull` flag. If this is the first time, it can take quite some time to pull the image.
+Or, when you haven't made changes yet to the code, you can also pull the existing docker images from our [Docker Hub](https://hub.docker.com/u/allianderrobotics) by using the `--pull` flag. If this is the first time, it can take quite some time to pull the image.
 
 ```bash
 uv run image_manager.py --pull
