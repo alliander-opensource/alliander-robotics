@@ -31,19 +31,36 @@ jobs:
       - name: Detect changed subdirectories
         id: set-matrix
         run: |
-          CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          if [[ -z "${{ github.base_ref }}" ]]; then
+            GITHUB_REF=origin/main
+          else
+            GITHUB_REF=origin/${{ github.base_ref }}
+          fi
+          CHANGES=$(git diff --name-only "$GITHUB_REF"...HEAD)
 
           CHANGED_DIRS=()
-          CORE_CHANGED=false
+          CORELIBS_CHANGED=false
           if [[ "$CHANGES" == *"alliander_core/"* ]] ; then
+            CORELIBS_CHANGED=true
+            echo "alliander_core libraries changed -- will rebuild all dependent components"
+          fi
+
+          CORE_CHANGED=false
+          if [[ "$CHANGES" == *"alliander_core/alliander_core.Dockerfile"* ]] ; then
             CORE_CHANGED=true
             echo "has_core_changes=true" >> $GITHUB_OUTPUT
-            echo "alliander_core changed -- will rebuild all components"
+            echo "alliander_core Dockerfile changed -- will rebuild all components"
           fi
 
           for d in *alliander_* ; do
-            # If alliander_core has changes, we want to build all images anew
-            if [[ "$CORE_CHANGED" == true ]] || [[ "$CHANGES" ==  *"${d}/"* ]] ; then 
+            if [[ "$CORE_CHANGED" == true ]] ; then
+              # If alliander_core.Dockerfile has changes, we want to build all images anew
+              CHANGED_DIRS+=("$d")
+            elif [[ "$CORELIBS_CHANGED" == true ]] && [[ "$d" != *"core"* ]] ; then
+              # Otherwise, if alliander_core has changes, build all other images that depend on its libs
+              CHANGED_DIRS+=("$d")
+            elif [[ "$CHANGES" ==  *"${d}/"* ]] ; then
+              # Finally, if there are changes in the current directory, build that image
               CHANGED_DIRS+=("$d")
             fi
           done
