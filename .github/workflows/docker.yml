@@ -372,6 +372,7 @@ jobs:
   linting:
     runs-on: ubuntu-24.04
     needs: [build-ubuntu-images, build-cuda-images]
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - name: Set up python3
