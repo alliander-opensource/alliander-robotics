@@ -1,0 +1,32 @@
+{
+  "configById": {
+    "3D": {
+      "cameraState": {},
+      "followMode": "follow-pose",
+      "followTf": "map",
+      "fixedFrame": "map",
+      "scene": {
+        "transforms": {
+          "visible": false
+        }
+      },
+      "transforms": {},
+      "topics": {},
+      "layers": {
+        "grid": {
+          "layerId": "foxglove.Grid",
+          "visible": true
+        }
+      },
+      "publish": {
+        "type": "pose",
+        "poseTopic": "/goal_pose"
+      }
+    },
+    "virtual-joystick.Virtual Joystick": {
+      "topic": "/cmd_vel",
+      "messageSchema": "geometry_msgs/msg/TwistStamped"
+    }
+  },
+  "layout": {}
+}

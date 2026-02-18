@@ -45,11 +45,16 @@ def launch_setup(context: LaunchContext) -> list:
         parameters=[{"platform_list": platforms.to_str()}],
     )
 
+    foxglove = RegisteredLaunchDescription(
+        get_file_path("foxglove_bridge", ["launch"], "foxglove_bridge_launch.xml")
+    )
+
     return [
         SetParameter(name="use_sim_time", value=simulation),
         Register.group(rviz, context) if config.rviz else SKIP,
         Register.group(vizanti, context) if config.vizanti else SKIP,
         Register.on_start(gui, context) if config.gui else SKIP,
+        Register.group(foxglove, context),
     ]
 
 

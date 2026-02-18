@@ -13,6 +13,7 @@ from alliander_utilities.config_objects import (
     VisualizationConfig,
 )
 
+from alliander_visualization.foxglove import Foxglove
 from alliander_visualization.rviz import Rviz
 from alliander_visualization.vizanti import Vizanti
 
@@ -40,6 +41,7 @@ class ApplyConfigurations:
 
         for platform in platform_list.platforms:
             Rviz.add_platform_model(platform.namespace)
+            Foxglove.add_platform_model(platform.namespace)
             match platform.platform_type:
                 case "Arm":
                     self.add_arm(Arm.from_str(platform.to_str()))
@@ -49,6 +51,7 @@ class ApplyConfigurations:
                     self.add_lidar(Lidar.from_str(platform.to_str()))
                 case "Camera":
                     self.add_depth_camera(Camera.from_str(platform.to_str()))
+                    Foxglove.add_camera(platform.namespace)
                 case "GPS":
                     self.add_gps(GPS.from_str(platform.to_str()))
                 case _:
@@ -61,6 +64,8 @@ class ApplyConfigurations:
 
         if config.vizanti:
             Vizanti.create_config_file()
+
+        Foxglove.create_layout_file()
 
     # TODO: refactor this
     @staticmethod
