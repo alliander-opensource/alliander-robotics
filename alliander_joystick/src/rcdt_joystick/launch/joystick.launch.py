@@ -32,6 +32,7 @@ def launch_setup(context: LaunchContext) -> list:
             {"arm_frame_id": joystick_config.arm_frame_id},
             {"arm_gripper_name": joystick_config.arm_gripper_name},
             {"arm_home_service": joystick_config.arm_home_service},
+            {"arm_pause_servo_service": joystick_config.arm_pause_servo_service},
             {"vehicle_cmd_topic": joystick_config.vehicle_cmd_topic},
             {"vehicle_estop_reset": joystick_config.vehicle_estop_reset},
             {"vehicle_estop_trigger": joystick_config.vehicle_estop_trigger},

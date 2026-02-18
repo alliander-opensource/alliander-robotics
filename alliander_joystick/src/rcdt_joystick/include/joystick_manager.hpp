@@ -76,11 +76,13 @@ class JoystickManager {
   std::string arm_gripper_name;
   /// Service name with which the arm can be moved back to its home position
   std::string arm_home_service;
+  /// Service name with which the arm's servo node can be paused
+  std::string arm_pause_servo_service;
   /// The vehicle twist topic
   std::string vehicle_topic;
-  /// Service name for resetting the vehicle's E-stop.
+  /// Service name for resetting the vehicle's E-stop
   std::string vehicle_estop_reset_service;
-  /// Service name for triggering the vehicle's E-stop.
+  /// Service name for triggering the vehicle's E-stop
   std::string vehicle_estop_trigger_service;
 
   // Other variables:

@@ -117,6 +117,7 @@ class PredefinedConfigurations:
             arm_frame_id="franka/fr3_link1",
             arm_gripper_name="/franka/gripper",
             arm_home_service="/franka/moveit_manager/move_to_configuration",
+            arm_pause_servo_service="/franka/servo_node/pause_servo",
             simulation=False,
             vehicle_cmd_topic="/panther/cmd_vel",
             vehicle_estop_reset="/panther/hardware/e_stop_reset",

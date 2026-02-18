@@ -9,6 +9,7 @@ JoystickManager::JoystickManager(rclcpp::Node::SharedPtr node) : node(node) {
   arm_frame_id = node->get_parameter("arm_frame_id").as_string();
   arm_gripper_name = node->get_parameter("arm_gripper_name").as_string();
   arm_home_service = node->get_parameter("arm_home_service").as_string();
+  arm_pause_servo_service = node->get_parameter("arm_pause_servo_service").as_string();
   vehicle_topic = node->get_parameter("vehicle_cmd_topic").as_string();
   vehicle_estop_reset_service =
       node->get_parameter("vehicle_estop_reset").as_string();
@@ -45,7 +46,7 @@ void JoystickManager::initialize_joystick_manager() {
   srv_client_estop_reset =
       node->create_client<std_srvs::srv::Trigger>(vehicle_estop_reset_service);
   srv_client_pause_servo = node->create_client<std_srvs::srv::SetBool>(
-      "/franka/servo_node/pause_servo");
+      arm_pause_servo_service);
   srv_client_arm_home =
       node->create_client<alliander_interfaces::srv::StringSrv>(
           arm_home_service);
