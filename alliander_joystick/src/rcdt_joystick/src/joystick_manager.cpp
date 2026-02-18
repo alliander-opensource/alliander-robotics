@@ -44,8 +44,8 @@ void JoystickManager::initialize_joystick_manager() {
       vehicle_estop_trigger_service);
   srv_client_estop_reset =
       node->create_client<std_srvs::srv::Trigger>(vehicle_estop_reset_service);
-  srv_client_pause_servo =
-      node->create_client<std_srvs::srv::SetBool>("/franka/servo_node/pause_servo");
+  srv_client_pause_servo = node->create_client<std_srvs::srv::SetBool>(
+      "/franka/servo_node/pause_servo");
   srv_client_arm_home =
       node->create_client<alliander_interfaces::srv::StringSrv>(
           arm_home_service);
@@ -289,7 +289,8 @@ void JoystickManager::pause_servo_node(bool pause) {
   request->data = pause;
 
   if (!srv_client_pause_servo->service_is_ready()) {
-    RCLCPP_WARN(node->get_logger(), "(Un)pause servo node service not available.");
+    RCLCPP_WARN(node->get_logger(),
+                "(Un)pause servo node service not available.");
     arm_busy = false;
     return;
   }
@@ -302,13 +303,14 @@ void JoystickManager::pause_servo_node(bool pause) {
 
           if (response->success) {
             RCLCPP_DEBUG(node->get_logger(),
-                        "Servo node (un)paused successfully.");
+                         "Servo node (un)paused successfully.");
           } else {
             RCLCPP_WARN(node->get_logger(), "(Un)pause servo node failed.");
           }
         } catch (const std::exception& e) {
           RCLCPP_ERROR(node->get_logger(),
-                       "(Un)pause servo node service call failed: %s", e.what());
+                       "(Un)pause servo node service call failed: %s",
+                       e.what());
         }
       });
 }
