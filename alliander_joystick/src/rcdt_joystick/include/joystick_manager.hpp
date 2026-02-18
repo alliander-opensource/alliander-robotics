@@ -5,10 +5,10 @@
 #ifndef JOYSTICK_MANAGER_HPP_
 #define JOYSTICK_MANAGER_HPP_
 
-#include <cstdint>
-#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <alliander_interfaces/action/trigger_action.hpp>
 #include <alliander_interfaces/srv/string_srv.hpp>
+#include <cstdint>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_options.hpp>
@@ -16,6 +16,7 @@
 #include <rclcpp_action/client.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <sensor_msgs/msg/joy.hpp>
+#include <std_srvs/srv/set_bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
 using std::placeholders::_1;
@@ -56,6 +57,8 @@ class JoystickManager {
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_trigger;
   /// Client to reset the vehicle's E-stop
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv_client_estop_reset;
+  /// Client to pause and unpause the servo node
+  rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr srv_client_pause_servo;
   /// Client to move the arm back to home position
   rclcpp::Client<alliander_interfaces::srv::StringSrv>::SharedPtr
       srv_client_arm_home;
@@ -176,6 +179,13 @@ class JoystickManager {
    * @brief send service request to move the arm back to its home position.
    */
   void move_arm_to_home();
+
+  /**
+   * @brief (un)pause the servo node via a service request.
+   * @param pause indication whether the servo node should be paused (true) or
+   * unpaused (false).
+   */
+  void pause_servo_node(bool pause);
 
   /**
    * @brief send a trigger service request with the provided service client.

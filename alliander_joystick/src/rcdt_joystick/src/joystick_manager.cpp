@@ -44,8 +44,11 @@ void JoystickManager::initialize_joystick_manager() {
       vehicle_estop_trigger_service);
   srv_client_estop_reset =
       node->create_client<std_srvs::srv::Trigger>(vehicle_estop_reset_service);
+  srv_client_pause_servo =
+      node->create_client<std_srvs::srv::SetBool>("/franka/servo_node/pause_servo");
   srv_client_arm_home =
-      node->create_client<alliander_interfaces::srv::StringSrv>(arm_home_service);
+      node->create_client<alliander_interfaces::srv::StringSrv>(
+          arm_home_service);
 
   // Action clients
   action_client_gripper_open = rclcpp_action::create_client<TriggerAction>(
@@ -86,8 +89,11 @@ void JoystickManager::joy_cb(const sensor_msgs::msg::Joy::SharedPtr msg) {
   handle_button_input(msg->buttons);
 
   switch (current_mode) {
-    case arm_mode && !arm_busy:  // Don't send arm messages while it's already
-                                 // following a trajectory
+    case arm_mode:
+      if (arm_busy) {
+        // Don't send arm messages while it's already following a trajectory.
+        break;
+      }
       handle_arm_movement(msg->axes[1], msg->axes[0], msg->axes[3],
                           msg->axes[2]);
       break;
@@ -241,9 +247,12 @@ void JoystickManager::move_arm_to_home() {
     return;
   }
 
+  pause_servo_node(true);
+
   arm_busy = true;
 
-  auto request = std::make_shared<alliander_interfaces::srv::StringSrv::Request>();
+  auto request =
+      std::make_shared<alliander_interfaces::srv::StringSrv::Request>();
   request->text = "home";
 
   if (!srv_client_arm_home->service_is_ready()) {
@@ -260,7 +269,7 @@ void JoystickManager::move_arm_to_home() {
           auto response = future.get();
 
           if (response->success) {
-            RCLCPP_INFO(node->get_logger(), "Arm moved home successfully.");
+            RCLCPP_DEBUG(node->get_logger(), "Arm moved home successfully.");
           } else {
             RCLCPP_WARN(node->get_logger(), "Move home failed.");
           }
@@ -268,9 +277,39 @@ void JoystickManager::move_arm_to_home() {
           RCLCPP_ERROR(node->get_logger(), "'Move arm' service call failed: %s",
                        e.what());
         }
+        pause_servo_node(false);
 
         // Unblock arm once service call finishes
         arm_busy = false;
+      });
+}
+
+void JoystickManager::pause_servo_node(bool pause) {
+  auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+  request->data = pause;
+
+  if (!srv_client_pause_servo->service_is_ready()) {
+    RCLCPP_WARN(node->get_logger(), "(Un)pause servo node service not available.");
+    arm_busy = false;
+    return;
+  }
+
+  srv_client_pause_servo->async_send_request(
+      request,
+      [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future) {
+        try {
+          auto response = future.get();
+
+          if (response->success) {
+            RCLCPP_DEBUG(node->get_logger(),
+                        "Servo node (un)paused successfully.");
+          } else {
+            RCLCPP_WARN(node->get_logger(), "(Un)pause servo node failed.");
+          }
+        } catch (const std::exception& e) {
+          RCLCPP_ERROR(node->get_logger(),
+                       "(Un)pause servo node service call failed: %s", e.what());
+        }
       });
 }
 
@@ -291,7 +330,7 @@ void JoystickManager::send_trigger_request(
           auto response = future.get();
 
           if (response->success) {
-            RCLCPP_INFO(node->get_logger(), "Trigger service successful.");
+            RCLCPP_DEBUG(node->get_logger(), "Trigger service successful.");
           } else {
             RCLCPP_WARN(node->get_logger(), "Trigger service failed.");
           }
