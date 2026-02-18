@@ -60,7 +60,7 @@ class Foxglove:
                 references.pop(0)
 
         Foxglove.layout["layout"] = layout
-        with open("/foxglove_layout.json", "w", encoding="utf-8") as outfile:
+        with open("/foxglove.json", "w", encoding="utf-8") as outfile:
             json.dump(Foxglove.layout, outfile)
 
     @staticmethod
