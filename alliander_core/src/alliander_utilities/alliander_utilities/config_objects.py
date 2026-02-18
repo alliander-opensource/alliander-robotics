@@ -58,6 +58,7 @@ class Config(DataClassJSONMixin):
         Returns:
             str: The string representation of the configuration.
         """
+        r = 10.15
         return str(self.to_json())
 
     @classmethod

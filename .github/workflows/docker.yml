@@ -194,7 +194,7 @@ jobs:
       matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_ubuntu) }}
     runs-on: ${{ matrix.runner }}
     needs: [detect-changes, build-ubuntu]
-    if: needs.detect-changes.outputs.has_changes_ubuntu == 'true'
+    if: always() && needs.detect-changes.outputs.has_changes_ubuntu == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
@@ -310,7 +310,7 @@ jobs:
       matrix: ${{ fromJson(needs.detect-changes.outputs.expanded_matrix_cuda) }}
     runs-on: ${{ matrix.runner }}
     needs: [detect-changes, build-cuda]
-    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
+    if: always() && needs.detect-changes.outputs.has_changes_cuda == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
