@@ -2,14 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from alliander_utilities.config_objects import Joystick
+import warnings
+
+from alliander_utilities.config_objects import PlatformList
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
 
-platform_arg = LaunchArgument("platform_config", "")
+platform_list_arg = LaunchArgument("platform_list", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -20,22 +22,62 @@ def launch_setup(context: LaunchContext) -> list:
 
     Returns:
         list: The actions to start.
+
+    Raises:
+        RuntimeError: No arm nor vehicle platform is found.
     """
-    joystick_config = Joystick.from_str(platform_arg.string_value(context))
+    platforms = PlatformList.from_str(platform_list_arg.string_value(context)).platforms
+
+    # Create default namespaces which can be ignored when left unchanged
+    arm_namespace = "/arm"
+    vehicle_namespace = "/vehicle"
+
+    # Find arm / vehicle platforms in the platform list
+    for platform in platforms:
+        match platform.platform_type:
+            case "Arm":
+                if arm_namespace == "/arm":
+                    arm_namespace = f"/{platform.namespace}"
+                else:
+                    warnings.warn(
+                        "No support for multiple arms yet, only accepting the first arm.",
+                        RuntimeWarning,
+                        stacklevel=1,
+                    )
+
+            case "Vehicle":
+                if vehicle_namespace == "/vehicle":
+                    vehicle_namespace = f"/{platform.namespace}"
+                else:
+                    warnings.warn(
+                        "No support for multiple vehicles yet, only accepting the first vehicle.",
+                        RuntimeWarning,
+                        stacklevel=1,
+                    )
+
+            case _:
+                pass
+
+    if arm_namespace == "/arm" and vehicle_namespace == "/vehicle":
+        raise RuntimeError(
+            "No arm/vehicle platform present, cancelling the joystick manager."
+        )
 
     joystick_manager = Node(
         package="alliander_joystick",
         executable="joystick_manager",
         name="joystick_manager",
         parameters=[
-            {"arm_cmd_topic": joystick_config.arm_cmd_topic},
-            {"arm_frame_id": joystick_config.arm_frame_id},
-            {"arm_gripper_name": joystick_config.arm_gripper_name},
-            {"arm_home_service": joystick_config.arm_home_service},
-            {"arm_pause_servo_service": joystick_config.arm_pause_servo_service},
-            {"vehicle_cmd_topic": joystick_config.vehicle_cmd_topic},
-            {"vehicle_estop_reset": joystick_config.vehicle_estop_reset},
-            {"vehicle_estop_trigger": joystick_config.vehicle_estop_trigger},
+            {"arm_cmd_topic": f"{arm_namespace}/servo_node/delta_twist_cmds"},
+            {"arm_frame_id": f"{arm_namespace[1:]}/fr3_link1"},
+            {"arm_gripper_name": f"{arm_namespace}/gripper"},
+            {
+                "arm_home_service": f"{arm_namespace}/moveit_manager/move_to_configuration"
+            },
+            {"arm_pause_servo_service": f"{arm_namespace}/servo_node/pause_servo"},
+            {"vehicle_cmd_topic": f"{vehicle_namespace}/cmd_vel"},
+            {"vehicle_estop_reset": f"{vehicle_namespace}/hardware/e_stop_reset"},
+            {"vehicle_estop_trigger": f"{vehicle_namespace}/hardware/e_stop_trigger"},
         ],
     )
 
@@ -61,7 +103,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            platform_arg.declaration,
+            platform_list_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )

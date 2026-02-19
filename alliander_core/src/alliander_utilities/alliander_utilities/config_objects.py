@@ -322,33 +322,6 @@ class GPS(Platform):
     ip_address: str = ""
 
 
-@dataclass
-class Joystick(Platform):
-    """Configuration for a Joystick platform.
-
-    Attributes:
-        platform_type (str): Type identifier for the platform.
-        arm_cmd_topic (str): Topic for publishing the arm's twist message.
-        arm_frame_id (str): Frame ID for the arm topic.
-        arm_gripper_name (str): Name of the arm's gripper.
-        arm_home_service (str): Service name with which the arm can be moved back to home position.
-        arm_pause_servo_service (str): Service name with which the arm's servo node can be paused.
-        vehicle_cmd_topic (str): Topic for publishing the vehicle's twist message.
-        vehicle_estop_reset (str): Service name for resetting the vehicle's E-stop.
-        vehicle_estop_trigger (str): Service name for triggering the vehicle's E-stop.
-    """
-
-    platform_type: str = "Joystick"
-    arm_cmd_topic: str = "arm/cmd_vel"
-    arm_frame_id: str = "base_link"
-    arm_gripper_name: str = "/arm/gripper"
-    arm_home_service: str = "/arm/move_home"
-    arm_pause_servo_service: str = "/arm/servo_node/pause_servo"
-    vehicle_cmd_topic: str = "vehicle/cmd_vel"
-    vehicle_estop_reset: str = "vehicle/estop_reset"
-    vehicle_estop_trigger: str = "vehicle/estop_trigger"
-
-
 # Configurations containing lists of platforms:
 @dataclass
 class PlatformList(Config):
@@ -360,7 +333,7 @@ class PlatformList(Config):
 
     platforms: List[
         Annotated[
-            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS, Joystick],
+            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS],
             Discriminator(field="platform_type", include_supertypes=True),
         ]
     ] = field(default_factory=list)
