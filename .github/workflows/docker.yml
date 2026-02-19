@@ -346,7 +346,7 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.detect-changes.outputs.matrix_cuda) }}
     needs: [detect-changes, build-cuda-images]
-    if: needs.detect-changes.outputs.has_changes_cuda == 'true'
+    if: always() && needs.detect-changes.outputs.has_changes_cuda == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Docker login
