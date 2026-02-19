@@ -371,7 +371,7 @@ jobs:
 
   linting:
     runs-on: ubuntu-24.04
-    needs: [build-ubuntu-images, build-cuda-images]
+    needs: [create-manifests-ubuntu, create-manifests-cuda]
     if: always()
     steps:
       - uses: actions/checkout@v4
