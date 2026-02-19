@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-
 from alliander_utilities.config_objects import PlatformList, VisualizationConfig
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.launch_utils import SKIP
@@ -45,8 +44,28 @@ def launch_setup(context: LaunchContext) -> list:
         parameters=[{"platform_list": platforms.to_str()}],
     )
 
-    foxglove = RegisteredLaunchDescription(
-        get_file_path("foxglove_bridge", ["launch"], "foxglove_bridge_launch.xml")
+    topic_whitelist = ["/clock", "/tf", "/tf_static"]
+    for platform in platforms.platforms:
+        topic_whitelist.append([f"/{platform.namespace}/robot_description"])
+        match platform.platform_type:
+            case "Vehicle":
+                topic_whitelist.append(f"/{platform.namespace}/cmd_vel")
+            case "Camera":
+                topic_whitelist.append(f"/{platform.namespace}/color/image_raw")
+            case "Lidar":
+                topic_whitelist.append(f"/{platform.namespace}/scan/points")
+
+    foxglove = Node(
+        package="foxglove_bridge",
+        executable="foxglove_bridge",
+        parameters=[
+            {
+                "topic_whitelist": topic_whitelist,
+                "service_whitelist": [""],
+                "param_whitelist": [""],
+                "client_topic_whitelist": [""],
+            }
+        ],
     )
 
     return [
@@ -54,7 +73,7 @@ def launch_setup(context: LaunchContext) -> list:
         Register.group(rviz, context) if config.rviz else SKIP,
         Register.group(vizanti, context) if config.vizanti else SKIP,
         Register.on_start(gui, context) if config.gui else SKIP,
-        Register.group(foxglove, context),
+        Register.on_start(foxglove, context),
     ]
 
 
