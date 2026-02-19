@@ -26,6 +26,7 @@ SERVICE = typing.Literal[
     "pytest-no-nvidia",
     "linting",
     "documentation",
+    "joystick",
 ]
 MODE = typing.Literal[
     "configuration",
