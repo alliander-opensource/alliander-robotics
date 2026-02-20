@@ -129,6 +129,8 @@ class ApplyConfigurations:
         nav2 = platform.nav2_config
         Vizanti.add_platform_model(ns)
         Foxglove.topics.append(f"/{ns}/cmd_vel")
+        Foxglove.add_trigger_service("E-Stop Trigger", f"/{ns}/hardware/e_stop_trigger")
+        Foxglove.add_trigger_service("E-Stop Reset", f"/{ns}/hardware/e_stop_reset")
 
         if (nav2.navigation or nav2.slam) and not nav2.gps:
             Rviz.add_map(f"/{ns}/map")
