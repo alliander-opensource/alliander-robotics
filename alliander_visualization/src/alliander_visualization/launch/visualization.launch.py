@@ -6,7 +6,7 @@ from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.launch_utils import SKIP
 from alliander_utilities.register import Register, RegisteredLaunchDescription
 from alliander_utilities.ros_utils import get_file_path
-from alliander_visualization.tool_manager import ApplyConfigurations
+from alliander_visualization.tool_manager import ApplyConfigurations, Foxglove
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node, SetParameter
@@ -44,24 +44,13 @@ def launch_setup(context: LaunchContext) -> list:
         parameters=[{"platform_list": platforms.to_str()}],
     )
 
-    topic_whitelist = ["/clock", "/tf", "/tf_static"]
-    for platform in platforms.platforms:
-        topic_whitelist.append([f"/{platform.namespace}/robot_description"])
-        match platform.platform_type:
-            case "Vehicle":
-                topic_whitelist.append(f"/{platform.namespace}/cmd_vel")
-            case "Camera":
-                topic_whitelist.append(f"/{platform.namespace}/color/image_raw")
-            case "Lidar":
-                topic_whitelist.append(f"/{platform.namespace}/scan/points")
-
     foxglove = Node(
         package="foxglove_bridge",
         executable="foxglove_bridge",
         parameters=[
             {
-                "topic_whitelist": topic_whitelist,
-                "service_whitelist": [""],
+                "topic_whitelist": Foxglove.topics,
+                "service_whitelist": Foxglove.services,
                 "param_whitelist": [""],
                 "client_topic_whitelist": [""],
             }

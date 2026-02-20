@@ -51,7 +51,6 @@ class ApplyConfigurations:
                     self.add_lidar(Lidar.from_str(platform.to_str()))
                 case "Camera":
                     self.add_depth_camera(Camera.from_str(platform.to_str()))
-                    Foxglove.add_camera(platform.namespace)
                 case "GPS":
                     self.add_gps(GPS.from_str(platform.to_str()))
                 case _:
@@ -62,10 +61,11 @@ class ApplyConfigurations:
         if config.rviz:
             Rviz.create_rviz_file()
 
+        if config.foxglove:
+            Foxglove.create_layout_file()
+
         if config.vizanti:
             Vizanti.create_config_file()
-
-        Foxglove.create_layout_file()
 
     # TODO: refactor this
     @staticmethod
@@ -128,6 +128,7 @@ class ApplyConfigurations:
         ns = platform.namespace
         nav2 = platform.nav2_config
         Vizanti.add_platform_model(ns)
+        Foxglove.topics.append(f"/{ns}/cmd_vel")
 
         if (nav2.navigation or nav2.slam) and not nav2.gps:
             Rviz.add_map(f"/{ns}/map")
@@ -135,6 +136,11 @@ class ApplyConfigurations:
         if nav2.navigation:
             Rviz.add_map(f"/{ns}/global_costmap/costmap")
             Rviz.add_path(f"/{ns}/plan")
+
+            Foxglove.add_map(f"/{ns}/global_costmap/costmap")
+            Foxglove.add_path(f"/{ns}/plan")
+            Foxglove.add_trigger_service("Stop", f"/{ns}/nav2_manager/stop")
+
             Vizanti.add_button("Stop", f"/{ns}/waypoint_follower_controller/stop")
             Vizanti.add_initial_pose()
             Vizanti.add_goal_pose()
@@ -150,6 +156,9 @@ class ApplyConfigurations:
             Rviz.add_polygon(f"/{ns}/polygon_slower")
             Rviz.add_polygon(f"/{ns}/velocity_polygon_stop")
 
+            Foxglove.add_polygon(f"/{ns}/polygon_slower")
+            Foxglove.add_polygon(f"/{ns}/velocity_polygon_stop")
+
     @staticmethod
     def add_lidar(platform: Lidar) -> None:
         """Add lidar configurations to RViz and Vizanti.
@@ -158,6 +167,7 @@ class ApplyConfigurations:
             platform (Lidar): The lidar platform configuration.
         """
         Rviz.add_laser_scan(platform.namespace)
+        Foxglove.add_pointcloud(platform.namespace)
 
     @staticmethod
     def add_depth_camera(platform: Camera) -> None:
@@ -173,6 +183,8 @@ class ApplyConfigurations:
             f"/{platform.namespace}/depth/image_rect_raw",
         )
 
+        Foxglove.add_image(platform.namespace)
+
     @staticmethod
     def add_gps(platform: GPS) -> None:
         """Add GPS configurations to RViz and Vizanti.
@@ -181,3 +193,4 @@ class ApplyConfigurations:
             platform (GPS): The GPS platform configuration.
         """
         Rviz.add_satellite(f"/{platform.namespace}/gps/fix")
+        Foxglove.add_street_map(platform.namespace)

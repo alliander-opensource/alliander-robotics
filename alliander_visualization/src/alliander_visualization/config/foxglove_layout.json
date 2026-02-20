@@ -8,7 +8,8 @@
       "scene": {
         "transforms": {
           "visible": false
-        }
+        },
+        "backgroundColor": "#454545"
       },
       "transforms": {},
       "topics": {},
