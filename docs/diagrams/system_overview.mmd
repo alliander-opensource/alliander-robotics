@@ -56,10 +56,10 @@ teltonika.gps --> panther.nav2
 
 %% Joystick:
 
-class joystick
+class joystick_manager
 
-joystick --> franka.moveit_servo
-joystick --> panther.controller
+joystick_manager --> franka.moveit_servo
+joystick_manager --> panther.controller
 
 
 classDef external_node stroke: #0000ff

@@ -86,9 +86,9 @@ You can see two robots (`franka` and `panther`) and four sensors (`realsense`, `
 :::{mermaid} ../diagrams/node_definitions.mmd
 :::
 
-*joystick*:
+*joystick_manager*:
 \
-This joystick contains a `joystick_topic_manager` to switch the control between franka and panther. A `joy_to_twist` node converts the joy message to a twist message. For panther, this twist message can be directly send to the drive controller. For franka, `moveit_servo` is used to calculate the required joint command that results in the desired twist command of the end effector.
+This joystick manager is a custom implementation for controlling both an arm and a vehicle platform, being able to swtich the control between the two. For panther, this twist message can be directly send to the drive controller. For franka, `moveit_servo` is used to calculate the required joint command that results in the desired twist command of the end effector.
 
 *moveit_manager*:
 \
@@ -98,7 +98,7 @@ For robot arms, we created a `moveit_manager` node as a layer above the `moveit_
 \
 For robot vehicles, we use `nav2`, a set of nodes that provide functionality like navigating to a pose or following waypoints.
 
-At the moment, we can use the joystick, or functionality of the moveit_manager or nav2 to control the robots.
+At the moment, we can use the joystick_manager, or functionality of the moveit_manager or nav2 to control the robots.
 
 **vendor elements**
 \

@@ -23,6 +23,10 @@ ubuntu_images:
     base_image: allianderrobotics/base
     repository: husarion
     dockerfile: alliander_husarion/alliander_husarion.Dockerfile
+  alliander_joystick:
+    base_image: allianderrobotics/base
+    repository: joystick
+    dockerfile: alliander_joystick/alliander_joystick.Dockerfile
   alliander_moveit:
     base_image: allianderrobotics/base
     repository: moveit

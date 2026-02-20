@@ -26,6 +26,7 @@ SERVICE = typing.Literal[
     "pytest-no-nvidia",
     "linting",
     "documentation",
+    "joystick",
 ]
 MODE = typing.Literal[
     "configuration",
@@ -66,6 +67,7 @@ class Compose:
         self.visualization = True
         self.dev = False
         self.gazebo_ui = False
+        self.joystick = False
 
     @staticmethod
     def get_src_mounts(package: str) -> list[str]:
@@ -151,6 +153,11 @@ class Compose:
                     f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
                     f" vis_config:='{self.predefined_configuration.viz_conf.to_str()}'"
                 ),
+                {},
+            ),
+            "joystick": (
+                "alliander_joystick",
+                f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
                 {},
             ),
             "linting": (
@@ -311,7 +318,7 @@ class Compose:
 
         content["services"][package] = service
 
-    def create_compose(
+    def create_compose(  # noqa: PLR0912
         self,
         output_file: str = "compose.yml",
         arguments: str = "",
@@ -351,6 +358,8 @@ class Compose:
                 if self.visualization:
                     self.add_service(content, "visualization")
                     services["alliander_visualization"]["depends_on"] = {}
+                if self.joystick:
+                    self.add_service(content, "joystick")
 
         # Add healthchecks to all services:
         for name, service in services.items():
@@ -472,6 +481,14 @@ if __name__ == "__main__":
         help="Add this flag to enable the Gazebo UI in containers.",
     )
 
+    parser.add_argument(
+        "-j",
+        "--joystick",
+        required=False,
+        action="store_true",
+        help="Add this flag to enable joystick control for arm and/or vehicle platforms.",
+    )
+
     # Parse arguments:
     args = parser.parse_args()
     compose = Compose()
@@ -484,6 +501,7 @@ if __name__ == "__main__":
         config_setup.apply_configuration(args.configuration)
         compose.simulator = not args.hardware
         compose.visualization = args.visualization
+        compose.joystick = args.joystick
         compose.mode = "configuration"
     elif isinstance(args.pytest, list):
         arguments = " " + " ".join(args.pytest)
