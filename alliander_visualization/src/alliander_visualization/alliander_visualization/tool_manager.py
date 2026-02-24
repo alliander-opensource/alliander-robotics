@@ -108,7 +108,7 @@ class ApplyConfigurations:
             ApplyConfigurations.add_description(ns, kinematic=True)
             Rviz.add_planning_scene(ns)
             Rviz.add_robot_state(ns)
-            Rviz.add_trajectory(ns)
+            Rviz.add_arm_trajectory(ns)
             Rviz.add_markers()
             if platform.moveit_config.load_rviz_motion_planning_plugin:
                 Rviz.add_motion_planning_plugin(ns)
@@ -130,6 +130,7 @@ class ApplyConfigurations:
         if nav2.navigation:
             Rviz.add_map(f"/{ns}/global_costmap/costmap")
             Rviz.add_path(f"/{ns}/plan")
+            Rviz.add_vehicle_trajectory(f"/{ns}/optimal_trajectory")
             Vizanti.add_button("Stop", f"/{ns}/waypoint_follower_controller/stop")
             Vizanti.add_initial_pose()
             Vizanti.add_goal_pose()

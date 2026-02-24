@@ -8,6 +8,5 @@ planner_server:
   ros__parameters:
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "nav2_smac_planner::SmacPlannerHybrid"
-      minimum_turning_radius: 0.0
+      plugin: "nav2_smac_planner::SmacPlanner2D"
 
