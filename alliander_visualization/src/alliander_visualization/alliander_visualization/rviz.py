@@ -145,6 +145,28 @@ class Rviz:
         )
 
     @staticmethod
+    def add_vehicle_trajectory(topic: str) -> None:
+        """Add a controller trajectory to the RViz configuration.
+
+        Args:
+            topic (str): The topic of the trajectory.
+        """
+        Rviz.displays.append(
+            {
+                "Enabled": True,
+                "Class": "rviz_default_plugins/Path",
+                "Name": topic,
+                "Topic": {"Value": topic},
+                "Pose Style": "Arrows",
+                "Pose Color": "255; 85; 255",
+                "Shaft Length": 0.3,
+                "Head Length": 0.2,
+                "Shaft Diameter": 0.05,
+                "Head Diameter": 0.1,
+            }
+        )
+
+    @staticmethod
     def add_motion_planning_plugin(namespace: str) -> None:
         """Add the motion planning plugin to the RViz configuration.
 
@@ -201,7 +223,7 @@ class Rviz:
         )
 
     @staticmethod
-    def add_trajectory(namespace: str) -> None:
+    def add_arm_trajectory(namespace: str) -> None:
         """Add the trajectory display to the RViz configuration.
 
         Args:
