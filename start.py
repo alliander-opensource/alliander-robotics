@@ -27,6 +27,7 @@ SERVICE = typing.Literal[
     "linting",
     "documentation",
     "joystick",
+    "diagnostics",
 ]
 MODE = typing.Literal[
     "configuration",
@@ -160,6 +161,11 @@ class Compose:
                 f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
                 {},
             ),
+            "diagnostics": (
+                "alliander_diagnostics",
+                f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
+                {},
+            ),
             "linting": (
                 "alliander_tests",
                 " && pre-commit run --all-files",
@@ -216,6 +222,7 @@ class Compose:
         Returns:
             dict: dictionary containing YAML data from docker-compose.yml, with added command.
         """
+        print(f"{package}")
         service = self.load_compose(f"{package}/docker-compose.yml")["services"][
             package
         ]
@@ -347,6 +354,7 @@ class Compose:
             case "documentation":
                 self.add_service(content, "documentation")
             case "configuration" | "configuration-no-nvidia":
+                self.add_service(content, "diagnostics")
                 for platform in self.predefined_configuration.plat_conf.platforms:
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
