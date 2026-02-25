@@ -27,6 +27,8 @@ def state_publisher_node(
         xacro_arguments = {}
     xacro_path = get_file_path("alliander_description", [platform, "urdf"], xacro)
     robot_description = get_robot_description(xacro_path, xacro_arguments)
+    change_meshes(robot_description)
+
     return Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -38,6 +40,39 @@ def state_publisher_node(
             {"publish_frequency": 1000.0},
         ],
     )
+
+
+def change_meshes(robot_description: dict) -> None:
+    """Change .dae and .stl mesh files to .glb in the robot description.
+
+    Args:
+        robot_description (dict): The robot description dictionary.
+    """
+    robot_description_str = str(robot_description["robot_description"])
+    robot_description_str = robot_description_str.replace(".dae", ".glb")
+    robot_description_str = robot_description_str.replace(".stl", ".glb")
+
+    for original, replacement in [
+        ("husarion_ugv_description", "husarion"),
+        ("franka_description", "franka"),
+        ("realsense2_description", "realsense"),
+        ("zed_msgs", "zed"),
+        ("husarion_components_description", "nmea_gps"),
+    ]:
+        robot_description_str = robot_description_str.replace(
+            rf'<mesh filename="package://{original}',
+            rf'<mesh filename="package://alliander_description/{replacement}',
+        )
+        robot_description_str = robot_description_str.replace(
+            rf'<mesh filename="file:///opt/ros/jazzy/share/{original}',
+            rf'<mesh filename="package://alliander_description/{replacement}',
+        )
+        robot_description_str = robot_description_str.replace(
+            rf'<mesh filename="file:///alliander/external/install/{original}/share/{original}',
+            rf'<mesh filename="package://alliander_description/{replacement}',
+        )
+
+    robot_description["robot_description"] = robot_description_str
 
 
 def static_tf_node(

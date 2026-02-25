@@ -15,4 +15,5 @@ services:
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
+      - "./foxglove.json:/foxglove.json"
     command: ["/bin/bash", "-c", "ros2 launch alliander_visualization visualization.launch.py"]
