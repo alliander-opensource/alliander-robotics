@@ -7,6 +7,10 @@ ubuntu:
     repository: base
     dockerfile: alliander_core/alliander_core.Dockerfile
 ubuntu_images:
+  alliander_diagnostics:
+    base_image: allianderrobotics/base
+    repository: diagnostics
+    dockerfile: alliander_diagnostics/alliander_diagnostics.Dockerfile
   alliander_franka:
     base_image: allianderrobotics/base
     repository: franka
