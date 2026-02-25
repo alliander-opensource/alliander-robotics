@@ -28,6 +28,9 @@ RUN apt update \
   && rosdep update --rosdistro $ROS_DISTRO \
   && rosdep install --from-paths src -y -i
 
+# Get rosboard:
+RUN git clone https://github.com/alliander-opensource/rosboard.git src/rosboard
+
 # Get vendor descriptions
 COPY common/get_vendor_descriptions.sh /$WORKDIR/get_vendor_descriptions.sh
 RUN /$WORKDIR/get_vendor_descriptions.sh && rm /$WORKDIR/get_vendor_descriptions.sh
