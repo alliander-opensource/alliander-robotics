@@ -373,6 +373,7 @@ jobs:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     needs: [create-manifests-ubuntu, create-manifests-cuda]
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - name: Free disk space
