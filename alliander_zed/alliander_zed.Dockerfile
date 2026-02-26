@@ -8,21 +8,18 @@ ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
 
 # Install ZED SDK:
-ARG UBUNTU_RELEASE_YEAR=24      
-ARG CUDA_MAJOR=12              
-ARG CUDA_MINOR=9                
-ARG ZED_SDK_MAJOR=5
-ARG ZED_SDK_MINOR=0
-RUN echo "CUDA Version ${CUDA_MAJOR}.${CUDA_MINOR}.0" > /usr/local/cuda/version.txt || true \
-  && installer="ZED_SDK_Ubuntu${UBUNTU_RELEASE_YEAR}_cuda${CUDA_MAJOR}.${CUDA_MINOR}.run" \
-  && sdk_url="https://download.stereolabs.com/zedsdk/${ZED_SDK_MAJOR}.${ZED_SDK_MINOR}/cu${CUDA_MAJOR}/ubuntu${UBUNTU_RELEASE_YEAR}" \
-  && echo "Downloading ${sdk_url}  →  ${installer} ..." \
-  && wget -q --show-progress -O "${installer}" "${sdk_url}" \
-  && chmod +x "${installer}" \
-  && echo "Running installer …" \
-  && ./"${installer}" -- silent \
+ARG TEMP_DIR="/tmp/zed_install"
+ARG RUN_FILE="$TEMP_DIR/zed_sdk.run"
+RUN mkdir -p "$TEMP_DIR"
+RUN if [ $(dpkg --print-architecture) = "amd64" ]; \
+  then wget -O "$RUN_FILE" "https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/5.0/ZED_SDK_Ubuntu24_cuda12.8_tensorrt10.9_v5.0.7.zstd.run"; \
+  elif [ $(dpkg --print-architecture) = "arm64" ]; \ 
+  then wget -O "$RUN_FILE" "https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/5.0/ZED_SDK_Tegra_L4T36.4_v5.0.7.zstd.run"; \
+  else echo "Unsupported architecture: $(dpkg --print-architecture)"; exit 1; fi
+RUN chmod +x "${RUN_FILE}" \
+  && "${RUN_FILE}" -- silent \
   && chmod -R u+rwX,go+rX /usr/local/zed \
-  && rm -f "${installer}" \
+  && rm -f "${RUN_FILE}" \
   && rm -rf /var/lib/apt/lists/*
 
 # Install ZED Wrapper:
