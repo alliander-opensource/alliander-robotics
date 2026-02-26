@@ -97,17 +97,12 @@ jobs:
             ] | map(select(.name as $n | $changed | index($n)))'
           }
 
-          # TODO remove if-statement after zed/realsense-arm64 is supported
           expand_matrix() {
             local original_matrix=$1
             echo "$original_matrix" | jq -c '[
               .[] |
-              if .name == "alliander_realsense" or .name == "alliander_zed" then
-                . + {"arch": "amd64", "runner": "ubuntu-24.04"}
-              else
                 (. + {"arch": "amd64", "runner": "ubuntu-24.04"}),
                 (. + {"arch": "arm64", "runner": "ubuntu-24.04-arm"})
-              end
             ]'
           }
 
@@ -238,17 +233,10 @@ jobs:
 
       - name: Create manifest for ${{ matrix.repository }}
         run: |
-          # TODO remove this when realsense-arm64 is supported
-          if docker manifest inspect allianderrobotics/${{ matrix.repository }}:latest-arm64 > /dev/null 2>&1; then
-            docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.repository }}:latest \
-              allianderrobotics/${{ matrix.repository }}:latest-amd64 \
-              allianderrobotics/${{ matrix.repository }}:latest-arm64
-          else
-            docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.repository }}:latest \
-              allianderrobotics/${{ matrix.repository }}:latest-amd64
-          fi
+          docker buildx imagetools create \
+            -t allianderrobotics/${{ matrix.repository }}:latest \
+            allianderrobotics/${{ matrix.repository }}:latest-amd64 \
+            allianderrobotics/${{ matrix.repository }}:latest-arm64
 
   build-cuda:
     strategy:
@@ -357,17 +345,10 @@ jobs:
 
       - name: Create manifest for ${{ matrix.repository }}
         run: |
-          # TODO fix this once zed-arm64 is supported
-          if docker manifest inspect allianderrobotics/${{ matrix.repository }}:latest-arm64 > /dev/null 2>&1; then
-            docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.repository }}:latest \
-              allianderrobotics/${{ matrix.repository }}:latest-amd64 \
-              allianderrobotics/${{ matrix.repository }}:latest-arm64
-          else
-            docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.repository }}:latest \
-              allianderrobotics/${{ matrix.repository }}:latest-amd64
-          fi
+          docker buildx imagetools create \
+            -t allianderrobotics/${{ matrix.repository }}:latest \
+            allianderrobotics/${{ matrix.repository }}:latest-amd64 \
+            allianderrobotics/${{ matrix.repository }}:latest-arm64
 
   linting:
     runs-on: ubuntu-24.04
@@ -409,10 +390,5 @@ jobs:
           cache: "pip"
       - name: Install dependencies
         run: pip install pyyaml mashumaro
-      # TODO remove difference between ARM and non-ARM when zed/realsense-arm64 is supported:
-      - name: Run tests in alliander_tests container (ubuntu-24.04)
-        if: ${{ matrix.runner == 'ubuntu-24.04' }} 
+      - name: Run tests in alliander_tests container
         run: python3 start.py --pytest-no-nvidia
-      - name: Run tests in alliander_tests container (ubuntu-24.04-arm)
-        if: ${{ matrix.runner == 'ubuntu-24.04-arm' }} 
-        run: python3 start.py --pytest-no-nvidia --deselect=alliander_tests/src/alliander_tests/tests/test_camera.py
