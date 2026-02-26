@@ -8,9 +8,9 @@ on:
   push:
     branches: [main]
 
-  # pull_request:
-  #   branches: [main]
-  #   types: [opened, synchronize, reopened, ready_for_review]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   detect-changes:
@@ -102,7 +102,7 @@ jobs:
             local original_matrix=$1
             echo "$original_matrix" | jq -c '[
               .[] |
-              if .name == "alliander_realsense" or .name == "alliander_zed" then
+              if .name == "alliander_zed" then
                 . + {"arch": "amd64", "runner": "ubuntu-24.04"}
               else
                 (. + {"arch": "amd64", "runner": "ubuntu-24.04"}),
@@ -238,17 +238,10 @@ jobs:
 
       - name: Create manifest for ${{ matrix.repository }}
         run: |
-          # TODO remove this when realsense-arm64 is supported
-          if docker manifest inspect allianderrobotics/${{ matrix.repository }}:latest-arm64 > /dev/null 2>&1; then
-            docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.repository }}:latest \
-              allianderrobotics/${{ matrix.repository }}:latest-amd64 \
-              allianderrobotics/${{ matrix.repository }}:latest-arm64
-          else
-            docker buildx imagetools create \
-              -t allianderrobotics/${{ matrix.repository }}:latest \
-              allianderrobotics/${{ matrix.repository }}:latest-amd64
-          fi
+          docker buildx imagetools create \
+          -t allianderrobotics/${{ matrix.repository }}:latest \
+          allianderrobotics/${{ matrix.repository }}:latest-amd64 \
+          allianderrobotics/${{ matrix.repository }}:latest-arm64
 
   build-cuda:
     strategy:
@@ -411,8 +404,8 @@ jobs:
         run: pip install pyyaml mashumaro
       # TODO remove difference between ARM and non-ARM when zed/realsense-arm64 is supported:
       - name: Run tests in alliander_tests container (ubuntu-24.04)
-        if: ${{ matrix.runner == 'ubuntu-24.04' }} 
+        if: ${{ matrix.runner == 'ubuntu-24.04' }}
         run: python3 start.py --pytest-no-nvidia
       - name: Run tests in alliander_tests container (ubuntu-24.04-arm)
-        if: ${{ matrix.runner == 'ubuntu-24.04-arm' }} 
+        if: ${{ matrix.runner == 'ubuntu-24.04-arm' }}
         run: python3 start.py --pytest-no-nvidia --deselect=alliander_tests/src/alliander_tests/tests/test_camera.py

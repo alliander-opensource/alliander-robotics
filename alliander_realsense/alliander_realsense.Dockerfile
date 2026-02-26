@@ -16,14 +16,15 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt autoremove -y \
   && apt clean
 
-ARG ZIP_URL="https://github.com/realsenseai/librealsense/releases/download/v2.57.6/librealsense2_noble_ARM_debians_2_57_6_beta.zip"
 ARG TEMP_DIR="/tmp/realsense_install"
-ARG ZIP_FILE="$TEMP_DIR/librealsense2_noble_ARM_debians_2_57_6_beta.zip"
-RUN mkdir -p "$TEMP_DIR" \
-  && wget -O "$ZIP_FILE" "$ZIP_URL" \
-  && unzip "$ZIP_FILE" -d "$TEMP_DIR" \ 
-  && dpkg -i "$TEMP_DIR"/*.deb \
-  && rm -rf "$TEMP_DIR"
+ARG ZIP_FILE="$TEMP_DIR/librealsense2.zip"
+RUN mkdir -p "$TEMP_DIR"
+RUN if [ $(dpkg --print-architecture) = "amd64" ]; \
+  then wget -O "$ZIP_FILE" "https://github.com/realsenseai/librealsense/releases/download/v2.57.6/librealsense2_noble_x86_debians_2_57_6_beta.zip"; \
+  elif [ $(dpkg --print-architecture) = "arm64" ]; \ 
+  then wget -O "$ZIP_FILE" "https://github.com/realsenseai/librealsense/releases/download/v2.57.6/librealsense2_noble_ARM_debians_2_57_6_beta.zip"; \
+  else echo "Unsupported architecture: $(dpkg --print-architecture)"; exit 1; fi
+RUN unzip "$ZIP_FILE" -d "$TEMP_DIR" && dpkg -i "$TEMP_DIR"/*.deb && rm -rf "$TEMP_DIR"
 
 # Install Realsense Wrapper:
 WORKDIR /$WORKDIR/external
