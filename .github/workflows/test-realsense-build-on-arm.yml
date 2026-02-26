@@ -25,6 +25,6 @@ jobs:
           python-version: "3.12"
           cache: "pip"
       - name: Install dependencies
-        run: pip install pyyaml mashumaro
+        run: pip install PyYAML termcolor
       - name: build realsense image
         run: python3 image_manager.py --build -c realsense
