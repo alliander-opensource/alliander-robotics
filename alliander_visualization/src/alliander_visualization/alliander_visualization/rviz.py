@@ -325,6 +325,7 @@ class Rviz:
                 },
                 "Value": True,
                 "Zoom": 19,
+                "Draw Behind": True,
             }
         )
 

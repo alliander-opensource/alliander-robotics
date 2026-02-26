@@ -7,7 +7,6 @@
 global_costmap:
   global_costmap:
     ros__parameters:
-      always_send_full_costmap: true
       rolling_window: substitute_me
       width: substitute_me
       height: substitute_me
@@ -39,4 +38,5 @@ global_costmap:
           inf_is_valid: false
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 1.0
+        inflation_radius: 1.5
+        cost_scaling_factor: 2.0

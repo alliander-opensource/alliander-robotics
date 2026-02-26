@@ -222,7 +222,7 @@ class PredefinedConfigurations:
         link(vehicle, gps)
         self.plat_conf.platforms = [vehicle, lidar, gps]
         self.viz_conf.gui = True
-        self.sim_conf.world = "map_5.940906_51.966960"
+        self.sim_conf.world = "map_5.954036_51.977320"
 
     # Lynx:
     @register_configuration("lynx")
