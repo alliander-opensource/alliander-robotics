@@ -119,6 +119,9 @@ class Rviz:
                 "Class": "rviz_default_plugins/PointCloud2",
                 "Topic": {"Value": f"/{namespace}/scan/points"},
                 "Name": namespace,
+                "Use rainbow": False,
+                "Min Color": "170; 0; 255",
+                "Alpha": 0.3,
             }
         )
 
@@ -140,7 +143,8 @@ class Rviz:
                 "Name": namespace,
                 "Color Transformer": "FlatColor",
                 "Color": "255; 0; 0",
-                "Size (m)": 0.02,
+                "Style": "Spheres",
+                "Size (m)": 0.03,
             }
         )
 
@@ -241,13 +245,14 @@ class Rviz:
         )
 
     @staticmethod
-    def add_map(topic: str) -> None:
+    def add_map(topic: str, color_scheme: str = "costmap", alpha: float = 0.7) -> None:
         """Add a map to the RViz configuration.
 
         Args:
             topic (str): The topic of the map.
+            color_scheme (str): The color scheme of the map.
+            alpha (float): The transparency level of the map.
         """
-        color_scheme = "costmap" if "costmap" in topic else "map"
         Rviz.displays.append(
             {
                 "Enabled": True,
@@ -255,6 +260,7 @@ class Rviz:
                 "Name": topic,
                 "Topic": {"Value": topic},
                 "Color Scheme": color_scheme,
+                "Alpha": alpha,
             }
         )
 

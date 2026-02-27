@@ -12,9 +12,9 @@ controller_server:
       visualize: true  # computationally expensive, set to false on robot
       time_steps: 56
       model_dt: 0.05  # set this to 1 / controller_frequency
-      batch_size: 3000
-      vx_std: 0.2
-      wz_std: 0.4
+      batch_size: 2000
+      vx_std: 0.35
+      wz_std: 0.6
       vx_max: 2.0
       vx_min: -1.0
       wz_max: 3.14
@@ -67,14 +67,12 @@ controller_server:
       ObstaclesCritic:
         enabled: true
         cost_power: 1
-        repulsion_weight: 1.5
+        repulsion_weight: 1.5  # set to inflation_radius - min_dist_to_obstacle
         critical_weight: 20.0
         consider_footprint: false
         collision_cost: 10000.0
         collision_margin_distance: 0.1
         near_goal_distance: 0.5
-        inflation_radius: 0.55 # (only in Humble)
-        cost_scaling_factor: 10.0 # (only in Humble)
       CostCritic:
         enabled: true
         cost_power: 1

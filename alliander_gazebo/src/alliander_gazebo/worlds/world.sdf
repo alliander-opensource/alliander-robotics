@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 <sdf version="1.6">
   <world name="generated_world">
     <physics name="1ms" type="ignored">
-      <max_step_size>0.001</max_step_size>
+      <max_step_size>0.0025</max_step_size>
       <real_time_factor>1.0</real_time_factor>
     </physics>
 
