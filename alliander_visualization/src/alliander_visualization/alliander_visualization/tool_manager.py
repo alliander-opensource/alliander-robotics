@@ -125,10 +125,11 @@ class ApplyConfigurations:
         Vizanti.add_platform_model(ns)
 
         if (nav2.navigation or nav2.slam) and not nav2.gps:
-            Rviz.add_map(f"/{ns}/map")
+            Rviz.add_map(f"/{ns}/map", "map")
 
         if nav2.navigation:
             Rviz.add_map(f"/{ns}/global_costmap/costmap")
+            Rviz.add_map(f"/{ns}/local_costmap/costmap", "map", 0.3)
             Rviz.add_path(f"/{ns}/plan")
             Rviz.add_vehicle_trajectory(f"/{ns}/optimal_trajectory")
             Vizanti.add_button("Stop", f"/{ns}/waypoint_follower_controller/stop")
@@ -154,6 +155,7 @@ class ApplyConfigurations:
             platform (Lidar): The lidar platform configuration.
         """
         Rviz.add_laser_scan(platform.namespace)
+        Rviz.add_point_cloud(platform.namespace)
 
     @staticmethod
     def add_depth_camera(platform: Camera) -> None:
