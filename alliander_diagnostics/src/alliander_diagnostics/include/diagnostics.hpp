@@ -61,7 +61,8 @@ class Diagnostics {
   void initialize_diagnostics();
 
   /**
-   * @brief callback method that publishes all diagnostic data at a constant rate.
+   * @brief callback method that publishes all diagnostic data at a constant
+   * rate.
    */
   void diagnostics_cb();
 
