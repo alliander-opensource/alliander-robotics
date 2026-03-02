@@ -51,6 +51,7 @@ RUN apt update && apt install -y --no-install-recommends \
   ros-$ROS_DISTRO-vision-msgs \
   ros-$ROS_DISTRO-vision-msgs \
   ros-$ROS_DISTRO-geographic-msgs \
+  ros-$ROS_DISTRO-topic-tools \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \
   && apt clean
