@@ -35,6 +35,8 @@ class Diagnostics {
   /// Publisher for the diagnostic data
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr
       pub_diagnostics;
+  /// Timer that triggers the diagnostics callback to send the data at a
+  /// constant rate
   rclcpp::TimerBase::SharedPtr timer;
 
   // ROS2 get parameter variables:
@@ -46,9 +48,11 @@ class Diagnostics {
   bool gps_high_covariance_detected;
   /// The GPS status
   rclcpp::Time gps_high_covariance_start_time;
-  /// ...
+  /// The limit of the GPS' covariance value, where a higher value indicates a
+  /// weak signal
   double gps_covariance_limit{100.0};
-  /// ...
+  /// The number of seconds of ERROR status until the GPS signal is officially
+  /// deemed to be unstable
   double gps_signal_instability_limit{10.0};
 
   // Other variables
