@@ -23,6 +23,8 @@ RUN apt update && apt install -y --no-install-recommends \
     ros-$ROS_DISTRO-moveit-visual-tools \
     ros-$ROS_DISTRO-moveit-ros-perception \
     ros-$ROS_DISTRO-topic-tools \
+    ros-$ROS_DISTRO-navigation2 \
+    ros-$ROS_DISTRO-nav2-bringup \
     && rm -rf /var/lib/apt/lists/* \
     && apt autoremove -y \
     && apt clean
@@ -50,6 +52,7 @@ COPY alliander_diagnostics/src/ /alliander/ros/src
 COPY alliander_franka/src/ /alliander/ros/src
 COPY alliander_joystick/src/ /alliander/ros/src
 COPY alliander_moveit/src/ /alliander/ros/src
+COPY alliander_nav2/src/ /alliander/ros/src
 
 # Build repo packages:
 RUN /alliander/colcon_build.sh
