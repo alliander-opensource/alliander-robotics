@@ -142,7 +142,7 @@ class PredefinedConfigurations:
     @register_configuration("panther_realsense")
     def config_panther_realsense(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
-        camera = Camera("realsense", (0, 0, 0.2))
+        camera = Camera("realsense", (0.18, 0, 0.2))
 
         link(vehicle, camera)
         self.plat_conf.platforms = [vehicle, camera]
@@ -179,7 +179,7 @@ class PredefinedConfigurations:
     @register_configuration("panther_gps")
     def config_panther_gps(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
-        gps = GPS("gps", (0, 0, 0.2))
+        gps = GPS("gps", position=(-0.08, -0.25, 0.2), orientation=(0, 0, -90))
 
         link(vehicle, gps)
         self.plat_conf.platforms = [vehicle, gps]
@@ -237,15 +237,17 @@ class PredefinedConfigurations:
         vehicle.nav2_config.window_size = 50
         lidar = Lidar(
             "velodyne",
-            position=(0.125, 0.185, 0.20),
-            orientation=(0.0, 0.0, 45.0),
+            position=(0.125, 0.185, 0.2),
+            orientation=(0, 0, 45),
             ip_address="10.15.20.5",
         )
-        gps = GPS("gps", (0, 0, 0.2))
+        gps = GPS("gps", position=(-0.08, -0.25, 0.2), orientation=(0, 0, -90))
+        camera = Camera("realsense", (0.18, 0, 0.2))
 
         link(vehicle, lidar)
         link(vehicle, gps)
-        self.plat_conf.platforms = [vehicle, lidar, gps]
+        link(vehicle, camera)
+        self.plat_conf.platforms = [vehicle, lidar, gps, camera]
         self.viz_conf.gui = True
         self.sim_conf.world = "map_5.954036_51.977320"
 
