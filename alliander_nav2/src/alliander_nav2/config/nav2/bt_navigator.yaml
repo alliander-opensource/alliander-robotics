@@ -12,3 +12,5 @@ bt_navigator:
     error_code_names:
       - compute_path_error_code
       - follow_path_error_code
+    plugin_lib_names:
+    - bt_is_gps_healthy_node
