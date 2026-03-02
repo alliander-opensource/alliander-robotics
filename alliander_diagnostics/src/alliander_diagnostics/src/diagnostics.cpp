@@ -48,13 +48,12 @@ void Diagnostics::diagnostics_cb() {
 
 void Diagnostics::gps_cb(const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(diagnostics_mutex);
-  
+
   gps_status.name = "GPS Status";
   gps_status.hardware_id = "gps";  // We only accept a single GPS sensor
   gps_status.values.clear();
 
-  if (!msg)
-  {
+  if (!msg) {
     gps_status.level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
     gps_status.message = "No GPS data received";
     return;

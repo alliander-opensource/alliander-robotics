@@ -48,9 +48,7 @@ def launch_setup(context: LaunchContext) -> list:
                 pass
 
     if not gps_namespace:
-        raise RuntimeError(
-            "No platform present, cancelling the diagnostics package."
-        )
+        raise RuntimeError("No platform present, cancelling the diagnostics package.")
 
     diagnostics_node = Node(
         package="alliander_diagnostics",
