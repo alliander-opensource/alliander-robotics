@@ -73,6 +73,7 @@ class GPSWaypointFollower(Node):
             self, FollowGPSWaypoints, "/panther/follow_gps_waypoints"
         )
         self.current_wp = -1
+        self.done = False
 
     def send_goal(self, route: Route) -> None:
         """Sends a Route to the nav2 action server.
@@ -125,16 +126,21 @@ class GPSWaypointFollower(Node):
         """Callback for result from the action server.
 
         Args:
-            result_msg (Future): future containing result of GPS waypoint following.
+            future (Future): future containing result of GPS waypoint following.
         """
         result_msg = future.result()
+        print(result_msg)
         if result_msg is None:
             self.get_logger().info("No result received.")
             return
+        result = result_msg.result
 
         self.get_logger().info(
-            f"Completed waypoints.\nMissed waypoints: {result_msg.missed_waypoints}\nError msg: {result_msg.error_msg}"
+            f"Completed waypoints.\
+            \nMissed waypoints: {result.missed_waypoints} \
+            \nError msg: {result.error_msg}"
         )
+        self.done = True
 
     @staticmethod
     def _to_gps_pose(wp: GPSWaypoint) -> GeoPose:
@@ -167,13 +173,14 @@ if __name__ == "__main__":
         case _:
             print("No valid route given. Defaulting to SIM_TIGHT_ALLEYS.")
             route = Route.SIM_TIGHT_ALLEYS
-    print(f"Sending route {route.name}.")
+    print(f"Sending route {route.name} ({len(ROUTES[route])} waypoints).")
 
     rclpy.init()
     gps_waypoint_follower = GPSWaypointFollower()
 
     future = gps_waypoint_follower.send_goal(route)
-    rclpy.spin(gps_waypoint_follower)
+    while not gps_waypoint_follower.done:
+        rclpy.spin_once(gps_waypoint_follower)
 
     gps_waypoint_follower.destroy_node()
     rclpy.shutdown()
