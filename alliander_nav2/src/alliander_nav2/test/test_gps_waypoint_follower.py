@@ -9,6 +9,7 @@ import rclpy
 from geographic_msgs.msg import GeoPose
 from geometry_msgs.msg import Quaternion
 from nav2_msgs.action import FollowGPSWaypoints
+from nav2_msgs.action._follow_gps_waypoints import FollowGPSWaypoints_FeedbackMessage
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.task import Future
@@ -33,16 +34,16 @@ class Route(Enum):
     """Enum containing predefined routes for GPS Waypoint Follower.
 
     Attributes:
-        KB_TRUCK_PARKING_LOT: Route nearby Roboticalab entrance.
+        KB_TRUCK_PARKING_SPACE: Route nearby Roboticalab entrance.
         SIM_TIGHT_ALLEYS: Simulation route in Arnhem, with buildings close together.
     """
 
-    KB_TRUCK_PARKING_LOT = auto()
+    KB_TRUCK_PARKING_SPACE = auto()
     SIM_TIGHT_ALLEYS = auto()
 
 
 ROUTES: dict[Route, list[GPSWaypoint]] = {
-    Route.KB_TRUCK_PARKING_LOT: [
+    Route.KB_TRUCK_PARKING_SPACE: [
         GPSWaypoint(51.966663, 5.940867),
         GPSWaypoint(51.966511, 5.940912),
         GPSWaypoint(51.966512, 5.940945),
@@ -71,36 +72,54 @@ class GPSWaypointFollower(Node):
         self.ac = ActionClient(
             self, FollowGPSWaypoints, "/panther/follow_gps_waypoints"
         )
+        self.current_wp = -1
 
-    def send_goal(self, route: Route) -> Future:
+    def send_goal(self, route: Route) -> None:
         """Sends a Route to the nav2 action server.
 
         Args:
             route (Route): predefined set of waypoints to send.
-
-        Returns:
-            Future: future that can be awaited by rclpy.
         """
         self.ac.wait_for_server()
 
         waypoints = ROUTES[route]
         goal_msg = FollowGPSWaypoints.Goal()
         goal_msg.gps_poses = [self._to_gps_pose(wp) for wp in waypoints]
-        print(f"goal: {goal_msg}")
 
-        future = self.ac.send_goal_async(goal_msg, feedback_callback=self.cb_feedback)
-        future.add_done_callback(self.cb_result)
-        return future
+        self._send_goal_future = self.ac.send_goal_async(
+            goal_msg, feedback_callback=self.cb_feedback
+        )
+        self._send_goal_future.add_done_callback(self.cb_goal_response)
 
-    def cb_feedback(self, feedback_msg: FollowGPSWaypoints.Feedback) -> None:
+    def cb_goal_response(self, future: Future) -> None:
+        """Callback to indicate whether goal is accepted or not.
+
+        Args:
+            future (Future): future containing the goal response.
+        """
+        gh = future.result()
+        if gh is None:
+            self.get_logger().info("Received None goal response.")
+            return
+
+        if not gh.accepted:
+            self.get_logger().info("Goal rejected.")
+            return
+
+        self.get_logger().info("Goal accepted!")
+        self._get_result_future = gh.get_result_async()
+        self._get_result_future.add_done_callback(self.cb_result)
+
+    def cb_feedback(self, feedback_msg: FollowGPSWaypoints_FeedbackMessage) -> None:
         """Callback for feedback from the action server.
 
         Args:
-            feedback_msg (FollowGPSWaypoints.Feedback): feedback indicating current waypoint being followed.
+            feedback_msg (FollowGPSWaypoints_FeedbackMessage): feedback message containing current waypoint being followed.
         """
-        self.get_logger().info(
-            f"Now navigating to waypoint {feedback_msg.current_waypoint}."
-        )
+        current_wp = feedback_msg.feedback.current_waypoint
+        if current_wp != self.current_wp:
+            self.get_logger().info(f"Now navigating to waypoint {current_wp}.")
+            self.current_wp = current_wp
 
     def cb_result(self, result_msg: FollowGPSWaypoints.Result) -> None:
         """Callback for result from the action server.
@@ -130,22 +149,26 @@ class GPSWaypointFollower(Node):
 
 if __name__ == "__main__":
     route_input = input(
-        f"\nGPS Waypoint Follower test script.\nChoose one of the following routes:\n{ROUTES}\n\nInput: "
+        f"\nGPS Waypoint Follower test script. \
+        \nChoose one of the following routes: \
+        \n{[f'{i}: {k.name}' for i, k in enumerate(ROUTES)]} \
+        \n\nInput: "
     )
     match route_input:
-        case "KB_TRUCK_PARKING_LOT" | 1:
-            route = Route.KB_TRUCK_PARKING_LOT
-        case "SIM_TIGHT_ALLEYS" | 2:
+        case "KB_TRUCK_PARKING_SPACE" | "0":
+            route = Route.KB_TRUCK_PARKING_SPACE
+        case "SIM_TIGHT_ALLEYS" | "1":
             route = Route.SIM_TIGHT_ALLEYS
         case _:
             print("No valid route given. Defaulting to SIM_TIGHT_ALLEYS.")
             route = Route.SIM_TIGHT_ALLEYS
+    print(f"Sending route {route.name}.")
 
     rclpy.init()
     gps_waypoint_follower = GPSWaypointFollower()
 
     future = gps_waypoint_follower.send_goal(route)
-    rclpy.spin_until_future_complete(gps_waypoint_follower, future)
+    rclpy.spin(gps_waypoint_follower)
 
     gps_waypoint_follower.destroy_node()
     rclpy.shutdown()
