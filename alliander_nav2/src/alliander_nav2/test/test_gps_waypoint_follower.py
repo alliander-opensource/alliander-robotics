@@ -121,12 +121,17 @@ class GPSWaypointFollower(Node):
             self.get_logger().info(f"Now navigating to waypoint {current_wp}.")
             self.current_wp = current_wp
 
-    def cb_result(self, result_msg: FollowGPSWaypoints.Result) -> None:
+    def cb_result(self, future: Future) -> None:
         """Callback for result from the action server.
 
         Args:
-            result_msg (FollowGPSWaypoints.Result): message indicating statistics of operation.
+            result_msg (Future): future containing result of GPS waypoint following.
         """
+        result_msg = future.result()
+        if result_msg is None:
+            self.get_logger().info("No result received.")
+            return
+
         self.get_logger().info(
             f"Completed waypoints.\nMissed waypoints: {result_msg.missed_waypoints}\nError msg: {result_msg.error_msg}"
         )
