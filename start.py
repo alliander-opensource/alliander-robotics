@@ -125,11 +125,12 @@ class Compose:
             platform (Platform | None): platform to get config for, or None if not a platform.
             arguments (str): additional arguments for pytest.
 
+        Returns:
+            tuple[str, str, dict]: tuple consisting of the package, the config for compose, and additional config.
+
         Raises:
             ValueError: if platform is not provided while a platform is needed.
 
-        Returns:
-            tuple[str, str, dict]: tuple consisting of the package, the config for compose, and additional config.
         """
         needs_platform = service_type in {"platform", "moveit", "nav2"}
         if needs_platform and platform is None:
