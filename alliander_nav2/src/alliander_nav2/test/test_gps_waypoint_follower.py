@@ -85,6 +85,7 @@ class GPSWaypointFollower(Node):
 
         waypoints = ROUTES[route]
         goal_msg = FollowGPSWaypoints.Goal()
+        goal_msg.number_of_loops = 5
         goal_msg.gps_poses = [self._to_gps_pose(wp) for wp in waypoints]
 
         self._send_goal_future = self.ac.send_goal_async(
@@ -129,7 +130,6 @@ class GPSWaypointFollower(Node):
             future (Future): future containing result of GPS waypoint following.
         """
         result_msg = future.result()
-        print(result_msg)
         if result_msg is None:
             self.get_logger().info("No result received.")
             return
