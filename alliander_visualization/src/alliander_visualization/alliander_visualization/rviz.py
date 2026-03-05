@@ -119,6 +119,9 @@ class Rviz:
                 "Class": "rviz_default_plugins/PointCloud2",
                 "Topic": {"Value": f"/{namespace}/scan/points"},
                 "Name": namespace,
+                "Use rainbow": False,
+                "Min Color": "170; 0; 255",
+                "Alpha": 0.3,
             }
         )
 
@@ -140,7 +143,30 @@ class Rviz:
                 "Name": namespace,
                 "Color Transformer": "FlatColor",
                 "Color": "255; 0; 0",
-                "Size (m)": 0.02,
+                "Style": "Spheres",
+                "Size (m)": 0.03,
+            }
+        )
+
+    @staticmethod
+    def add_vehicle_trajectory(topic: str) -> None:
+        """Add a controller trajectory to the RViz configuration.
+
+        Args:
+            topic (str): The topic of the trajectory.
+        """
+        Rviz.displays.append(
+            {
+                "Enabled": True,
+                "Class": "rviz_default_plugins/Path",
+                "Name": topic,
+                "Topic": {"Value": topic},
+                "Pose Style": "Arrows",
+                "Pose Color": "255; 85; 255",
+                "Shaft Length": 0.3,
+                "Head Length": 0.2,
+                "Shaft Diameter": 0.05,
+                "Head Diameter": 0.1,
             }
         )
 
@@ -201,7 +227,7 @@ class Rviz:
         )
 
     @staticmethod
-    def add_trajectory(namespace: str) -> None:
+    def add_arm_trajectory(namespace: str) -> None:
         """Add the trajectory display to the RViz configuration.
 
         Args:
@@ -219,13 +245,14 @@ class Rviz:
         )
 
     @staticmethod
-    def add_map(topic: str) -> None:
+    def add_map(topic: str, color_scheme: str = "costmap", alpha: float = 0.7) -> None:
         """Add a map to the RViz configuration.
 
         Args:
             topic (str): The topic of the map.
+            color_scheme (str): The color scheme of the map.
+            alpha (float): The transparency level of the map.
         """
-        color_scheme = "costmap" if "costmap" in topic else "map"
         Rviz.displays.append(
             {
                 "Enabled": True,
@@ -233,6 +260,7 @@ class Rviz:
                 "Name": topic,
                 "Topic": {"Value": topic},
                 "Color Scheme": color_scheme,
+                "Alpha": alpha,
             }
         )
 
@@ -303,6 +331,7 @@ class Rviz:
                 },
                 "Value": True,
                 "Zoom": 19,
+                "Draw Behind": True,
             }
         )
 

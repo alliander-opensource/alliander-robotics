@@ -101,7 +101,19 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
             "global_frame": f"{namespace_vehicle}/odom",
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
             "rolling_window": nav2.gps,
+            "width": 10,
+            "height": 10,
             "plugins": plugins,
+            "obstacle_layer": {
+                "scan": {
+                    "topic": f"/{namespace_lidar}/scan",
+                    "obstacle_max_range": 10.0,
+                    "raytrace_max_range": 10.0,
+                }
+            },
+            "inflation_layer": {
+                "inflation_radius": float(5),  # width / 2
+            },
         },
         root_key=namespace_vehicle,
     )

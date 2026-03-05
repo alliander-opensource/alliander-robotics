@@ -68,6 +68,7 @@ class Compose:
         self.dev = False
         self.gazebo_ui = False
         self.joystick = False
+        self.rviz_yaml = False
 
     @staticmethod
     def get_src_mounts(package: str) -> list[str]:
@@ -125,11 +126,12 @@ class Compose:
             platform (Platform | None): platform to get config for, or None if not a platform.
             arguments (str): additional arguments for pytest.
 
+        Returns:
+            tuple[str, str, dict]: tuple consisting of the package, the config for compose, and additional config.
+
         Raises:
             ValueError: if platform is not provided while a platform is needed.
 
-        Returns:
-            tuple[str, str, dict]: tuple consisting of the package, the config for compose, and additional config.
         """
         needs_platform = service_type in {"platform", "moveit", "nav2"}
         if needs_platform and platform is None:
@@ -378,6 +380,11 @@ class Compose:
                 }
 
         self.write_compose(output_file, content)
+
+        if self.rviz_yaml:
+            rviz_content = {"services": {}}
+            self.add_service(rviz_content, "visualization")
+            self.write_compose("rviz.yml", rviz_content)
         return list(services.keys())
 
     def run_compose(self) -> int:
@@ -489,6 +496,20 @@ if __name__ == "__main__":
         help="Add this flag to enable joystick control for arm and/or vehicle platforms.",
     )
 
+    parser.add_argument(
+        "--rviz",
+        required=False,
+        action="store_true",
+        help="Add this flag to createan additional Rviz config in rviz.yml. You still need to specify platforms.",
+    )
+
+    parser.add_argument(
+        "--no-run",
+        required=False,
+        action="store_true",
+        help="Add this flag if you only want to create the YML files, but not run them.",
+    )
+
     # Parse arguments:
     args = parser.parse_args()
     compose = Compose()
@@ -502,6 +523,7 @@ if __name__ == "__main__":
         compose.simulator = not args.hardware
         compose.visualization = args.visualization
         compose.joystick = args.joystick
+        compose.rviz_yaml = args.rviz
         compose.mode = "configuration"
     elif isinstance(args.pytest, list):
         arguments = " " + " ".join(args.pytest)
@@ -525,5 +547,6 @@ if __name__ == "__main__":
     compose.create_compose(arguments=arguments)
 
     # Spin up containers:
-    ret = compose.run_compose()
-    sys.exit(ret)
+    if not args.no_run:
+        ret = compose.run_compose()
+        sys.exit(ret)
