@@ -163,7 +163,10 @@ class Compose:
             ),
             "diagnostics": (
                 "alliander_diagnostics",
-                f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
+                (
+                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
+                    f" use_sim_time:='{self.simulator}'"
+                ),
                 {},
             ),
             "linting": (
