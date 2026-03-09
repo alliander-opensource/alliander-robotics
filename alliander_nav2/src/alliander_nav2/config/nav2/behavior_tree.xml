@@ -21,7 +21,7 @@ MainTree
     │   │       ├── ComputePathToPose
     │   │       └── Wait (2s)
     │   └── RecoveryNode (FollowPath) [retries: 1]
-    │       ├── Sequence (FollowPathWithGpsCheck)
+    │       ├── ReactiveSequence (FollowPathWithGpsCheck)
     |       |   ├── IsGpsHealthy (custom ConditionNode)
     │       |   └── FollowPath
     │       └── Sequence (Contextual Recovery, in case FollowPath fails)
@@ -60,11 +60,11 @@ MainTree
                     </RecoveryNode>
                 </RateController>
                 <RecoveryNode number_of_retries="1" name="FollowPath">
-                    <Sequence name="FollowPathWithGpsCheck">
+                    <ReactiveSequence name="FollowPathWithGpsCheck">
                         <IsGpsHealthy/>
                         <FollowPath path="{path}" controller_id="{selected_controller}"
                                     error_code_id="{follow_path_error_code}"/>
-                    </Sequence>
+                    </ReactiveSequence>
                     <Sequence>
                         <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}" />
                         <ClearEntireCostmap name="ClearLocalCostmap-Context"
