@@ -9,7 +9,6 @@
 
 #include "base_diagnostics.hpp"
 
-
 /**
  * @brief Diagnostic module for monitoring GPS health.
  *
@@ -71,7 +70,6 @@ class GpsDiagnostics : public BaseDiagnostics {
    * @param now current time.
    */
   void evaluate(rclcpp::Time now) override;
-
 };
 
 #endif  // GPS_DIAGNOSTICS_HPP_
