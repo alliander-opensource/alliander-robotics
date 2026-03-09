@@ -126,11 +126,11 @@ class Compose:
             platform (Platform | None): platform to get config for, or None if not a platform.
             arguments (str): additional arguments for pytest.
 
-        Raises:
-            ValueError: if platform is not provided while a platform is needed.
-
         Returns:
             tuple[str, str, dict]: tuple consisting of the package, the config for compose, and additional config.
+
+        Raises:
+            ValueError: if platform is not provided while a platform is needed.
         """
         needs_platform = service_type in {"platform", "moveit", "nav2"}
         if needs_platform and platform is None:
@@ -163,7 +163,10 @@ class Compose:
             ),
             "diagnostics": (
                 "alliander_diagnostics",
-                f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
+                (
+                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
+                    f" use_sim_time:='{self.simulator}'"
+                ),
                 {},
             ),
             "linting": (

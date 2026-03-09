@@ -15,9 +15,9 @@ find_package(sensor_msgs REQUIRED)
 
 # C++ executables:
 include_directories(include)
-add_executable(diagnostics 
-  src/diagnostics.cpp
-  src/main.cpp
+add_executable(diagnostics
+  src/diagnostics_node.cpp
+  src/gps_diagnostics.cpp
 )
 target_include_directories(diagnostics PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
