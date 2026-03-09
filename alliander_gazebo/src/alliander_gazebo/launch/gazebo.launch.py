@@ -26,11 +26,11 @@ def get_sdf_file(world: str) -> str:
     Args:
         world (str): The world argument.
 
-    Raises:
-        ValueError: If the SDF file cannot be generated.
-
     Returns:
         str: The path to the sdf file.
+
+    Raises:
+        ValueError: If the SDF file cannot be generated.
     """
     if world.startswith("map"):
         try:
@@ -92,11 +92,11 @@ def launch_setup(context: LaunchContext) -> list:
     Args:
         context (LaunchContext): The launch context.
 
-    Raises:
-        ValueError: If the SDF file does not contain a world attribute with a name.
-
     Returns:
         list: The actions to start.
+
+    Raises:
+        ValueError: If the SDF file does not contain a world attribute with a name.
     """
     config = SimulatorConfig.from_str(config_arg.string_value(context))
     platforms = PlatformList.from_str(platform_list_arg.string_value(context))

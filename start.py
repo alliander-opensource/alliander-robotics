@@ -27,6 +27,7 @@ SERVICE = typing.Literal[
     "linting",
     "documentation",
     "joystick",
+    "diagnostics",
 ]
 MODE = typing.Literal[
     "configuration",
@@ -125,11 +126,11 @@ class Compose:
             platform (Platform | None): platform to get config for, or None if not a platform.
             arguments (str): additional arguments for pytest.
 
-        Raises:
-            ValueError: if platform is not provided while a platform is needed.
-
         Returns:
             tuple[str, str, dict]: tuple consisting of the package, the config for compose, and additional config.
+
+        Raises:
+            ValueError: if platform is not provided while a platform is needed.
         """
         needs_platform = service_type in {"platform", "moveit", "nav2"}
         if needs_platform and platform is None:
@@ -158,6 +159,14 @@ class Compose:
             "joystick": (
                 "alliander_joystick",
                 f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
+                {},
+            ),
+            "diagnostics": (
+                "alliander_diagnostics",
+                (
+                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
+                    f" use_sim_time:='{self.simulator}'"
+                ),
                 {},
             ),
             "linting": (
@@ -216,6 +225,7 @@ class Compose:
         Returns:
             dict: dictionary containing YAML data from docker-compose.yml, with added command.
         """
+        print(f"{package}")
         service = self.load_compose(f"{package}/docker-compose.yml")["services"][
             package
         ]
@@ -347,6 +357,7 @@ class Compose:
             case "documentation":
                 self.add_service(content, "documentation")
             case "configuration" | "configuration-no-nvidia":
+                self.add_service(content, "diagnostics")
                 for platform in self.predefined_configuration.plat_conf.platforms:
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
