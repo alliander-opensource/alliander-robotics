@@ -21,7 +21,7 @@ class DiagnosticsNode {
  public:
   /**
    * @brief Construct the diagnostics node.
-   * @param node Shared pointer to the ROS2 node.
+   * @param node The ROS2 node.
    */
   DiagnosticsNode(rclcpp::Node::SharedPtr node);
 

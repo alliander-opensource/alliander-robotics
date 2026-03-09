@@ -51,7 +51,7 @@ void GpsDiagnostics::evaluate(rclcpp::Time now) {
 
   rclcpp::Duration since_last = now - latest_msg_time;
 
-  if (since_last.seconds() > limit_no_data_received) {
+  if (since_last.seconds() > no_data_received_limit) {
     status_.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
     status_.message = "No GPS signal received anymore";
   } else if (latest_fix_status < 0) {
