@@ -46,7 +46,7 @@ class GpsDiagnostics : public BaseDiagnostics {
 
   /// The number of seconds of having received no data until the GPS signal is
   /// deemed to be unstable
-  double limit_no_data_received = 5.0;
+  double no_data_received_limit = 5.0;
 
   /// Indication of whether a high covariance is detected (true) or not (false)
   bool high_covariance_detected = false;
