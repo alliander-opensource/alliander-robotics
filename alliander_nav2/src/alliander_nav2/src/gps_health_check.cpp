@@ -75,12 +75,13 @@ class IsGpsHealthy : public BT::ConditionNode {
 
   /**
    * @brief Tick function for the BT node to check the GPS status and respond
-   * accordingly.
+   * accordingly. For any status worse than a warning, the GPS health condition
+   * should fail.
    *
    * @return BT::NodeStatus Node execution status.
    */
   BT::NodeStatus tick() override {
-    if (gps_status_ == diagnostic_msgs::msg::DiagnosticStatus::ERROR) {
+    if (gps_status_ > diagnostic_msgs::msg::DiagnosticStatus::WARN) {
       RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 5000,
                            "GPS unhealthy, pausing FollowPath");
       return BT::NodeStatus::RUNNING;  // Keep tree RUNNING until GPS recovers
