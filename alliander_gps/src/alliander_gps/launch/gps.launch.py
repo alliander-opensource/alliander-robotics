@@ -64,7 +64,7 @@ def launch_setup(context: LaunchContext) -> list:
             ("imu", f"/{gps_config.parent.namespace}/imu/data"),
             (
                 "odometry/filtered",
-                f"/{gps_config.parent.namespace}/odometry/filtered",
+                f"/{gps_config.parent.namespace}/odometry/global",
             ),
         ],
     )
@@ -120,6 +120,9 @@ def launch_setup(context: LaunchContext) -> list:
                     )
                 ),
             }
+        ],
+        remappings=[
+            ("odometry/filtered", f"/{gps_config.parent.namespace}/odometry/global"),
         ],
     )
 
