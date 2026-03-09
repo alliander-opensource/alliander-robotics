@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from os import stat
+
 import yaml
 from alliander_utilities.ros_utils import get_file_path, get_yaml
 
@@ -281,6 +283,23 @@ class Rviz:
         )
 
     @staticmethod
+    def add_odometry(topic: str) -> None:
+        """Add an odometry marker to the RViz configuration.
+
+        Args:
+            topic (str): The odometry topic.
+        """
+        Rviz.displays.append(
+            {
+                "Enabled": True,
+                "Class": "rviz_default_plugins/Odometry",
+                "Name": topic,
+                "Topic": {"Value": topic},
+                "Keep": 1,
+            }
+        )
+
+    @staticmethod
     def add_polygon(topic: str) -> None:
         """Add a polygon to the RViz configuration.
 
@@ -325,7 +344,7 @@ class Rviz:
                 "Enabled": True,
                 "Class": "rviz_satellite/AerialMap",
                 "Name": topic,
-                "Object URI": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                "Object URI": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
                 "Topic": {
                     "Value": topic,
                 },

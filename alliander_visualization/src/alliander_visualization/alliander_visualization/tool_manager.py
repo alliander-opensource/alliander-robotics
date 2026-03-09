@@ -130,6 +130,7 @@ class ApplyConfigurations:
         if nav2.navigation:
             Rviz.add_map(f"/{ns}/global_costmap/costmap")
             Rviz.add_map(f"/{ns}/local_costmap/costmap", "map", 0.3)
+            Rviz.add_odometry(f"/{ns}/odometry/filtered")
             Rviz.add_path(f"/{ns}/plan")
             Rviz.add_vehicle_trajectory(f"/{ns}/optimal_trajectory")
             Vizanti.add_button("Stop", f"/{ns}/waypoint_follower_controller/stop")
