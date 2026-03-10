@@ -7,12 +7,12 @@
 global_costmap:
   global_costmap:
     ros__parameters:
-      always_send_full_costmap: true
       rolling_window: substitute_me
       width: substitute_me
       height: substitute_me
-      update_frequency: 30.0
-      publish_frequency: 30.0
+      update_frequency: 20.0
+      publish_frequency: 20.0
+      always_send_full_costmap: true
       robot_base_frame: substitute_me
       footprint: "[[0.4045, 0.424], [0.4045, -0.424], [-0.4045, -0.424], [-0.4045, 0.424]]"
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
@@ -39,4 +39,5 @@ global_costmap:
           inf_is_valid: false
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 1.0
+        inflation_radius: 1.5
+        cost_scaling_factor: 2.0

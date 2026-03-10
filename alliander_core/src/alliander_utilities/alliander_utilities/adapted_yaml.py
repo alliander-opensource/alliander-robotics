@@ -34,12 +34,12 @@ class AdaptedYaml:
         Args:
             source_file (str): Path to the YAML file.
 
-        Raises:
-            KeyError: If no or multiple 'ros__parameters' keys are found.
-
         Returns:
             tuple[list[str], dict]: A tuple containing the namespace as a list of strings and the
             'ros__parameters' dictionary.
+
+        Raises:
+            KeyError: If no or multiple 'ros__parameters' keys are found.
         """
         params = get_yaml(source_file)
         sub_dicts: list[tuple[list[str], dict]] = [([], params)]

@@ -101,7 +101,19 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
             "global_frame": f"{namespace_vehicle}/odom",
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
             "rolling_window": nav2.gps,
+            "width": 10,
+            "height": 10,
             "plugins": plugins,
+            "obstacle_layer": {
+                "scan": {
+                    "topic": f"/{namespace_lidar}/scan",
+                    "obstacle_max_range": 10.0,
+                    "raytrace_max_range": 10.0,
+                }
+            },
+            "inflation_layer": {
+                "inflation_radius": float(5),  # width / 2
+            },
         },
         root_key=namespace_vehicle,
     )
@@ -127,7 +139,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     controller_server_params = AdaptedYaml(
         get_file_path("alliander_nav2", ["config", "nav2"], "controller_server.yaml"),
-        {"odom_topic": f"/{namespace_vehicle}/odom"},
+        {"odom_topic": f"/{namespace_vehicle}/odometry/filtered"},
         root_key=namespace_vehicle,
     )
 
@@ -157,7 +169,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
                 "alliander_nav2", ["config", "nav2"], "behavior_tree.xml"
             ),
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
-            "odom_topic": f"/{namespace_vehicle}/odom",
+            "odom_topic": f"/{namespace_vehicle}/odometry/filtered",
         },
         root_key=namespace_vehicle,
     )

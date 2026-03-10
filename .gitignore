@@ -28,3 +28,4 @@ clangd/
 # generated compose files
 compose.yml
 compose_pytest.yml
+rviz.yml
