@@ -98,6 +98,9 @@ alliander-gazebo = [
     { name = "scipy" },
     { name = "xmltodict" },
 ]
+alliander-gps = [
+    { name = "pydantic" },
+]
 alliander-moveit = [
     { name = "xmltodict" },
 ]
@@ -157,6 +160,7 @@ alliander-gazebo = [
     { name = "scipy", specifier = ">=1.17.0" },
     { name = "xmltodict", specifier = ">=1.0.2" },
 ]
+alliander-gps = [{ name = "pydantic", specifier = ">=2.12.5" }]
 alliander-moveit = [{ name = "xmltodict", specifier = ">=1.0.2" }]
 alliander-nav2 = [
     { name = "numpy", specifier = ">=2.4.1" },
