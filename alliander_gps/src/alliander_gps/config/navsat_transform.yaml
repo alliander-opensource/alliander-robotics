@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Based on: https://github.com/husarion/husarion_ugv_ros/blob/ros2/husarion_ugv_localization/config/enu_localization_with_gps.yaml
+navsat_transform:
+  navsat_transform:
+    ros__parameters:
+      delay: 3.0
+      magnetic_declination_radians: 0.0
+      yaw_offset: 0.0
+      zero_altitude: true
+      broadcast_cartesian_transform: false
+      publish_filtered_gps: true
+      use_odometry_yaw: true
+      wait_for_datum: false

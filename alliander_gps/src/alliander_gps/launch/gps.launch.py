@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import itertools
 
+from alliander_utilities.adapted_yaml import AdaptedYaml
 from alliander_utilities.config_objects import GPS
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
@@ -51,15 +52,29 @@ def launch_setup(context: LaunchContext) -> list:
         {"platform_config": gps_config.to_str()},
     )
 
+    ekf_global_params = AdaptedYaml(
+        get_file_path("alliander_gps", ["config"], "ekf_global.yaml"),
+        {
+            "odom_frame": f"{gps_config.parent.namespace}/odom",
+            "base_link_frame": f"{gps_config.parent.namespace}/base_footprint",
+            "odom0": f"/{gps_config.parent.namespace}/odometry/wheels",
+            "odom1": f"/{gps_config.namespace}/odometry/gps",
+            "imu0": f"/{gps_config.parent.namespace}/imu/data",
+        },
+        root_key=gps_config.parent.namespace,
+    )
+    navsat_transform_params = AdaptedYaml(
+        get_file_path("alliander_gps", ["config"], "navsat_transform.yaml"),
+        {},
+        root_key=gps_config.parent.namespace,
+    )
+
     navsat_transform = Node(
         package="robot_localization",
         executable="navsat_transform_node",
+        name="navsat_transform",
         namespace=gps_config.namespace,
-        parameters=[
-            {
-                "publish_filtered_gps": True,
-            }
-        ],
+        parameters=[navsat_transform_params.file],
         remappings=[
             ("imu", f"/{gps_config.parent.namespace}/imu/data"),
             (
@@ -75,52 +90,7 @@ def launch_setup(context: LaunchContext) -> list:
         executable="ekf_node",
         name="ekf_global",
         namespace=gps_config.parent.namespace,
-        parameters=[
-            {
-                "two_d_mode": True,
-                "publish_tf": True,
-                "world_frame": "map",
-                "map_frame": "map",
-                "odom_frame": f"{gps_config.parent.namespace}/odom",
-                "base_link_frame": f"{gps_config.parent.namespace}/base_footprint",
-                "odom0": f"/{gps_config.parent.namespace}/odometry/wheels",
-                "odom0_config": list(
-                    itertools.chain.from_iterable(
-                        [
-                            [F, F, F],  # [x_pos, y_pos, z_pos]
-                            [F, F, F],  # [roll, pitch, yaw]
-                            [T, T, T],  # [x_vel, y_vel, z_vel]
-                            [F, F, T],  # [roll_rate, pitch_rate, yaw_rate]
-                            [F, F, F],  # [x_accel, y_accel, z_accel]
-                        ]
-                    )
-                ),
-                "odom1": f"/{gps_config.namespace}/odometry/gps",
-                "odom1_config": list(
-                    itertools.chain.from_iterable(
-                        [
-                            [T, T, F],  # [x_pos, y_pos, z_pos]
-                            [F, F, F],  # [roll, pitch, yaw]
-                            [F, F, F],  # [x_vel, y_vel, z_vel]
-                            [F, F, F],  # [roll_rate, pitch_rate, yaw_rate]
-                            [F, F, F],  # [x_accel, y_accel, z_accel]
-                        ]
-                    )
-                ),
-                "imu0": f"/{gps_config.parent.namespace}/imu/data",
-                "imu0_config": list(
-                    itertools.chain.from_iterable(
-                        [
-                            [F, F, F],  # [x_pos, y_pos, z_pos]
-                            [F, F, T],  # [roll, pitch, yaw]
-                            [F, F, F],  # [x_vel, y_vel, z_vel]
-                            [F, F, F],  # [roll_rate, pitch_rate, yaw_rate]
-                            [F, F, F],  # [x_accel, y_accel, z_accel]
-                        ]
-                    )
-                ),
-            }
-        ],
+        parameters=[ekf_global_params.file],
         remappings=[
             ("odometry/filtered", f"/{gps_config.parent.namespace}/odometry/global"),
         ],
