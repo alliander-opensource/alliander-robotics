@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-import itertools
-
 from alliander_utilities.adapted_yaml import AdaptedYaml
 from alliander_utilities.config_objects import GPS
 from alliander_utilities.launch_argument import LaunchArgument

@@ -1,14 +1,11 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-
-from os import stat
-
 import yaml
 from alliander_utilities.ros_utils import get_file_path, get_yaml
 
 
-class Rviz:
+class Rviz:  # noqa PLR0904
     """A class to dynammically manage the RViz configuration.
 
     Attributes:
