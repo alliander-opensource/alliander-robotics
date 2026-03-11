@@ -1,13 +1,12 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-
 from alliander_utilities.config_objects import PlatformList, VisualizationConfig
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.launch_utils import SKIP
 from alliander_utilities.register import Register, RegisteredLaunchDescription
 from alliander_utilities.ros_utils import get_file_path
-from alliander_visualization.tool_manager import ApplyConfigurations
+from alliander_visualization.tool_manager import ApplyConfigurations, Foxglove
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node, SetParameter
@@ -47,12 +46,26 @@ def launch_setup(context: LaunchContext) -> list:
         parameters=[{"platform_list": platforms.to_str()}],
     )
 
+    foxglove = Node(
+        package="foxglove_bridge",
+        executable="foxglove_bridge",
+        parameters=[
+            {
+                "topic_whitelist": Foxglove.topics,
+                "service_whitelist": Foxglove.services,
+                "param_whitelist": [""],
+                "client_topic_whitelist": [""],
+            }
+        ],
+    )
+
     return [
         SetParameter(name="use_sim_time", value=simulation),
         Register.group(rviz, context) if config.rviz else SKIP,
         Register.group(vizanti, context) if config.vizanti else SKIP,
         Register.on_start(rosboard, context) if config.rosboard else SKIP,
         Register.on_start(gui, context) if config.gui else SKIP,
+        Register.on_start(foxglove, context),
     ]
 
 

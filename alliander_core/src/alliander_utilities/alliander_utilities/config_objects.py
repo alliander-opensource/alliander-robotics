@@ -358,12 +358,14 @@ class VisualizationConfig(Config):
 
     Attributes:
         rviz (bool): Whether to enable RViz visualization.
+        foxglove (bool): Whether to enable Foxglove visualization.
         vizanti (bool): Whether to enable Vizanti visualization.
         rosboard (bool): Whether to enable ROSBoard visualization.
         gui (bool): Whether to enable GUI.
     """
 
-    rviz: bool = True
+    rviz: bool = False
+    foxglove: bool = True
     vizanti: bool = False
     rosboard: bool = False
     gui: bool = False
