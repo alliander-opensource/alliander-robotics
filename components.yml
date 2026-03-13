@@ -47,6 +47,10 @@ ubuntu_images:
     base_image: allianderrobotics/base
     repository: tests
     dockerfile: alliander_tests/alliander_tests.Dockerfile
+  alliander_ur:
+    base_image: allianderrobotics/base
+    repository: ur
+    dockerfile: alliander_ur/alliander_ur.Dockerfile
   alliander_velodyne:
     base_image: allianderrobotics/base
     repository: velodyne
