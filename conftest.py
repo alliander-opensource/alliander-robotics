@@ -152,13 +152,42 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
 
     services = compose.create_compose(COMPOSE_FILE)
 
-    subprocess.run(
-        f"docker compose -f {COMPOSE_FILE} pull --policy missing",
-        timeout=3600,
-        shell=True,
-        check=True,
+    # Define the required images:
+    images = (
+        subprocess.check_output(
+            f"docker compose -f {COMPOSE_FILE} config --images".split(),
+        )
+        .decode("utf-8")
+        .split()
     )
 
+    # Create list of services of which the image needs to be pulled:
+    print("")
+    services_to_pull = []
+    for image in images:
+        try:
+            subprocess.check_output(
+                f"docker image inspect {image}".split(),
+                stdin=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            cprint(f"Image {image} is already available locally.", "green")
+        except subprocess.CalledProcessError:
+            cprint(f"Image {image} is not available locally.", "yellow")
+            service = f"alliander_{image.split('/')[-1]}"
+            services_to_pull.append(service)
+
+    # Pull the missing images:
+    if services_to_pull:
+        cprint(f"Pulling missing images: {services_to_pull}", "yellow")
+        subprocess.run(
+            f"docker compose -f {COMPOSE_FILE} pull {' '.join(services_to_pull)}",
+            timeout=3600,
+            shell=True,
+            check=True,
+        )
+
+    # Spin up the containers:
     process = subprocess.Popen([f"docker compose -f {COMPOSE_FILE} up"], shell=True)
 
     containers_started = False
