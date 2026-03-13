@@ -43,9 +43,11 @@ def signal_handler() -> Generator:
     Yields:
         Generator: Yields signal control to the test session.
     """
+    print("")
     orig = signal.signal(signal.SIGTERM, signal.getsignal(signal.SIGINT))
     yield
-    cprint("Interrupt received, stopping Docker containers...", "yellow")
+    print("")
+    cprint("All tests finished, stopping Docker containers...", "yellow")
     stop_containers(COMPOSE_FILE)
     signal.signal(signal.SIGTERM, orig)
 
@@ -113,7 +115,21 @@ def check_containers_started(compose_file: str, services: list) -> bool:
     return all(statuses.values())
 
 
-@pytest.fixture(scope="module", autouse=True)
+def get_changed_packages() -> set[str]:
+    """Get the set of changed packages in the repository.
+
+    Returns:
+        set[str]: A set of package names that have changed.
+    """
+    files = []
+    files.extend(subprocess.getoutput("git diff origin/main --name-only").split())
+    files.extend(
+        subprocess.getoutput("git ls-files --others --exclude-standard").split()
+    )
+    return {file.split("/")[0] for file in files if file.startswith("alliander_")}
+
+
+@pytest.fixture(scope="class", autouse=True)
 def start_and_stop_containers(request: SubRequest) -> Generator:
     """Automatically start and stop Docker containers for each test module.
 
@@ -123,6 +139,9 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     Yields:
         Generator: Starts and stops Docker containers for each module.
     """
+    print("")
+    cprint(f"[{request.cls.__name__}]: started", "blue")
+
     # Execute before starting the tests in the module:
     compose = Compose()
     if os.getenv("NO_NVIDIA", default="false").lower() == "true":
@@ -133,10 +152,10 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     compose.visualization = False
 
     platform_list = PlatformList()
-    platform_list.platforms = getattr(request.module, "PLATFORMS", [])
+    platform_list.platforms = request.cls.platforms.values()
     compose.predefined_configuration.plat_conf = platform_list
 
-    world = getattr(request.module, "WORLD", "empty.sdf")
+    world = getattr(request.cls, "world", "empty.sdf")
     load_ui = os.getenv("GAZEBO_UI", default="false").lower() == "true"
 
     # Propagate dev mounts
@@ -152,13 +171,46 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
 
     services = compose.create_compose(COMPOSE_FILE)
 
-    subprocess.run(
-        f"docker compose -f {COMPOSE_FILE} pull --policy missing",
-        timeout=3600,
-        shell=True,
-        check=True,
+    packages_changed = get_changed_packages()
+    if set(services).isdisjoint(packages_changed):
+        pytest.skip(reason="No relevant packages have changed.")
+
+    # Define the required images:
+    images = (
+        subprocess.check_output(
+            f"docker compose -f {COMPOSE_FILE} config --images".split(),
+        )
+        .decode("utf-8")
+        .split()
     )
 
+    # Create list of services of which the image needs to be pulled:
+    print("")
+    services_to_pull = []
+    for image in images:
+        try:
+            subprocess.check_output(
+                f"docker image inspect {image}".split(),
+                stdin=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            cprint(f"Image {image} is already available locally.", "green")
+        except subprocess.CalledProcessError:
+            cprint(f"Image {image} is not available locally.", "yellow")
+            service = f"alliander_{image.split('/')[-1]}"
+            services_to_pull.append(service)
+
+    # Pull the missing images:
+    if services_to_pull:
+        cprint(f"Pulling missing images: {services_to_pull}", "yellow")
+        subprocess.run(
+            f"docker compose -f {COMPOSE_FILE} pull {' '.join(services_to_pull)}",
+            timeout=3600,
+            shell=True,
+            check=True,
+        )
+
+    # Spin up the containers:
     process = subprocess.Popen([f"docker compose -f {COMPOSE_FILE} up"], shell=True)
 
     containers_started = False
@@ -176,6 +228,7 @@ def start_and_stop_containers(request: SubRequest) -> Generator:
     # Execute after all tests in module are done:
     stop_containers(COMPOSE_FILE)
     process.wait()
+    cprint(f"[{request.cls.__name__}]: finished", "blue")
 
 
 @pytest.fixture(scope="module")
