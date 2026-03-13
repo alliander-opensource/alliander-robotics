@@ -58,6 +58,10 @@ tests:
   base_image: allianderrobotics/base
   repository: allianderrobotics/tests
   dockerfile: alliander_tests/alliander_tests.Dockerfile
+ur:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/ur
+  dockerfile: alliander_ur/alliander_ur.Dockerfile
 velodyne:
   base_image: allianderrobotics/base
   repository: allianderrobotics/velodyne

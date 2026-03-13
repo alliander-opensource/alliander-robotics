@@ -132,6 +132,14 @@ class PredefinedConfigurations:
         link(arm, camera)
         self.plat_conf.platforms = [arm, camera]
 
+    # UR5:
+    @register_configuration("ur")
+    def config_ur(self) -> None:  # noqa: D102
+        arm = Arm("ur", moveit=False)
+
+        self.plat_conf.platforms = [arm]
+        self.viz_conf.gui = True
+
     # Panther:
     @register_configuration("panther")
     def config_panther(self) -> None:  # noqa: D102
