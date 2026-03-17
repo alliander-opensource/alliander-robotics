@@ -53,7 +53,7 @@ def launch_setup(context: LaunchContext) -> list:
 
     diagnostics_node = Node(
         package="alliander_diagnostics",
-        executable="diagnostics",
+        executable="alliander_diagnostics_node",
         name="diagnostics",
         parameters=[
             {"enable_gps": bool(gps_namespace)},

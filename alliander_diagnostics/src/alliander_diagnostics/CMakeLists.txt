@@ -15,21 +15,21 @@ find_package(sensor_msgs REQUIRED)
 
 # C++ executables:
 include_directories(include)
-add_executable(diagnostics
+add_executable(${PROJECT_NAME}_node
   src/diagnostics_node.cpp
   src/gps_diagnostics.cpp
 )
-target_include_directories(diagnostics PUBLIC
+target_include_directories(${PROJECT_NAME}_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(diagnostics
+ament_target_dependencies(${PROJECT_NAME}_node
   diagnostic_msgs
   rclcpp
   sensor_msgs
 )
 
 install(
-  TARGETS diagnostics
+  TARGETS ${PROJECT_NAME}_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
