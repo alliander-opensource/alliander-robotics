@@ -43,10 +43,6 @@ class GpsDiagnostics : public BaseDiagnostics {
   /// Fix status from latest received GPS data
   int latest_fix_status = -1;
 
-  /// The number of seconds of having received no data until the GPS signal is
-  /// deemed to be unstable
-  double no_data_received_limit = 5.0;
-
   /// Indication of whether a high covariance is detected (true) or not (false)
   bool high_covariance_detected = false;
   /// Start time of the detected high covariance value
@@ -55,9 +51,6 @@ class GpsDiagnostics : public BaseDiagnostics {
   /// The limit of the GPS' covariance value, where a higher value indicates a
   /// weak signal
   double gps_covariance_limit = 30.0;
-  /// The number of seconds of ERROR status until the GPS signal is officially
-  /// deemed to be unstable
-  double gps_signal_instability_limit = 5.0;
 
   /**
    * @brief Monitor the GPS topic and save the data received.

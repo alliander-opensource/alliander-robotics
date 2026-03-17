@@ -52,6 +52,15 @@ class BaseDiagnostics {
 
   /// Mutex protecting access to the status message.
   std::mutex mutex_;
+
+  /// Escalation timeout until status level should become a warning
+  rclcpp::Duration warning_timeout_ = std::chrono::seconds(3);
+
+  /// Escalation timeout until status level should become an error
+  rclcpp::Duration error_timeout_ = std::chrono::seconds(5);
+
+  /// Escalation timeout until status level should become stale
+  rclcpp::Duration stale_timeout_ = std::chrono::seconds(10);
 };
 
 #endif  // BASE_DIAGNOSTICS_HPP_

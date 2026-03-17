@@ -25,7 +25,8 @@ void GpsDiagnostics::gps_cb(const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
   gps_msg_received = true;
 
   latest_msg_time = msg->header.stamp;
-  latest_covariance = fmax(msg->position_covariance[0], msg->position_covariance[4]);
+  latest_covariance =
+      fmax(msg->position_covariance[0], msg->position_covariance[4]);
   latest_fix_status = msg->status.status;
 
   if (latest_covariance > gps_covariance_limit) {
@@ -44,6 +45,7 @@ void GpsDiagnostics::evaluate(rclcpp::Time now) {
   status_.values.clear();
 
   if (!gps_msg_received) {
+    // Never received GPS data
     status_.level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
     status_.message = "No GPS data received";
     return;
@@ -51,23 +53,44 @@ void GpsDiagnostics::evaluate(rclcpp::Time now) {
 
   rclcpp::Duration since_last = now - latest_msg_time;
 
-  if (since_last.seconds() > no_data_received_limit) {
-    status_.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    status_.message = "No GPS signal received anymore";
+  if (since_last > warning_timeout_) {
+    // No data received in time
+    status_.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    status_.message = "Warning: no GPS signal received anymore";
+
+    // Handle "no data received" escalations:
+    if (since_last > stale_timeout_) {
+      status_.level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+      status_.message = "Stale: no GPS signal received";
+    } else if (since_last > error_timeout_) {
+      status_.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+      status_.message = "Error: no GPS signal received";
+    }
+
   } else if (latest_fix_status < 0) {
+    // According to the GPS data, the signal is lost
     status_.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
     status_.message = "GPS signal lost";
   } else if (high_covariance_detected) {
-    rclcpp::Duration duration = now - high_covariance_start_time;
+    rclcpp::Duration high_cov_duration = now - high_covariance_start_time;
 
-    if (duration.seconds() < gps_signal_instability_limit) {
-      status_.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      status_.message = "GPS signal getting instable";
-    } else {
+    // Handle all "high covariance" escalations
+    if (high_cov_duration > stale_timeout_) {
+      status_.level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+      status_.message = "Stale: high covariance for too long";
+    } else if (high_cov_duration > error_timeout_) {
       status_.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      status_.message = "GPS signal instable for too long";
+      status_.message = "Error: high covariance for longer period";
+    } else if (high_cov_duration > warning_timeout_) {
+      status_.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      status_.message = "Warning: high covariance";
+    } else {
+      status_.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+      status_.message = "GPS OK, but high covariance noticed";
     }
+
   } else {
+    // GPS data is OK
     status_.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     status_.message = "GPS OK";
   }
