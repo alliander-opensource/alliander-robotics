@@ -25,7 +25,7 @@ void GpsDiagnostics::gps_cb(const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
   gps_msg_received = true;
 
   latest_msg_time = msg->header.stamp;
-  latest_covariance = msg->position_covariance[0];
+  latest_covariance = fmax(msg->position_covariance[0], msg->position_covariance[4]);
   latest_fix_status = msg->status.status;
 
   if (latest_covariance > gps_covariance_limit) {
@@ -73,7 +73,7 @@ void GpsDiagnostics::evaluate(rclcpp::Time now) {
   }
 
   diagnostic_msgs::msg::KeyValue kv;
-  kv.key = "GPS Position Covariance[0]";
+  kv.key = "GPS Position Covariance";
   kv.value = std::to_string(latest_covariance);
 
   status_.values.push_back(kv);
