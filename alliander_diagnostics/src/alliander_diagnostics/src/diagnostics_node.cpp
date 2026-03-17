@@ -7,11 +7,6 @@
 #include "gps_diagnostics.hpp"
 
 DiagnosticsNode::DiagnosticsNode(rclcpp::Node::SharedPtr node) : node_(node) {
-  // std::string gps_topic = node_->get_parameter("gps_topic").as_string();
-
-  // diagnostics_modules.push_back(
-  //     std::make_shared<GpsDiagnostics>(node_, gps_topic));
-
   pub_diag = node_->create_publisher<diagnostic_msgs::msg::DiagnosticArray>(
       "/system/diagnostics", 10);
 
