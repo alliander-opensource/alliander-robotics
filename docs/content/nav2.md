@@ -28,7 +28,7 @@ MainTree
     │   │       └── Wait (2s)
     │   └── RecoveryNode (FollowPath) [retries: 1]
     │       ├── ReactiveSequence (FollowPathWithGpsCheck)
-    |       |   ├── IsGpsHealthy (custom ConditionNode)
+    |       |   ├── IsSystemHealthy (custom ConditionNode)
     │       |   └── FollowPath
     │       └── Sequence (Contextual Recovery, in case FollowPath fails)
     │           ├── WouldAControllerRecoveryHelp?

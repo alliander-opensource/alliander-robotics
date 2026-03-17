@@ -17,15 +17,15 @@ namespace nav2_behavior_tree {
  * @brief A Behavior Tree condition node that checks the health of the GPS
  * sensor.
  */
-class IsGpsHealthy : public BT::ConditionNode {
+class IsSystemHealthy : public BT::ConditionNode {
  public:
   /**
-   * @brief constructor for the IsGpsHealthy class.
+   * @brief constructor for the IsSystemHealthy class.
    *
    * @param name Name of the BT node.
    * @param config Node configuration including blackboard.
    */
-  IsGpsHealthy(const std::string& name, const BT::NodeConfiguration& config)
+  IsSystemHealthy(const std::string& name, const BT::NodeConfiguration& config)
       : BT::ConditionNode(name, config),
         gps_status_(diagnostic_msgs::msg::DiagnosticStatus::ERROR) {
     // Get the shared Nav2 node from blackboard
@@ -47,17 +47,17 @@ class IsGpsHealthy : public BT::ConditionNode {
 
     sub_ = node_->create_subscription<diagnostic_msgs::msg::DiagnosticArray>(
         "/system/diagnostics", 10,
-        std::bind(&IsGpsHealthy::callback, this, std::placeholders::_1),
+        std::bind(&IsSystemHealthy::callback, this, std::placeholders::_1),
         sub_options);
 
-    RCLCPP_INFO(node_->get_logger(), "Initialized IsGpsHealthy BT node");
+    RCLCPP_INFO(node_->get_logger(), "Initialized IsSystemHealthy BT node");
   }
 
   /**
-   * @brief Destructor of the IsGpsHealthy class.
+   * @brief Destructor of the IsSystemHealthy class.
    */
-  ~IsGpsHealthy() {
-    RCLCPP_INFO(node_->get_logger(), "Shutting down IsGpsHealthy BT node");
+  ~IsSystemHealthy() {
+    RCLCPP_INFO(node_->get_logger(), "Shutting down IsSystemHealthy BT node");
 
     // Stop the executor and join the thread
     callback_group_executor_.cancel();
@@ -125,5 +125,5 @@ class IsGpsHealthy : public BT::ConditionNode {
 #include "behaviortree_cpp/bt_factory.h"
 
 BT_REGISTER_NODES(factory) {
-  factory.registerNodeType<nav2_behavior_tree::IsGpsHealthy>("IsGpsHealthy");
+  factory.registerNodeType<nav2_behavior_tree::IsSystemHealthy>("IsSystemHealthy");
 }
