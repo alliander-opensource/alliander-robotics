@@ -11,6 +11,7 @@ from pathlib import Path
 
 import yaml
 
+import utils
 from alliander_core.src.alliander_utilities.alliander_utilities.config_objects import (
     Platform,
 )
@@ -69,6 +70,8 @@ class Compose:
         self.dev = False
         self.gazebo_ui = False
         self.joystick = False
+
+        self.changed_packages = utils.get_changed_packages()
 
     @staticmethod
     def get_src_mounts(package: str) -> list[str]:
@@ -229,6 +232,12 @@ class Compose:
         service = self.load_compose(f"{package}/docker-compose.yml")["services"][
             package
         ]
+
+        # Use the branch tag if the package has changes:
+        name_branch = subprocess.getoutput("git rev-parse --abbrev-ref HEAD")
+        if package in self.changed_packages:
+            service["image"] += f":{name_branch}"
+
         if self.mode == "configuration-no-nvidia":
             service["init"] = True
             service["command"][-1] = f"xvfb-run -a {service['command'][-1]}"
@@ -400,6 +409,8 @@ class Compose:
         cmd = "docker compose -f compose.yml up"
         if self.mode in {"linting", "pytest", "pytest-no-nvidia"}:
             cmd += " --abort-on-container-exit"
+        if self.mode == "pytest-no-nvidia":
+            cmd += " --quiet-pull"
 
         result = subprocess.CompletedProcess([], 0)
         with contextlib.suppress(KeyboardInterrupt):

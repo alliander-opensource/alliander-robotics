@@ -1,0 +1,82 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: deploy-image
+description: Build and push a Docker image to Docker Hub.
+inputs:
+  component:
+    description: "Component to deploy."
+    required: true
+  runner:
+    description: "Runner to use for deployment."
+    required: true
+  DOCKER_USERNAME:
+    description: "Docker Hub username."
+    required: true
+  DOCKER_TOKEN:
+    description: "Docker Hub token."
+    required: true
+  free-disk-space-before:
+    description: "Free disk space before deployment."
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Free disk space
+      if: ${{ inputs.free-disk-space-before == 'true' }}
+      uses: ./.github/actions/free-disk-space
+    - name: Set architecture
+      shell: bash
+      id: arch
+      run: |
+        if [[ "${{ inputs.runner }}" == *"-arm"* ]]; then
+          echo "arch=arm64" >> $GITHUB_OUTPUT
+        else
+          echo "arch=amd64" >> $GITHUB_OUTPUT
+        fi
+    - name: Get variables for ${{ inputs.component }}
+      shell: bash
+      id: variables
+      run: |
+        echo "BASE_IMAGE=$(yq .${{ inputs.component }}.base_image components.yml)" >> $GITHUB_OUTPUT
+        echo "REPOSITORY=$(yq .${{ inputs.component }}.repository components.yml)" >> $GITHUB_OUTPUT
+        echo "DOCKERFILE=$(yq .${{ inputs.component }}.dockerfile components.yml)" >> $GITHUB_OUTPUT
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Docker login
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.DOCKER_USERNAME }}
+        password: ${{ inputs.DOCKER_TOKEN }}
+    - name: Build and push ${{ inputs.component }}-${{ steps.arch.outputs.arch }}
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        context: .
+        file: ${{ steps.variables.outputs.DOCKERFILE }}
+        tags: ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-${{ steps.arch.outputs.arch }}
+        build-args: BASE_IMAGE=${{ steps.variables.outputs.BASE_IMAGE }}:latest-${{ steps.arch.outputs.arch }}
+        cache-from: |
+          type=registry,ref=${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-${{ steps.arch.outputs.arch }}-cache
+          type=registry,ref=${{ steps.variables.outputs.BASE_IMAGE}}:${{ env.BRANCH_NAME }}-${{ steps.arch.outputs.arch }}-cache
+          type=registry,ref=${{ steps.variables.outputs.REPOSITORY }}:latest-${{ steps.arch.outputs.arch }}-cache
+          type=registry,ref=${{ steps.variables.outputs.BASE_IMAGE}}:latest-${{ steps.arch.outputs.arch }}-cache
+        cache-to: |
+          type=registry,ref=${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-${{ steps.arch.outputs.arch }}-cache,mode=max
+    - name: Create manifest for ${{ inputs.component }}
+      shell: bash
+      run: |
+        # TODO remove this when all components have both amd64 and arm64 images
+        if docker manifest inspect ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-arm64 > /dev/null 2>&1; then
+          docker buildx imagetools create -t \
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }} \
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-amd64 \
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-arm64
+        else
+          docker buildx imagetools create -t \
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }} \
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-amd64
+        fi

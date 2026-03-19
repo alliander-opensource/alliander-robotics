@@ -1,71 +1,74 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-ubuntu:
-  alliander_core:
-    base_image: allianderrobotics/ubuntu-noble
-    repository: base
-    dockerfile: alliander_core/alliander_core.Dockerfile
-ubuntu_images:
-  alliander_diagnostics:
-    base_image: allianderrobotics/base
-    repository: diagnostics
-    dockerfile: alliander_diagnostics/alliander_diagnostics.Dockerfile
-  alliander_franka:
-    base_image: allianderrobotics/base
-    repository: franka
-    dockerfile: alliander_franka/alliander_franka.Dockerfile
-  alliander_gazebo:
-    base_image: allianderrobotics/base
-    repository: gazebo
-    dockerfile: alliander_gazebo/alliander_gazebo.Dockerfile
-  alliander_gps:
-    base_image: allianderrobotics/base
-    repository: gps
-    dockerfile: alliander_gps/alliander_gps.Dockerfile
-  alliander_husarion:
-    base_image: allianderrobotics/base
-    repository: husarion
-    dockerfile: alliander_husarion/alliander_husarion.Dockerfile
-  alliander_joystick:
-    base_image: allianderrobotics/base
-    repository: joystick
-    dockerfile: alliander_joystick/alliander_joystick.Dockerfile
-  alliander_moveit:
-    base_image: allianderrobotics/base
-    repository: moveit
-    dockerfile: alliander_moveit/alliander_moveit.Dockerfile
-  alliander_nav2:
-    base_image: allianderrobotics/base
-    repository: nav2
-    dockerfile: alliander_nav2/alliander_nav2.Dockerfile
-  alliander_ouster:
-    base_image: allianderrobotics/base
-    repository: ouster
-    dockerfile: alliander_ouster/alliander_ouster.Dockerfile
-  alliander_realsense:
-    base_image: allianderrobotics/base
-    repository: realsense
-    dockerfile: alliander_realsense/alliander_realsense.Dockerfile
-  alliander_tests:
-    base_image: allianderrobotics/base
-    repository: tests
-    dockerfile: alliander_tests/alliander_tests.Dockerfile
-  alliander_velodyne:
-    base_image: allianderrobotics/base
-    repository: velodyne
-    dockerfile: alliander_velodyne/alliander_velodyne.Dockerfile
-  alliander_visualization:
-    base_image: allianderrobotics/base
-    repository: visualization
-    dockerfile: alliander_visualization/alliander_visualization.Dockerfile
+
+# Core components:
+base:
+  base_image: allianderrobotics/ubuntu-noble
+  repository: allianderrobotics/base
+  dockerfile: alliander_core/alliander_core.Dockerfile
+
 cuda:
-  alliander_core:
-    base_image: allianderrobotics/nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
-    repository: cuda
-    dockerfile: alliander_core/alliander_core.Dockerfile
-cuda_images:
-  alliander_zed:
-    base_image: allianderrobotics/cuda
-    repository: zed
-    dockerfile: alliander_zed/alliander_zed.Dockerfile
+  base_image: allianderrobotics/nvidia-cuda-12.9.1-cudnn-devel-ubuntu24.04
+  repository: allianderrobotics/cuda
+  dockerfile: alliander_core/alliander_core.Dockerfile
+
+# Ubuntu components:
+diagnostics:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/diagnostics
+  dockerfile: alliander_diagnostics/alliander_diagnostics.Dockerfile
+franka:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/franka
+  dockerfile: alliander_franka/alliander_franka.Dockerfile
+gazebo:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/gazebo
+  dockerfile: alliander_gazebo/alliander_gazebo.Dockerfile
+gps:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/gps
+  dockerfile: alliander_gps/alliander_gps.Dockerfile
+husarion:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/husarion
+  dockerfile: alliander_husarion/alliander_husarion.Dockerfile
+joystick:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/joystick
+  dockerfile: alliander_joystick/alliander_joystick.Dockerfile
+moveit:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/moveit
+  dockerfile: alliander_moveit/alliander_moveit.Dockerfile
+nav2:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/nav2
+  dockerfile: alliander_nav2/alliander_nav2.Dockerfile
+ouster:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/ouster
+  dockerfile: alliander_ouster/alliander_ouster.Dockerfile
+realsense:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/realsense
+  dockerfile: alliander_realsense/alliander_realsense.Dockerfile
+tests:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/tests
+  dockerfile: alliander_tests/alliander_tests.Dockerfile
+velodyne:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/velodyne
+  dockerfile: alliander_velodyne/alliander_velodyne.Dockerfile
+visualization:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/visualization
+  dockerfile: alliander_visualization/alliander_visualization.Dockerfile
+
+# CUDA components:
+zed:
+  base_image: allianderrobotics/cuda
+  repository: allianderrobotics/zed
+  dockerfile: alliander_zed/alliander_zed.Dockerfile
