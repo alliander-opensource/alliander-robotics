@@ -61,11 +61,11 @@ class LaunchArgument:
         Args:
             context (LaunchContext): The launch context in which to evaluate the argument.
 
-        Raises:
-            TypeError: If the string value cannot be interpreted as a boolean.
-
         Returns:
             bool: The boolean value of the launch argument.
+
+        Raises:
+            TypeError: If the string value cannot be interpreted as a boolean.
         """
         string_value = self.string_value(context)
         if string_value in {"True", "true"}:
@@ -93,11 +93,11 @@ class LaunchArgument:
         Args:
             context (LaunchContext): The launch context in which to evaluate the argument.
 
-        Raises:
-            RuntimeError: If the float value is outside the specified min or max range.
-
         Returns:
             float: The float value of the launch argument.
+
+        Raises:
+            RuntimeError: If the float value is outside the specified min or max range.
         """
         string_value = self.string_value(context)
         float_value = float(string_value)
