@@ -134,20 +134,9 @@ jobs:
     if: always()
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-      - name: Free disk space
-        uses: ./.github/actions/free-disk-space
-        with:
-          tool-cache: true
-      - name: Clear disk space
-        uses: ./.github/actions/clear-disk-space
       - name: Set up python3
         uses: actions/setup-python@v5
         with:
-          # need to specify version to circumvent externally-managed act python
-          # which won't let us install dependencies
           python-version: "3.12"
           cache: "pip"
       - name: Install dependencies
