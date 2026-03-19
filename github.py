@@ -44,7 +44,14 @@ def remove_tags_on_docker_hub(token: str) -> None:
         token (str): the token to authenticate with the Docker Hub API.
     """
     request = requests.get("https://hub.docker.com/v2/repositories/allianderrobotics/")
+    number_of_repositories = request.json()["count"]
+
+    params = {"page_size": number_of_repositories}
+    request = requests.get(
+        "https://hub.docker.com/v2/repositories/allianderrobotics/", params=params
+    )
     repositories = [repository["name"] for repository in request.json()["results"]]
+    print(f"Repositories: {repositories}")
 
     successfull = True
     successfull_status_code = 204
@@ -52,6 +59,14 @@ def remove_tags_on_docker_hub(token: str) -> None:
         request = requests.get(
             f"https://hub.docker.com/v2/repositories/allianderrobotics/{repository}/tags/"
         )
+        number_of_tags = request.json()["count"]
+
+        params = {"page_size": number_of_tags}
+        request = requests.get(
+            f"https://hub.docker.com/v2/repositories/allianderrobotics/{repository}/tags/",
+            params=params,
+        )
+
         tags = [
             tag["name"]
             for tag in request.json()["results"]
@@ -59,19 +74,19 @@ def remove_tags_on_docker_hub(token: str) -> None:
         ]
         if not tags:
             continue
-        print("Repository:", repository)
+        print("\nRepository:", repository)
         print("Tags to remove:", tags)
 
         for tag in tags:
             headers = {"Accept": "application/json", "Authorization": f"JWT {token}"}
-            response = requests.delete(
+            request = requests.delete(
                 f"https://hub.docker.com/v2/repositories/allianderrobotics/{repository}/tags/{tag}/",
                 headers=headers,
             )
-            if response.status_code == successfull_status_code:
-                print(f"| Success | {response.status_code} | {tag} |")
+            if request.status_code == successfull_status_code:
+                print(f"| Success | {request.status_code} | {tag} |")
             else:
-                print(f"| Failure | {response.status_code} | {tag} |")
+                print(f"| Failure | {request.status_code} | {tag} |")
                 successfull = False
 
     if not successfull:
