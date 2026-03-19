@@ -409,7 +409,7 @@ class Compose:
         cmd = "docker compose -f compose.yml up"
         if self.mode in {"linting", "pytest", "pytest-no-nvidia"}:
             cmd += " --abort-on-container-exit"
-        if self.mode == "pytest-no-nvidia":
+        if self.mode in {"linting", "pytest-no-nvidia"}:
             cmd += " --quiet-pull"
 
         result = subprocess.CompletedProcess([], 0)
