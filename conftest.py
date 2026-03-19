@@ -285,7 +285,7 @@ def check_containers_started(compose_file: str, services: list) -> bool:
     return all(statuses.values())
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="class")
 def test_node() -> Iterator[Node]:
     """Fixture to create a singleton node for testing.
 
