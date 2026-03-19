@@ -22,10 +22,10 @@ jobs:
       CUDA_COMPONENTS: ${{ steps.variables.outputs.CUDA_COMPONENTS }}
       REBUILD_CUDA_IMAGES: ${{ steps.variables.outputs.REBUILD_CUDA_IMAGES }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: "pip"
@@ -41,7 +41,7 @@ jobs:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Deploy image
         uses: ./.github/actions/deploy-image
         with:
@@ -61,7 +61,7 @@ jobs:
         component: ${{ fromJSON(needs.select-components.outputs.UBUNTU_COMPONENTS) }}
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Deploy image
         uses: ./.github/actions/deploy-image
         with:
@@ -79,7 +79,7 @@ jobs:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Deploy image
         uses: ./.github/actions/deploy-image
         with:
@@ -99,7 +99,7 @@ jobs:
         component: ${{ fromJSON(needs.select-components.outputs.CUDA_COMPONENTS) }}
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Deploy image
         uses: ./.github/actions/deploy-image
         with:
@@ -114,9 +114,9 @@ jobs:
     if: always()
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up python3
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: "pip"
@@ -134,9 +134,9 @@ jobs:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up python3
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: "pip"
