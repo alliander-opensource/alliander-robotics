@@ -2,25 +2,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: pr
+name: main
 
 on:
-  pull_request:
+  push:
     branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
-
-env:
-  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
 jobs:
   select-components:
     runs-on: ubuntu-24.04
     outputs:
-      REBUILD_CORE: ${{ steps.variables.outputs.REBUILD_CORE }}
       UBUNTU_COMPONENTS: ${{ steps.variables.outputs.UBUNTU_COMPONENTS }}
-      REBUILD_UBUNTU_IMAGES: ${{ steps.variables.outputs.REBUILD_UBUNTU_IMAGES }}
       CUDA_COMPONENTS: ${{ steps.variables.outputs.CUDA_COMPONENTS }}
-      REBUILD_CUDA_IMAGES: ${{ steps.variables.outputs.REBUILD_CUDA_IMAGES }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,11 +24,9 @@ jobs:
           cache: "pip"
       - run: pip install pyyaml requests
       - id: variables
-        run: python3 github.py --select-components changed
+        run: python3 github.py --select-components all
 
   build-ubuntu:
-    needs: select-components
-    if: needs.select-components.outputs.REBUILD_CORE == 'true'
     strategy:
       matrix:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
@@ -52,7 +43,6 @@ jobs:
 
   build-ubuntu-images:
     needs: [select-components, build-ubuntu]
-    if: always() && needs.select-components.outputs.REBUILD_UBUNTU_IMAGES == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -70,8 +60,6 @@ jobs:
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
   build-cuda:
-    needs: [select-components]
-    if: needs.select-components.outputs.REBUILD_CORE == 'true'
     strategy:
       matrix:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
@@ -88,7 +76,6 @@ jobs:
 
   build-cuda-images:
     needs: [select-components, build-cuda]
-    if: always() && needs.select-components.outputs.REBUILD_CUDA_IMAGES == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -106,9 +93,9 @@ jobs:
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
   linting:
+    runs-on: ubuntu-24.04
     needs: [build-ubuntu-images, build-cuda-images]
     if: always()
-    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Set up python3
@@ -122,13 +109,12 @@ jobs:
         run: python3 start.py --linting
 
   test:
-    needs: [build-ubuntu-images, build-cuda-images]
-    if: always()
     strategy:
       fail-fast: false
       matrix:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
+    needs: [build-ubuntu-images, build-cuda-images]
     steps:
       - uses: actions/checkout@v4
       - name: Set up python3
@@ -141,7 +127,7 @@ jobs:
       # TODO remove difference between ARM and non-ARM when zed/realsense-arm64 is supported:
       - name: Run tests in alliander_tests container (ubuntu-24.04)
         if: ${{ matrix.runner == 'ubuntu-24.04' }}
-        run: python3 start.py --pytest-no-nvidia
+        run: python3 start.py --pytest-no-nvidia --mode all
       - name: Run tests in alliander_tests container (ubuntu-24.04-arm)
         if: ${{ matrix.runner == 'ubuntu-24.04-arm' }}
-        run: python3 start.py --pytest-no-nvidia --deselect=alliander_tests/src/alliander_tests/tests/test_camera.py
+        run: python3 start.py --pytest-no-nvidia --mode all --deselect=alliander_tests/src/alliander_tests/tests/test_camera.py

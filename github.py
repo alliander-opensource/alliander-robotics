@@ -10,15 +10,22 @@ import requests
 import utils
 
 
-def select_components() -> None:
-    """Selects components to build, used in the open PR workflow."""
+def select_components(components: str) -> None:
+    """Selects components to build, used in the open PR workflow.
+
+    Args:
+        components (str): the components to select, either "all" or "changed".
+    """
+    if components not in {"all", "changed"}:
+        sys.exit("Invalid argument to select_components, expected 'all' or 'changed'.")
+
     ubuntu_components = set(utils.load_components("ubuntu_images").keys())
     cuda_components = set(utils.load_components("cuda_images").keys())
 
     changed_packages = utils.get_changed_packages()
     changed_components = {p.removeprefix("alliander_") for p in changed_packages}
 
-    if not utils.is_core_files_changed():
+    if not utils.is_core_files_changed() and components != "all":
         ubuntu_components = ubuntu_components.intersection(changed_components)
         cuda_components = cuda_components.intersection(changed_components)
 
@@ -101,7 +108,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--select-components",
         required=False,
-        action="store_true",
+        metavar="COMPONENTS",
         help="Select components for the PR workflow.",
     )
 
@@ -114,6 +121,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if args.select_components:
-        select_components()
+        select_components(args.select_components)
     elif args.remove_tags_on_docker_hub:
         remove_tags_on_docker_hub(args.remove_tags_on_docker_hub)
