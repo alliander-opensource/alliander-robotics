@@ -8,6 +8,10 @@ inputs:
   component:
     description: "Component to deploy."
     required: true
+  tag:
+    description: "Tag to use for the image."
+    required: false
+    default: "latest"
   runner:
     description: "Runner to use for deployment."
     required: true
@@ -57,26 +61,26 @@ runs:
         push: true
         context: .
         file: ${{ steps.variables.outputs.DOCKERFILE }}
-        tags: ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-${{ steps.arch.outputs.arch }}
+        tags: ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-${{ steps.arch.outputs.arch }}
         build-args: BASE_IMAGE=${{ steps.variables.outputs.BASE_IMAGE }}:latest-${{ steps.arch.outputs.arch }}
         cache-from: |
-          type=registry,ref=${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-${{ steps.arch.outputs.arch }}-cache
-          type=registry,ref=${{ steps.variables.outputs.BASE_IMAGE}}:${{ env.BRANCH_NAME }}-${{ steps.arch.outputs.arch }}-cache
+          type=registry,ref=${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-${{ steps.arch.outputs.arch }}-cache
+          type=registry,ref=${{ steps.variables.outputs.BASE_IMAGE}}:${{ inputs.tag }}-${{ steps.arch.outputs.arch }}-cache
           type=registry,ref=${{ steps.variables.outputs.REPOSITORY }}:latest-${{ steps.arch.outputs.arch }}-cache
           type=registry,ref=${{ steps.variables.outputs.BASE_IMAGE}}:latest-${{ steps.arch.outputs.arch }}-cache
         cache-to: |
-          type=registry,ref=${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-${{ steps.arch.outputs.arch }}-cache,mode=max
+          type=registry,ref=${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-${{ steps.arch.outputs.arch }}-cache,mode=max
     - name: Create manifest for ${{ inputs.component }}
       shell: bash
       run: |
         # TODO remove this when all components have both amd64 and arm64 images
-        if docker manifest inspect ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-arm64 > /dev/null 2>&1; then
+        if docker manifest inspect ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-arm64 > /dev/null 2>&1; then
           docker buildx imagetools create -t \
-          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }} \
-          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-amd64 \
-          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-arm64
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }} \
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-amd64 \
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-arm64
         else
           docker buildx imagetools create -t \
-          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }} \
-          ${{ steps.variables.outputs.REPOSITORY }}:${{ env.BRANCH_NAME }}-amd64
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }} \
+          ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-amd64
         fi

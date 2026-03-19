@@ -46,6 +46,7 @@ jobs:
         uses: ./.github/actions/deploy-image
         with:
           component: base
+          tag: ${{ env.BRANCH_NAME }}
           runner: ${{ matrix.runner }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -65,6 +66,7 @@ jobs:
         uses: ./.github/actions/deploy-image
         with:
           component: ${{ matrix.component }}
+          tag: ${{ env.BRANCH_NAME }}
           runner: ${{ matrix.runner }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -82,6 +84,7 @@ jobs:
         uses: ./.github/actions/deploy-image
         with:
           component: cuda
+          tag: ${{ env.BRANCH_NAME }}
           runner: ${{ matrix.runner }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -101,6 +104,7 @@ jobs:
         uses: ./.github/actions/deploy-image
         with:
           component: ${{ matrix.component }}
+          tag: ${{ env.BRANCH_NAME }}
           runner: ${{ matrix.runner }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
