@@ -14,5 +14,5 @@ services:
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
-    command: ["/bin/bash", "-c", "ros2 launch alliander_ur ur5.launch.py"]
+    command: ["/bin/bash", "-c", "ros2 launch alliander_ur ur.launch.py"]
 

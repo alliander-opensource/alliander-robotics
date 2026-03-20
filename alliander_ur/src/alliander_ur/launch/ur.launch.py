@@ -27,19 +27,13 @@ def launch_setup(context: LaunchContext) -> list:
     state_publisher = state_publisher_node(
         namespace=arm_config.namespace,
         platform="ur",
-        xacro="ur5.urdf.xacro",
+        xacro="ur.urdf.xacro",
         xacro_arguments={
             "simulation": str(arm_config.simulation),
-            "ip_address": arm_config.ip_address,
-            "namespace": arm_config.namespace,
-            "parent": "" if arm_config.parent.link else "world",
-            "connected_to": "" if arm_config.parent.link else "world",
-            "childs": str(
-                [
-                    [child.connects_to, child.namespace, child.link]
-                    for child in arm_config.childs
-                ]
+            "simulation_controllers": get_file_path(
+                "alliander_description", ["ur", "config"], "controllers.yaml"
             ),
+            "ros_namespace": arm_config.namespace,
         },
     )
 

@@ -17,6 +17,7 @@ ENV ROS_DISTRO=jazzy
 # RUN /$WORKDIR/colcon_build.sh
 RUN apt update && apt install -y --no-install-recommends \
   ros-$ROS_DISTRO-ur \
+  ros-$ROS_DISTRO-ur-simulation-gz \
   ros-$ROS_DISTRO-ur-description \
   ros-$ROS_DISTRO-ur-moveit-config \
   ros-$ROS_DISTRO-ur-robot-driver \

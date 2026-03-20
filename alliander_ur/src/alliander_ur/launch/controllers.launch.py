@@ -5,9 +5,8 @@
 from alliander_utilities.config_objects import Arm
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
-from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
-from launch.actions import OpaqueFunction, Shutdown
+from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
 
 TIMEOUT = 100
@@ -49,8 +48,8 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
-        # Register.on_exit(joint_state_broadcaster_spawner, context),
-        # Register.on_exit(ur5_arm_controller_spawner, context),
+        Register.on_exit(joint_state_broadcaster_spawner, context),
+        Register.on_exit(ur5_arm_controller_spawner, context),
     ]
 
 
