@@ -10,6 +10,17 @@
 #include "base_diagnostics.hpp"
 
 /**
+ * @brief Configuration for GPS diagnostics.
+ */
+struct GpsConfig {
+  /// Topic name of the GPS fix topic
+  std::string fix_topic;
+
+  /// Escalation timeouts [warning, error, stale] in seconds
+  std::vector<int64_t> timeouts;
+};
+
+/**
  * @brief Diagnostic module for monitoring GPS health.
  *
  * This class subscribes to a NavSatFix topic and evaluates the
@@ -22,9 +33,9 @@ class GpsDiagnostics : public BaseDiagnostics {
   /**
    * @brief Construct a GPSDiagnostics instance.
    * @param node The ROS2 node to attach to.
-   * @param topic The topic of the GPS to monitor.
+   * @param config Configuration for the GPS diagnostics.
    */
-  GpsDiagnostics(rclcpp::Node::SharedPtr node, const std::string& topic);
+  GpsDiagnostics(rclcpp::Node::SharedPtr node, const GpsConfig& config);
 
  private:
   /// The ROS2 node
@@ -43,14 +54,12 @@ class GpsDiagnostics : public BaseDiagnostics {
   /// Fix status from latest received GPS data
   int latest_fix_status = -1;
 
-  /// Indication of whether a high covariance is detected (true) or not (false)
-  bool high_covariance_detected = false;
-  /// Start time of the detected high covariance value
-  rclcpp::Time high_covariance_start_time;
-
-  /// The limit of the GPS' covariance value, where a higher value indicates a
-  /// weak signal
-  double gps_covariance_limit = 30.0;
+  /// The warning threshold of the GPS covariance value
+  double gps_covariance_warn_val = 2.0;
+  /// The error threshold of the GPS covariance value
+  double gps_covariance_error_val = 10.0;
+  /// The stale threshold of the GPS covariance value
+  double gps_covariance_stale_val = 100.0;
 
   /**
    * @brief Monitor the GPS topic and save the data received.

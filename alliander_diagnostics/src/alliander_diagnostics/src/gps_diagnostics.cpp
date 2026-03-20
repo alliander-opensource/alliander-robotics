@@ -12,11 +12,16 @@
 #include "diagnostics_node.hpp"
 
 GpsDiagnostics::GpsDiagnostics(rclcpp::Node::SharedPtr node,
-                               const std::string& topic)
+                               const GpsConfig& config)
     : BaseDiagnostics("GPS Status", "gps"), node_(node) {
   sub_gps = node_->create_subscription<sensor_msgs::msg::NavSatFix>(
-      topic, rclcpp::SensorDataQoS(),
+      config.fix_topic, rclcpp::SensorDataQoS(),
       std::bind(&GpsDiagnostics::gps_cb, this, std::placeholders::_1));
+
+  // Register timeouts
+  warning_timeout_ = std::chrono::seconds(config.timeouts[0]);
+  error_timeout_ = std::chrono::seconds(config.timeouts[1]);
+  stale_timeout_ = std::chrono::seconds(config.timeouts[2]);
 }
 
 void GpsDiagnostics::gps_cb(const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
@@ -28,15 +33,6 @@ void GpsDiagnostics::gps_cb(const sensor_msgs::msg::NavSatFix::SharedPtr msg) {
   latest_covariance =
       fmax(msg->position_covariance[0], msg->position_covariance[4]);
   latest_fix_status = msg->status.status;
-
-  if (latest_covariance > gps_covariance_limit) {
-    if (!high_covariance_detected) {
-      high_covariance_detected = true;
-      high_covariance_start_time = node_->now();
-    }
-  } else {
-    high_covariance_detected = false;
-  }
 }
 
 void GpsDiagnostics::evaluate(rclcpp::Time now) {
@@ -71,22 +67,18 @@ void GpsDiagnostics::evaluate(rclcpp::Time now) {
     // According to the GPS data, the signal is lost
     status_.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
     status_.message = "GPS signal lost";
-  } else if (high_covariance_detected) {
-    rclcpp::Duration high_cov_duration = now - high_covariance_start_time;
+  } else if (latest_covariance > gps_covariance_warn_val) {
+    // High covariance detected
+    status_.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    status_.message = "Warning: high covariance";
 
     // Handle all "high covariance" escalations
-    if (high_cov_duration > stale_timeout_) {
+    if (latest_covariance > gps_covariance_stale_val) {
       status_.level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-      status_.message = "Stale: high covariance for too long";
-    } else if (high_cov_duration > error_timeout_) {
+      status_.message = "Stale: extreme high covariance";
+    } else if (latest_covariance > gps_covariance_error_val) {
       status_.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      status_.message = "Error: high covariance for longer period";
-    } else if (high_cov_duration > warning_timeout_) {
-      status_.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      status_.message = "Warning: high covariance";
-    } else {
-      status_.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-      status_.message = "GPS OK, but high covariance noticed";
+      status_.message = "Error: high covariance";
     }
 
   } else {

@@ -16,49 +16,64 @@ use_sim_time_arg = LaunchArgument("use_sim_time", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
-    """The launch setup.
+    """Setup the launch description for the diagnostic nodes.
 
     Args:
         context (LaunchContext): The launch context.
 
     Returns:
-        list: The actions to start.
+        list: A list of actions to be executed in the launch description.
 
     Raises:
-        RuntimeError: No platform is found.
+        RuntimeError: Don't run the diagnostics node when no platforms require diagnostics.
     """
     platforms = PlatformList.from_str(platform_list_arg.string_value(context)).platforms
 
-    # Create default namespaces which can be ignored when left unchanged
-    gps_namespace = ""
+    sensor_configs: dict[str, list[dict]] = {}
 
-    # Find platforms in the platform list
     for platform in platforms:
-        match platform.platform_type:
-            case "GPS":
-                if not gps_namespace:
-                    gps_namespace = f"/{platform.namespace}"
-                else:
-                    warnings.warn(
-                        "No support for multiple GPS sensors yet, only accepting the first GPS.",
-                        RuntimeWarning,
-                        stacklevel=1,
-                    )
+        if platform.diagnostic_topic:
+            sensor_configs.setdefault(platform.platform_type.lower(), []).append(
+                {
+                    "namespace": platform.namespace,
+                    "topic": platform.diagnostic_topic,
+                    "timeouts": platform.diagnostic_timeouts,  # (warn, error, stale)
+                }
+            )
 
-            case _:
-                pass
+    parameters: dict[str, str | list[str]] = {
+        "modules": [],
+    }
 
-    if not gps_namespace:
+    for sensor_type, configs in sensor_configs.items():
+        if not configs:
+            continue
+
+        if len(configs) > 1:
+            warnings.warn(
+                f"Multiple {sensor_type.upper()} sensors detected, using first.",
+                RuntimeWarning,
+                stacklevel=1,
+            )
+
+        config = configs[0]
+
+        namespace = config["namespace"]
+        topic = config["topic"]
+        timeouts = config["timeouts"]
+
+        parameters["modules"].append(sensor_type)
+        parameters[f"{sensor_type}.topic"] = f"/{namespace}/{topic}"
+        parameters[f"{sensor_type}.timeouts"] = list(timeouts)
+
+    if not parameters["modules"]:
         raise RuntimeError("No platform present, cancelling the diagnostics package.")
 
     diagnostics_node = Node(
         package="alliander_diagnostics",
         executable="alliander_diagnostics_node",
         name="diagnostics",
-        parameters=[
-            {"enable_gps": bool(gps_namespace)},
-            {"gps_topic": f"{gps_namespace}/gps/fix"},
-        ],
+        parameters=[parameters],
     )
 
     use_sim_time = use_sim_time_arg.bool_value(context)

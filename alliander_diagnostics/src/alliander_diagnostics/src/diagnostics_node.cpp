@@ -10,15 +10,22 @@ DiagnosticsNode::DiagnosticsNode(rclcpp::Node::SharedPtr node) : node_(node) {
   pub_diag = node_->create_publisher<diagnostic_msgs::msg::DiagnosticArray>(
       "/system/diagnostics", 10);
 
-  bool enable_gps = node_->get_parameter("enable_gps").as_bool();
+  std::vector<std::string> modules =
+      node_->get_parameter("modules").as_string_array();
 
-  if (enable_gps) {
-    std::string gps_topic = node_->get_parameter("gps_topic").as_string();
+  for (const auto& module : modules) {
+    if (module == "gps") {
+      // make separate function of these contents (add_gps)
+      GpsConfig config;
 
-    diagnostics_modules.push_back(
-        std::make_shared<GpsDiagnostics>(node_, gps_topic));
+      config.fix_topic = node_->get_parameter("gps.topic").as_string();
+      config.timeouts = node_->get_parameter("gps.timeouts").as_integer_array();
 
-    RCLCPP_INFO(node_->get_logger(), "GPS diagnostics enabled");
+      diagnostics_modules.push_back(
+          std::make_shared<GpsDiagnostics>(node_, config));
+
+      RCLCPP_INFO(node_->get_logger(), "GPS diagnostics enabled");
+    }
   }
 
   timer = node_->create_wall_timer(

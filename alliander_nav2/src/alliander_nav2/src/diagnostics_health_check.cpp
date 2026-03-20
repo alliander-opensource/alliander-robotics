@@ -125,5 +125,6 @@ class IsSystemHealthy : public BT::ConditionNode {
 #include "behaviortree_cpp/bt_factory.h"
 
 BT_REGISTER_NODES(factory) {
-  factory.registerNodeType<nav2_behavior_tree::IsSystemHealthy>("IsSystemHealthy");
+  factory.registerNodeType<nav2_behavior_tree::IsSystemHealthy>(
+      "IsSystemHealthy");
 }

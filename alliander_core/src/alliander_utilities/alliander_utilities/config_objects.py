@@ -118,6 +118,8 @@ class Platform(Config):
         namespace (str): Namespace for the platform.
         platform_type (str): Type identifier for the platform.
         simulation (bool): Whether the platform is running in simulation.
+        diagnostic_topic (str): topic related to the platform to monitor for diagnostic data.
+        diagnostic_timeouts (tuple[int, int, int]): timeout to trigger status levels WARN, ERROR, and STALE.
         parent (Parent): Parent platform configuration.
         childs (list[Child]): List of child platform configurations.
         initialized (bool): Whether the platform has been initialized.
@@ -129,6 +131,9 @@ class Platform(Config):
     namespace: str = ""
     platform_type: str = ""
     simulation: bool = True
+
+    diagnostic_topic: str = ""
+    diagnostic_timeouts: tuple[int, int, int] = (2, 5, 10)
 
     parent: Parent = field(default_factory=Parent)
     childs: list[Child] = field(default_factory=list[Child])
@@ -316,10 +321,14 @@ class GPS(Platform):
     Attributes:
         platform_type (str): Type identifier for the platform.
         ip_address (str): IP address of the GPS receiver.
+        diagnostic_topic (str): GPS topic to monitor for diagnostic data.
+        diagnostic_timeouts (tuple[int, int, int]): timeout to trigger status levels WARN, ERROR, and STALE.
     """
 
     platform_type: str = "GPS"
     ip_address: str = ""
+    diagnostic_topic: str = "gps/fix"
+    diagnostic_timeouts: tuple[int, int, int] = (3, 5, 10)
 
 
 # Configurations containing lists of platforms:
