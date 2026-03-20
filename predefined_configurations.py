@@ -132,10 +132,18 @@ class PredefinedConfigurations:
         link(arm, camera)
         self.plat_conf.platforms = [arm, camera]
 
-    # UR5:
+    # UR:
     @register_configuration("ur")
     def config_ur(self) -> None:  # noqa: D102
         arm = Arm("ur", moveit=False)
+
+        self.plat_conf.platforms = [arm]
+        self.viz_conf.gui = True
+
+    @register_configuration("ur_rviz_motion_planning")
+    def config_ur_rviz_motion_planning(self) -> None:  # noqa: D102
+        arm = Arm("ur", moveit=True)
+        arm.moveit_config.load_rviz_motion_planning_plugin = True
 
         self.plat_conf.platforms = [arm]
         self.viz_conf.gui = True

@@ -32,10 +32,8 @@ class Moveit:
             robot_description (dict): The robot description dictionary.
             platform (str): The platform of the robot.
         """
-        match platform:
-            case "franka":
-                package = "alliander_franka_moveit_config"
-        srdf_path = get_file_path(package, ["config"], "fr3.srdf")
+        package = f"alliander_{platform}_moveit_config"
+        srdf_path = get_file_path(package, ["config"], "arm.srdf")
         moveit_config_builder = MoveItConfigsBuilder(platform, package_name=package)
 
         # load servos configuration:

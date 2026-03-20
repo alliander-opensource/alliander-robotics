@@ -14,6 +14,7 @@ RUN apt update && apt install -y --no-install-recommends \
   ros-$ROS_DISTRO-moveit-visual-tools \
   ros-$ROS_DISTRO-moveit-ros-perception \
   ros-$ROS_DISTRO-topic-tools \
+  ros-$ROS_DISTRO-ur-description \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \
   && apt clean
