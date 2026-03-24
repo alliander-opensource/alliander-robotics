@@ -62,7 +62,7 @@ def test_goal_pose_lidar(
     goal_pose.pose.position.y = current_pose.transform.translation.y
     goal_pose.pose.position.z = current_pose.transform.translation.z
 
-    publisher = test_node.create_publisher(PoseStamped, "/goal_pose", 10)
+    publisher = test_node.create_publisher(PoseStamped, f"/{vehicle.namespace}/goal_pose", 10)
     wait_for_subscriber(publisher, timeout)
     publisher.publish(goal_pose)
     test_node.get_logger().info("Published goal pose for navigation.")

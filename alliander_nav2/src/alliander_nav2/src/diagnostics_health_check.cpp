@@ -27,7 +27,7 @@ class IsSystemHealthy : public BT::ConditionNode {
    */
   IsSystemHealthy(const std::string& name, const BT::NodeConfiguration& config)
       : BT::ConditionNode(name, config),
-        gps_status_(diagnostic_msgs::msg::DiagnosticStatus::ERROR) {
+        gps_status_(diagnostic_msgs::msg::DiagnosticStatus::OK) {
     // Get the shared Nav2 node from blackboard
     node_ = config.blackboard->get<rclcpp::Node::SharedPtr>("node");
 
@@ -83,7 +83,8 @@ class IsSystemHealthy : public BT::ConditionNode {
   BT::NodeStatus tick() override {
     if (gps_status_ > diagnostic_msgs::msg::DiagnosticStatus::WARN) {
       RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 5000,
-                           "GPS unhealthy, pausing FollowPath");
+                           "GPS unhealthy (code %u), pausing FollowPath",
+                           gps_status_);
       return BT::NodeStatus::RUNNING;  // Keep tree RUNNING until GPS recovers
     }
     return BT::NodeStatus::SUCCESS;
