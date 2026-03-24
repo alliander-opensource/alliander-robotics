@@ -23,9 +23,6 @@ def launch_setup(context: LaunchContext) -> list:
 
     Returns:
         list: A list of actions to be executed in the launch description.
-
-    Raises:
-        RuntimeError: Don't run the diagnostics node when no platforms require diagnostics.
     """
     platforms = PlatformList.from_str(platform_list_arg.string_value(context)).platforms
 
@@ -42,7 +39,9 @@ def launch_setup(context: LaunchContext) -> list:
             )
 
     parameters: dict[str, str | list[str]] = {
-        "modules": [],
+        "modules": [
+            ""
+        ],  # Dummy parameter to make sure the diagnostics package does not abort
     }
 
     for sensor_type, configs in sensor_configs.items():
@@ -65,9 +64,6 @@ def launch_setup(context: LaunchContext) -> list:
         parameters["modules"].append(sensor_type)
         parameters[f"{sensor_type}.topic"] = f"/{namespace}/{topic}"
         parameters[f"{sensor_type}.timeouts"] = list(timeouts)
-
-    if not parameters["modules"]:
-        raise RuntimeError("No platform present, cancelling the diagnostics package.")
 
     diagnostics_node = Node(
         package="alliander_diagnostics",
