@@ -69,7 +69,7 @@ def launch_setup(context: LaunchContext) -> list:
         name="joystick_manager",
         parameters=[
             {"arm_cmd_topic": f"{arm_namespace}/servo_node/delta_twist_cmds"},
-            {"arm_frame_id": f"{arm_namespace[1:]}/fr3_link1"},
+            {"arm_frame_id": f"{arm_namespace[1:]}/base_link"},
             {"arm_gripper_name": f"{arm_namespace}/gripper"},
             {
                 "arm_home_service": f"{arm_namespace}/moveit_manager/move_to_configuration"

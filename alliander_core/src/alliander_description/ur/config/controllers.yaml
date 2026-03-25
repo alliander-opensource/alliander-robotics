@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Based on: 
-# https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation/blob/ros2/ur_simulation_gz/config/ur_controllers.yaml
+# https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation/blob/2.5.0/ur_simulation_gz/config/ur_controllers.yaml
 
 /**:
   controller_manager:
@@ -37,6 +37,7 @@
 
   joint_trajectory_controller:
     ros__parameters:
+      allow_nonzero_velocity_at_trajectory_end: true
       joints:
         - shoulder_pan_joint
         - shoulder_lift_joint

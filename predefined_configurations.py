@@ -135,7 +135,7 @@ class PredefinedConfigurations:
     # UR:
     @register_configuration("ur")
     def config_ur(self) -> None:  # noqa: D102
-        arm = Arm("ur", moveit=False)
+        arm = Arm("ur", moveit=True)
 
         self.plat_conf.platforms = [arm]
         self.viz_conf.gui = True

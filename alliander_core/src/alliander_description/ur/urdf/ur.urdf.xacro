@@ -14,7 +14,7 @@ SPDX-License-Identifier: Apache-2.0
   <xacro:arg name="ur_type" default="ur7e" />
 
   <xacro:if value="$(arg simulation)">
-    <xacro:include filename="$(find ur_simulation_gz)/urdf/ur_gz.urdf.xacro" />
+    <xacro:include filename="$(find alliander_description)/ur/urdf/adapted/ur_gz.urdf.xacro" />
   </xacro:if>
   <xacro:unless value="$(arg simulation)">
     <xacro:include filename="$(find ur_robot_driver)/urdf/ur.urdf.xacro" />
