@@ -124,10 +124,5 @@ jobs:
           cache: "pip"
       - name: Install dependencies
         run: pip install pyyaml mashumaro
-      # TODO remove difference between ARM and non-ARM when zed/realsense-arm64 is supported:
-      - name: Run tests in alliander_tests container (ubuntu-24.04)
-        if: ${{ matrix.runner == 'ubuntu-24.04' }}
+      - name: Run tests in alliander_tests container
         run: python3 start.py --pytest-no-nvidia --mode all
-      - name: Run tests in alliander_tests container (ubuntu-24.04-arm)
-        if: ${{ matrix.runner == 'ubuntu-24.04-arm' }}
-        run: python3 start.py --pytest-no-nvidia --mode all --deselect=alliander_tests/src/alliander_tests/tests/test_camera.py
