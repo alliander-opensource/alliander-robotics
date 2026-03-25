@@ -65,7 +65,7 @@ class _TestNavigationLidar:
         goal_pose.pose.position.z = current_pose.transform.translation.z
 
         publisher = test_node.create_publisher(
-            PoseStamped, f"/{vehicle.namespace}/goal_pose", 10
+            PoseStamped, f"/{self.platforms['vehicle'].namespace}/goal_pose", 10
         )
         wait_for_subscriber(publisher, timeout)
         publisher.publish(goal_pose)
