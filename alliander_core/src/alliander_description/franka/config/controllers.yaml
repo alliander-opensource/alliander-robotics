@@ -14,13 +14,13 @@
       joint_state_broadcaster:
         type: joint_state_broadcaster/JointStateBroadcaster
 
-      fr3_arm_controller:
+      joint_trajectory_controller:
         type: joint_trajectory_controller/JointTrajectoryController
 
       gripper_action_controller:
         type: parallel_gripper_action_controller/GripperActionController
 
-  fr3_arm_controller:
+  joint_trajectory_controller:
     ros__parameters:
       allow_nonzero_velocity_at_trajectory_end: true
       command_interfaces:

@@ -8,10 +8,10 @@ moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControll
 
 moveit_simple_controller_manager:
   controller_names:
-    - fr3_arm_controller
+    - joint_trajectory_controller
     - franka_hand_controller
 
-  fr3_arm_controller:
+  joint_trajectory_controller:
     type: FollowJointTrajectory
     action_ns: follow_joint_trajectory
     default: true
@@ -23,6 +23,7 @@ moveit_simple_controller_manager:
       - fr3_joint5
       - fr3_joint6
       - fr3_joint7
+
   franka_hand_controller:
     type: GripperCommand
     joints:

@@ -36,7 +36,7 @@ def launch_setup(context: LaunchContext) -> list:
         namespace=arm_config.namespace,
     )
 
-    ur5_arm_controller_spawner = Node(
+    joint_trajectory_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=[
@@ -49,7 +49,7 @@ def launch_setup(context: LaunchContext) -> list:
 
     return [
         Register.on_exit(joint_state_broadcaster_spawner, context),
-        Register.on_exit(ur5_arm_controller_spawner, context),
+        Register.on_exit(joint_trajectory_controller_spawner, context),
     ]
 
 
