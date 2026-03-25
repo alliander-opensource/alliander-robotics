@@ -14,7 +14,7 @@ https://code.visualstudio.com/docs/editing/codebasics#_compare-files
     name
     tf_prefix
     transmission_hw_interface:=hardware_interface/PositionJointInterface
-    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=1.57,wrist_1_joint=-1.57,wrist_2_joint=-1.57,wrist_3_joint=0.0)}
+    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=1.57,wrist_1_joint=-1.57,wrist_2_joint=-1.57,wrist_3_joint=-1.57)}
     ">
 
 

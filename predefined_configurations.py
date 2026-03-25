@@ -148,6 +148,14 @@ class PredefinedConfigurations:
         self.plat_conf.platforms = [arm]
         self.viz_conf.gui = True
 
+    @register_configuration("ur_realsense")
+    def config_ur_realsense(self) -> None:  # noqa: D102
+        arm = Arm("ur", moveit=True)
+        camera = Camera("realsense", (0.05, 0, 0), (0, -90, 180))
+
+        link(arm, camera)
+        self.plat_conf.platforms = [arm, camera]
+
     # Panther:
     @register_configuration("panther")
     def config_panther(self) -> None:  # noqa: D102

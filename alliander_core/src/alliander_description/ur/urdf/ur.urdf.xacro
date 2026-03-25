@@ -9,6 +9,7 @@ SPDX-License-Identifier: Apache-2.0
   <xacro:arg name="simulation" default="" />
   <xacro:arg name="simulation_controllers" default="" />
   <xacro:arg name="ros_namespace" default="" />
+  <xacro:arg name="childs" default="${[]}" />
 
   <xacro:arg name="name" default="ur" />
   <xacro:arg name="ur_type" default="ur7e" />
@@ -19,5 +20,9 @@ SPDX-License-Identifier: Apache-2.0
   <xacro:unless value="$(arg simulation)">
     <xacro:include filename="$(find ur_robot_driver)/urdf/ur.urdf.xacro" />
   </xacro:unless>
+
+  <!-- Create detachable joints with given childs: -->
+  <xacro:include filename="$(find alliander_utilities)/urdf/detachable_joints.urdf.xacro" />
+  <xacro:detachable_joints childs="${$(arg childs)}" />
 
 </robot>
