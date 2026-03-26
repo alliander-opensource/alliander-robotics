@@ -1,0 +1,128 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: main
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  select-components:
+    runs-on: ubuntu-24.04
+    outputs:
+      UBUNTU_COMPONENTS: ${{ steps.variables.outputs.UBUNTU_COMPONENTS }}
+      CUDA_COMPONENTS: ${{ steps.variables.outputs.CUDA_COMPONENTS }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - run: pip install pyyaml requests
+      - id: variables
+        run: python3 github.py --select-components all
+
+  build-ubuntu:
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Deploy image
+        uses: ./.github/actions/deploy-image
+        with:
+          component: base
+          runner: ${{ matrix.runner }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
+  build-ubuntu-images:
+    needs: [select-components, build-ubuntu]
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        component: ${{ fromJSON(needs.select-components.outputs.UBUNTU_COMPONENTS) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Deploy image
+        uses: ./.github/actions/deploy-image
+        with:
+          component: ${{ matrix.component }}
+          runner: ${{ matrix.runner }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
+  build-cuda:
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Deploy image
+        uses: ./.github/actions/deploy-image
+        with:
+          component: cuda
+          runner: ${{ matrix.runner }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
+  build-cuda-images:
+    needs: [select-components, build-cuda]
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        component: ${{ fromJSON(needs.select-components.outputs.CUDA_COMPONENTS) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Deploy image
+        uses: ./.github/actions/deploy-image
+        with:
+          component: ${{ matrix.component }}
+          runner: ${{ matrix.runner }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
+  linting:
+    runs-on: ubuntu-24.04
+    needs: [build-ubuntu-images, build-cuda-images]
+    if: always()
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up python3
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install pyyaml mashumaro
+      - name: Run linting in alliander_tests container
+        run: python3 start.py --linting
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    needs: [build-ubuntu-images, build-cuda-images]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up python3
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install pyyaml mashumaro
+      - name: Run tests in alliander_tests container
+        run: python3 start.py --pytest-no-nvidia --mode all

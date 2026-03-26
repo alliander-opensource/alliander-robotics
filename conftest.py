@@ -19,12 +19,25 @@ from alliander_utilities.config_objects import PlatformList, SimulatorConfig
 from rclpy.node import Node
 from termcolor import cprint
 
+import utils
 from predefined_configurations import PredefinedConfigurations
 from start import Compose
 
 LAUNCH_TIMEOUT = 90  # seconds
 COMPOSE_FILE = "/alliander_robotics/compose_pytest.yml"
 HOST_COMPOSE_FILE = "/alliander_robotics/compose.yml"
+
+
+class Configurations:
+    """Configurations used for pytest.
+
+    Attributes:
+        mode (str): The mode of testing.
+        changed_packages (set[str]): The set of packages that have changed.
+    """
+
+    mode: str
+    changed_packages: set[str]
 
 
 def pytest_addoption(parser: Parser) -> None:
@@ -34,25 +47,71 @@ def pytest_addoption(parser: Parser) -> None:
         parser (Parser): The pytest parser to add options to.
     """
     parser.addoption("--simulation", action="store", default="True")
+    parser.addoption("--mode", action="store", default="changed")
+
+
+@pytest.hookimpl()
+def pytest_sessionstart() -> None:
+    """Run before the pytest session starts."""
+    Configurations.changed_packages = utils.get_changed_packages()
+    print(f"\nChanged packages: {Configurations.changed_packages}\n")
 
 
 @pytest.fixture(scope="session", autouse=True)
-def signal_handler() -> Generator:
-    """Fixture to ensure that Docker containers are stopped when Pytest is interrupted.
+def control_session(pytestconfig: Config) -> Generator:
+    """Controls setup and teardown of the pytest session.
+
+    Args:
+        pytestconfig (Config): The pytest configuration object.
 
     Yields:
         Generator: Yields signal control to the test session.
     """
+    mode = pytestconfig.getoption("mode")
+    mode_options = ["changed", "all"]
+    if mode not in mode_options:
+        pytest.exit(
+            f"Invalid mode '{mode}' specified. Please choose from {mode_options}."
+        )
+    Configurations.mode = mode
+
     orig = signal.signal(signal.SIGTERM, signal.getsignal(signal.SIGINT))
+
     yield
-    cprint("Interrupt received, stopping Docker containers...", "yellow")
+
+    print("\n")
+    cprint("All tests finished, stopping Docker containers...", "yellow")
     stop_containers(COMPOSE_FILE)
     signal.signal(signal.SIGTERM, orig)
 
 
+@pytest.fixture(scope="class", autouse=True)
+def control_class(request: SubRequest) -> Generator:
+    """Controls the setup and teardown of a pytest class.
+
+    Args:
+        request (SubRequest): The pytest request object.
+
+    Yields:
+        Generator: Starts and stops Docker containers for each module.
+    """
+    print("")
+    cprint(f"[{request.cls.__name__}]: started", "blue")
+    services = create_compose_file(request)
+    skip_if_no_changes(services)
+    pull_missing_images()
+    process = start_containers(services)
+
+    yield
+
+    stop_containers(COMPOSE_FILE)
+    process.wait()
+    cprint(f"[{request.cls.__name__}]: finished", "blue")
+
+
 @pytest.fixture(scope="function", autouse=True)
-def print_test_info(request: SubRequest) -> Generator:
-    """Print the start and end of each test.
+def control_function(request: SubRequest) -> Generator:
+    """Control the setup and teardown of an individual test function.
 
     Args:
         request (SubRequest): The pytest request object.
@@ -61,9 +120,122 @@ def print_test_info(request: SubRequest) -> Generator:
         Generator: Yields start and end of each test function.
     """
     cprint(f"Starting test: {request.node.name}", "blue")
+
     yield
+
     print("")
     cprint(f"Finished test: {request.node.name}", "blue")
+
+
+def create_compose_file(request: SubRequest) -> list:
+    """Create a compose file for the group of tests.
+
+    Args:
+        request (SubRequest): The pytest request object.
+
+    Returns:
+        list: The list of services defined in the compose file.
+    """
+    compose = Compose()
+    if os.getenv("NO_NVIDIA", default="false").lower() == "true":
+        compose.mode = "configuration-no-nvidia"
+    else:
+        compose.mode = "configuration"
+    compose.predefined_configuration = PredefinedConfigurations()
+    compose.visualization = False
+
+    platform_list = PlatformList()
+    platform_list.platforms = request.cls.platforms.values()
+    compose.predefined_configuration.plat_conf = platform_list
+
+    load_ui = os.getenv("GAZEBO_UI", default="false").lower() == "true"
+    world = getattr(request.cls, "world", "empty.sdf")
+    sim_config = SimulatorConfig(load_ui=load_ui, world=world)
+    compose.predefined_configuration.sim_conf = sim_config
+
+    # Propagate dev mounts
+    dev_mounts = os.getenv("DEV_MOUNTS", default="false") == "true"
+    if dev_mounts:
+        compose.dev = True
+        host_cwd = os.getenv("HOST_CWD", default="/alliander")
+        home_dir = os.getenv("HOME_DIR", default="/root")
+        Compose.host_cwd = host_cwd
+        Compose.home_dir = home_dir
+
+    services = compose.create_compose(COMPOSE_FILE)
+    return services
+
+
+def skip_if_no_changes(services: list) -> None:
+    """Skip the test if no relevant packages have changed.
+
+    Args:
+        services (list): The list of services required for the test.
+    """
+    required_packages = set(services)
+    required_packages.add("rcdt_core")
+    if (
+        required_packages.isdisjoint(Configurations.changed_packages)
+        and Configurations.mode != "all"
+    ):
+        pytest.skip(reason="No relevant packages have changed.")
+
+
+def pull_missing_images() -> None:
+    """Pull the missing Docker images required for the test."""
+    images = (
+        subprocess.check_output(
+            f"docker compose -f {COMPOSE_FILE} config --images".split()
+        )
+        .decode("utf-8")
+        .split()
+    )
+
+    # Create list of services of which the image needs to be pulled:
+    services_to_pull = []
+    for image in images:
+        try:
+            subprocess.check_output(
+                f"docker image inspect {image}".split(),
+                stdin=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            cprint(f"Image {image} is already available locally.", "green")
+        except subprocess.CalledProcessError:
+            cprint(f"Image {image} is not available locally.", "yellow")
+            service = f"alliander_{image.split('/')[-1]}"
+            services_to_pull.append(service)
+
+    # Pull the missing images:
+    cmd = f"docker compose -f {COMPOSE_FILE} pull {' '.join(services_to_pull)}"
+    if os.getenv("NO_NVIDIA", default="false").lower() == "true":
+        cmd += " --quiet"
+    if services_to_pull:
+        cprint(f"Pulling missing images: {services_to_pull}", "yellow")
+        subprocess.run(cmd, timeout=3600, shell=True, check=True)
+
+
+def start_containers(services: list) -> subprocess.Popen:
+    """Start the Docker containers for all services.
+
+    Args:
+        services (list): The list of services to start.
+
+    Returns:
+        subprocess.Popen: The process running the Docker containers.
+    """
+    process = subprocess.Popen([f"docker compose -f {COMPOSE_FILE} up"], shell=True)
+
+    containers_started = False
+    start_time = time.time()
+    while not containers_started:
+        containers_started = check_containers_started(COMPOSE_FILE, services)
+        if time.time() - start_time > LAUNCH_TIMEOUT:
+            stop_containers(COMPOSE_FILE)
+            pytest.exit("Timeout waiting for containers to start. Exiting pytest.")
+    cprint("All containers are started, start testing!", "green")
+
+    return process
 
 
 def stop_containers(compose_file: str) -> None:
@@ -113,72 +285,7 @@ def check_containers_started(compose_file: str, services: list) -> bool:
     return all(statuses.values())
 
 
-@pytest.fixture(scope="module", autouse=True)
-def start_and_stop_containers(request: SubRequest) -> Generator:
-    """Automatically start and stop Docker containers for each test module.
-
-    Args:
-        request (SubRequest): The pytest request object.
-
-    Yields:
-        Generator: Starts and stops Docker containers for each module.
-    """
-    # Execute before starting the tests in the module:
-    compose = Compose()
-    if os.getenv("NO_NVIDIA", default="false").lower() == "true":
-        compose.mode = "configuration-no-nvidia"
-    else:
-        compose.mode = "configuration"
-    compose.predefined_configuration = PredefinedConfigurations()
-    compose.visualization = False
-
-    platform_list = PlatformList()
-    platform_list.platforms = getattr(request.module, "PLATFORMS", [])
-    compose.predefined_configuration.plat_conf = platform_list
-
-    world = getattr(request.module, "WORLD", "empty.sdf")
-    load_ui = os.getenv("GAZEBO_UI", default="false").lower() == "true"
-
-    # Propagate dev mounts
-    dev_mounts = os.getenv("DEV_MOUNTS", default="false") == "true"
-    if dev_mounts:
-        compose.dev = True
-        host_cwd = os.getenv("HOST_CWD", default="/alliander")
-        home_dir = os.getenv("HOME_DIR", default="/root")
-        Compose.host_cwd = host_cwd
-        Compose.home_dir = home_dir
-    sim_config = SimulatorConfig(load_ui=load_ui, world=world)
-    compose.predefined_configuration.sim_conf = sim_config
-
-    services = compose.create_compose(COMPOSE_FILE)
-
-    subprocess.run(
-        f"docker compose -f {COMPOSE_FILE} pull --policy missing",
-        timeout=3600,
-        shell=True,
-        check=True,
-    )
-
-    process = subprocess.Popen([f"docker compose -f {COMPOSE_FILE} up"], shell=True)
-
-    containers_started = False
-    start_time = time.time()
-    while not containers_started:
-        containers_started = check_containers_started(COMPOSE_FILE, services)
-        if time.time() - start_time > LAUNCH_TIMEOUT:
-            stop_containers(COMPOSE_FILE)
-            pytest.exit("Timeout waiting for containers to start. Exiting pytest.")
-    cprint("All containers are started, start testing!", "green")
-
-    # Yield to run the tests in the module:
-    yield
-
-    # Execute after all tests in module are done:
-    stop_containers(COMPOSE_FILE)
-    process.wait()
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="class")
 def test_node() -> Iterator[Node]:
     """Fixture to create a singleton node for testing.
 
@@ -195,7 +302,7 @@ def test_node() -> Iterator[Node]:
         rclpy.shutdown()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def timeout(pytestconfig: Config) -> int:
     """Fixture to get the timeout value from pytest config return it.
 
