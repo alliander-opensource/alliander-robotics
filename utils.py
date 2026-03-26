@@ -27,6 +27,12 @@ def get_files_changed() -> list[str]:
     files.extend(
         subprocess.getoutput("git ls-files --others --exclude-standard").split()
     )
+
+    print("\nChecking for changed files:")
+    print(f"{len(files)} files changed compared to the latest commit on main:")
+    print(subprocess.getoutput("git log -n 1 origin/main --pretty=oneline"))
+    print("\n")
+
     return files
 
 
