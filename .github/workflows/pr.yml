@@ -135,6 +135,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up python3
         uses: actions/setup-python@v6
         with:
