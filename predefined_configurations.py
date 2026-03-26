@@ -276,19 +276,38 @@ class PredefinedConfigurations:
         self.sim_conf.world = "map_5.940906_51.966960"
 
     # Mobile Manipulators:
-    @register_configuration("mm")
-    def config_mm(self) -> None:  # noqa: D102
+    @register_configuration("pf")
+    def config_pf(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
         arm = Arm("franka", (0, 0, 0.14), gripper=True, moveit=True)
 
         link(vehicle, arm)
         self.plat_conf.platforms = [vehicle, arm]
 
-    @register_configuration("mm_velodyne")
-    def config_mm_velodyne(self) -> None:  # noqa: D102
+    @register_configuration("pu")
+    def config_pu(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        arm = Arm("ur", (0, 0, 0.14), moveit=True)
+
+        link(vehicle, arm)
+        self.plat_conf.platforms = [vehicle, arm]
+
+    @register_configuration("pfv")
+    def config_pfv(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
         vehicle.nav2_config.navigation = True
         arm = Arm("franka", (0, 0, 0.14), gripper=True, moveit=True)
+        lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
+
+        link(vehicle, arm)
+        link(vehicle, lidar)
+        self.plat_conf.platforms = [vehicle, arm, lidar]
+
+    @register_configuration("puv")
+    def config_puv(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        vehicle.nav2_config.navigation = True
+        arm = Arm("ur", (0, 0, 0.14), moveit=True)
         lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
 
         link(vehicle, arm)
