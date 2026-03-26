@@ -65,7 +65,7 @@ are defined
 
     <!--END_EFFECTOR:
     Purpose: Represent information about an end effector.-->
-    <end_effector name="hand" parent_link="wrist_3_joint" group="hand" parent_group="arm" />
+    <end_effector name="hand" parent_link="wrist_3_link" group="hand" parent_group="arm" />
     <!--DISABLE_COLLISIONS:
     By default it is assumed that any link of the robot could potentially come into
     collision with any other link in the robot. This tag disables collision checking between a
