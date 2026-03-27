@@ -190,10 +190,17 @@ def pull_missing_images() -> None:
         .decode("utf-8")
         .split()
     )
+    services = (
+        subprocess.check_output(
+            f"docker compose -f {COMPOSE_FILE} config --services".split()
+        )
+        .decode("utf-8")
+        .split()
+    )
 
     # Create list of services of which the image needs to be pulled:
     services_to_pull = []
-    for image in images:
+    for image, service in zip(images, services, strict=False):
         try:
             subprocess.check_output(
                 f"docker image inspect {image}".split(),
@@ -203,7 +210,6 @@ def pull_missing_images() -> None:
             cprint(f"Image {image} is already available locally.", "green")
         except subprocess.CalledProcessError:
             cprint(f"Image {image} is not available locally.", "yellow")
-            service = f"alliander_{image.split('/')[-1]}"
             services_to_pull.append(service)
 
     # Pull the missing images:

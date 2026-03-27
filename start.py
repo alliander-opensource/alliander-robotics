@@ -228,7 +228,6 @@ class Compose:
         Returns:
             dict: dictionary containing YAML data from docker-compose.yml, with added command.
         """
-        print(f"{package}")
         service = self.load_compose(f"{package}/docker-compose.yml")["services"][
             package
         ]
