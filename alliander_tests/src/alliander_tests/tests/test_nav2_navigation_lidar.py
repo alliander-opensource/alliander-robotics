@@ -66,13 +66,13 @@ class _TestNavigationLidar:
 
         publisher = test_node.create_publisher(PoseStamped, "/goal_pose", 10)
         wait_for_node_active(
-            test_node, f"/{self.platforms['vehicle'].namespace}/bt_navigator", 20.0
+            test_node, f"/{self.platforms['vehicle'].namespace}/bt_navigator", 10.0
         )
         wait_for_node_active(
-            test_node, f"/{self.platforms['vehicle'].namespace}/planner_server", 20.0
+            test_node, f"/{self.platforms['vehicle'].namespace}/planner_server", 10.0
         )
         wait_for_node_active(
-            test_node, f"/{self.platforms['vehicle'].namespace}/controller_server", 20.0
+            test_node, f"/{self.platforms['vehicle'].namespace}/controller_server", 10.0
         )
         wait_for_subscriber(publisher, timeout)
         publisher.publish(goal_pose)
@@ -122,7 +122,7 @@ for i, vehicle in enumerate(
         "lynx",
     ]
 ):
-    for lidar in ["velodyne", "ouster"]:
+    for lidar in ["velodyne", "ouster", "velodyne", "ouster", "velodyne"]:
         vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
         link(vehicle_platform, lidar_platform)
