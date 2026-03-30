@@ -4,6 +4,7 @@
 
 """Global pytest fixtures for ROS 2 integration testing."""
 
+import json
 import os
 import signal
 import subprocess
@@ -183,20 +184,16 @@ def skip_if_no_changes(services: list) -> None:
 
 def pull_missing_images() -> None:
     """Pull the missing Docker images required for the test."""
-    images = (
+    compose = json.loads(
         subprocess.check_output(
-            f"docker compose -f {COMPOSE_FILE} config --images".split()
+            f"docker compose -f {COMPOSE_FILE} config --format json".split(),
         )
-        .decode("utf-8")
-        .split()
     )
-    services = (
-        subprocess.check_output(
-            f"docker compose -f {COMPOSE_FILE} config --services".split()
-        )
-        .decode("utf-8")
-        .split()
-    )
+    services = []
+    images = []
+    for service_name, service in compose["services"].items():
+        services.append(service_name)
+        images.append(service["image"])
 
     # Create list of services of which the image needs to be pulled:
     services_to_pull = []
