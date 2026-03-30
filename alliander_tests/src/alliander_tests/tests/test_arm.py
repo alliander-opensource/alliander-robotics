@@ -2,8 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import numpy as np
 import pytest
+import xmltodict
 from alliander_utilities.config_objects import Arm
+from control_msgs.msg import JointTrajectoryControllerState
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 
@@ -13,18 +16,17 @@ from ..utils import (
     call_trigger_action,
     check_joint_positions,
     follow_joint_trajectory_goal,
+    get_message,
+    get_parameter,
     wait_until_reached_joint,
 )
-
-arm = Arm("franka", gripper=True, moveit=True)
-PLATFORMS = [arm]
 
 
 class _TestArm:
     """Base class for arm tests.
 
     Attributes:
-         platforms (dict): A dictionary of the platforms to launch.
+        platforms (dict): A dictionary of the platforms to launch.
     """
 
     platforms: dict
@@ -56,6 +58,8 @@ class _TestArm:
             finger_joint_fault_tolerance (float): The tolerance for the finger joint position.
             timeout (int): The timeout in seconds before stopping the test.
         """
+        if self.platforms["arm"].name == "ur":
+            pytest.skip("Gripper is not yet implemented for UR arm.")
         assert (
             call_trigger_action(
                 test_node,
@@ -85,18 +89,27 @@ class _TestArm:
             joint_movement_tolerance (float): The tolerance for joint movement.
             timeout (int): The timeout in seconds to wait for the joint trajectory goal to be followed.
         """
-        expected_positions = [0.15, -0.39, 0.1, -2.06, 0.0, 1.68, 1.01]
-        follow_joint_trajectory_goal(
-            test_node,
-            positions=expected_positions,
-            controller=f"{self.platforms['arm'].namespace}/fr3_arm_controller",
+        # Get joint names and current position and define a goal position:
+        controller_state = get_message(
+            JointTrajectoryControllerState,
+            f"/{self.platforms['arm'].namespace}/joint_trajectory_controller/controller_state",
             timeout=timeout,
         )
-        joint_names = [f"fr3_joint{i + 1}" for i in range(7)]
+        current_positions = list(controller_state.reference.positions)
+        goal_positions = [position + np.deg2rad(10) for position in current_positions]
+
+        # Call the follow_joint_trajectory action and check if the joints reached the expected positions:
+        follow_joint_trajectory_goal(
+            test_node,
+            controller_state.joint_names,
+            goal_positions,
+            controller=f"{self.platforms['arm'].namespace}/joint_trajectory_controller",
+            timeout=timeout,
+        )
         check_joint_positions(
             self.platforms["arm"].namespace,
-            joint_names,
-            expected_positions,
+            controller_state.joint_names,
+            goal_positions,
             joint_movement_tolerance,
             timeout,
         )
@@ -111,21 +124,43 @@ class _TestArm:
             joint_movement_tolerance (float): The tolerance for joint movement.
             timeout (int): The timeout in seconds before stopping the test.
         """
+        # Get the robot_description_semantic and convert to a dictionary:
+        robot_description_semantic_str = get_parameter(
+            test_node,
+            f"/{self.platforms['arm'].namespace}/move_group",
+            "robot_description_semantic",
+            timeout=timeout,
+        ).string_value
+        robot_description_semantic = xmltodict.parse(robot_description_semantic_str)
+
+        # Extract the configurations from the robot_description_semantic:
+        configurations = {}
+        group_states = robot_description_semantic["robot"]["group_state"]
+        for group_state in group_states:
+            configurations[group_state["@name"]] = {"names": [], "positions": []}
+            for joint in group_state["joint"]:
+                configurations[group_state["@name"]]["names"].append(joint["@name"])
+                configurations[group_state["@name"]]["positions"].append(
+                    joint["@value"]
+                )
+
+        # Call the move_to_configuration service and check if the joints reached the expected positions:
+        configuration = "drop"
+        names = configurations[configuration]["names"]
+        positions = [float(pos) for pos in configurations[configuration]["positions"]]
         assert call_move_to_configuration_service(
-            test_node, self.platforms["arm"].namespace, "drop", timeout=timeout
+            test_node, self.platforms["arm"].namespace, configuration, timeout=timeout
         ), "Failed to call move_to_configuration service."
-        joint_names = [f"fr3_joint{i + 1}" for i in range(7)]
-        expected_positions = [-1.57079632679, -0.65, 0, -2.4, 0, 1.75, 0.78539816339]
         check_joint_positions(
             self.platforms["arm"].namespace,
-            joint_names,
-            expected_positions,
+            names,
+            positions,
             joint_movement_tolerance,
             timeout,
         )
 
 
-for arm in ["franka"]:
+for arm in ["franka", "ur"]:
     arm_platform = Arm(arm, (0, 0, 0.5), gripper=True, moveit=True)
     test_class = type(
         f"Test{arm.capitalize()}",
