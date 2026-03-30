@@ -85,7 +85,7 @@ jobs:
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
   build-ubuntu-images-manifest:
-    needs: build-ubuntu-images
+    needs: [select-components, build-ubuntu-images]
     strategy:
       fail-fast: false
       matrix:
@@ -153,7 +153,7 @@ jobs:
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
   build-cuda-images-manifest:
-    needs: build-cuda-images
+    needs: [select-components, build-cuda-images]
     strategy:
       fail-fast: false
       matrix:
