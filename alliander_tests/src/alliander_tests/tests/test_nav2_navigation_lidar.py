@@ -6,7 +6,6 @@ import contextlib
 import sys
 import time
 
-import pytest
 import rclpy
 from alliander_utilities.config_objects import Lidar, Vehicle, link
 from geometry_msgs.msg import PoseStamped, TransformStamped
@@ -66,15 +65,15 @@ class _TestNavigationLidar:
         goal_pose.pose.position.z = current_pose.transform.translation.z
 
         publisher = test_node.create_publisher(PoseStamped, "/goal_pose", 10)
-        # wait_for_node_active(
-        #     test_node, f"/{self.platforms['vehicle'].namespace}/bt_navigator", 20.0
-        # )
-        # wait_for_node_active(
-        #     test_node, f"/{self.platforms['vehicle'].namespace}/planner_server", 20.0
-        # )
-        # wait_for_node_active(
-        #     test_node, f"/{self.platforms['vehicle'].namespace}/controller_server", 20.0
-        # )
+        wait_for_node_active(
+            test_node, f"/{self.platforms['vehicle'].namespace}/bt_navigator", 20.0
+        )
+        wait_for_node_active(
+            test_node, f"/{self.platforms['vehicle'].namespace}/planner_server", 20.0
+        )
+        wait_for_node_active(
+            test_node, f"/{self.platforms['vehicle'].namespace}/controller_server", 20.0
+        )
         wait_for_subscriber(publisher, timeout)
         publisher.publish(goal_pose)
         test_node.get_logger().info("Published goal pose for navigation.")
@@ -82,23 +81,24 @@ class _TestNavigationLidar:
         # 3) Wait until goal is reached within tolerance:
         start_time = time.time()
         distance: float = sys.float_info.max
+        timed_out = False
+
         while distance > navigation_distance_tolerance:
             rclpy.spin_once(test_node, timeout_sec=0)
             with contextlib.suppress(TransformException):
                 current_pose = tf_buffer.lookup_transform(
                     "map", f"{self.platforms['vehicle'].namespace}/base_link", Time()
                 )
-            distance = abs(
-                current_pose.transform.translation.x - goal_pose.pose.position.x
-            )
-            if time.time() - start_time > timeout:
-                test_node.get_logger().info("FAILED NAV2")
-                pytest.fail(
-                    f"Distance is {distance} while tolerance is {navigation_distance_tolerance}."
+                distance = abs(
+                    current_pose.transform.translation.x - goal_pose.pose.position.x
                 )
+            if time.time() - start_time > timeout:
+                timed_out = True
+                break
 
-        test_node.get_logger().info("SUCCESS NAV2")
-        test_node.get_logger().info(f"Final TEST distance: {distance}")
+        assert not timed_out, (
+            f"Timeout: distance {distance} > tolerance {navigation_distance_tolerance}"
+        )
 
         # 4) Stop navigation, since the goal can be reached before the navigation is finished due to tolerance:
         assert call_trigger_service(
