@@ -86,6 +86,7 @@ jobs:
 
   build-ubuntu-images-manifest:
     needs: [select-components, build-ubuntu-images]
+    if: always() && needs.select-components.outputs.REBUILD_UBUNTU_IMAGES == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -154,6 +155,7 @@ jobs:
 
   build-cuda-images-manifest:
     needs: [select-components, build-cuda-images]
+    if: always() && needs.select-components.outputs.REBUILD_CUDA_IMAGES == 'true'
     strategy:
       fail-fast: false
       matrix:
