@@ -42,7 +42,7 @@ def launch_setup(context: LaunchContext) -> list:
         package="controller_manager",
         executable="spawner",
         arguments=[
-            "fr3_arm_controller",
+            "forward_command_controller",
             "--switch-timeout",
             str(TIMEOUT),
         ],

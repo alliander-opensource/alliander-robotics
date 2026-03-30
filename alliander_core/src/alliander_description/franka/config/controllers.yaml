@@ -20,6 +20,22 @@
       gripper_action_controller:
         type: parallel_gripper_action_controller/GripperActionController
 
+      forward_command_controller:
+        type: forward_command_controller/ForwardCommandController
+
+  forward_command_controller:
+    ros__parameters:
+      type: forward_command_controller/ForwardCommandController
+      interface_name: velocity
+      joints:
+        - fr3_joint1
+        - fr3_joint2
+        - fr3_joint3
+        - fr3_joint4
+        - fr3_joint5
+        - fr3_joint6
+        - fr3_joint7
+
   fr3_arm_controller:
     ros__parameters:
       allow_nonzero_velocity_at_trajectory_end: true
