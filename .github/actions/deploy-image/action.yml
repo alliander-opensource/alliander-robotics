@@ -70,10 +70,3 @@ runs:
           type=registry,ref=${{ steps.variables.outputs.BASE_IMAGE}}:latest-${{ steps.arch.outputs.arch }}-cache
         cache-to: |
           type=registry,ref=${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-${{ steps.arch.outputs.arch }}-cache,mode=max
-    - name: Create manifest for ${{ inputs.component }}
-      shell: bash
-      run: |
-        docker buildx imagetools create -t \
-        ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }} \
-        ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-amd64 \
-        ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-arm64
