@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: create-manifest
+description: Create a Docker manifest for multi-architecture images.
+inputs:
+  component:
+    description: "Component to create a manifest for."
+    required: true
+  tag:
+    description: "Tag to use for the manifest."
+    required: false
+    default: "latest"
+  DOCKER_USERNAME:
+    description: "Docker Hub username."
+    required: true
+  DOCKER_TOKEN:
+    description: "Docker Hub token."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v4
+    - name: Docker login
+      uses: docker/login-action@v4
+      with:
+        username: ${{ inputs.DOCKER_USERNAME }}
+        password: ${{ inputs.DOCKER_TOKEN }}
+    - name: Get variables for ${{ inputs.component }}
+      shell: bash
+      id: variables
+      run: |
+        echo "REPOSITORY=$(yq .${{ inputs.component }}.repository components.yml)" >> $GITHUB_OUTPUT
+    - name: Create manifest for ${{ inputs.component }}
+      shell: bash
+      run: |
+        docker buildx imagetools create -t \
+        ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }} \
+        ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-amd64 \
+        ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-arm64

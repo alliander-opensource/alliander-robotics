@@ -51,8 +51,21 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
+  build-ubuntu-manifest:
+    needs: build-ubuntu
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Create manifest
+        uses: ./.github/actions/create-manifest
+        with:
+          component: base
+          tag: ${{ env.BRANCH_NAME }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
   build-ubuntu-images:
-    needs: [select-components, build-ubuntu]
+    needs: [select-components, build-ubuntu-manifest]
     if: always() && needs.select-components.outputs.REBUILD_UBUNTU_IMAGES == 'true'
     strategy:
       fail-fast: false
@@ -68,6 +81,23 @@ jobs:
           component: ${{ matrix.component }}
           tag: ${{ env.BRANCH_NAME }}
           runner: ${{ matrix.runner }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
+  build-ubuntu-images-manifest:
+    needs: [select-components, build-ubuntu-images]
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ${{ fromJSON(needs.select-components.outputs.UBUNTU_COMPONENTS) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Create manifest
+        uses: ./.github/actions/create-manifest
+        with:
+          component: ${{ matrix.component }}
+          tag: ${{ env.BRANCH_NAME }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
@@ -89,8 +119,21 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
+  build-cuda-manifest:
+    needs: build-cuda
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Create manifest
+        uses: ./.github/actions/create-manifest
+        with:
+          component: cuda
+          tag: ${{ env.BRANCH_NAME }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
   build-cuda-images:
-    needs: [select-components, build-cuda]
+    needs: [select-components, build-cuda-manifest]
     if: always() && needs.select-components.outputs.REBUILD_CUDA_IMAGES == 'true'
     strategy:
       fail-fast: false
@@ -109,8 +152,25 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
+  build-cuda-images-manifest:
+    needs: [select-components, build-cuda-images]
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ${{ fromJSON(needs.select-components.outputs.CUDA_COMPONENTS) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Create manifest
+        uses: ./.github/actions/create-manifest
+        with:
+          component: ${{ matrix.component }}
+          tag: ${{ env.BRANCH_NAME }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
   linting:
-    needs: [build-ubuntu-images, build-cuda-images]
+    needs: [build-ubuntu-images-manifest, build-cuda-images-manifest]
     if: always()
     runs-on: ubuntu-24.04
     steps:
@@ -126,7 +186,7 @@ jobs:
         run: python3 start.py --linting
 
   test:
-    needs: [build-ubuntu-images, build-cuda-images]
+    needs: [build-ubuntu-images-manifest, build-cuda-images-manifest]
     if: always()
     strategy:
       fail-fast: false
