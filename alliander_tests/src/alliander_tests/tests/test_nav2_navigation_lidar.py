@@ -92,10 +92,12 @@ class _TestNavigationLidar:
                 current_pose.transform.translation.x - goal_pose.pose.position.x
             )
             if time.time() - start_time > timeout:
+                test_node.get_logger().info("FAILED NAV2")
                 pytest.fail(
                     f"Distance is {distance} while tolerance is {navigation_distance_tolerance}."
                 )
 
+        test_node.get_logger().info("SUCCESS NAV2")
         test_node.get_logger().info(f"Final TEST distance: {distance}")
 
         # 4) Stop navigation, since the goal can be reached before the navigation is finished due to tolerance:
