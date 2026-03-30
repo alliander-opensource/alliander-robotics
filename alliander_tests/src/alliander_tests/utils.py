@@ -98,18 +98,14 @@ def wait_for_node_active(node: Node, lifecycle_node_name: str, timeout: float) -
             state_id = future.result().current_state.id
             state_label = future.result().current_state.label
 
-            node.get_logger().info(
-                f"{lifecycle_node_name} state: {state_label}"
-            )
+            node.get_logger().info(f"{lifecycle_node_name} state: {state_label}")
 
             active_state = 3
             if state_id == active_state:
                 return
 
         if time.time() - start_time > timeout:
-            raise TimeoutError(
-                f"{lifecycle_node_name} did not become ACTIVE"
-            )
+            raise TimeoutError(f"{lifecycle_node_name} did not become ACTIVE")
 
         time.sleep(0.5)
 
