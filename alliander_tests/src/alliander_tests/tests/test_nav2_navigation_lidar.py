@@ -6,6 +6,7 @@ import contextlib
 import sys
 import time
 
+import pytest
 import rclpy
 from alliander_utilities.config_objects import Lidar, Vehicle, link
 from geometry_msgs.msg import PoseStamped, TransformStamped
@@ -15,7 +16,7 @@ from tf2_ros import TransformException  # ty: ignore[unresolved-import]
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
-from ..utils import call_trigger_service, wait_for_subscriber
+from ..utils import call_trigger_service, wait_for_node_active, wait_for_subscriber
 
 
 class _TestNavigationLidar:
@@ -49,7 +50,7 @@ class _TestNavigationLidar:
 
         start_time = time.time()
         while current_pose == TransformStamped():
-            rclpy.spin_once(test_node, timeout_sec=0)
+            rclpy.spin_once(test_node, timeout_sec=0)  # TODO: change to 0.1 maybe?
             with contextlib.suppress(TransformException):
                 current_pose = tf_buffer.lookup_transform(
                     "map", f"{self.platforms['vehicle'].namespace}/base_link", Time()
@@ -64,9 +65,16 @@ class _TestNavigationLidar:
         goal_pose.pose.position.y = current_pose.transform.translation.y
         goal_pose.pose.position.z = current_pose.transform.translation.z
 
-        publisher = test_node.create_publisher(
-            PoseStamped, f"/{self.platforms['vehicle'].namespace}/goal_pose", 10
-        )
+        publisher = test_node.create_publisher(PoseStamped, "/goal_pose", 10)
+        # wait_for_node_active(
+        #     test_node, f"/{self.platforms['vehicle'].namespace}/bt_navigator", 20.0
+        # )
+        # wait_for_node_active(
+        #     test_node, f"/{self.platforms['vehicle'].namespace}/planner_server", 20.0
+        # )
+        # wait_for_node_active(
+        #     test_node, f"/{self.platforms['vehicle'].namespace}/controller_server", 20.0
+        # )
         wait_for_subscriber(publisher, timeout)
         publisher.publish(goal_pose)
         test_node.get_logger().info("Published goal pose for navigation.")
@@ -84,9 +92,11 @@ class _TestNavigationLidar:
                 current_pose.transform.translation.x - goal_pose.pose.position.x
             )
             if time.time() - start_time > timeout:
-                raise TimeoutError(
+                pytest.fail(
                     f"Distance is {distance} while tolerance is {navigation_distance_tolerance}."
                 )
+
+        test_node.get_logger().info(f"Final TEST distance: {distance}")
 
         # 4) Stop navigation, since the goal can be reached before the navigation is finished due to tolerance:
         assert call_trigger_service(
@@ -96,8 +106,22 @@ class _TestNavigationLidar:
         )
 
 
-for vehicle in ["panther", "lynx"]:
-    for lidar in ["velodyne", "ouster"]:
+for vehicle in [
+    "panther",
+    "lynx",
+    "panther",
+    "lynx",
+    "panther",
+    "lynx",
+    "panther",
+    "lynx",
+    "panther",
+    "lynx",
+]:
+    for lidar in [
+        "velodyne",
+        "ouster"
+    ]:
         vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
         link(vehicle_platform, lidar_platform)

@@ -200,4 +200,4 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml mashumaro
       - name: Run tests in alliander_tests container
-        run: python3 start.py --pytest-no-nvidia
+        run: python3 start.py --pytest-no-nvidia --mode all -k nav2_navigation_lidar
