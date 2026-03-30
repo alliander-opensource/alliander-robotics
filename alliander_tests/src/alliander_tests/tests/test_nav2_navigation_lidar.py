@@ -93,10 +93,7 @@ class _TestNavigationLidar:
             )
             if time.time() - start_time > timeout:
                 test_node.get_logger().info("FAILED NAV2")
-                # pytest.fail(
-                #     f"Distance is {distance} while tolerance is {navigation_distance_tolerance}."
-                # )
-                raise TimeoutError(
+                pytest.fail(
                     f"Distance is {distance} while tolerance is {navigation_distance_tolerance}."
                 )
 
@@ -111,28 +108,27 @@ class _TestNavigationLidar:
         )
 
 
-for vehicle in [
-    "panther",
-    "lynx",
-    "panther",
-    "lynx",
-    "panther",
-    "lynx",
-    "panther",
-    "lynx",
-    "panther",
-    "lynx",
-]:
-    for lidar in [
-        "velodyne",
-        "ouster"
-    ]:
+for i, vehicle in enumerate(
+    [
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+    ]
+):
+    for lidar in ["velodyne", "ouster"]:
         vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
         link(vehicle_platform, lidar_platform)
         vehicle_platform.nav2_config.navigation = True
         test_class = type(
-            f"Test{vehicle.capitalize()}{lidar.capitalize()}Navigation",
+            f"Test{vehicle.capitalize()}{lidar.capitalize()}Navigation{i}",
             (_TestNavigationLidar,),
             {"platforms": {"vehicle": vehicle_platform, "lidar": lidar_platform}},
         )
