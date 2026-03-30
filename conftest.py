@@ -54,7 +54,7 @@ def pytest_addoption(parser: Parser) -> None:
 @pytest.hookimpl()
 def pytest_sessionstart() -> None:
     """Run before the pytest session starts."""
-    Configurations.changed_packages = utils.get_changed_packages()
+    Configurations.changed_packages = utils.get_changed_packages(verbose=True)
     print(f"\nChanged packages: {Configurations.changed_packages}\n")
 
 
@@ -99,7 +99,8 @@ def control_class(request: SubRequest) -> Generator:
     print("")
     cprint(f"[{request.cls.__name__}]: started", "blue")
     services = create_compose_file(request)
-    skip_if_no_changes(services)
+    if Configurations.mode != "all":
+        skip_if_no_changes(services)
     pull_missing_images()
     process = start_containers(services)
 
@@ -174,12 +175,14 @@ def skip_if_no_changes(services: list) -> None:
         services (list): The list of services required for the test.
     """
     required_packages = set(services)
-    required_packages.add("rcdt_core")
-    if (
-        required_packages.isdisjoint(Configurations.changed_packages)
-        and Configurations.mode != "all"
-    ):
+    required_packages.add("alliander_core")
+    if required_packages.isdisjoint(Configurations.changed_packages):
         pytest.skip(reason="No relevant packages have changed.")
+    else:
+        print("\n")
+        print("Running test since the following relevant packages have changed:")
+        print(required_packages.intersection(Configurations.changed_packages))
+        print("\n")
 
 
 def pull_missing_images() -> None:

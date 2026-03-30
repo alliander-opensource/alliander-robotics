@@ -22,7 +22,7 @@ def select_components(components: str) -> None:
     ubuntu_components = set(utils.load_components("ubuntu_images").keys())
     cuda_components = set(utils.load_components("cuda_images").keys())
 
-    changed_packages = utils.get_changed_packages()
+    changed_packages = utils.get_changed_packages(verbose=True)
     changed_components = {p.removeprefix("alliander_") for p in changed_packages}
 
     if not utils.is_core_files_changed() and components != "all":
