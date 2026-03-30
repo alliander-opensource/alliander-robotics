@@ -93,7 +93,10 @@ class _TestNavigationLidar:
             )
             if time.time() - start_time > timeout:
                 test_node.get_logger().info("FAILED NAV2")
-                pytest.fail(
+                # pytest.fail(
+                #     f"Distance is {distance} while tolerance is {navigation_distance_tolerance}."
+                # )
+                raise TimeoutError(
                     f"Distance is {distance} while tolerance is {navigation_distance_tolerance}."
                 )
 
