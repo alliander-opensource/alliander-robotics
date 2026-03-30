@@ -6,6 +6,7 @@ import contextlib
 import sys
 import time
 
+import pytest
 import rclpy
 from alliander_utilities.config_objects import Lidar, Vehicle, link
 from geometry_msgs.msg import PoseStamped, TransformStamped
@@ -42,9 +43,23 @@ class _TestNavigationLidar:
         Raises:
             TimeoutError: When a timeout occurs.
         """
-        # 1) Obtain current pose in map frame:
+        # 0) Wait for valid TF
         tf_buffer = Buffer()
         TransformListener(tf_buffer, test_node)
+        start = time.time()
+        while True:
+            rclpy.spin_once(test_node, timeout_sec=0.1)
+            try:
+                tf_buffer.lookup_transform("odom", f"{self.platforms['vehicle'].namespace}/base_footprint", Time())
+                break
+            except TransformException:
+                pass
+            if time.time() - start > timeout:
+                pytest.fail("panther/odom never appeared: odometry stack did not start")
+
+        # 1) Obtain current pose in map frame:
+        # tf_buffer = Buffer()
+        # TransformListener(tf_buffer, test_node)
         current_pose = TransformStamped()
 
         start_time = time.time()
