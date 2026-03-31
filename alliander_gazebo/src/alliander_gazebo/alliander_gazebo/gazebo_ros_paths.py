@@ -72,11 +72,9 @@ class GazeboRosPaths:
         return gazebo_model_path, gazebo_plugin_path
 
     @staticmethod
-    def get_env() -> Optional[
-        dict[
-            Iterable[str | Path | Substitution] | Path | Substitution,
-            Iterable[str | Path | Substitution] | Path | Substitution,
-        ]
+    def get_env() -> dict[
+        Iterable[str | Path | Substitution] | Path | Substitution,
+        Iterable[str | Path | Substitution] | Path | Substitution,
     ]:
         """Get the environment variables for Gazebo.
 
