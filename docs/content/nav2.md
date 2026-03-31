@@ -12,6 +12,12 @@ According to the official [website](https://docs.nav2.org/):
 
 This documentation shows Nav2 components that are used in this repository, sometimes with some additional explanation about implementation choices.
 
+## Planner
+We choose to implement, for our Husarion platforms, the `SmacPlanner2D` planner. This because it is a standard planner in Nav2, and does not need a minimum turning radius. The `SmacPlannerHybrid` needs a minimum turning radius as large as the costmap resolution, a constraint that the Husarion platforms do not have. Using the Hybrid-A* planner sometimes results in no path being found, even though the Husarion robot is able to physically move to the goal pose. Using the classic 2D A* planner resolves this.
+
+## Controller
+With a relatively simple planner, we choose MPPI as the Husarion robots` controller. This because it is good for dynamic obstacle avoidance, produces smooth commands, and supports GPU acceleration.
+
 
 ## Behaviour Tree
 We implement a behaviour tree that was originally inspired by Nav2's `navigate_to_pose_w_replanning_and_recovery.xml`. See below our tree written out:
