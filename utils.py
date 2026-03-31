@@ -16,8 +16,11 @@ def get_git_branch() -> str:
     return subprocess.getoutput("git rev-parse --abbrev-ref HEAD")
 
 
-def get_files_changed() -> list[str]:
+def get_files_changed(verbose: bool = False) -> list[str]:
     """Get the list of files changed in the current branch compared to main.
+
+    Args:
+        verbose (bool, optional): Whether to print detailed information. Defaults to False.
 
     Returns:
         list[str]: A list of file paths that have changed.
@@ -27,6 +30,13 @@ def get_files_changed() -> list[str]:
     files.extend(
         subprocess.getoutput("git ls-files --others --exclude-standard").split()
     )
+
+    if verbose:
+        print("\nChecking for changed files:")
+        print(f"{len(files)} files changed compared to the latest commit on main:")
+        print(subprocess.getoutput("git log -n 1 origin/main --pretty=oneline"))
+        print("\n")
+
     return files
 
 
@@ -63,13 +73,16 @@ def load_components(group: str = "") -> dict:
             return components
 
 
-def get_changed_packages() -> set[str]:
+def get_changed_packages(verbose: bool = False) -> set[str]:
     """Get the set of changed packages in the repository.
+
+    Args:
+        verbose (bool, optional): Whether to print detailed information. Defaults to False.
 
     Returns:
         set[str]: A set of package names that have changed.
     """
-    files = get_files_changed()
+    files = get_files_changed(verbose=verbose)
     return {file.split("/")[0] for file in files if file.startswith("alliander_")}
 
 

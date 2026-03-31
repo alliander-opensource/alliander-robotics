@@ -228,14 +228,13 @@ class Compose:
         Returns:
             dict: dictionary containing YAML data from docker-compose.yml, with added command.
         """
-        print(f"{package}")
         service = self.load_compose(f"{package}/docker-compose.yml")["services"][
             package
         ]
 
         # Use the branch tag if the package has changes:
         name_branch = subprocess.getoutput("git rev-parse --abbrev-ref HEAD")
-        if package in self.changed_packages:
+        if package in self.changed_packages and name_branch != "main":
             service["image"] += f":{name_branch}"
 
         if self.mode == "configuration-no-nvidia":
