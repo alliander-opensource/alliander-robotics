@@ -45,7 +45,7 @@ class _TestNavigationLidar:
         Raises:
             TimeoutError: When a timeout occurs.
         """
-        timeout = 5  # Lower timeout for testing purposes
+        # timeout = 5  # Lower timeout for testing purposes
 
         # 0) Log callbacks
         def joint_state_callback(msg: JointState) -> None:
@@ -115,7 +115,7 @@ class _TestNavigationLidar:
         # wait_for_node_active(
         #     test_node, f"/{self.platforms['vehicle'].namespace}/controller_server", 10.0
         # )
-        # wait_for_subscriber(publisher, timeout)
+        wait_for_subscriber(publisher, timeout)
         publisher.publish(goal_pose)
         test_node.get_logger().info("Published goal pose for navigation.")
 
@@ -174,7 +174,7 @@ for i, vehicle in enumerate(
         vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
         link(vehicle_platform, lidar_platform)
-        # vehicle_platform.nav2_config.navigation = True
+        vehicle_platform.nav2_config.navigation = True
         test_class = type(
             f"Test{vehicle.capitalize()}{lidar.capitalize()}Navigation{i}",
             (_TestNavigationLidar,),
