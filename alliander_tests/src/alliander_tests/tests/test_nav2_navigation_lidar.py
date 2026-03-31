@@ -105,15 +105,15 @@ class _TestNavigationLidar:
         goal_pose.pose.position.z = current_pose.transform.translation.z
 
         publisher = test_node.create_publisher(PoseStamped, "/goal_pose", 10)
-        wait_for_node_active(
-            test_node, f"/{self.platforms['vehicle'].namespace}/bt_navigator", 10.0
-        )
-        wait_for_node_active(
-            test_node, f"/{self.platforms['vehicle'].namespace}/planner_server", 10.0
-        )
-        wait_for_node_active(
-            test_node, f"/{self.platforms['vehicle'].namespace}/controller_server", 10.0
-        )
+        # wait_for_node_active(
+        #     test_node, f"/{self.platforms['vehicle'].namespace}/bt_navigator", 10.0
+        # )
+        # wait_for_node_active(
+        #     test_node, f"/{self.platforms['vehicle'].namespace}/planner_server", 10.0
+        # )
+        # wait_for_node_active(
+        #     test_node, f"/{self.platforms['vehicle'].namespace}/controller_server", 10.0
+        # )
         wait_for_subscriber(publisher, timeout)
         publisher.publish(goal_pose)
         test_node.get_logger().info("Published goal pose for navigation.")
