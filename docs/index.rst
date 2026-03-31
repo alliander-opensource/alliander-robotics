@@ -22,6 +22,7 @@
 
    content/moveit.md
    content/grasping.md
+   content/nav2.md
 
    content/docker.md
    content/workflows.md

@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: pr-closed
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  remove-branch-images:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - run: pip install pyyaml requests
+      - name: Get token
+        id: token
+        run: |
+          echo "TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d "{\"username\": \"${{ secrets.DOCKER_USERNAME }}\", \"password\": \"${{ secrets.DOCKER_TOKEN }}\"}" \
+          https://hub.docker.com/v2/users/login/ \
+          | jq -r .token)" >> $GITHUB_OUTPUT
+      - name: Remove tags on Docker Hub
+        run: python3 github.py --remove-tags-on-docker-hub ${{ steps.token.outputs.TOKEN }}

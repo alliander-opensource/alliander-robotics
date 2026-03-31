@@ -66,7 +66,6 @@ class LaunchArgument:
 
         Raises:
             TypeError: If the string value cannot be interpreted as a boolean.
-
         """
         string_value = self.string_value(context)
         if string_value in {"True", "true"}:
@@ -99,7 +98,6 @@ class LaunchArgument:
 
         Raises:
             RuntimeError: If the float value is outside the specified min or max range.
-
         """
         string_value = self.string_value(context)
         float_value = float(string_value)

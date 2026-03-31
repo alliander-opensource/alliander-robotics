@@ -9,6 +9,39 @@ https://github.com/ros-navigation/navigation2/blob/jazzy/nav2_bt_navigator/behav
 
 Also see:
 https://docs.nav2.org/behavior_trees/overview/detailed_behavior_tree_walkthrough.html
+
+Tree written out:
+MainTree
+└── RecoveryNode (NavigateRecovery) [retries: 6]
+    ├── PipelineSequence (NavigateWithReplanning)
+    │   ├── ControllerSelector
+    │   ├── PlannerSelector
+    │   ├── RateController (4 Hz)
+    │   │   └── RecoveryNode (ComputePathToPose) [retries: 20]
+    │   │       ├── ComputePathToPose
+    │   │       └── Wait (2s)
+    │   └── RecoveryNode (FollowPath) [retries: 1]
+    │       ├── ReactiveSequence (FollowPathWithGpsCheck)
+    |       |   ├── IsSystemHealthy (custom ConditionNode)
+    │       |   └── FollowPath
+    │       └── Sequence (Contextual Recovery, in case FollowPath fails)
+    │           ├── WouldAControllerRecoveryHelp?
+    │           └── ClearEntireCostmap (Local)
+    │
+    └── Sequence (Global Recovery Branch, in case PipelineSequence a.k.a. navigation fails)
+        ├── Fallback (If either says yes, proceed to ReactiveFallback)
+        │   ├── WouldAControllerRecoveryHelp?
+        │   └── WouldAPlannerRecoveryHelp?
+        │
+        └── ReactiveFallback (RecoveryFallback)
+            ├── GoalUpdated? (If yes, then exit recovery, else proceed to RoundRobin)
+            └── RoundRobin (RecoveryActions)
+                ├── Sequence (ClearingActions)
+                │   ├── ClearEntireCostmap (Local)
+                │   └── ClearEntireCostmap (Global)
+                ├── Spin (1.57 rad ≈ 90°)
+                ├── Wait (5s)
+                └── BackUp (0.30m @ 0.15 m/s)
 -->
 <root BTCPP_format="4" main_tree_to_execute="MainTree">
     <BehaviorTree ID="MainTree">
@@ -27,8 +60,11 @@ https://docs.nav2.org/behavior_trees/overview/detailed_behavior_tree_walkthrough
                     </RecoveryNode>
                 </RateController>
                 <RecoveryNode number_of_retries="1" name="FollowPath">
-                    <FollowPath path="{path}" controller_id="{selected_controller}"
-                        error_code_id="{follow_path_error_code}" />
+                    <ReactiveSequence name="FollowPathWithGpsCheck">
+                        <IsSystemHealthy/>
+                        <FollowPath path="{path}" controller_id="{selected_controller}"
+                                    error_code_id="{follow_path_error_code}"/>
+                    </ReactiveSequence>
                     <Sequence>
                         <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}" />
                         <ClearEntireCostmap name="ClearLocalCostmap-Context"

@@ -31,7 +31,6 @@ def get_sdf_file(world: str) -> str:
 
     Raises:
         ValueError: If the SDF file cannot be generated.
-
     """
     if world.startswith("map"):
         try:
@@ -98,7 +97,6 @@ def launch_setup(context: LaunchContext) -> list:
 
     Raises:
         ValueError: If the SDF file does not contain a world attribute with a name.
-
     """
     config = SimulatorConfig.from_str(config_arg.string_value(context))
     platforms = PlatformList.from_str(platform_list_arg.string_value(context))
@@ -117,7 +115,7 @@ def launch_setup(context: LaunchContext) -> list:
     gazebo = ExecuteProcess(
         cmd=cmd,
         shell=False,
-        additional_env=GazeboRosPaths.get_env(),
+        additional_env=GazeboRosPaths.get_env(),  # ty: ignore
     )
 
     bridge = Node(

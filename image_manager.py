@@ -5,8 +5,9 @@ import argparse
 import subprocess
 import sys
 
-import yaml
 from termcolor import colored, cprint
+
+import utils
 
 DOCKER_ORGANIZATION = "allianderrobotics"
 
@@ -27,23 +28,8 @@ class ImageManager:
             print(f"Architecture {self.arch} is not supported.")
             sys.exit(1)
 
-        self.components = {}
-        self.load_components()
+        self.components = utils.load_components()
         self.selected = []
-
-    def load_components(self) -> None:
-        """Loads components.yml file into a dictionary."""
-        with open("components.yml", encoding="utf-8") as stream:
-            try:
-                components: dict[str, dict] = yaml.safe_load(stream)
-            except yaml.YAMLError as e:
-                print(e)
-                sys.exit(1)
-
-        # Create flat directory combining all components with repository as key:
-        for group in components.values():
-            for component in group.values():
-                self.components[component["repository"]] = component
 
     def select_repositories(self, repositories: list[str]) -> None:
         """Selects repositories to pull or build. If no repositories are provided, all repositories are selected.
@@ -74,11 +60,15 @@ class ImageManager:
         print(f"pull: {colored_bool(pull)}, build: {colored_bool(build)}")
         print(f"repositories: {self.selected}")
 
+        changed_packages = utils.get_changed_packages()
         for repository in self.selected:
+            package = f"alliander_{repository}"
+            tag = utils.get_git_branch() if package in changed_packages else "latest"
+            tag = "latest" if tag == "main" else tag
             if pull:
-                self.run_pull_subprocess(repository)
+                self.run_pull_subprocess(repository, tag)
             if build:
-                self.run_build_subprocess(repository)
+                self.run_build_subprocess(repository, tag)
 
     @staticmethod
     def run_pull_subprocess(repository: str, tag: str = "latest") -> None:

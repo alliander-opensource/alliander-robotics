@@ -264,6 +264,21 @@ class PredefinedConfigurations:
         link(vehicle, lidar)
         self.plat_conf.platforms = [vehicle, lidar]
 
+    @register_configuration("lynx_gps_navigation")
+    def config_lynx_gps_navigation(self) -> None:  # noqa: D102
+        vehicle = Vehicle("lynx", (0, 0, 0.13))
+        vehicle.nav2_config.navigation = True
+        vehicle.nav2_config.gps = True
+        vehicle.nav2_config.window_size = 50
+        lidar = Lidar("ouster", (0.1, -0.1, 0.25))
+        gps = GPS("gps", (0, 0, 0.13))
+
+        link(vehicle, lidar)
+        link(vehicle, gps)
+        self.plat_conf.platforms = [vehicle, lidar, gps]
+        self.viz_conf.gui = True
+        self.sim_conf.world = "map_5.940906_51.966960"
+
     # Mobile Manipulators:
     @register_configuration("mm")
     def config_mm(self) -> None:  # noqa: D102

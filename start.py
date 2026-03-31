@@ -11,6 +11,7 @@ from pathlib import Path
 
 import yaml
 
+import utils
 from alliander_core.src.alliander_utilities.alliander_utilities.config_objects import (
     Platform,
 )
@@ -27,6 +28,7 @@ SERVICE = typing.Literal[
     "linting",
     "documentation",
     "joystick",
+    "diagnostics",
 ]
 MODE = typing.Literal[
     "configuration",
@@ -69,6 +71,8 @@ class Compose:
         self.gazebo_ui = False
         self.joystick = False
         self.rviz_yaml = False
+
+        self.changed_packages = utils.get_changed_packages()
 
     @staticmethod
     def get_src_mounts(package: str) -> list[str]:
@@ -131,7 +135,6 @@ class Compose:
 
         Raises:
             ValueError: if platform is not provided while a platform is needed.
-
         """
         needs_platform = service_type in {"platform", "moveit", "nav2"}
         if needs_platform and platform is None:
@@ -160,6 +163,14 @@ class Compose:
             "joystick": (
                 "alliander_joystick",
                 f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
+                {},
+            ),
+            "diagnostics": (
+                "alliander_diagnostics",
+                (
+                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
+                    f" use_sim_time:='{self.simulator}'"
+                ),
                 {},
             ),
             "linting": (
@@ -221,6 +232,12 @@ class Compose:
         service = self.load_compose(f"{package}/docker-compose.yml")["services"][
             package
         ]
+
+        # Use the branch tag if the package has changes:
+        name_branch = subprocess.getoutput("git rev-parse --abbrev-ref HEAD")
+        if package in self.changed_packages and name_branch != "main":
+            service["image"] += f":{name_branch}"
+
         if self.mode == "configuration-no-nvidia":
             service["init"] = True
             service["command"][-1] = f"xvfb-run -a {service['command'][-1]}"
@@ -349,6 +366,7 @@ class Compose:
             case "documentation":
                 self.add_service(content, "documentation")
             case "configuration" | "configuration-no-nvidia":
+                self.add_service(content, "diagnostics")
                 for platform in self.predefined_configuration.plat_conf.platforms:
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
@@ -396,6 +414,8 @@ class Compose:
         cmd = "docker compose -f compose.yml up"
         if self.mode in {"linting", "pytest", "pytest-no-nvidia"}:
             cmd += " --abort-on-container-exit"
+        if self.mode in {"linting", "pytest-no-nvidia"}:
+            cmd += " --quiet-pull"
 
         result = subprocess.CompletedProcess([], 0)
         with contextlib.suppress(KeyboardInterrupt):

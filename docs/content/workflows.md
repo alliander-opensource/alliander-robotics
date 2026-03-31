@@ -42,20 +42,27 @@ The Documentation workflow automatically builds HTML pages form the files in the
 
 ## Docker
 
-The Docker workflow is the most extensive workflow of this repository. This workflow can also be tested locally using [Act](https://github.com/nektos/act) with the command:
+The Docker workflows in this repository handle multi-architecture builds, selective component deployment, and cleanup. They support `amd64` and `arm64` architectures and are split across three workflows: `main.yml`, `pr.yml`, and `pr-closed.yml`.
 
-```bash
-act --rm -W .github/workflows/docker.yml
-```
+1. **Main Branch Workflow** (`main.yml`)
+    - **Select Components**: Gathers all components.
+    - **Build Base Images**: Builds `base` (Ubuntu) and `cuda` images for all architectures.
+    - **Build Component Images**: Builds all Ubuntu- and CUDA-based components that depend on the updated base images.
+    - **Linting**: Runs `alliander_tests` container with `--linting` to check code style.
+    - **Testing**: Runs integration and end-to-end tests in `alliander_tests` container with `--pytest-no-nvidia` (GPU tests skipped). Full test coverage is run using `--mode all`.
 
-The workflow contains the following steps, both for the `amd64` and `arm64` architectures:
+2. **Pull Request Workflow** (`pr.yml`)
+    - **Select Components**: Detects only the components affected by the PR relative to the main branch.
+    - **Conditional Builds**:
+      - Builds `base` and `cuda` only if `REBUILD_CORE` is true.
+      - Builds Ubuntu and CUDA component images only if `REBUILD_UBUNTU_IMAGES` or `REBUILD_CUDA_IMAGES` are `true`.
+      - Images are tagged with the branch name to allow traceability, keep images from different PRs separate, and ensure that the main branch always uses stable, working images rather than potentially unstable PR builds.
+    - **Linting**: Runs `alliander_tests` container with `--linting` to check code style.
+    - **Testing**: Runs tests only for components affected by the PR, skipping GPU tests with `--pytest-no-nvidia`.
 
-1. Check where there are changes compared to last commit for each of the `alliander_<package>` folders.
-2. If `alliander_core` is changed, a new `base` image is built.
-3. For all other packages with changes that are based on `allianderrobotics/base`, new images are built.
-4. For all built images based on `allianderrobotics/base`, a manifest is created. This combines the `amd64` and `arm64` images into one multi-arch image.
-5. If `alliander_core` is changed, a new `cuda` image is built.
-6. For all other packages with changes that are based on `allianderrobotics/cuda`, new images are built.
-7. For all built images based on `allianderrobotics/cuda`, a manifest is created.
-8. The `alliander_tests` container is run with the `--linting` flag, which runs the *Linting* as outlined above.
-9. The `alliander_tests` container is run with the `--pytest-no-nvidia` flag, which runs integration and end-to-end tests. Any tests requiring a GPU are not run, as the currently available GitHub runners do not have a GPU.
+3. **Pull Request Closed Workflow** (`pr-closed.yml`)
+    - **Automatic Cleanup**:
+      - Triggered when a pull request is closed (merged or discarded).
+      - Removes Docker images and tags associated with the PR branch on Docker Hub.
+      - Uses a GitHub Action to authenticate to Docker Hub and a Python script (`github.py`) to delete branch-specific tags.
+
