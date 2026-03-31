@@ -59,8 +59,7 @@ jobs:
       - name: Create manifest
         uses: ./.github/actions/create-manifest
         with:
-          components: |
-            base
+          components: '["base"]'
           tag: ${{ env.BRANCH_NAME }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -125,8 +124,7 @@ jobs:
       - name: Create manifest
         uses: ./.github/actions/create-manifest
         with:
-          components: |
-            cuda
+          components: '["cuda"]'
           tag: ${{ env.BRANCH_NAME }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
