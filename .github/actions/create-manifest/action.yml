@@ -5,8 +5,8 @@
 name: create-manifest
 description: Create a Docker manifest for multi-architecture images.
 inputs:
-  component:
-    description: "Component to create a manifest for."
+  components:
+    description: "A list of components to create manifests for."
     required: true
   tag:
     description: "Tag to use for the manifest."
@@ -29,15 +29,17 @@ runs:
       with:
         username: ${{ inputs.DOCKER_USERNAME }}
         password: ${{ inputs.DOCKER_TOKEN }}
-    - name: Get variables for ${{ inputs.component }}
-      shell: bash
-      id: variables
-      run: |
-        echo "REPOSITORY=$(yq .${{ inputs.component }}.repository components.yml)" >> $GITHUB_OUTPUT
     - name: Create manifest for ${{ inputs.component }}
       shell: bash
       run: |
-        docker buildx imagetools create -t \
-        ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }} \
-        ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-amd64 \
-        ${{ steps.variables.outputs.REPOSITORY }}:${{ inputs.tag }}-arm64
+        for component in ${{ inputs.components }}
+        do
+          echo "Creating manifest for: $component"
+          
+          REPOSITORY=$(yq .$component.repository components.yml)
+          
+          docker buildx imagetools create -t \
+          $REPOSITORY:${{ inputs.tag }} \
+          $REPOSITORY:${{ inputs.tag }}-amd64 \
+          $REPOSITORY:${{ inputs.tag }}-arm64
+        done
