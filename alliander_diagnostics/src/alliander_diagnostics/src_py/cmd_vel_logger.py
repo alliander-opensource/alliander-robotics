@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import math
-from os import name
 
 import rclpy
 from geometry_msgs.msg import TwistStamped
