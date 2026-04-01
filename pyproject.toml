@@ -32,6 +32,9 @@ linting = [
     "ruff>=0.14.13",
     "ty>=0.0.12",
 ]
+alliander-diagnostics = [
+    "numpy>=2.4.1",
+]
 alliander-franka = [
     "numpy>=2.4.1",
 ]
