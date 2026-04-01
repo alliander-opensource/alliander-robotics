@@ -6,9 +6,12 @@ import contextlib
 import sys
 import time
 
+import pytest
 import rclpy
 from alliander_utilities.config_objects import Lidar, Vehicle, link
 from geometry_msgs.msg import PoseStamped, TransformStamped
+from nav2_msgs.action import ComputePathToPose
+from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.time import Time
 from tf2_ros import TransformException  # ty: ignore[unresolved-import]
@@ -57,6 +60,20 @@ class _TestNavigationLidar:
             if time.time() - start_time > timeout:
                 raise TimeoutError()
 
+        # 1.5) Wait for compute_path_to_pose to become ready
+        test_node.get_logger().info("Wait for compute_path_to_pose to become available.")
+        planner_client = ActionClient(
+            test_node,
+            ComputePathToPose,
+            f"/{self.platforms['vehicle'].namespace}/compute_path_to_pose",
+        )
+
+        start = time.time()
+        while not planner_client.wait_for_server(timeout_sec=1.0):
+            rclpy.spin_once(test_node, timeout_sec=0)
+            if time.time() - start > timeout:
+                pytest.fail("Planner action server never became available")
+
         # 2) Publish goal pose 3 meter in front of current position:
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = "map"
@@ -86,7 +103,7 @@ class _TestNavigationLidar:
                 )
             now = time.time()
             if now - last_log_time >= 1.0:
-                test_node.get_logger().info(f"Distance to goal: {distance:.2f}m")
+                test_node.get_logger().info(f"Distance to goal: {distance:.6f}m")
                 last_log_time = now
             if time.time() - start_time > timeout:
                 timed_out = True
