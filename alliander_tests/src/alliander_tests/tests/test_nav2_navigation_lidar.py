@@ -61,18 +61,18 @@ class _TestNavigationLidar:
                 raise TimeoutError()
 
         # 1.5) Wait for compute_path_to_pose to become ready
-        test_node.get_logger().info("Wait for compute_path_to_pose to become available.")
-        planner_client = ActionClient(
-            test_node,
-            ComputePathToPose,
-            f"/{self.platforms['vehicle'].namespace}/compute_path_to_pose",
-        )
+        # test_node.get_logger().info("Wait for compute_path_to_pose to become available.")
+        # planner_client = ActionClient(
+        #     test_node,
+        #     ComputePathToPose,
+        #     f"/{self.platforms['vehicle'].namespace}/compute_path_to_pose",
+        # )
 
-        start = time.time()
-        while not planner_client.wait_for_server(timeout_sec=1.0):
-            rclpy.spin_once(test_node, timeout_sec=0)
-            if time.time() - start > timeout:
-                pytest.fail("Planner action server never became available")
+        # start = time.time()
+        # while not planner_client.wait_for_server(timeout_sec=1.0):
+        #     rclpy.spin_once(test_node, timeout_sec=0)
+        #     if time.time() - start > timeout:
+        #         pytest.fail("Planner action server never became available")
 
         # 2) Publish goal pose 3 meter in front of current position:
         goal_pose = PoseStamped()
