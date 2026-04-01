@@ -81,9 +81,9 @@ class _TestNavigationLidar:
                 current_pose = tf_buffer.lookup_transform(
                     "map", f"{self.platforms['vehicle'].namespace}/base_link", Time()
                 )
-                distance = abs(
-                    current_pose.transform.translation.x - goal_pose.pose.position.x
-                )
+            distance = abs(
+                current_pose.transform.translation.x - goal_pose.pose.position.x
+            )
             now = time.time()
             if now - last_log_time >= 1.0:
                 test_node.get_logger().info(f"Distance to goal: {distance:.6f}m")
