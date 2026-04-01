@@ -3,19 +3,21 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import math
+from os import name
 
 import rclpy
 from geometry_msgs.msg import TwistStamped
 from rclpy.node import Node
 
 # Thresholds for abnormal behaviour:
-MAX_LINEAR_X = 2.0       # m/s
-MAX_LINEAR_Y = 0.1       # m/s — differential drive should not move sideways
-MAX_ANGULAR_Z = 2.0      # rad/s
+MAX_LINEAR_X = 2.0  # m/s
+MAX_LINEAR_Y = 0.1  # m/s — differential drive should not move sideways
+MAX_ANGULAR_Z = 2.0  # rad/s
 
 
 class CmdVelLogger(Node):
     """Test."""
+
     def __init__(self) -> None:
         """Test."""
         super().__init__("cmd_vel_logger")
@@ -25,33 +27,19 @@ class CmdVelLogger(Node):
         self.sub_lynx = self.create_subscription(
             TwistStamped, "/lynx/cmd_vel", self._callback_lynx, 10
         )
-        self.get_logger().info("cmd_vel_logger started, listening to /panther/cmd_vel and /lynx/cmd_vel")
+        self.get_logger().info(
+            "cmd_vel_logger started, listening to /panther/cmd_vel and /lynx/cmd_vel"
+        )
 
     def _callback_panther(self, msg: TwistStamped) -> None:
-        self._check_nan(msg)
+        self._check_nan(msg, "panther")
         self._check_limits(msg)
-        publishers = self.get_publishers_info_by_topic("/panther/cmd_vel")
-        for pub in publishers:
-            self.get_logger().info(
-                f"Publisher on /panther/cmd_vel: "
-                f"node={pub.node_name}, "
-                f"namespace={pub.node_namespace}, "
-                f"type={pub.topic_type}"
-            )
 
     def _callback_lynx(self, msg: TwistStamped) -> None:
-        self._check_nan(msg)
+        self._check_nan(msg, "lynx")
         self._check_limits(msg)
-        publishers = self.get_publishers_info_by_topic("/lynx/cmd_vel")
-        for pub in publishers:
-            self.get_logger().info(
-                f"Publisher on /lynx/cmd_vel: "
-                f"node={pub.node_name}, "
-                f"namespace={pub.node_namespace}, "
-                f"type={pub.topic_type}"
-            )
 
-    def _check_nan(self, msg: TwistStamped) -> None:
+    def _check_nan(self, msg: TwistStamped, namespace: str) -> None:
         msg = msg.twist
         values = {
             "linear.x": msg.linear.x,
@@ -63,7 +51,17 @@ class CmdVelLogger(Node):
         }
         for field, value in values.items():
             if math.isnan(value) or math.isinf(value):
-                self.get_logger().error(f"cmd_vel contains invalid value in {field}: {value}")
+                self.get_logger().error(
+                    f"cmd_vel contains invalid value in {field}: {value}"
+                )
+                publishers = self.get_publishers_info_by_topic(f"/{namespace}/cmd_vel")
+                for pub in publishers:
+                    self.get_logger().info(
+                        f"Publisher on /{namespace}/cmd_vel: "
+                        f"node={pub.node_name}, "
+                        f"namespace={pub.node_namespace}, "
+                        f"type={pub.topic_type}"
+                    )
 
     def _check_limits(self, msg: TwistStamped) -> None:
         msg = msg.twist
