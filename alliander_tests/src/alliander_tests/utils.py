@@ -13,7 +13,6 @@ from alliander_interfaces.srv import StringSrv
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from launch_testing_ros.wait_for_topics import WaitForTopics
-from lifecycle_msgs.srv import GetState
 from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle
 from rclpy.client import Client
@@ -67,47 +66,6 @@ def wait_for_subscriber(pub: Publisher, timeout: int) -> None:
         if time.time() > (start_time + timeout):
             raise TimeoutError()
         time.sleep(0.1)
-
-
-def wait_for_node_active(node: Node, lifecycle_node_name: str, timeout: float) -> None:
-    """Wait for a subscriber to be ready for a given publisher.
-
-    Args:
-        node (Node): The publisher to wait for.
-        lifecycle_node_name (str): The name of the lifecycle node to wait for.
-        timeout (float): The maximum time to wait for a subscriber in seconds.
-
-    Raises:
-        TimeoutError: If no subscriber is found within the timeout period.
-
-    """
-    client = node.create_client(GetState, f"{lifecycle_node_name}/get_state")
-
-    if not client.wait_for_service(timeout_sec=timeout):
-        raise TimeoutError(f"Service {lifecycle_node_name} not available")
-
-    start_time = time.time()
-
-    while True:
-        request = GetState.Request()
-        future = client.call_async(request)
-
-        rclpy.spin_until_future_complete(node, future, timeout_sec=1.0)
-
-        if future.result() is not None:
-            state_id = future.result().current_state.id
-            state_label = future.result().current_state.label
-
-            node.get_logger().info(f"{lifecycle_node_name} state: {state_label}")
-
-            active_state = 3
-            if state_id == active_state:
-                return
-
-        if time.time() - start_time > timeout:
-            raise TimeoutError(f"{lifecycle_node_name} did not become ACTIVE")
-
-        time.sleep(0.5)
 
 
 def get_joint_position(namespace: str, joint: str, timeout: int) -> float:

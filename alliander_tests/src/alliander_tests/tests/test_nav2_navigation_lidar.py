@@ -3,22 +3,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import contextlib
-import math
 import sys
 import time
 
 import rclpy
 from alliander_utilities.config_objects import Lidar, Vehicle, link
-from geometry_msgs.msg import PoseStamped, TransformStamped, TwistStamped
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped, TransformStamped
 from rclpy.node import Node
 from rclpy.time import Time
-from sensor_msgs.msg import JointState
 from tf2_ros import TransformException  # ty: ignore[unresolved-import]
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
-from ..utils import call_trigger_service, wait_for_node_active, wait_for_subscriber
+from ..utils import call_trigger_service, wait_for_subscriber
 
 
 class _TestNavigationLidar:
@@ -45,44 +42,6 @@ class _TestNavigationLidar:
         Raises:
             TimeoutError: When a timeout occurs.
         """
-        # timeout = 5  # Lower timeout for testing purposes
-
-        # 0) Log callbacks
-        def joint_state_callback(msg: JointState) -> None:
-            joint_state: JointState = msg
-            if math.isnan(joint_state.position[0]):
-                test_node.get_logger().error("ERROR: joint state is NaN!")
-
-        test_node.create_subscription(
-            JointState,
-            f"/{self.platforms['vehicle'].namespace}/joint_states",
-            joint_state_callback,
-            10,
-        )
-
-        def odom_callback(msg: Odometry) -> None:
-            odom: Odometry = msg
-            if math.isnan(odom.pose.pose.position.x):
-                test_node.get_logger().error("ERROR: odom is NaN!")
-
-        test_node.create_subscription(
-            Odometry,
-            f"/{self.platforms['vehicle'].namespace}/odom",
-            odom_callback,
-            10,
-        )
-
-        def twist_callback(msg: TwistStamped) -> None:
-            twist: TwistStamped = msg
-            if math.isnan(twist.twist.linear.x):
-                test_node.get_logger().error("ERROR: cmd_vel is NaN!")
-
-        test_node.create_subscription(
-            TwistStamped,
-            f"/{self.platforms['vehicle'].namespace}/cmd_vel",
-            twist_callback,
-            10,
-        )
         # 1) Obtain current pose in map frame:
         tf_buffer = Buffer()
         TransformListener(tf_buffer, test_node)
@@ -90,7 +49,7 @@ class _TestNavigationLidar:
 
         start_time = time.time()
         while current_pose == TransformStamped():
-            rclpy.spin_once(test_node, timeout_sec=0)  # TODO: change to 0.1 maybe?
+            rclpy.spin_once(test_node, timeout_sec=0)
             with contextlib.suppress(TransformException):
                 current_pose = tf_buffer.lookup_transform(
                     "map", f"{self.platforms['vehicle'].namespace}/base_link", Time()
@@ -106,15 +65,6 @@ class _TestNavigationLidar:
         goal_pose.pose.position.z = current_pose.transform.translation.z
 
         publisher = test_node.create_publisher(PoseStamped, "/goal_pose", 10)
-        # wait_for_node_active(
-        #     test_node, f"/{self.platforms['vehicle'].namespace}/bt_navigator", 10.0
-        # )
-        # wait_for_node_active(
-        #     test_node, f"/{self.platforms['vehicle'].namespace}/planner_server", 10.0
-        # )
-        # wait_for_node_active(
-        #     test_node, f"/{self.platforms['vehicle'].namespace}/controller_server", 10.0
-        # )
         wait_for_subscriber(publisher, timeout)
         publisher.publish(goal_pose)
         test_node.get_logger().info("Published goal pose for navigation.")
@@ -142,7 +92,7 @@ class _TestNavigationLidar:
                 timed_out = True
                 break
 
-        test_node.get_logger().info(f"Final TEST distance to goal: {distance}.")
+        test_node.get_logger().info(f"Final distance to goal: {distance}.")
 
         assert not timed_out, (
             f"Timeout: distance {distance} > tolerance {navigation_distance_tolerance}"
@@ -156,27 +106,14 @@ class _TestNavigationLidar:
         )
 
 
-for i, vehicle in enumerate(
-    [
-        "panther",
-        "lynx",
-        "panther",
-        "lynx",
-        "panther",
-        "lynx",
-        "panther",
-        "lynx",
-        "panther",
-        "lynx",
-    ]
-):
-    for lidar in ["velodyne", "ouster", "velodyne", "ouster", "velodyne"]:
+for vehicle in ["panther", "lynx"]:
+    for lidar in ["velodyne", "ouster"]:
         vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
         link(vehicle_platform, lidar_platform)
         vehicle_platform.nav2_config.navigation = True
         test_class = type(
-            f"Test{vehicle.capitalize()}{lidar.capitalize()}Navigation{i}",
+            f"Test{vehicle.capitalize()}{lidar.capitalize()}Navigation",
             (_TestNavigationLidar,),
             {"platforms": {"vehicle": vehicle_platform, "lidar": lidar_platform}},
         )

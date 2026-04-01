@@ -102,22 +102,7 @@ def control_class(request: SubRequest) -> Generator:
     if Configurations.mode != "all":
         skip_if_no_changes(services)
     pull_missing_images()
-    cprint("Check ros2 node list before starting containers.", "blue")
-
-    active_nodes = subprocess.check_output(
-        ["ros2", "node", "list"],
-        stdin=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    while active_nodes != bytes():
-        active_nodes = subprocess.check_output(
-            ["ros2", "node", "list"],
-            stdin=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        cprint(f"Waiting for the following nodes to exit: {active_nodes.decode("utf-8")}", "red")
-        time.sleep(1)
-    cprint("No more nodes active.", "blue")
+    wait_for_removal_nodes()
 
     process = start_containers(services)
 
@@ -236,6 +221,24 @@ def pull_missing_images() -> None:
     if services_to_pull:
         cprint(f"Pulling missing images: {services_to_pull}", "yellow")
         subprocess.run(cmd, timeout=3600, shell=True, check=True)
+
+
+def wait_for_removal_nodes() -> None:
+    """Wait for all active nodes to be stopped before moving on."""
+    cprint("Checking ros2 node list before starting containers.", "blue")
+
+    while active_nodes := subprocess.check_output(
+        ["ros2", "node", "list"],
+        stdin=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    ):
+        cprint(
+            f"Waiting for the following nodes to exit: {active_nodes.decode('utf-8').strip()}",
+            "red",
+        )
+        time.sleep(1)
+
+    cprint("No more nodes active, moving on.", "blue")
 
 
 def start_containers(services: list) -> subprocess.Popen:
