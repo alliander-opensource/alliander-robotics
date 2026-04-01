@@ -50,6 +50,9 @@ def remove_tags_on_docker_hub(token: str) -> None:
     Args:
         token (str): the token to authenticate with the Docker Hub API.
     """
+    tag_name = utils.get_git_branch()
+    print((f"Checking for tags on Docker Hub with name {tag_name} to remove."))
+
     request = requests.get("https://hub.docker.com/v2/repositories/allianderrobotics/")
     number_of_repositories = request.json()["count"]
 
