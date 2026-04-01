@@ -28,16 +28,28 @@ class CmdVelLogger(Node):
         self.get_logger().info("cmd_vel_logger started, listening to /panther/cmd_vel and /lynx/cmd_vel")
 
     def _callback_panther(self, msg: TwistStamped) -> None:
-        sender = msg.header.frame_id or "<unknown>"
-        self.get_logger().info(f"Received from frame_id: {sender}")
         self._check_nan(msg)
         self._check_limits(msg)
+        publishers = self.get_publishers_info_by_topic("/panther/cmd_vel")
+        for pub in publishers:
+            self.get_logger().info(
+                f"Publisher on /panther/cmd_vel: "
+                f"node={pub.node_name}, "
+                f"namespace={pub.node_namespace}, "
+                f"type={pub.topic_type}"
+            )
 
     def _callback_lynx(self, msg: TwistStamped) -> None:
-        sender = msg.header.frame_id or "<unknown>"
-        self.get_logger().info(f"Received from frame_id: {sender}")
         self._check_nan(msg)
         self._check_limits(msg)
+        publishers = self.get_publishers_info_by_topic("/lynx/cmd_vel")
+        for pub in publishers:
+            self.get_logger().info(
+                f"Publisher on /lynx/cmd_vel: "
+                f"node={pub.node_name}, "
+                f"namespace={pub.node_namespace}, "
+                f"type={pub.topic_type}"
+            )
 
     def _check_nan(self, msg: TwistStamped) -> None:
         msg = msg.twist
