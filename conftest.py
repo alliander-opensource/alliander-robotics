@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Global pytest fixtures for ROS 2 integration testing."""
-
 import json
 import os
 import signal
@@ -35,10 +34,12 @@ class Configurations:
     Attributes:
         mode (str): The mode of testing.
         changed_packages (set[str]): The set of packages that have changed.
+        ros_domain_id (int): ...
     """
 
     mode: str
     changed_packages: set[str]
+    ros_domain_id: int = 0
 
 
 def pytest_addoption(parser: Parser) -> None:
@@ -96,6 +97,8 @@ def control_class(request: SubRequest) -> Generator:
     Yields:
         Generator: Starts and stops Docker containers for each module.
     """
+    Configurations.ros_domain_id += 1
+    os.environ["ROS_DOMAIN_ID"] = f"{Configurations.ros_domain_id}"
     print("")
     cprint(f"[{request.cls.__name__}]: started", "blue")
     services = create_compose_file(request)
@@ -140,7 +143,7 @@ def create_compose_file(request: SubRequest) -> list:
     Returns:
         list: The list of services defined in the compose file.
     """
-    compose = Compose()
+    compose = Compose(Configurations.ros_domain_id)
     if os.getenv("NO_NVIDIA", default="false").lower() == "true":
         compose.mode = "configuration-no-nvidia"
     else:
