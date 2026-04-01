@@ -10,6 +10,7 @@ bt_navigator:
     robot_base_frame: substitute_me
     odom_topic: substitute_me
     default_server_timeout: 10000
+    default_cancel_timeout: 10000
     wait_for_service_timeout: 10000
     error_code_names:
       - compute_path_error_code
