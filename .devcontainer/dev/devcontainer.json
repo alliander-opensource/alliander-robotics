@@ -30,6 +30,7 @@
         "twxs.cmake",
         "kylinideteam.cmake-intellisence",
         "redhat.vscode-yaml",
+        "redhat.vscode-xml",
         "github.vscode-pull-request-github"
       ]
     }

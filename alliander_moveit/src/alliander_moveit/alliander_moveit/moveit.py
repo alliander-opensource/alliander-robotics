@@ -32,11 +32,12 @@ class Moveit:
             robot_description (dict): The robot description dictionary.
             platform (str): The platform of the robot.
         """
-        match platform:
-            case "franka":
-                package = "alliander_franka_moveit_config"
-        srdf_path = get_file_path(package, ["config"], "fr3.srdf")
-        moveit_config_builder = MoveItConfigsBuilder(platform, package_name=package)
+        package = "alliander_moveit"
+        package_config = f"alliander_{platform}_moveit_config"
+        srdf_path = get_file_path(package_config, ["config"], "arm.srdf")
+        moveit_config_builder = MoveItConfigsBuilder(
+            platform, package_name=package_config
+        )
 
         # load servos configuration:
         servo_params_path = get_file_path(package, ["config"], "servo_params.yaml")
@@ -47,7 +48,7 @@ class Moveit:
 
         # load yaml's to moveit_configs:
         moveit_config_builder.trajectory_execution(
-            get_file_path(package, ["config"], "moveit_controllers.yaml")
+            get_file_path(package_config, ["config"], "moveit_controllers.yaml")
         )
         moveit_config_builder.moveit_cpp(
             get_file_path(package, ["config"], "planning_pipeline.yaml")

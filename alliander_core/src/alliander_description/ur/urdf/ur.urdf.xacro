@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="ur">
+
+  <xacro:arg name="simulation" default="" />
+  <xacro:arg name="simulation_controllers" default="" />
+  <xacro:arg name="ros_namespace" default="" />
+  <xacro:arg name="childs" default="${[]}" />
+
+  <xacro:arg name="name" default="ur" />
+  <xacro:arg name="ur_type" default="ur7e" />
+
+  <xacro:if value="$(arg simulation)">
+    <xacro:include filename="$(find alliander_description)/ur/urdf/adapted/ur_gz.urdf.xacro" />
+  </xacro:if>
+  <xacro:unless value="$(arg simulation)">
+    <xacro:include filename="$(find ur_robot_driver)/urdf/ur.urdf.xacro" />
+  </xacro:unless>
+
+  <!-- Create detachable joints with given childs: -->
+  <xacro:include filename="$(find alliander_utilities)/urdf/detachable_joints.urdf.xacro" />
+  <xacro:detachable_joints childs="${$(arg childs)}" />
+
+</robot>

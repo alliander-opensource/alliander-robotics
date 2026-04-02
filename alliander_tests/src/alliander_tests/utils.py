@@ -13,6 +13,8 @@ from alliander_interfaces.srv import StringSrv
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from launch_testing_ros.wait_for_topics import WaitForTopics
+from rcl_interfaces.msg import ParameterValue
+from rcl_interfaces.srv import GetParameters
 from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle
 from rclpy.client import Client
@@ -163,6 +165,31 @@ def call_trigger_service(node: Node, service_name: str, timeout: int) -> bool:
     return future.result() is not None
 
 
+def get_parameter(
+    node: Node, parameter_node: str, parameter_name: str, timeout: int
+) -> ParameterValue:
+    """Get a parameter using a service call.
+
+    Args:
+        node (Node): The rclpy node used to get the parameter.
+        parameter_node (str): The name of the node that has the parameter.
+        parameter_name (str): The name of the parameter to get.
+        timeout (int): Timeout in seconds to wait for the parameter.
+
+    Returns:
+        ParameterValue: The value of the parameter
+    """
+    client = create_ready_service_client(
+        node, GetParameters, f"{parameter_node}/get_parameters", timeout
+    )
+    request = GetParameters.Request()
+    request.names = [parameter_name]
+
+    future = client.call_async(request)
+    rclpy.spin_until_future_complete(node, future=future, timeout_sec=timeout)
+    return future.result().values[0]
+
+
 def call_trigger_action(node: Node, action_name: str, timeout: int) -> bool:
     """Call a trigger action and return True if the action was called successfully.
 
@@ -223,6 +250,23 @@ def create_ready_action_client(
     return client
 
 
+def get_message(message_type: type, topic: str, timeout: int) -> Any:
+    """Try to receive a message of a specific type on a given topic within a timeout period.
+
+    Args:
+        message_type (type): The type of the message to wait for.
+        topic (str): The topic to listen to.
+        timeout (int): The maximum time in seconds to wait for the message.
+
+    Returns:
+        Any: The received message, or None if no message was received within the timeout.
+    """
+    wait_for_topics = WaitForTopics([(topic, message_type)], timeout)
+    received = wait_for_topics.wait()
+    wait_for_topics.shutdown()
+    return wait_for_topics.received_messages(topic)[-1] if received else None
+
+
 def assert_for_message(message_type: type, topic: str, timeout: int) -> None:
     """Assert that a message of a specific type is received on a given topic within a timeout period.
 
@@ -231,10 +275,8 @@ def assert_for_message(message_type: type, topic: str, timeout: int) -> None:
         topic (str): The topic to listen to.
         timeout (int): The maximum time in seconds to wait for the message.
     """
-    wait_for_topics = WaitForTopics([(topic, message_type)], timeout)
-    received = wait_for_topics.wait()
-    wait_for_topics.shutdown()
-    assert received, (
+    message = get_message(message_type, topic, timeout)
+    assert message is not None, (
         f"No message received of type {message_type.__name__} on topic {topic} within {timeout} seconds."
     )
 
@@ -303,20 +345,22 @@ def call_move_to_configuration_service(
 
 def follow_joint_trajectory_goal(
     node: Node,
+    names: list[str],
     positions: list[float],
     controller: str,
     timeout: int,
-    time_from_start: int = 3,
 ) -> None:
     """Test sending a joint trajectory goal to the arm controller.
 
     Args:
         node (Node): The ROS 2 node to use for the action client.
+        names (list[str]): The names of the joints to control.
         positions (list[float]): The joint positions to move to.
         controller (str): The name of the controller to use.
         timeout (int): The timeout in seconds for the action client.
-        time_from_start (int, optional): The time from start in seconds. Defaults to 3.
     """
+    time_from_start = 3
+
     action_client = create_ready_action_client(
         node,
         FollowJointTrajectory,
@@ -325,15 +369,7 @@ def follow_joint_trajectory_goal(
     )
 
     goal_msg = FollowJointTrajectory.Goal()
-    goal_msg.trajectory.joint_names = [
-        "fr3_joint1",
-        "fr3_joint2",
-        "fr3_joint3",
-        "fr3_joint4",
-        "fr3_joint5",
-        "fr3_joint6",
-        "fr3_joint7",
-    ]
+    goal_msg.trajectory.joint_names = names
 
     point = JointTrajectoryPoint()
     point.positions = positions

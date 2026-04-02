@@ -191,6 +191,8 @@ class Platform(Config):
                 return "base_link"
             case "franka":
                 return "fr3_hand"
+            case "ur":
+                return "wrist_3_link"
             case _:
                 raise ValueError(
                     f"No link_to_child for unknown platform name: {self.name}"

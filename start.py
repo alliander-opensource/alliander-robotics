@@ -301,6 +301,8 @@ class Compose:
         env_vars = service.get("environment", [])
         if self.predefined_configuration.sim_conf.load_ui:
             env_vars.append("GAZEBO_UI=true")
+        if self.visualization:
+            env_vars.append("VISUALIZATION=true")
         if self.dev:
             env_vars.append("DEV_MOUNTS=true")
             env_vars.append(f"HOST_CWD={Compose.host_cwd}")
@@ -518,15 +520,15 @@ if __name__ == "__main__":
     config_setup = PredefinedConfigurations()
     config_setup.sim_conf.load_ui = args.ui
     compose.dev = args.dev
+    compose.simulator = not args.hardware
+    compose.visualization = args.visualization
+    compose.joystick = args.joystick
+    compose.gazebo_ui = args.ui
     if args.configuration:
         config_setup.apply_configuration(args.configuration)
-        compose.simulator = not args.hardware
-        compose.visualization = args.visualization
-        compose.joystick = args.joystick
         compose.mode = "configuration"
     elif isinstance(args.pytest, list):
         arguments = " " + " ".join(args.pytest)
-        compose.gazebo_ui = args.ui
         compose.mode = "pytest"
     elif isinstance(args.pytest_no_nvidia, list):
         arguments = " " + " ".join(args.pytest_no_nvidia)

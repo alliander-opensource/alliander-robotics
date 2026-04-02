@@ -34,7 +34,7 @@ pose_tracking:
 ############################## OUTGOING COMMAND SETTINGS #######################
 
 status_topic: "~/status"
-command_out_topic: "/fr3_arm_controller/joint_trajectory"
+command_out_topic: "/joint_trajectory_controller/joint_trajectory"
 command_out_type: "trajectory_msgs/JointTrajectory"
 publish_joint_positions: true
 publish_joint_velocities: true

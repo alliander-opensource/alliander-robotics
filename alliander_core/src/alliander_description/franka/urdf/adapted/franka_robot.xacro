@@ -107,6 +107,13 @@ https://code.visualstudio.com/docs/editing/codebasics#_compare-files
       />
     </xacro:if>
 
+    <!-- Add base_link: -->
+    <link name="base_link" />
+    <joint name="base_joint" type="fixed">
+      <parent link="base_link" />
+      <child  link="${arm_prefix}${arm_id}_link0" />
+    </joint>
+
     <!-- Definition of additional Gazebo tags -->
     <xacro:if value="${gazebo}">
 
@@ -118,7 +125,7 @@ https://code.visualstudio.com/docs/editing/codebasics#_compare-files
         <joint name="${parent}_joint" type="fixed">
           <origin xyz="${xyz}" rpy="${rpy}" />
           <parent link="${parent}" />
-          <child  link="${arm_prefix}${arm_id}_link0" />
+          <child  link="base_link" />
         </joint>
       </xacro:if>
 

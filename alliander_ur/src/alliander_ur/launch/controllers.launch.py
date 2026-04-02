@@ -4,9 +4,7 @@
 
 from alliander_utilities.config_objects import Arm
 from alliander_utilities.launch_argument import LaunchArgument
-from alliander_utilities.launch_utils import SKIP
 from alliander_utilities.register import Register
-from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
@@ -17,7 +15,7 @@ platform_arg = LaunchArgument("platform_config", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
-    """Setup the launch description for the Franka controllers.
+    """Setup the launch description for the UR controllers.
 
     Args:
         context (LaunchContext): The launch context.
@@ -49,49 +47,14 @@ def launch_setup(context: LaunchContext) -> list:
         namespace=arm_config.namespace,
     )
 
-    if arm_config.simulation:
-        fr3_gripper = Node(
-            package="alliander_franka",
-            executable="fr3_gripper_simulation",
-            output="screen",
-            namespace=arm_config.namespace,
-        )
-    else:
-        fr3_gripper = Node(
-            package="franka_gripper",
-            executable="franka_gripper_node",
-            name="fr3_gripper",
-            parameters=[
-                {
-                    "robot_ip": arm_config.ip_address,
-                    "joint_names": ["fr3_finger_joint1", "fr3_finger_joint2"],
-                },
-                get_file_path("franka_gripper", ["config"], "franka_gripper_node.yaml"),
-            ],
-            namespace=arm_config.namespace,
-        )
-
-    gripper_action_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["gripper_action_controller"],
-        namespace=arm_config.namespace,
-    )
-
     return [
         Register.on_exit(joint_state_broadcaster_spawner, context),
         Register.on_exit(joint_trajectory_controller_spawner, context),
-        Register.on_start(fr3_gripper, context),
-        (
-            Register.on_exit(gripper_action_controller_spawner, context)
-            if arm_config.simulation
-            else SKIP
-        ),
     ]
 
 
 def generate_launch_description() -> LaunchDescription:
-    """Generate the launch description for the Franka controllers.
+    """Generate the launch description for the UR controllers.
 
     Returns:
         LaunchDescription: The launch description containing the nodes and actions.
