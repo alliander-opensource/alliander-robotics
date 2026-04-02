@@ -45,6 +45,8 @@ class SpawnPlatform(Node):
 
         """
         for platform in platforms:
+            if platform.name in {"meta"}:
+                continue
             position = np.array(platform.position)
             orientation = np.array(platform.orientation)
 
