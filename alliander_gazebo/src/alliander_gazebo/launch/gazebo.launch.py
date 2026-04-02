@@ -157,7 +157,6 @@ def launch_setup(context: LaunchContext) -> list:
             context,
         ),
         Register.on_start(unpause_sim, context),
-        # Register.on_log(spawn_platforms, "All platforms spawned!", context),
         Register.on_exit(spawn_platforms, context),
     ]
 
