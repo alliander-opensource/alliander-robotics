@@ -149,6 +149,12 @@ def launch_setup(context: LaunchContext) -> list:
         shell=False,
     )
 
+    wait_for_clock = Node(
+        package="alliander_gazebo",
+        executable="wait_for_clock.py",
+        output="screen",
+    )
+
     return [
         Register.on_start(gazebo, context),
         Register.on_log(
@@ -157,7 +163,8 @@ def launch_setup(context: LaunchContext) -> list:
             context,
         ),
         Register.on_start(unpause_sim, context),
-        Register.on_exit(spawn_platforms, context),
+        Register.on_exit(wait_for_clock, context),
+        Register.on_start(spawn_platforms, context),
     ]
 
 
