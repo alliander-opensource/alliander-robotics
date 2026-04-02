@@ -5,7 +5,7 @@ from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 
 platform_arg = LaunchArgument("platform_config", "")
 
@@ -19,15 +19,29 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
+    namespace = "meta"
+    use_sim_time = True
+
     ros_tcp_endpoint = Node(
         package="ros_tcp_endpoint",
         executable="default_server_endpoint",
         emulate_tty=True,
         parameters=[{"ROS_IP": "10.223.237.24"}, {"ROS_TCP_PORT": 10000}],
+        namespace=namespace,
+        remappings=[
+            ("/tf", f"/{namespace}/tf"),
+            ("/tf_static", f"/{namespace}/tf_static"),
+        ],
+    )
+
+    teleoperation = Node(
+        package="alliander_meta", executable="teleoperation.py", namespace=namespace
     )
 
     return [
+        SetParameter(name="use_sim_time", value=use_sim_time),
         Register.on_start(ros_tcp_endpoint, context),
+        Register.on_start(teleoperation, context),
     ]
 
 

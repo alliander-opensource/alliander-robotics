@@ -40,6 +40,9 @@ alliander-gazebo = [
     "scipy>=1.17.0",
     "xmltodict>=1.0.2",
 ]
+alliander-meta = [
+    "numpy>=2.4.1",
+]
 alliander-moveit = [
     "xmltodict>=1.0.2",
 ]

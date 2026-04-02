@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = "==3.12.*"
 
 [[package]]
@@ -97,6 +97,9 @@ alliander-gazebo = [
     { name = "scipy" },
     { name = "xmltodict" },
 ]
+alliander-meta = [
+    { name = "numpy" },
+]
 alliander-moveit = [
     { name = "xmltodict" },
 ]
@@ -152,6 +155,7 @@ alliander-gazebo = [
     { name = "scipy", specifier = ">=1.17.0" },
     { name = "xmltodict", specifier = ">=1.0.2" },
 ]
+alliander-meta = [{ name = "numpy", specifier = ">=2.4.1" }]
 alliander-moveit = [{ name = "xmltodict", specifier = ">=1.0.2" }]
 alliander-nav2 = [
     { name = "numpy", specifier = ">=2.4.1" },
