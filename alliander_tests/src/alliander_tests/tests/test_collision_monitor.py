@@ -30,6 +30,7 @@ class _TestCollisionMonitoring:
             test_node (Node): The ROS 2 node to use for the test.
             timeout (int): The timeout in seconds.
         """
+        timeout = 2  # TEST
         input_velocity = 0.0001
         expected_output = input_velocity * 0.7
 
