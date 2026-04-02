@@ -26,6 +26,9 @@ class CmdVelLogger(Node):
         self.sub_lynx = self.create_subscription(
             TwistStamped, "/lynx/cmd_vel", self._callback_lynx, 10
         )
+        self.sub_drive_controller = self.create_subscription(
+            TwistStamped, "/drive_controller/cmd_vel", self._callback_cmd_vel, 10
+        )
         self.get_logger().info(
             "cmd_vel_logger started, listening to /panther/cmd_vel and /lynx/cmd_vel"
         )
@@ -38,6 +41,17 @@ class CmdVelLogger(Node):
         self._check_nan(msg, "lynx")
         self._check_limits(msg)
 
+    def _callback_cmd_vel(self, msg: TwistStamped) -> None:
+        self.get_logger().warn(f"Found data on /drive_controller/cmd_vel, with timestamp: {msg.header.stamp}")
+        publishers = self.get_publishers_info_by_topic("/drive_controller/cmd_vel")
+        for pub in publishers:
+            self.get_logger().info(
+                f"Publisher on /drive_controller/cmd_vel: "
+                f"node={pub.node_name}, "
+                f"namespace={pub.node_namespace}, "
+                f"type={pub.topic_type}"
+            )
+
     def _check_nan(self, msg: TwistStamped, namespace: str) -> None:
         msg = msg.twist
         values = {
@@ -49,7 +63,7 @@ class CmdVelLogger(Node):
             "angular.z": msg.angular.z,
         }
         for field, value in values.items():
-            if math.isnan(value) or math.isinf(value):
+            if math.isnan(value) or math.isinf(value) or not math.isfinite(value):
                 self.get_logger().error(
                     f"cmd_vel contains invalid value in {field}: {value}"
                 )
