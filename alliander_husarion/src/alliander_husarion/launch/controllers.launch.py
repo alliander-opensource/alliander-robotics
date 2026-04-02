@@ -69,7 +69,7 @@ def launch_setup(context: LaunchContext) -> list:
             "--controller-manager",
             "controller_manager",
             "--controller-ros-args",
-            "--remap drive_controller/cmd_vel:=cmd_vel_bluh",
+            "--remap drive_controller/cmd_vel:=cmd_vel",
             "--controller-ros-args",
             "--remap drive_controller/odom:=odometry/wheels",
             "--controller-ros-args",
