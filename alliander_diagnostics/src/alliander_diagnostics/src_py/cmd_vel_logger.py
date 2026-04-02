@@ -42,7 +42,9 @@ class CmdVelLogger(Node):
         self._check_limits(msg)
 
     def _callback_cmd_vel(self, msg: TwistStamped) -> None:
-        self.get_logger().warn(f"Found data on /drive_controller/cmd_vel, with timestamp: {msg.header.stamp}")
+        self.get_logger().warn(
+            f"Found data on /drive_controller/cmd_vel, with timestamp: {msg.header.stamp}"
+        )
         publishers = self.get_publishers_info_by_topic("/drive_controller/cmd_vel")
         for pub in publishers:
             self.get_logger().info(

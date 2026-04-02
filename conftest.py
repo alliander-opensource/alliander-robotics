@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Global pytest fixtures for ROS 2 integration testing."""
+
 import json
 import os
 import signal
