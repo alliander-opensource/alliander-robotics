@@ -52,6 +52,13 @@ repos:
         types_or: [c++, c, cuda]
   - repo: local
     hooks:
+      - id: cppcheck
+        name: cppcheck
+        entry: ./run_cppcheck.sh 
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
       - id: doxygen
         name: doxygen linting 
         entry: ./doxygen-lint.sh

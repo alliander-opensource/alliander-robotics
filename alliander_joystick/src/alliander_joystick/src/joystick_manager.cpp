@@ -200,9 +200,6 @@ bool JoystickManager::check_btn_pressed(size_t idx,
 
 void JoystickManager::handle_driving(const float& linear,
                                      const float& angular) {
-  float prev_linear = prev_joy_input->axes[1];
-  float prev_angular = prev_joy_input->axes[2];
-
   geometry_msgs::msg::TwistStamped twist;
   twist.header.stamp = node->now();
   twist.header.frame_id = "base_link";
