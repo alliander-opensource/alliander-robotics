@@ -156,8 +156,9 @@ def launch_setup(context: LaunchContext) -> list:
             "Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)]",
             context,
         ),
-        Register.on_log(spawn_platforms, "All platforms spawned!", context),
-        Register.on_exit(unpause_sim, context),
+        Register.on_start(unpause_sim, context),
+        # Register.on_log(spawn_platforms, "All platforms spawned!", context),
+        Register.on_exit(spawn_platforms, context),
     ]
 
 
