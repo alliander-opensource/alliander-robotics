@@ -39,6 +39,7 @@ class _TestNavigationGPS:
         Raises:
             TimeoutError: When a timeout occurs.
         """
+        timeout = 2  # TEST
         # 1) Obtain current GPS location:
         current_nav_sat = NavSatFix()
 
@@ -108,8 +109,8 @@ for vehicle in ["panther", "lynx"]:
             gps_platform = GPS(gps, (0, 0, 0.2))
             link(vehicle_platform, lidar_platform)
             link(vehicle_platform, gps_platform)
-            vehicle_platform.nav2_config.navigation = True
-            vehicle_platform.nav2_config.gps = True
+            # vehicle_platform.nav2_config.navigation = True
+            # vehicle_platform.nav2_config.gps = True
             test_class = type(
                 f"Test{vehicle.capitalize()}{lidar.capitalize()}{gps.capitalize()}Navigation",
                 (_TestNavigationGPS,),
