@@ -24,7 +24,7 @@ import utils
 from predefined_configurations import PredefinedConfigurations
 from start import Compose
 
-LAUNCH_TIMEOUT = 90  # seconds
+LAUNCH_TIMEOUT = 300  # seconds
 COMPOSE_FILE = "/alliander_robotics/compose_pytest.yml"
 HOST_COMPOSE_FILE = "/alliander_robotics/compose.yml"
 

@@ -339,7 +339,7 @@ def registerd_sleep(context: LaunchContext) -> LaunchDescription:
         ExecuteProcess(
             cmd=[
                 "sleep",
-                "10",
+                "5",
             ],
             shell=False,
         ),
