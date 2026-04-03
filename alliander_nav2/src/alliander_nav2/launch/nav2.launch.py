@@ -9,7 +9,7 @@ from alliander_utilities.launch_utils import SKIP
 from alliander_utilities.register import Register
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
-from launch.actions import OpaqueFunction
+from launch.actions import ExecuteProcess, OpaqueFunction
 from launch_ros.actions import LifecycleNode, Node, SetParameter, SetRemap
 
 platform_arg = LaunchArgument("platform_config", "")
@@ -308,9 +308,18 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     for node_name in lifecycle_nodes_names:
         register_lifecycle_nodes.append(all_lifecycle_nodes[node_name])
 
+    sleep = ExecuteProcess(
+        cmd=[
+            "sleep",
+            "15",
+        ],
+        shell=False,
+    )
+
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
         SetRemap(src="/cmd_vel", dst=pub_topic),
+        Register.on_exit(sleep, context),
         *[Register.on_start(node, context) for node in register_lifecycle_nodes],
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
         Register.on_log(nav2_manager, "Controller is ready.", context)
