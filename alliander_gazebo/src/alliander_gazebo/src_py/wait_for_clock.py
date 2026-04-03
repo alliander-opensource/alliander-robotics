@@ -22,7 +22,7 @@ class WaitForClock(Node):
         Args:
             msg (Clock): test.
         """
-        self.get_logger().info("Received /clock, continuing...")
+        self.get_logger().info(f"Received /clock: {msg.clock}, continuing...")
         self.received = True
 
 
