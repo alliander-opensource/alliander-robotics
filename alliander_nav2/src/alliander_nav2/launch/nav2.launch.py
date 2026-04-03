@@ -308,24 +308,43 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     for node_name in lifecycle_nodes_names:
         register_lifecycle_nodes.append(all_lifecycle_nodes[node_name])
 
-    sleep = ExecuteProcess(
-        cmd=[
-            "sleep",
-            "15",
-        ],
-        shell=False,
-    )
+    registered_nodes_with_sleeps = []
+    for node in register_lifecycle_nodes:
+        registered_nodes_with_sleeps.append(registerd_sleep(context))
+        registered_nodes_with_sleeps.append(Register.on_start(node, context))
 
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
         SetRemap(src="/cmd_vel", dst=pub_topic),
-        Register.on_exit(sleep, context),
-        *[Register.on_start(node, context) for node in register_lifecycle_nodes],
+        *registered_nodes_with_sleeps,
+        registerd_sleep(context),
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
+        registerd_sleep(context),
         Register.on_log(nav2_manager, "Controller is ready.", context)
         if nav2.navigation
         else SKIP,
     ]
+
+
+def registerd_sleep(context: LaunchContext) -> LaunchDescription:
+    """Create a sleep.
+
+    Args:
+        context (LaunchContext): The launch context.
+
+    Returns:
+        LaunchDescription: The launch description containing the sleep action.
+    """
+    return Register.on_exit(
+        ExecuteProcess(
+            cmd=[
+                "sleep",
+                "10",
+            ],
+            shell=False,
+        ),
+        context,
+    )
 
 
 def generate_launch_description() -> LaunchDescription:
