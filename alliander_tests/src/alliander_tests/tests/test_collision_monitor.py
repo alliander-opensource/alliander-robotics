@@ -30,6 +30,7 @@ class _TestCollisionMonitoring:
             test_node (Node): The ROS 2 node to use for the test.
             timeout (int): The timeout in seconds.
         """
+        timeout = 2  # TEST
         input_velocity = 0.0001
         expected_output = input_velocity * 0.7
 
@@ -78,8 +79,8 @@ for vehicle in ["panther", "lynx"]:
         vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
         link(vehicle_platform, lidar_platform)
-        vehicle_platform.nav2_config.navigation = True
-        vehicle_platform.nav2_config.collision_monitor = True
+        # vehicle_platform.nav2_config.navigation = True
+        # vehicle_platform.nav2_config.collision_monitor = True
         test_class = type(
             f"Test{vehicle.capitalize()}{lidar.capitalize()}CollisionMonitoring",
             (_TestCollisionMonitoring,),
