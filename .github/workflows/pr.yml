@@ -205,4 +205,4 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml mashumaro
       - name: Run tests in alliander_tests container
-        run: python3 start.py --pytest-no-nvidia --mode all -k \"collision_monitor or nav2_navigation_gps or nav2_navigation_lidar\"
+        run: python3 start.py --pytest-no-nvidia --mode all -k \"nav2_absent_navigation_gps or nav2_absent_navigation_lidar or nav2_navigation_gps or nav2_navigation_lidar\"

@@ -10,6 +10,7 @@ from rosgraph_msgs.msg import Clock
 
 class WaitForClock(Node):
     """Test."""
+
     def __init__(self):
         """Test."""
         super().__init__("wait_for_clock")
