@@ -66,7 +66,6 @@ class _TestNavigationLidar:
         goal_pose.pose.position.z = current_pose.transform.translation.z
 
         publisher = test_node.create_publisher(PoseStamped, "/goal_pose", 10)
-        wait_for_subscriber(publisher, timeout)
         publisher.publish(goal_pose)
         test_node.get_logger().info("Published goal pose for navigation.")
 

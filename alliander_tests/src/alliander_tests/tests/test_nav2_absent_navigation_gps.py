@@ -62,7 +62,6 @@ class _TestNavigationGPS:
         goal_nav_sat.latitude += 1e-5
 
         publisher = test_node.create_publisher(GeoPath, "/gps_waypoints", 10)
-        wait_for_subscriber(publisher, timeout)
         goal_msg = GeoPath()
         goal_pose = GeoPoseStamped()
         goal_pose.pose.position.latitude = goal_nav_sat.latitude
