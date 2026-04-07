@@ -126,7 +126,7 @@ for i, vehicle in enumerate(
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
         link(vehicle_platform, lidar_platform)
         test_class = type(
-            f"Test{vehicle.capitalize()}{lidar.capitalize()}Navigation{i}.{j}",
+            f"Test{vehicle.capitalize()}{lidar.capitalize()}AbsentNavigation{i}.{j}",
             (_TestNavigationLidar,),
             {"platforms": {"vehicle": vehicle_platform, "lidar": lidar_platform}},
         )
