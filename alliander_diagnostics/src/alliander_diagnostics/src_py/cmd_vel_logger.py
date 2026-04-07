@@ -38,11 +38,11 @@ class CmdVelLogger(Node):
 
     def _callback_panther(self, msg: TwistStamped) -> None:
         self._check_nan(msg, "panther")
-        self._check_limits(msg)
+        self._check_limits(msg, "panther")
 
     def _callback_lynx(self, msg: TwistStamped) -> None:
         self._check_nan(msg, "lynx")
-        self._check_limits(msg)
+        self._check_limits(msg, "lynx")
 
     def _callback_cmd_vel(self, msg: TwistStamped) -> None:
         self.get_logger().warn(
@@ -81,21 +81,21 @@ class CmdVelLogger(Node):
                         f"type={pub.topic_type}"
                     )
 
-    def _check_limits(self, msg: TwistStamped) -> None:
-        msg = msg.twist
-        if abs(msg.linear.x) > MAX_LINEAR_X:
-            self.get_logger().warning(
-                f"Linear X velocity {msg.linear.x:.2f} m/s exceeds limit of {MAX_LINEAR_X} m/s"
+    def _check_limits(self, msg: TwistStamped, namespace: str) -> None:
+        msg_seconds = msg.header.stamp.sec
+        second_duration = 10000
+        if msg_seconds > second_duration:
+            self.get_logger().error(
+                f"cmd_vel not using sim_time!! Namely (in sec): {msg_seconds}"
             )
-        if abs(msg.linear.y) > MAX_LINEAR_Y:
-            self.get_logger().warning(
-                f"Unexpected lateral velocity linear.y={msg.linear.y:.2f} m/s "
-                f"(differential drive should not move sideways)"
-            )
-        if abs(msg.angular.z) > MAX_ANGULAR_Z:
-            self.get_logger().warning(
-                f"Angular Z velocity {msg.angular.z:.2f} rad/s exceeds limit of {MAX_ANGULAR_Z} rad/s"
-            )
+            publishers = self.get_publishers_info_by_topic(f"/{namespace}/cmd_vel")
+            for pub in publishers:
+                self.get_logger().info(
+                    f"Publisher on /{namespace}/cmd_vel: "
+                    f"node={pub.node_name}, "
+                    f"namespace={pub.node_namespace}, "
+                    f"type={pub.topic_type}"
+                )
 
 
 def main() -> None:
