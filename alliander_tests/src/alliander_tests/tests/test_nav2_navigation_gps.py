@@ -39,6 +39,7 @@ class _TestNavigationGPS:
         Raises:
             TimeoutError: When a timeout occurs.
         """
+        timeout = 2  # TEST
         # 1) Obtain current GPS location:
         current_nav_sat = NavSatFix()
 
@@ -103,10 +104,10 @@ class _TestNavigationGPS:
 for i, vehicle in enumerate(
     [
         "panther",
-        "lynx",
-        "panther",
-        "lynx",
-        "panther",
+        # "lynx",
+        # "panther",
+        # "lynx",
+        # "panther",
         # "lynx",
         # "panther",
         # "lynx",

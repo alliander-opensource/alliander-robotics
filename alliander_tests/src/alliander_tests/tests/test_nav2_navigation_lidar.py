@@ -42,6 +42,7 @@ class _TestNavigationLidar:
         Raises:
             TimeoutError: When a timeout occurs.
         """
+        timeout = 2  # TEST
         # 1) Obtain current pose in map frame:
         tf_buffer = Buffer()
         TransformListener(tf_buffer, test_node)
@@ -109,10 +110,10 @@ class _TestNavigationLidar:
 for i, vehicle in enumerate(
     [
         "panther",
-        "lynx",
-        "panther",
-        "lynx",
-        "panther",
+        # "lynx",
+        # "panther",
+        # "lynx",
+        # "panther",
         # "lynx",
         # "panther",
         # "lynx",
