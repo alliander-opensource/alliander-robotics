@@ -253,6 +253,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             follow_path_params.file,
         ],
         namespace=namespace_vehicle,
+        remappings=[(f"/{namespace_vehicle}/cmd_vel", f"/{namespace_vehicle}/cmd_vel_controller")],
     )
 
     all_lifecycle_nodes["planner_server"] = LifecycleNode(
@@ -272,6 +273,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         name="behavior_server",
         parameters=[behavior_server_params.file],
         namespace=namespace_vehicle,
+        remappings=[(f"/{namespace_vehicle}/cmd_vel", f"/{namespace_vehicle}/cmd_vel_behavior")],
     )
 
     all_lifecycle_nodes["bt_navigator"] = LifecycleNode(
@@ -322,16 +324,16 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
 
     registered_nodes_with_sleeps = []
     for node in register_lifecycle_nodes:
-        registered_nodes_with_sleeps.append(registerd_sleep(context))
+        # registered_nodes_with_sleeps.append(registerd_sleep(context))
         registered_nodes_with_sleeps.append(Register.on_start(node, context))
 
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
         SetRemap(src="/cmd_vel", dst=pub_topic),
         *registered_nodes_with_sleeps,
-        registerd_sleep(context),
+        # registerd_sleep(context),
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
-        registerd_sleep(context),
+        # registerd_sleep(context),
         Register.on_log(nav2_manager, "Controller is ready.", context)
         if nav2.navigation
         else SKIP,
