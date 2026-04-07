@@ -157,17 +157,17 @@ def launch_setup(context: LaunchContext) -> list:
 
     return [
         Register.on_start(gazebo, context),
-        registerd_sleep(context),
+        # registerd_sleep(context),
         Register.on_log(
             bridge,
             "Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)]",
             context,
         ),
-        registerd_sleep(context),
+        # registerd_sleep(context),
         Register.on_start(unpause_sim, context),
-        registerd_sleep(context),
+        # registerd_sleep(context),
         Register.on_exit(wait_for_clock, context),
-        registerd_sleep(context),
+        # registerd_sleep(context),
         Register.on_start(spawn_platforms, context),
     ]
 

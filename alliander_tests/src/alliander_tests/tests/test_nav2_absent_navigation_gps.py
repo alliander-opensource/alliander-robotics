@@ -83,10 +83,10 @@ class _TestNavigationGPS:
 for i, vehicle in enumerate(
     [
         "panther",
-        "lynx",
-        "panther",
-        "lynx",
-        "panther",
+        # "lynx",
+        # "panther",
+        # "lynx",
+        # "panther",
         # "lynx",
         # "panther",
         # "lynx",

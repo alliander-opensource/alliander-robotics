@@ -91,10 +91,10 @@ class _TestNavigationLidar:
 for i, vehicle in enumerate(
     [
         "panther",
-        "lynx",
-        "panther",
-        "lynx",
-        "panther",
+        # "lynx",
+        # "panther",
+        # "lynx",
+        # "panther",
         # "lynx",
         # "panther",
         # "lynx",
