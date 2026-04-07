@@ -29,6 +29,9 @@ class CmdVelLogger(Node):
         self.sub_drive_controller = self.create_subscription(
             TwistStamped, "/drive_controller/cmd_vel", self._callback_cmd_vel, 10
         )
+        self.sub_cmd_vel = self.create_subscription(
+            TwistStamped, "/cmd_vel", self._callback_cmd_vel, 10
+        )
         self.get_logger().info(
             "cmd_vel_logger started, listening to /panther/cmd_vel and /lynx/cmd_vel"
         )

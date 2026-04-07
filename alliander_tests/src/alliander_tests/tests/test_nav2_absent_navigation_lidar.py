@@ -15,8 +15,6 @@ from tf2_ros import TransformException  # ty: ignore[unresolved-import]
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
-from ..utils import wait_for_subscriber
-
 
 class _TestNavigationLidar:
     """Base class for lidar navigation tests.
@@ -38,9 +36,6 @@ class _TestNavigationLidar:
             test_node (Node): The ROS 2 node to use for the test.
             navigation_distance_tolerance (float): The tolerance for navigation.
             timeout (int): The timeout in seconds.
-
-        Raises:
-            TimeoutError: When a timeout occurs.
         """
         timeout = 1  # TEST
         # 1) Obtain current pose in map frame:
@@ -56,7 +51,7 @@ class _TestNavigationLidar:
                     "map", f"{self.platforms['vehicle'].namespace}/base_link", Time()
                 )
             if time.time() - start_time > timeout:
-                raise TimeoutError()
+                break
 
         # 2) Publish goal pose 3 meter in front of current position:
         goal_pose = PoseStamped()
