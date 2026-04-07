@@ -13,6 +13,7 @@ from alliander_utilities.config_objects import (
     VisualizationConfig,
 )
 
+from alliander_visualization.foxglove import Foxglove
 from alliander_visualization.rviz import Rviz
 from alliander_visualization.vizanti import Vizanti
 
@@ -40,6 +41,7 @@ class ApplyConfigurations:
 
         for platform in platform_list.platforms:
             Rviz.add_platform_model(platform.namespace)
+            Foxglove.add_platform_model(platform.namespace)
             match platform.platform_type:
                 case "Arm":
                     self.add_arm(Arm.from_str(platform.to_str()))
@@ -58,6 +60,9 @@ class ApplyConfigurations:
 
         if config.rviz:
             Rviz.create_rviz_file()
+
+        if config.foxglove:
+            Foxglove.create_layout_file()
 
         if config.vizanti:
             Vizanti.create_config_file()
@@ -123,6 +128,9 @@ class ApplyConfigurations:
         ns = platform.namespace
         nav2 = platform.nav2_config
         Vizanti.add_platform_model(ns)
+        Foxglove.topics.append(f"/{ns}/cmd_vel")
+        Foxglove.add_trigger_service("E-Stop Trigger", f"/{ns}/hardware/e_stop_trigger")
+        Foxglove.add_trigger_service("E-Stop Reset", f"/{ns}/hardware/e_stop_reset")
 
         if (nav2.navigation or nav2.slam) and not nav2.gps:
             Rviz.add_map(f"/{ns}/map")
@@ -130,6 +138,11 @@ class ApplyConfigurations:
         if nav2.navigation:
             Rviz.add_map(f"/{ns}/global_costmap/costmap")
             Rviz.add_path(f"/{ns}/plan")
+
+            Foxglove.add_map(f"/{ns}/global_costmap/costmap")
+            Foxglove.add_path(f"/{ns}/plan")
+            Foxglove.add_trigger_service("Stop", f"/{ns}/nav2_manager/stop")
+
             Vizanti.add_button("Stop", f"/{ns}/waypoint_follower_controller/stop")
             Vizanti.add_initial_pose()
             Vizanti.add_goal_pose()
@@ -145,6 +158,9 @@ class ApplyConfigurations:
             Rviz.add_polygon(f"/{ns}/polygon_slower")
             Rviz.add_polygon(f"/{ns}/velocity_polygon_stop")
 
+            Foxglove.add_polygon(f"/{ns}/polygon_slower")
+            Foxglove.add_polygon(f"/{ns}/velocity_polygon_stop")
+
     @staticmethod
     def add_lidar(platform: Lidar) -> None:
         """Add lidar configurations to RViz and Vizanti.
@@ -153,6 +169,7 @@ class ApplyConfigurations:
             platform (Lidar): The lidar platform configuration.
         """
         Rviz.add_laser_scan(platform.namespace)
+        Foxglove.add_pointcloud(platform.namespace)
 
     @staticmethod
     def add_depth_camera(platform: Camera) -> None:
@@ -168,6 +185,8 @@ class ApplyConfigurations:
             f"/{platform.namespace}/depth/image_rect_raw",
         )
 
+        Foxglove.add_image(platform.namespace)
+
     @staticmethod
     def add_gps(platform: GPS) -> None:
         """Add GPS configurations to RViz and Vizanti.
@@ -176,3 +195,4 @@ class ApplyConfigurations:
             platform (GPS): The GPS platform configuration.
         """
         Rviz.add_satellite(f"/{platform.namespace}/gps/fix")
+        Foxglove.add_street_map(platform.namespace)
