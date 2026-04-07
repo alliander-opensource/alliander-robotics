@@ -108,11 +108,11 @@ for i, vehicle in enumerate(
         "panther",
         "lynx",
         "panther",
-        "lynx",
-        "panther",
-        "lynx",
-        "panther",
-        "lynx",
+        # "lynx",
+        # "panther",
+        # "lynx",
+        # "panther",
+        # "lynx",
     ]
 ):
     for j, lidar in enumerate(["velodyne", "ouster", "velodyne", "ouster", "velodyne"]):
