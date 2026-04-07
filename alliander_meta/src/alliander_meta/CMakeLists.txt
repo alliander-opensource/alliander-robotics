@@ -9,9 +9,30 @@ project(alliander_meta)
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
-# Python executables:
+# Other dependencies:
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(alliander_interfaces REQUIRED)
+
+# C++ executables:
+include_directories(include)
+add_executable(meta_manager src/meta_manager.cpp)
+ament_target_dependencies(meta_manager
+  rclcpp
+  geometry_msgs
+  sensor_msgs
+  tf2
+  tf2_msgs
+  tf2_ros
+  alliander_interfaces
+)
+
 install(
-  DIRECTORY src_py/
+  TARGETS meta_manager
   DESTINATION lib/${PROJECT_NAME}
 )
 

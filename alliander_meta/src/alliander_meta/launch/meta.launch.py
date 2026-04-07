@@ -19,7 +19,8 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    namespace = "meta"
+    namespace = "quest"
+    namespace_arm = "franka"
     use_sim_time = True
 
     ros_tcp_endpoint = Node(
@@ -34,14 +35,17 @@ def launch_setup(context: LaunchContext) -> list:
         ],
     )
 
-    teleoperation = Node(
-        package="alliander_meta", executable="teleoperation.py", namespace=namespace
+    meta_manager = Node(
+        package="alliander_meta",
+        executable="meta_manager",
+        namespace=namespace,
+        parameters=[{"namespace_arm": namespace_arm}],
     )
 
     return [
         SetParameter(name="use_sim_time", value=use_sim_time),
         Register.on_start(ros_tcp_endpoint, context),
-        Register.on_start(teleoperation, context),
+        Register.on_start(meta_manager, context),
     ]
 
 
