@@ -36,6 +36,7 @@ are defined
         <joint name="fr3_joint5" />
         <joint name="fr3_joint6" />
         <joint name="fr3_joint7" />
+        <link name="fr3_hand_tcp" />
     </group>
     <group name="hand">
         <joint name="fr3_joint8" />

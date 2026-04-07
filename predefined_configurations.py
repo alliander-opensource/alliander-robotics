@@ -13,7 +13,7 @@ from alliander_core.src.alliander_utilities.alliander_utilities.config_objects i
     Arm,
     Camera,
     Lidar,
-    Meta,
+    Platform,
     PlatformList,
     SimulatorConfig,
     Vehicle,
@@ -84,9 +84,9 @@ class PredefinedConfigurations:
     def config_empty(self) -> None:  # noqa: D102
         self.plat_conf.platforms = []
 
-    @register_configuration("meta")
-    def config_meta(self) -> None:  # noqa: D102
-        self.plat_conf.platforms = [Meta("meta")]
+    @register_configuration("axis")
+    def config_axis(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [Platform("axis")]
 
     @register_configuration("gps")
     def config_gps(self) -> None:  # noqa: D102
@@ -131,13 +131,6 @@ class PredefinedConfigurations:
 
         link(arm, camera)
         self.plat_conf.platforms = [arm, camera]
-
-    @register_configuration("franka_meta")
-    def config_franka_meta(self) -> None:  # noqa: D102
-        arm = Arm("franka", gripper=False, moveit=True)
-        meta = Meta("meta")
-
-        self.plat_conf.platforms = [arm, meta]
 
     # Panther:
     @register_configuration("panther")

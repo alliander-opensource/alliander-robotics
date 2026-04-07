@@ -51,6 +51,7 @@ COPY alliander_core/src/ /alliander/ros/src
 COPY alliander_diagnostics/src/ /alliander/ros/src
 COPY alliander_franka/src/ /alliander/ros/src
 COPY alliander_joystick/src/ /alliander/ros/src
+COPY alliander_meta/src/ /alliander/ros/src
 COPY alliander_moveit/src/ /alliander/ros/src
 COPY alliander_nav2/src/ /alliander/ros/src
 

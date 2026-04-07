@@ -28,6 +28,7 @@ SERVICE = typing.Literal[
     "linting",
     "documentation",
     "joystick",
+    "meta",
     "diagnostics",
 ]
 MODE = typing.Literal[
@@ -70,6 +71,7 @@ class Compose:
         self.dev = False
         self.gazebo_ui = False
         self.joystick = False
+        self.meta = False
 
         self.changed_packages = utils.get_changed_packages()
 
@@ -161,6 +163,11 @@ class Compose:
             ),
             "joystick": (
                 "alliander_joystick",
+                f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
+                {},
+            ),
+            "meta": (
+                "alliander_meta",
                 f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
                 {},
             ),
@@ -379,6 +386,8 @@ class Compose:
                     services["alliander_visualization"]["depends_on"] = {}
                 if self.joystick:
                     self.add_service(content, "joystick")
+                if self.meta:
+                    self.add_service(content, "meta")
 
         # Add healthchecks to all services:
         for name, service in services.items():
@@ -510,6 +519,14 @@ if __name__ == "__main__":
         help="Add this flag to enable joystick control for arm and/or vehicle platforms.",
     )
 
+    parser.add_argument(
+        "-m",
+        "--meta",
+        required=False,
+        action="store_true",
+        help="Add this flag to enable Meta Quest control for arm platforms.",
+    )
+
     # Parse arguments:
     args = parser.parse_args()
     compose = Compose()
@@ -523,6 +540,7 @@ if __name__ == "__main__":
         compose.simulator = not args.hardware
         compose.visualization = args.visualization
         compose.joystick = args.joystick
+        compose.meta = args.meta
         compose.mode = "configuration"
     elif isinstance(args.pytest, list):
         arguments = " " + " ".join(args.pytest)

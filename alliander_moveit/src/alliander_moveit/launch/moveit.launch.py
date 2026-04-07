@@ -118,7 +118,7 @@ def launch_setup(context: LaunchContext) -> list:
             "call",
             f"/{arm_config.namespace}/servo_node/switch_command_type",
             "moveit_msgs/srv/ServoCommandType",
-            "{command_type: 1}",
+            "{command_type: 2}",
         ]
     )
 

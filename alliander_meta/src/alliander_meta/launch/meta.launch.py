@@ -1,13 +1,16 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
+import warnings
+
+from alliander_utilities.config_objects import PlatformList
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node, SetParameter
 
-platform_arg = LaunchArgument("platform_config", "")
+platform_list_arg = LaunchArgument("platform_list", "")
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -19,9 +22,24 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
+    platforms = PlatformList.from_str(platform_list_arg.string_value(context)).platforms
+
     namespace = "quest"
-    namespace_arm = "franka"
-    use_sim_time = True
+    namespace_arm = ""
+
+    for platform in platforms:
+        match platform.platform_type:
+            case "Arm":
+                if not namespace_arm:
+                    namespace_arm = platform.namespace
+                else:
+                    warnings.warn(
+                        "No support for multiple arms yet, only accepting the first arm.",
+                        RuntimeWarning,
+                        stacklevel=1,
+                    )
+            case _:
+                pass
 
     ros_tcp_endpoint = Node(
         package="ros_tcp_endpoint",
@@ -43,7 +61,7 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
-        SetParameter(name="use_sim_time", value=use_sim_time),
+        SetParameter(name="use_sim_time", value=platforms[0].simulation),
         Register.on_start(ros_tcp_endpoint, context),
         Register.on_start(meta_manager, context),
     ]
@@ -57,7 +75,7 @@ def generate_launch_description() -> LaunchDescription:
     """
     return LaunchDescription(
         [
-            platform_arg.declaration,
+            platform_list_arg.declaration,
             OpaqueFunction(function=launch_setup),
         ]
     )
