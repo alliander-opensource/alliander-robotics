@@ -123,7 +123,7 @@ for i, vehicle in enumerate(
             link(vehicle_platform, lidar_platform)
             link(vehicle_platform, gps_platform)
             test_class = type(
-                f"Test{vehicle.capitalize()}{lidar.capitalize()}{gps.capitalize()}Navigation{i}.{j}",
+                f"Test{vehicle.capitalize()}{lidar.capitalize()}{gps.capitalize()}AbsentNavigation{i}.{j}",
                 (_TestNavigationGPS,),
                 {
                     "platforms": {
