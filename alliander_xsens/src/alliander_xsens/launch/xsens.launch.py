@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+from alliander_utilities.config_objects import Imu
+from alliander_utilities.launch_argument import LaunchArgument
+from alliander_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
+from alliander_utilities.register import Register, RegisteredLaunchDescription
+from alliander_utilities.ros_utils import get_file_path
+from launch import LaunchContext, LaunchDescription
+from launch.actions import OpaqueFunction
+from launch_ros.actions import Node
+from serial.tools import list_ports
+
+platform_arg = LaunchArgument("platform_config", "")
+
+
+def launch_setup(context: LaunchContext) -> list:
+    """The launch setup.
+
+    Args:
+        context (LaunchContext): The launch context.
+
+    Returns:
+        list: The actions to start.
+    """
+    imu_config = Imu.from_str(platform_arg.string_value(context))
+
+    VID = "2639"
+    PID = "0301"
+    imu_device = None
+    for device in list_ports.grep(f"{VID}:{PID}"):
+        print(f"Found IMU device {device}")
+        if imu_device is not None:
+            print(f"Found multiple IMU devices with VID:PID {VID}:{PID}!")
+        imu_device = device.name
+
+    if imu_device is None:
+        print("No IMU device found, exiting.")
+        exit(1)
+    imu_config.usb_device = imu_device
+
+    # state_publisher = state_publisher_node(
+    #     namespace=imu_config.namespace,
+    #     platform="xsens",
+    #     xacro="xsens.urdf.xacro",
+    #     xacro_arguments={
+    #         "parent": "" if imu_config.parent.link else "world",
+    #     },
+    # )
+    #
+    # parent = imu_config.parent
+    # static_tf = static_tf_node(
+    #     parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
+    #     child_frame=f"{imu_config.namespace}/{parent.connects_to}",
+    #     position=imu_config.position,
+    #     orientation=imu_config.orientation,
+    # )
+
+    hardware = Node(
+        package="xsens_mti_ros2_driver",
+        executable="xsens_mti_node",
+        remappings=[
+            ("/imu/acceleration", "imu/acceleration"),
+            ("/imu/angular_velocity", "imu/angular_velocity"),
+        ],
+        namespace=imu_config.namespace,
+    )
+
+    imu_bridge_node = Node(
+        package="alliander_xsens",
+        executable="imu_bridge_node",
+        remappings=[
+            ("/topic_in_linear_acceleration", "imu/acceleration"),
+            ("/topic_in_angular_velocity", "imu/angular_velocity"),
+            ("/topic_out_imu", "imu/data_raw"),
+        ],
+        namespace=imu_config.namespace,
+    )
+
+    madgwick_filter_node = Node(
+        package="imu_filter_madgwick",
+        executable="imu_filter_madgwick_node",
+        namespace=imu_config.namespace,
+    )
+
+    return [
+        # Register.on_start(state_publisher, context),
+        # Register.on_start(static_tf, context),
+        Register.on_start(hardware, context) if not imu_config.simulation else SKIP,
+        Register.on_start(imu_bridge_node, context),
+        Register.on_start(madgwick_filter_node, context),
+    ]
+
+
+def generate_launch_description() -> LaunchDescription:
+    """Generate the launch description for the Panther robot.
+
+    Returns:
+        LaunchDescription: The launch description for the Panther robot.
+    """
+    return LaunchDescription(
+        [
+            platform_arg.declaration,
+            OpaqueFunction(function=launch_setup),
+        ]
+    )
