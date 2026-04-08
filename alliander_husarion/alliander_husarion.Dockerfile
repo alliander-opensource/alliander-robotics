@@ -7,6 +7,13 @@ FROM $BASE_IMAGE
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
 
+# Install ROS dependencies 
+RUN apt update && apt install -y --no-install-recommends \
+  ros-$ROS_DISTRO-twist-mux \
+  && rm -rf /var/lib/apt/lists/* \
+  && apt autoremove -y \
+  && apt clean
+
 # Install Husarion packages
 WORKDIR /$WORKDIR/external
 RUN apt update \
