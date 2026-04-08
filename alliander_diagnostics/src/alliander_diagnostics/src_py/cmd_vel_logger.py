@@ -35,16 +35,28 @@ class CmdVelLogger(Node):
         self.get_logger().info(
             "cmd_vel_logger started, listening to /panther/cmd_vel and /lynx/cmd_vel"
         )
+        self.last_time = 0
 
     def _callback_panther(self, msg: TwistStamped) -> None:
+        self.get_logger().warn(
+            f"Found data on /panther/cmd_vel, with timestamp: {msg.header.stamp}"
+        )
         self._check_nan(msg, "panther")
-        self._check_limits(msg, "panther")
+        self._check_timing(msg, "/panther/cmd_vel")
 
     def _callback_lynx(self, msg: TwistStamped) -> None:
+        self.get_logger().warn(
+            f"Found data on /lynx/cmd_vel, with timestamp: {msg.header.stamp}"
+        )
         self._check_nan(msg, "lynx")
-        self._check_limits(msg, "lynx")
+        self._check_timing(msg, "/lynx/cmd_vel")
 
     def _callback_cmd_vel(self, msg: TwistStamped) -> None:
+        self.get_logger().warn(
+            f"Found data on /cmd_vel, with timestamp: {msg.header.stamp}"
+        )
+
+    def _callback_drive_cmd_vel(self, msg: TwistStamped) -> None:
         self.get_logger().warn(
             f"Found data on /drive_controller/cmd_vel, with timestamp: {msg.header.stamp}"
         )
@@ -81,21 +93,23 @@ class CmdVelLogger(Node):
                         f"type={pub.topic_type}"
                     )
 
-    def _check_limits(self, msg: TwistStamped, namespace: str) -> None:
-        msg_seconds = msg.header.stamp.sec
-        second_duration = 10000
-        if msg_seconds > second_duration:
-            self.get_logger().error(
-                f"cmd_vel not using sim_time!! Namely (in sec): {msg_seconds}"
-            )
-            publishers = self.get_publishers_info_by_topic(f"/{namespace}/cmd_vel")
-            for pub in publishers:
-                self.get_logger().info(
-                    f"Publisher on /{namespace}/cmd_vel: "
-                    f"node={pub.node_name}, "
-                    f"namespace={pub.node_namespace}, "
-                    f"type={pub.topic_type}"
+    def _check_timing(self, msg: TwistStamped, topic: str) -> None:
+        now = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+
+        if self.last_time is not None:
+            dt = now - self.last_time
+
+            if dt > 0.5:  # noqa: PLR2004
+                self.get_logger().warn(
+                    f"[{topic}] Large time gap detected: dt={dt:.3f}s (clock pause?)"
                 )
+
+            if dt < 0:
+                self.get_logger().error(
+                    f"[{topic}] Time went backwards! dt={dt:.6f}"
+                )
+
+        self.last_time = now
 
 
 def main() -> None:
