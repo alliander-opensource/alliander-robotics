@@ -12,6 +12,7 @@ from alliander_core.src.alliander_utilities.alliander_utilities.config_objects i
     GPS,
     Arm,
     Camera,
+    Imu,
     Lidar,
     Platform,
     PlatformList,
@@ -103,6 +104,10 @@ class PredefinedConfigurations:
     @register_configuration("realsense")
     def config_realsense(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("realsense", (0, 0, 0.5))]
+
+    @register_configuration("xsens")
+    def config_xsense(self) -> None:
+        self.plat_conf.platforms = [Imu("xsens", (0, 0, 0.5))]
 
     @register_configuration("zed")
     def config_zed(self) -> None:  # noqa: D102

@@ -66,6 +66,10 @@ visualization:
   base_image: allianderrobotics/base
   repository: allianderrobotics/visualization
   dockerfile: alliander_visualization/alliander_visualization.Dockerfile
+xsens:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/xsens
+  dockerfile: alliander_xsens/alliander_xsens.Dockerfile
 
 # CUDA components:
 zed:
