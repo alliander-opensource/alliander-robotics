@@ -25,6 +25,26 @@ def launch_setup(context: LaunchContext) -> list:
     """
     vehicle_config = Vehicle.from_str(platform_arg.string_value(context))
 
+    twist_mux = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        name="twist_mux",
+        namespace=vehicle_config.namespace,
+        parameters=[
+            {"use_stamped": True},
+            {
+                "topics": {
+                    "navigation": {
+                        "topic": "cmd_vel_nav",
+                        "timeout": 0.5,
+                        "priority": 10,
+                    }
+                }
+            },
+        ],
+        remappings=[("cmd_vel_out", "cmd_vel")],
+    )
+
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -69,7 +89,7 @@ def launch_setup(context: LaunchContext) -> list:
             "--controller-manager",
             "controller_manager",
             "--controller-ros-args",
-            "--remap drive_controller/cmd_vel:=cmd_vel_test",
+            "--remap drive_controller/cmd_vel:=cmd_vel_nav",
             "--controller-ros-args",
             "--remap drive_controller/odom:=odometry/wheels",
             "--controller-ros-args",
@@ -80,6 +100,7 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
+        Register.on_start(twist_mux, context),
         Register.on_exit(joint_state_broadcaster_spawner, context),
         Register.on_exit(imu_broadcaster_spawner, context),
         Register.on_exit(drive_controller_spawner, context),
