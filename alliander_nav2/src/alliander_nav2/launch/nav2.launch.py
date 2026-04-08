@@ -253,7 +253,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             follow_path_params.file,
         ],
         namespace=namespace_vehicle,
-        # remappings=[(f"/{namespace_vehicle}/cmd_vel", f"/{namespace_vehicle}/cmd_vel_controller")],
+        remappings=[(f"/{namespace_vehicle}/cmd_vel", f"/{namespace_vehicle}/cmd_vel_controller")],
     )
 
     all_lifecycle_nodes["planner_server"] = LifecycleNode(
