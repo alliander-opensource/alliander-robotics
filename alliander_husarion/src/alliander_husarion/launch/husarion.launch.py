@@ -9,6 +9,7 @@ from alliander_utilities.register import Register, RegisteredLaunchDescription
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import ExecuteProcess, OpaqueFunction
+from launch_ros.actions import Node
 
 platform_arg = LaunchArgument("platform_config", "")
 
@@ -47,6 +48,32 @@ def launch_setup(context: LaunchContext) -> list:
         orientation=vehicle_config.orientation,
     )
 
+    twist_mux = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        name="twist_mux",
+        namespace=vehicle_config.namespace,
+        parameters=[
+            {"use_sim_time": vehicle_config.simulation},
+            {"use_stamped": True},
+            {
+                "topics": {
+                    "navigation": {
+                        "topic": "cmd_vel_nav",
+                        "timeout": 0.5,
+                        "priority": 10,
+                    },
+                    "joystick": {
+                        "topic": "cmd_vel_joy",
+                        "timeout": 0.5,
+                        "priority": 100,
+                    },
+                }
+            },
+        ],
+        remappings=[("cmd_vel_out", "cmd_vel_final")],
+    )
+
     controllers = RegisteredLaunchDescription(
         get_file_path("alliander_husarion", ["launch"], "controllers.launch.py")
     )
@@ -61,6 +88,7 @@ def launch_setup(context: LaunchContext) -> list:
         if vehicle_config.simulation
         else SKIP,
         Register.on_start(static_tf, context) if not vehicle_config.nav2 else SKIP,
+        Register.on_start(twist_mux, context),
         Register.group(controllers, context) if vehicle_config.simulation else SKIP,
         Register.on_start(sleep_infinity, context),
     ]
