@@ -9,13 +9,13 @@ from alliander_utilities.launch_utils import SKIP
 from alliander_utilities.register import Register
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
-from launch.actions import ExecuteProcess, OpaqueFunction
+from launch.actions import OpaqueFunction
 from launch_ros.actions import LifecycleNode, Node, SetParameter, SetRemap
 
 platform_arg = LaunchArgument("platform_config", "")
 
 
-def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
+def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     """The launch setup.
 
     Args:
@@ -253,7 +253,9 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             follow_path_params.file,
         ],
         namespace=namespace_vehicle,
-        remappings=[(f"/{namespace_vehicle}/cmd_vel", f"/{namespace_vehicle}/cmd_vel_nav")],
+        remappings=[
+            (f"/{namespace_vehicle}/cmd_vel", f"/{namespace_vehicle}/cmd_vel_nav")
+        ],
     )
 
     all_lifecycle_nodes["planner_server"] = LifecycleNode(
@@ -273,7 +275,9 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         name="behavior_server",
         parameters=[behavior_server_params.file],
         namespace=namespace_vehicle,
-        remappings=[(f"/{namespace_vehicle}/cmd_vel", f"/{namespace_vehicle}/cmd_vel_nav")],
+        remappings=[
+            (f"/{namespace_vehicle}/cmd_vel", f"/{namespace_vehicle}/cmd_vel_nav")
+        ],
     )
 
     all_lifecycle_nodes["bt_navigator"] = LifecycleNode(
@@ -312,53 +316,23 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         remappings=remappings,
     )
 
-    pub_topic = (
-        f"/{namespace_vehicle}/cmd_vel"
-        if not nav2.collision_monitor
-        else f"/{namespace_vehicle}/cmd_vel_raw"
-    )
-
     register_lifecycle_nodes = []
     for node_name in lifecycle_nodes_names:
         register_lifecycle_nodes.append(all_lifecycle_nodes[node_name])
 
-    registered_nodes_with_sleeps = []
-    for node in register_lifecycle_nodes:
-        # registered_nodes_with_sleeps.append(registerd_sleep(context))
-        registered_nodes_with_sleeps.append(Register.on_start(node, context))
-
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
-        SetRemap(src="/cmd_vel", dst=pub_topic),
-        *registered_nodes_with_sleeps,
-        # registerd_sleep(context),
+        SetRemap(
+            src=f"/{namespace_vehicle}/cmd_vel", dst=f"/{namespace_vehicle}/cmd_vel_raw"
+        )
+        if nav2.collision_monitor
+        else SKIP,
+        *[Register.on_start(node, context) for node in register_lifecycle_nodes],
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
-        # registerd_sleep(context),
         Register.on_log(nav2_manager, "Controller is ready.", context)
         if nav2.navigation
         else SKIP,
     ]
-
-
-def registerd_sleep(context: LaunchContext) -> LaunchDescription:
-    """Create a sleep.
-
-    Args:
-        context (LaunchContext): The launch context.
-
-    Returns:
-        LaunchDescription: The launch description containing the sleep action.
-    """
-    return Register.on_exit(
-        ExecuteProcess(
-            cmd=[
-                "sleep",
-                "5",
-            ],
-            shell=False,
-        ),
-        context,
-    )
 
 
 def generate_launch_description() -> LaunchDescription:

@@ -109,7 +109,7 @@ def launch_setup(context: LaunchContext) -> list:
     else:
         world_name = world_attribute.attrib.get("name")
 
-    cmd: list[str] = ["gz", "sim", "-r", sdf_file]
+    cmd: list[str] = ["gz", "sim", sdf_file]
     if not config.load_ui:
         cmd.append("-s")
     gazebo = ExecuteProcess(
@@ -149,48 +149,16 @@ def launch_setup(context: LaunchContext) -> list:
         shell=False,
     )
 
-    wait_for_clock = Node(
-        package="alliander_gazebo",
-        executable="wait_for_clock.py",
-        output="screen",
-    )
-
     return [
         Register.on_start(gazebo, context),
-        # registerd_sleep(context),
         Register.on_log(
             bridge,
             "Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)]",
             context,
         ),
-        # registerd_sleep(context),
-        # Register.on_start(unpause_sim, context),
-        # registerd_sleep(context),
-        Register.on_exit(wait_for_clock, context),
-        # registerd_sleep(context),
-        Register.on_start(spawn_platforms, context),
+        Register.on_log(spawn_platforms, "All platforms spawned!", context),
+        Register.on_start(unpause_sim, context),
     ]
-
-
-def registerd_sleep(context: LaunchContext) -> LaunchDescription:
-    """Create a sleep.
-
-    Args:
-        context (LaunchContext): The launch context.
-
-    Returns:
-        LaunchDescription: The launch description containing the sleep action.
-    """
-    return Register.on_exit(
-        ExecuteProcess(
-            cmd=[
-                "sleep",
-                "5",
-            ],
-            shell=False,
-        ),
-        context,
-    )
 
 
 def generate_launch_description() -> LaunchDescription:
