@@ -47,7 +47,7 @@ def launch_setup(context: LaunchContext) -> list:
                 }
             },
         ],
-        remappings=[("cmd_vel_out", "cmd_vel_test")],
+        remappings=[("cmd_vel_out", "cmd_vel_final")],
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -94,7 +94,7 @@ def launch_setup(context: LaunchContext) -> list:
             "--controller-manager",
             "controller_manager",
             "--controller-ros-args",
-            "--remap drive_controller/cmd_vel:=cmd_vel_test",
+            "--remap drive_controller/cmd_vel:=cmd_vel_final",
             "--controller-ros-args",
             "--remap drive_controller/odom:=odometry/wheels",
             "--controller-ros-args",
