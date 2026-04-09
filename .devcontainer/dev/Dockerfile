@@ -42,6 +42,11 @@ RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
     && cd src/franka_ros2 \
     && git sparse-checkout set franka_msgs
 
+# Install debug tools:
+RUN apt update && apt install -y --no-install-recommends \
+    ros-$ROS_DISTRO-plotjuggler-ros \
+    ros-$ROS_DISTRO-rqt-tf-tree
+
 # Setup configuration files:
 COPY .devcontainer/dev/.dev_bashrc /.dev_bashrc
 RUN echo "source /.dev_bashrc" >> /home/$REMOTE_USER/.bashrc
