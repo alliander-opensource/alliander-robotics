@@ -9,7 +9,7 @@ from alliander_utilities.register import Register, RegisteredLaunchDescription
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import ExecuteProcess, OpaqueFunction
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 
 platform_arg = LaunchArgument("platform_config", "")
 
@@ -54,7 +54,6 @@ def launch_setup(context: LaunchContext) -> list:
         name="twist_mux",
         namespace=vehicle_config.namespace,
         parameters=[
-            {"use_sim_time": vehicle_config.simulation},
             {"use_stamped": True},
             {
                 "topics": {
@@ -84,6 +83,7 @@ def launch_setup(context: LaunchContext) -> list:
     sleep_infinity = ExecuteProcess(cmd=["sleep", "infinity"])
 
     return [
+        SetParameter(name="use_sim_time", value=vehicle_config.simulation),
         Register.on_start(state_publisher, context)
         if vehicle_config.simulation
         else SKIP,
