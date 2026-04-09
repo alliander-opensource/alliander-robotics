@@ -38,7 +38,7 @@ class Configurations:
     Attributes:
         mode (str): The mode of testing.
         changed_packages (set[str]): The set of packages that have changed.
-        ros_domain_id (int): ...
+        ros_domain_id (int): ROS domain ID in which the test will be executed.
     """
 
     mode: str
