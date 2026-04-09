@@ -27,6 +27,9 @@ from start import Compose
 LAUNCH_TIMEOUT = 300  # seconds
 COMPOSE_FILE = "/alliander_robotics/compose_pytest.yml"
 HOST_COMPOSE_FILE = "/alliander_robotics/compose.yml"
+MAX_ROS_DOMAIN_ID = (
+    232  # https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Domain-ID.html
+)
 
 
 class Configurations:
@@ -98,7 +101,10 @@ def control_class(request: SubRequest) -> Generator:
     Yields:
         Generator: Starts and stops Docker containers for each module.
     """
-    Configurations.ros_domain_id += 1
+    Configurations.ros_domain_id = (Configurations.ros_domain_id + 1) % (
+        MAX_ROS_DOMAIN_ID + 1
+    )  # Loop back to ID 0 if new ID exceeds the allowed maximum
+
     os.environ["ROS_DOMAIN_ID"] = f"{Configurations.ros_domain_id}"
     print("")
     cprint(f"[{request.cls.__name__}]: started", "blue")
