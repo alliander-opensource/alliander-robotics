@@ -100,7 +100,10 @@ class _TestNavigationGPS:
         )
 
 
-for vehicle in ["panther", "lynx",]:
+for vehicle in [
+    "panther",
+    "lynx",
+]:
     for lidar in ["velodyne", "ouster"]:
         for gps in ["gps"]:
             vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
