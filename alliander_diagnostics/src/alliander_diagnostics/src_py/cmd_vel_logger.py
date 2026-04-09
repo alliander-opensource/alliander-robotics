@@ -105,9 +105,7 @@ class CmdVelLogger(Node):
                 )
 
             if dt < 0:
-                self.get_logger().error(
-                    f"[{topic}] Time went backwards! dt={dt:.6f}"
-                )
+                self.get_logger().error(f"[{topic}] Time went backwards! dt={dt:.6f}")
 
         self.last_time = now
 
