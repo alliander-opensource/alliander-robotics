@@ -88,9 +88,6 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
-alliander-diagnostics = [
-    { name = "numpy" },
-]
 alliander-franka = [
     { name = "numpy" },
 ]
@@ -148,7 +145,6 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-alliander-diagnostics = [{ name = "numpy", specifier = ">=2.4.1" }]
 alliander-franka = [{ name = "numpy", specifier = ">=2.4.1" }]
 alliander-gazebo = [
     { name = "numpy", specifier = ">=2.4.1" },

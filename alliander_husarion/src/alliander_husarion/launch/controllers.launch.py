@@ -38,6 +38,11 @@ def launch_setup(context: LaunchContext) -> list:
                         "topic": "cmd_vel_nav",
                         "timeout": 0.5,
                         "priority": 10,
+                    },
+                    "joystick": {
+                        "topic": "cmd_vel_joy",
+                        "timeout": 0.5,
+                        "priority": 100,
                     }
                 }
             },

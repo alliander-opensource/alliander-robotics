@@ -72,17 +72,10 @@ def launch_setup(context: LaunchContext) -> list:
         parameters=[parameters],
     )
 
-    cmd_vel_logger_node = Node(
-        package="alliander_diagnostics",
-        executable="cmd_vel_logger.py",
-        name="cmd_vel_logger",
-    )
-
     use_sim_time = use_sim_time_arg.bool_value(context)
 
     return [
         SetParameter(name="use_sim_time", value=use_sim_time),
-        Register.on_start(cmd_vel_logger_node, context),
         Register.on_start(diagnostics_node, context),
     ]
 
