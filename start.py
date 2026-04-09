@@ -64,7 +64,7 @@ class Compose:
         """Initialize.
 
         Args:
-            ros_domain_id (int): optionally provide ros domain id.
+            ros_domain_id (int): optionally provide ROS domain ID.
         """
         self.mode: MODE | None = None
         self.remove_nvidia = False
