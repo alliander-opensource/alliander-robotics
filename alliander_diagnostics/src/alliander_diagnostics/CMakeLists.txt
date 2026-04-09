@@ -7,18 +7,11 @@ project(alliander_diagnostics)
 
 # CMake dependencies:
 find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
 
 # Other dependencies:
 find_package(rclcpp REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-
-# Python executables:
-install(
-  DIRECTORY src_py/
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 # C++ executables:
 include_directories(include)
