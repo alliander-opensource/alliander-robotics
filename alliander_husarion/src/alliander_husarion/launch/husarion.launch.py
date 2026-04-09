@@ -70,7 +70,7 @@ def launch_setup(context: LaunchContext) -> list:
                 }
             },
         ],
-        remappings=[("cmd_vel_out", "cmd_vel_final")],
+        remappings=[("cmd_vel_out", "cmd_vel")],
     )
 
     controllers = RegisteredLaunchDescription(
