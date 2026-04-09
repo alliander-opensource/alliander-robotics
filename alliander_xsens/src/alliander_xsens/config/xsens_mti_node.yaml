@@ -62,7 +62,7 @@
         # ---------------------------
         # If you want to configure your sensor, firstly set this flag to true, then change desired values for the parameters below.
         # Note: This configuration is required only once, once it is successful, the configurations are stored in the sensor, then you could set this to false.
-        enable_deviceConfig: false
+        enable_deviceConfig: false 
 
         # Sensor Extended Kalman Filter Option Configurations:
         # --------------------------
