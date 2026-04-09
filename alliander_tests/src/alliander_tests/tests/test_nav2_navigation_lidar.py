@@ -106,10 +106,7 @@ class _TestNavigationLidar:
         )
 
 
-for vehicle in [
-    "panther",
-    "lynx",
-]:
+for vehicle in ["panther", "lynx"]:
     for lidar in ["velodyne", "ouster"]:
         vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
