@@ -19,6 +19,7 @@ ImuBridge::ImuBridge() : Node("imu_bridge") {
       });
 
   pub_imu = this->create_publisher<sensor_msgs::msg::Imu>("/topic_out_imu", 1);
+  RCLCPP_INFO(this->get_logger(), "Started IMU bridge topic.");
 }
 
 void ImuBridge::publish_imu() {

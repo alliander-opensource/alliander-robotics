@@ -35,34 +35,37 @@ def launch_setup(context: LaunchContext) -> list:
             print(f"Found multiple IMU devices with VID:PID {VID}:{PID}!")
         imu_device = device.name
 
-    if imu_device is None:
+    if imu_device is None and not imu_config.simulation:
         print("No IMU device found, exiting.")
         exit(1)
     imu_config.usb_device = imu_device
 
-    # state_publisher = state_publisher_node(
-    #     namespace=imu_config.namespace,
-    #     platform="xsens",
-    #     xacro="xsens.urdf.xacro",
-    #     xacro_arguments={
-    #         "parent": "" if imu_config.parent.link else "world",
-    #     },
-    # )
-    #
-    # parent = imu_config.parent
-    # static_tf = static_tf_node(
-    #     parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
-    #     child_frame=f"{imu_config.namespace}/{parent.connects_to}",
-    #     position=imu_config.position,
-    #     orientation=imu_config.orientation,
-    # )
+    state_publisher = state_publisher_node(
+        namespace=imu_config.namespace,
+        platform="xsens",
+        xacro="xsens.urdf.xacro",
+        xacro_arguments={
+            "parent": "" if imu_config.parent.link else "world",
+        },
+    )
 
+    parent = imu_config.parent
+    static_tf = static_tf_node(
+        parent_frame=f"{parent.namespace}/{parent.link}" if parent.link else "map",
+        child_frame=f"{imu_config.namespace}/{parent.connects_to}",
+        position=imu_config.position,
+        orientation=imu_config.orientation,
+    )
+
+    parameter_file = get_file_path("alliander_xsens", ["config"], "xsens_mti_node.yaml")
     hardware = Node(
         package="xsens_mti_ros2_driver",
         executable="xsens_mti_node",
+        parameters=[parameter_file],
         remappings=[
             ("/imu/acceleration", "imu/acceleration"),
             ("/imu/angular_velocity", "imu/angular_velocity"),
+            ("/imu/mag", "imu/mag"),
         ],
         namespace=imu_config.namespace,
     )
@@ -81,12 +84,13 @@ def launch_setup(context: LaunchContext) -> list:
     madgwick_filter_node = Node(
         package="imu_filter_madgwick",
         executable="imu_filter_madgwick_node",
+        remappings=[],
         namespace=imu_config.namespace,
     )
 
     return [
-        # Register.on_start(state_publisher, context),
-        # Register.on_start(static_tf, context),
+        Register.on_start(state_publisher, context),
+        Register.on_start(static_tf, context),
         Register.on_start(hardware, context) if not imu_config.simulation else SKIP,
         Register.on_start(imu_bridge_node, context),
         Register.on_start(madgwick_filter_node, context),
