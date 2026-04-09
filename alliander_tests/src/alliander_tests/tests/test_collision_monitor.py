@@ -48,7 +48,7 @@ class _TestCollisionMonitoring:
 
         test_node.create_subscription(
             msg_type=TwistStamped,
-            topic=f"/{self.platforms['vehicle'].namespace}/cmd_vel_final",
+            topic=f"/{self.platforms['vehicle'].namespace}/cmd_vel",
             callback=callback_function_cmd_vel,
             qos_profile=10,
         )
