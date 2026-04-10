@@ -75,7 +75,7 @@ def launch_setup(context: LaunchContext) -> list:
                 "arm_home_service": f"{arm_namespace}/moveit_manager/move_to_configuration"
             },
             {"arm_pause_servo_service": f"{arm_namespace}/servo_node/pause_servo"},
-            {"vehicle_cmd_topic": f"{vehicle_namespace}/cmd_vel"},
+            {"vehicle_cmd_topic": f"{vehicle_namespace}/cmd_vel_joy"},
             {"vehicle_estop_reset": f"{vehicle_namespace}/hardware/e_stop_reset"},
             {"vehicle_estop_trigger": f"{vehicle_namespace}/hardware/e_stop_trigger"},
         ],
