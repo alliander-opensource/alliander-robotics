@@ -74,11 +74,9 @@ class Compose:
         self.dev = False
         self.gazebo_ui = False
         self.joystick = False
-<<<<<<< 375-changes-to-nav2-planner-and-controller-if-required
         self.rviz_yaml = False
-=======
+
         self.ros_domain_id = ros_domain_id
->>>>>>> main
 
         self.changed_packages = utils.get_changed_packages()
 
