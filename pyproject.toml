@@ -40,6 +40,9 @@ alliander-gazebo = [
     "scipy>=1.17.0",
     "xmltodict>=1.0.2",
 ]
+alliander-gps = [
+    "pydantic>=2.12.5",
+]
 alliander-moveit = [
     "xmltodict>=1.0.2",
 ]
