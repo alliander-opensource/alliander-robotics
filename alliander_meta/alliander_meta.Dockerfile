@@ -7,15 +7,8 @@ FROM $BASE_IMAGE
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
 
-# Install Meta packages:
-WORKDIR /$WORKDIR/external
-RUN apt update
-RUN echo "Clone and install" \
-  && git clone -b main-ros2 https://github.com/leggedrobotics/ROS-TCP-Endpoint.git src/ROS-TCP-Endpoint \
-  && git clone -b main-ros2 https://github.com/leggedrobotics/vr_haptic_msgs.git src/vr_haptic_msgs \
-  && git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nvblox.git /isaac_ros_nvblox \
-  && mv /isaac_ros_nvblox/nvblox_msgs src/
-RUN /$WORKDIR/colcon_build.sh
+# Install adb:
+RUN apt update && apt install -y android-tools-adb
 
 # Install repo packages:
 WORKDIR /$WORKDIR/ros

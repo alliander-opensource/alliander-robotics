@@ -99,6 +99,8 @@ alliander-gazebo = [
 ]
 alliander-meta = [
     { name = "numpy" },
+    { name = "pure-python-adb" },
+    { name = "scipy" },
 ]
 alliander-moveit = [
     { name = "xmltodict" },
@@ -155,7 +157,11 @@ alliander-gazebo = [
     { name = "scipy", specifier = ">=1.17.0" },
     { name = "xmltodict", specifier = ">=1.0.2" },
 ]
-alliander-meta = [{ name = "numpy", specifier = ">=2.4.1" }]
+alliander-meta = [
+    { name = "numpy", specifier = ">=2.4.1" },
+    { name = "pure-python-adb", specifier = ">=0.3.0.dev0" },
+    { name = "scipy", specifier = ">=1.17.0" },
+]
 alliander-moveit = [{ name = "xmltodict", specifier = ">=1.0.2" }]
 alliander-nav2 = [
     { name = "numpy", specifier = ">=2.4.1" },
@@ -873,6 +879,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/68/ab/6b5c191bb5de08036a8c697b265d4ca76148efb10fa162f14af14fb5f076/propcache-0.4.1-cp312-cp312-win_arm64.whl", hash = "sha256:204483131fb222bdaaeeea9f9e6c6ed0cac32731f75dfc1d4a567fc1926477c1", size = 37789, upload-time = "2025-10-08T19:47:06.077Z" },
     { url = "https://files.pythonhosted.org/packages/5b/5a/bc7b4a4ef808fa59a816c17b20c4bef6884daebbdf627ff2a161da67da19/propcache-0.4.1-py3-none-any.whl", hash = "sha256:af2a6052aeb6cf17d3e46ee169099044fd8224cbaf75c76a2ef596e8163e2237", size = 13305, upload-time = "2025-10-08T19:49:00.792Z" },
 ]
+
+[[package]]
+name = "pure-python-adb"
+version = "0.3.0.dev0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/b7/1c4d6b2cbe499b4180177abcf3ae2bb2d8b36acf695ae7d8e9eb99ba00ea/pure-python-adb-0.3.0.dev0.tar.gz", hash = "sha256:0ecc89d780160cfe03260ba26df2c471a05263b2cad0318363573ee8043fb94d", size = 25680, upload-time = "2020-08-05T18:41:27.157Z" }
 
 [[package]]
 name = "pycodestyle"

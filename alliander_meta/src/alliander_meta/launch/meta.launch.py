@@ -41,16 +41,10 @@ def launch_setup(context: LaunchContext) -> list:
             case _:
                 pass
 
-    ros_tcp_endpoint = Node(
-        package="ros_tcp_endpoint",
-        executable="default_server_endpoint",
-        emulate_tty=True,
-        parameters=[{"ROS_IP": "10.223.237.24"}, {"ROS_TCP_PORT": 10000}],
+    meta_quest_node = Node(
+        package="alliander_meta",
+        executable="meta_quest_node.py",
         namespace=namespace,
-        remappings=[
-            ("/tf", f"/{namespace}/tf"),
-            ("/tf_static", f"/{namespace}/tf_static"),
-        ],
     )
 
     meta_manager = Node(
@@ -62,7 +56,7 @@ def launch_setup(context: LaunchContext) -> list:
 
     return [
         SetParameter(name="use_sim_time", value=platforms[0].simulation),
-        Register.on_start(ros_tcp_endpoint, context),
+        Register.on_start(meta_quest_node, context),
         Register.on_start(meta_manager, context),
     ]
 

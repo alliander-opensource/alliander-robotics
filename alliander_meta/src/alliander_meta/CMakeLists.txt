@@ -18,6 +18,15 @@ find_package(tf2_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(alliander_interfaces REQUIRED)
 
+# Python package:
+ament_python_install_package(${PROJECT_NAME})
+
+# Python executables:
+install(
+  DIRECTORY src_py/
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # C++ executables:
 include_directories(include)
 add_executable(meta_manager src/meta_manager.cpp)

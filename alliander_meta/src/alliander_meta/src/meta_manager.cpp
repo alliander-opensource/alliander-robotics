@@ -26,15 +26,11 @@ MetaManager::MetaManager()
   tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
   // Subscriptions:
-  sub_meta_tf = this->create_subscription<tf2_msgs::msg::TFMessage>(
-      "/" + namespace_meta + "/tf", 10,
-      std::bind(&MetaManager::callback_tf, this, std::placeholders::_1));
   sub_joystick = this->create_subscription<sensor_msgs::msg::Joy>(
       "/" + namespace_meta + "/joystick", 10,
       std::bind(&MetaManager::callback_joystick, this, std::placeholders::_1));
 
   // Publishers:
-  pub_tf = this->create_publisher<tf2_msgs::msg::TFMessage>("/tf", 10);
   pub_servo_target = this->create_publisher<geometry_msgs::msg::PoseStamped>(
       "/franka/servo_node/pose_target_cmds", 10);
 
@@ -42,23 +38,6 @@ MetaManager::MetaManager()
   srv_client_arm_home =
       this->create_client<alliander_interfaces::srv::StringSrv>(
           "/" + namespace_arm + "/moveit_manager/move_to_configuration");
-}
-
-// Add timestamps to transforms, change "world" frame to "map" frame and prepend
-// the namespace before republishing them on the global /tf topic:
-void MetaManager::callback_tf(const tf2_msgs::msg::TFMessage::SharedPtr msg) {
-  auto updated_msg = *msg;
-  for (auto& transform : updated_msg.transforms) {
-    transform.header.stamp = this->get_clock()->now();
-    if (transform.header.frame_id == "world") {
-      transform.header.frame_id = "map";
-    } else {
-      transform.header.frame_id =
-          namespace_meta + "/" + transform.header.frame_id;
-    }
-    transform.child_frame_id = namespace_meta + "/" + transform.child_frame_id;
-  }
-  pub_tf->publish(updated_msg);
 }
 
 // Set the hand frame to the current pose of the end-effector when the

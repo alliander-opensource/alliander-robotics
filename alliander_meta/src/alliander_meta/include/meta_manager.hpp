@@ -11,9 +11,7 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joy.hpp>
-#include <tf2_msgs/msg/tf_message.hpp>
 
-typedef tf2_msgs::msg::TFMessage TFMessage;
 typedef geometry_msgs::msg::PoseStamped PoseStamped;
 typedef geometry_msgs::msg::TransformStamped TransformStamped;
 typedef sensor_msgs::msg::Joy Joy;
@@ -39,15 +37,11 @@ class MetaManager : public rclcpp::Node {
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster;
 
   // Subscriptions
-  /// Subscriber for TF messages published by the Meta Quest
-  rclcpp::Subscription<TFMessage>::SharedPtr sub_meta_tf;
   /// Subscriber for joystick input from the Meta Quest controller
   rclcpp::Subscription<Joy>::SharedPtr sub_joystick;
 
   // Publishers
   /// Publisher for republishing Meta Quest TF frames onto the global /tf topic:
-  rclcpp::Publisher<TFMessage>::SharedPtr pub_tf;
-  /// Publishes the pose target to the servo node
   rclcpp::Publisher<PoseStamped>::SharedPtr pub_servo_target;
 
   // Clients
@@ -66,11 +60,6 @@ class MetaManager : public rclcpp::Node {
   /// Start of the end-effector target frame when the trigger is pressed
   TransformStamped end_effector_start;
 
-  /**
-   * @brief Callback for incoming TF messages from the Meta Quest.
-   * @param msg the incoming TF message
-   */
-  void callback_tf(const TFMessage::SharedPtr msg);
   /**
    * @brief Callback for incoming joystick messages from the Meta Quest.
    * @param msg the incoming joystick message
