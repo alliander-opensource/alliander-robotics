@@ -44,12 +44,16 @@ def select_components(components: str) -> None:
                 print(variable, file=fh)
 
 
-def remove_tags_on_docker_hub(token: str) -> None:
+def remove_tags_on_docker_hub(token: str, closed_branch: str = "") -> None:
     """Removes tags on Docker Hub, used in the closed PR workflow.
 
     Args:
         token (str): the token to authenticate with the Docker Hub API.
+        closed_branch (str): the name of the closed branch.
     """
+    closed_branch = closed_branch if closed_branch else utils.get_git_branch()
+    print(f"Checking for tags on Docker Hub with name '{closed_branch}' to remove.")
+
     request = requests.get("https://hub.docker.com/v2/repositories/allianderrobotics/")
     number_of_repositories = request.json()["count"]
 
@@ -77,7 +81,7 @@ def remove_tags_on_docker_hub(token: str) -> None:
         tags = [
             tag["name"]
             for tag in request.json()["results"]
-            if utils.get_git_branch() in tag["name"]
+            if closed_branch in tag["name"]
         ]
         if not tags:
             continue
@@ -116,11 +120,18 @@ if __name__ == "__main__":
         "--remove-tags-on-docker-hub",
         required=False,
         metavar="TOKEN",
-        help="Remmove tags on Docker Hub for the closed PR workflow.",
+        help="Remove tags on Docker Hub for the closed PR workflow.",
+    )
+
+    parser.add_argument(
+        "--branch",
+        required=False,
+        default="",
+        help="Pass the branch name to remove tags for, used in the closed PR workflow.",
     )
 
     args = parser.parse_args()
     if args.select_components:
         select_components(args.select_components)
     elif args.remove_tags_on_docker_hub:
-        remove_tags_on_docker_hub(args.remove_tags_on_docker_hub)
+        remove_tags_on_docker_hub(args.remove_tags_on_docker_hub, args.branch)

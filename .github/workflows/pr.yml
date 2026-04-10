@@ -59,7 +59,7 @@ jobs:
       - name: Create manifest
         uses: ./.github/actions/create-manifest
         with:
-          component: base
+          components: '["base"]'
           tag: ${{ env.BRANCH_NAME }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -87,17 +87,13 @@ jobs:
   build-ubuntu-images-manifest:
     needs: [select-components, build-ubuntu-images]
     if: always() && needs.select-components.outputs.REBUILD_UBUNTU_IMAGES == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        component: ${{ fromJSON(needs.select-components.outputs.UBUNTU_COMPONENTS) }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
       - name: Create manifest
         uses: ./.github/actions/create-manifest
         with:
-          component: ${{ matrix.component }}
+          components: ${{ needs.select-components.outputs.UBUNTU_COMPONENTS}}
           tag: ${{ env.BRANCH_NAME }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -128,7 +124,7 @@ jobs:
       - name: Create manifest
         uses: ./.github/actions/create-manifest
         with:
-          component: cuda
+          components: '["cuda"]'
           tag: ${{ env.BRANCH_NAME }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -156,17 +152,13 @@ jobs:
   build-cuda-images-manifest:
     needs: [select-components, build-cuda-images]
     if: always() && needs.select-components.outputs.REBUILD_CUDA_IMAGES == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        component: ${{ fromJSON(needs.select-components.outputs.CUDA_COMPONENTS) }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
       - name: Create manifest
         uses: ./.github/actions/create-manifest
         with:
-          component: ${{ matrix.component }}
+          components: ${{ needs.select-components.outputs.CUDA_COMPONENTS }}
           tag: ${{ env.BRANCH_NAME }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -200,6 +192,11 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ env.BRANCH_NAME }}
+      - name: Docker login
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
       - name: Set up python3
         uses: actions/setup-python@v6
         with:

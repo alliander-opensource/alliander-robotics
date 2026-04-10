@@ -186,7 +186,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
             "base_frame_id": f"{namespace_vehicle}/base_footprint",
             "odom_frame_id": f"{namespace_vehicle}/odom",
             "cmd_vel_in_topic": f"/{namespace_vehicle}/cmd_vel_raw",
-            "cmd_vel_out_topic": f"/{namespace_vehicle}/cmd_vel",
+            "cmd_vel_out_topic": f"/{namespace_vehicle}/cmd_vel_nav",
             "scan": {
                 "topic": f"/{namespace_lidar}/scan",
             },
@@ -311,7 +311,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     )
 
     pub_topic = (
-        f"/{namespace_vehicle}/cmd_vel"
+        f"/{namespace_vehicle}/cmd_vel_nav"
         if not nav2.collision_monitor
         else f"/{namespace_vehicle}/cmd_vel_raw"
     )
@@ -322,7 +322,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
-        SetRemap(src="/cmd_vel", dst=pub_topic),
+        SetRemap(src=f"/{namespace_vehicle}/cmd_vel", dst=pub_topic),
         *[Register.on_start(node, context) for node in register_lifecycle_nodes],
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
         Register.on_log(nav2_manager, "Controller is ready.", context)

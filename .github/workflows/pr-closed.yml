@@ -26,4 +26,4 @@ jobs:
           https://hub.docker.com/v2/users/login/ \
           | jq -r .token)" >> $GITHUB_OUTPUT
       - name: Remove tags on Docker Hub
-        run: python3 github.py --remove-tags-on-docker-hub ${{ steps.token.outputs.TOKEN }}
+        run: python3 github.py --remove-tags-on-docker-hub ${{ steps.token.outputs.TOKEN }} --branch ${{ github.event.pull_request.head.ref }}

@@ -72,7 +72,7 @@ class _TestVehicle:
         )
 
         pub = test_node.create_publisher(
-            TwistStamped, f"/{self.platforms['vehicle'].namespace}/cmd_vel", 10
+            TwistStamped, f"/{self.platforms['vehicle'].namespace}/cmd_vel_nav", 10
         )
         wait_for_subscriber(pub, timeout)
 
