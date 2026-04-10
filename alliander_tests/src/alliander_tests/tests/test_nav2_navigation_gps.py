@@ -72,13 +72,25 @@ class _TestNavigationGPS:
         # 3) Wait until goal is reached within tolerance:
         start_time = time.time()
         distance: float = sys.float_info.max
+        timed_out = False
+        last_log_time = 0.0
+
         while distance > navigation_degree_tolerance:
             rclpy.spin_once(test_node, timeout_sec=0)
             distance = abs(current_nav_sat.latitude - goal_nav_sat.latitude)
+            now = time.time()
+            if now - last_log_time >= 1.0:
+                test_node.get_logger().info(f"Distance to goal: {distance}")
+                last_log_time = now
             if time.time() - start_time > timeout:
-                raise TimeoutError(
-                    f"Distance is {distance} while tolerance is {navigation_degree_tolerance}."
-                )
+                timed_out = True
+                break
+
+        test_node.get_logger().info(f"Final distance to goal: {distance}.")
+
+        assert not timed_out, (
+            f"Timeout: distance {distance} > tolerance {navigation_degree_tolerance}"
+        )
 
         # 4) Stop navigation, since the goal can be reached before the navigation is finished due to tolerance:
         assert call_trigger_service(

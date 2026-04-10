@@ -22,7 +22,6 @@ clangd/
 .venv
 
 # for LSP in neovim
-.clangd-build/
 **/compile_commands.json
 
 # generated compose files

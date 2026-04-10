@@ -142,7 +142,7 @@ class PredefinedConfigurations:
     @register_configuration("panther_realsense")
     def config_panther_realsense(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
-        camera = Camera("realsense", (0, 0, 0.2))
+        camera = Camera("realsense", (0.18, 0, 0.2))
 
         link(vehicle, camera)
         self.plat_conf.platforms = [vehicle, camera]
@@ -158,7 +158,12 @@ class PredefinedConfigurations:
     @register_configuration("panther_velodyne")
     def config_panther_velodyne(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
-        lidar = Lidar("velodyne", (0.13, -0.13, 0.35), ip_address="10.15.20.5")
+        lidar = Lidar(
+            "velodyne",
+            position=(0.125, 0.185, 0.20),
+            orientation=(0.0, 0.0, 45.0),
+            ip_address="10.15.20.5",
+        )
 
         link(vehicle, lidar)
         self.plat_conf.platforms = [vehicle, lidar]
@@ -174,7 +179,7 @@ class PredefinedConfigurations:
     @register_configuration("panther_gps")
     def config_panther_gps(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
-        gps = GPS("gps", (0, 0, 0.2))
+        gps = GPS("gps", position=(-0.08, -0.25, 0.2), orientation=(0, 0, -90))
 
         link(vehicle, gps)
         self.plat_conf.platforms = [vehicle, gps]
@@ -184,7 +189,12 @@ class PredefinedConfigurations:
     def config_panther_collision_monitor(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
         vehicle.nav2_config.collision_monitor = True
-        lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
+        lidar = Lidar(
+            "velodyne",
+            position=(0.125, 0.185, 0.20),
+            orientation=(0.0, 0.0, 45.0),
+            ip_address="10.15.20.5",
+        )
 
         link(vehicle, lidar)
         self.plat_conf.platforms = [vehicle, lidar]
@@ -193,7 +203,12 @@ class PredefinedConfigurations:
     def config_panther_slam(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
         vehicle.nav2_config.slam = True
-        lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
+        lidar = Lidar(
+            "velodyne",
+            position=(0.125, 0.185, 0.20),
+            orientation=(0.0, 0.0, 45.0),
+            ip_address="10.15.20.5",
+        )
 
         link(vehicle, lidar)
         self.plat_conf.platforms = [vehicle, lidar]
@@ -202,7 +217,12 @@ class PredefinedConfigurations:
     def config_panther_lidar_navigation(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
         vehicle.nav2_config.navigation = True
-        lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
+        lidar = Lidar(
+            "velodyne",
+            position=(0.125, 0.185, 0.20),
+            orientation=(0.0, 0.0, 45.0),
+            ip_address="10.15.20.5",
+        )
 
         link(vehicle, lidar)
         self.plat_conf.platforms = [vehicle, lidar]
@@ -210,18 +230,26 @@ class PredefinedConfigurations:
 
     @register_configuration("panther_gps_navigation")
     def config_panther_gps_navigation(self) -> None:  # noqa: D102
-        vehicle = Vehicle("panther", (0, 0, 0.2))
+        vehicle = Vehicle("panther", (0, 0, 0.2), (0, 0, 45))
+        vehicle.nav2_config.controller = "mppi"
         vehicle.nav2_config.navigation = True
         vehicle.nav2_config.gps = True
         vehicle.nav2_config.window_size = 50
-        lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
-        gps = GPS("gps", (0, 0, 0.2))
+        lidar = Lidar(
+            "velodyne",
+            position=(0.125, 0.185, 0.2),
+            orientation=(0, 0, 45),
+            ip_address="10.15.20.5",
+        )
+        gps = GPS("gps", position=(-0.08, -0.25, 0.2), orientation=(0, 0, -90))
+        camera = Camera("realsense", (0.18, 0, 0.2))
 
         link(vehicle, lidar)
         link(vehicle, gps)
-        self.plat_conf.platforms = [vehicle, lidar, gps]
+        link(vehicle, camera)
+        self.plat_conf.platforms = [vehicle, lidar, gps, camera]
         self.viz_conf.gui = True
-        self.sim_conf.world = "map_5.940906_51.966960"
+        self.sim_conf.world = "map_5.954036_51.977320"
 
     # Lynx:
     @register_configuration("lynx")
@@ -265,7 +293,12 @@ class PredefinedConfigurations:
         vehicle = Vehicle("panther", (0, 0, 0.2))
         vehicle.nav2_config.navigation = True
         arm = Arm("franka", (0, 0, 0.14), gripper=True, moveit=True)
-        lidar = Lidar("velodyne", (0.13, -0.13, 0.35))
+        lidar = Lidar(
+            "velodyne",
+            position=(0.125, 0.185, 0.20),
+            orientation=(0.0, 0.0, 45.0),
+            ip_address="10.15.20.5",
+        )
 
         link(vehicle, arm)
         link(vehicle, lidar)
