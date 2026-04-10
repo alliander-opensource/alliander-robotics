@@ -75,6 +75,7 @@ class Compose:
         self.gazebo_ui = False
         self.joystick = False
         self.rviz_yaml = False
+
         self.ros_domain_id = ros_domain_id
 
         self.changed_packages = utils.get_changed_packages()
