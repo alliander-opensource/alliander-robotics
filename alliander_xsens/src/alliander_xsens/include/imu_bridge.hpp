@@ -16,10 +16,8 @@ class ImuBridge : public rclcpp::Node {
  public:
   /**
    * @brief constructor for the ImuBridge class.
-   * @param node The ROS2 node to attach to.
    */
   ImuBridge();
-  ~ImuBridge() = default;
 
  private:
   // ROS2 communication variables:

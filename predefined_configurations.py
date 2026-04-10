@@ -106,7 +106,7 @@ class PredefinedConfigurations:
         self.plat_conf.platforms = [Camera("realsense", (0, 0, 0.5))]
 
     @register_configuration("xsens")
-    def config_xsense(self) -> None:
+    def config_xsense(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Imu("xsens", (0, 0, 0.5))]
 
     @register_configuration("zed")
