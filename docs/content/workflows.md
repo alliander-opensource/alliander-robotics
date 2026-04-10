@@ -19,7 +19,10 @@ Lint all Python files according to the rules in `pyproject.toml`. See the full l
 Checks the docstring of the .py files using the rules specified in *pyproject.toml*. These checks might be implemented in Ruff in the [future](https://github.com/astral-sh/ruff/issues/12434), but for now we use pydoclint for the additional checks not available in Ruff.
 
 - **clang-format**:\
-Checks the format of the .cpp, .h and .hpp files in this repository.
+Checks the formatting of the .cpp, .h and .hpp files in this repository.
+
+- **cppformat**:\
+Static code checker for .cpp files in this repository.
 
 - **reuse**:\
 Checks all files in this repository on usage of copyright terms.

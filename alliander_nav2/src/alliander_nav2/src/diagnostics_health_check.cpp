@@ -27,10 +27,8 @@ class IsSystemHealthy : public BT::ConditionNode {
    */
   IsSystemHealthy(const std::string& name, const BT::NodeConfiguration& config)
       : BT::ConditionNode(name, config),
-        gps_status_(diagnostic_msgs::msg::DiagnosticStatus::OK) {
-    // Get the shared Nav2 node from blackboard
-    node_ = config.blackboard->get<rclcpp::Node::SharedPtr>("node");
-
+        gps_status_(diagnostic_msgs::msg::DiagnosticStatus::OK),
+        node_(config.blackboard->get<rclcpp::Node::SharedPtr>("node")) {
     // Create a dedicated callback group
     callback_group_ = node_->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive, false);
