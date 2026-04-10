@@ -109,7 +109,7 @@ def launch_setup(context: LaunchContext) -> list:
     else:
         world_name = world_attribute.attrib.get("name")
 
-    cmd = ["gz", "sim", sdf_file]
+    cmd: list[str] = ["gz", "sim", sdf_file]
     if not config.load_ui:
         cmd.append("-s")
     gazebo = ExecuteProcess(

@@ -60,8 +60,12 @@ class Compose:
     host_cwd: str = os.path.abspath(os.getcwd())
     home_dir: str = os.path.expanduser("~")
 
-    def __init__(self) -> None:
-        """Initialize."""
+    def __init__(self, ros_domain_id: int = 0) -> None:
+        """Initialize.
+
+        Args:
+            ros_domain_id (int): optionally provide ROS domain ID.
+        """
         self.mode: MODE | None = None
         self.remove_nvidia = False
         self.predefined_configuration = PredefinedConfigurations()
@@ -70,6 +74,7 @@ class Compose:
         self.dev = False
         self.gazebo_ui = False
         self.joystick = False
+        self.ros_domain_id = ros_domain_id
 
         self.changed_packages = utils.get_changed_packages()
 
@@ -295,9 +300,12 @@ class Compose:
             service (dict): dictionary containing Docker container's YAML config.
             service_type (SERVICE): type of service being created.
         """
+        if self.ros_domain_id != 0:
+            service["environment"] = [f"ROS_DOMAIN_ID={self.ros_domain_id}"]
         if service_type not in {"pytest", "pytest-no-nvidia"}:
             return
 
+        service["environment"] = ["ROS_DOMAIN_ID=0"]
         env_vars = service.get("environment", [])
         if self.predefined_configuration.sim_conf.load_ui:
             env_vars.append("GAZEBO_UI=true")
