@@ -22,9 +22,10 @@ clangd/
 .venv
 
 # for LSP in neovim
-.clangd-build/
+.nvim/
 **/compile_commands.json
 
 # generated compose files
 compose.yml
 compose_pytest.yml
+rviz.yml

@@ -2,10 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import sys
+
 from alliander_utilities.config_objects import Imu
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
-from alliander_utilities.register import Register, RegisteredLaunchDescription
+from alliander_utilities.register import Register
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
@@ -26,18 +28,18 @@ def launch_setup(context: LaunchContext) -> list:
     """
     imu_config = Imu.from_str(platform_arg.string_value(context))
 
-    VID = "2639"
-    PID = "0301"
+    vid = "2639"
+    pid = "0301"
     imu_device = None
-    for device in list_ports.grep(f"{VID}:{PID}"):
+    for device in list_ports.grep(f"{vid}:{pid}"):
         print(f"Found IMU device {device}")
         if imu_device is not None:
-            print(f"Found multiple IMU devices with VID:PID {VID}:{PID}!")
+            print(f"Found multiple IMU devices with vid:pid {vid}:{pid}!")
         imu_device = device.name
 
     if imu_device is None and not imu_config.simulation:
         print("No IMU device found, exiting.")
-        exit(1)
+        sys.exit(1)
     imu_config.usb_device = imu_device
 
     state_publisher = state_publisher_node(

@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+SPDX-License-Identifier: Apache-2.0
+-->
 <robot name="imu_module">
 
   <link name="base_link"/>
