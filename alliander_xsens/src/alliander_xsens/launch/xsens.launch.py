@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import sys
+import time
 
 from alliander_utilities.config_objects import Imu
 from alliander_utilities.launch_argument import LaunchArgument
@@ -31,16 +32,16 @@ def launch_setup(context: LaunchContext) -> list:
     vid = "2639"
     pid = "0301"
     imu_device = None
-    for device in list_ports.grep(f"{vid}:{pid}"):
-        print(f"Found IMU device {device}")
-        if imu_device is not None:
-            print(f"Found multiple IMU devices with vid:pid {vid}:{pid}!")
-        imu_device = device.name
 
-    if imu_device is None and not imu_config.simulation:
-        print("No IMU device found, exiting.")
-        sys.exit(1)
-    imu_config.usb_device = imu_device
+    while imu_device is None and not imu_config.simulation:
+        for device in list_ports.grep(f"{vid}:{pid}"):
+            print(f"Found IMU device {device}")
+            imu_device = device.name
+        if imu_device is None:
+            print(
+                f"No Xsens IMU device (VID:PID {vid}:{pid}) found yet, make sure one is connected."
+            )
+            time.sleep(1.0)
 
     state_publisher = state_publisher_node(
         namespace=imu_config.namespace,
