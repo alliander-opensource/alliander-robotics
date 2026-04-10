@@ -520,7 +520,7 @@ if __name__ == "__main__":
         "--rviz",
         required=False,
         action="store_true",
-        help="Add this flag to createan additional Rviz config in rviz.yml. You still need to specify platforms.",
+        help="Add this flag to create an additional Rviz config in rviz.yml. You still need to specify platforms.",
     )
 
     parser.add_argument(
