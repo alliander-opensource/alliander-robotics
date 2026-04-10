@@ -38,11 +38,11 @@ def launch_setup(context: LaunchContext) -> list:
         namespace=arm_config.namespace,
     )
 
-    fr3_arm_controller_spawner = Node(
+    arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=[
-            "fr3_arm_controller",
+            f"{arm_config.controller}",
             "--switch-timeout",
             str(TIMEOUT),
         ],
@@ -80,7 +80,7 @@ def launch_setup(context: LaunchContext) -> list:
 
     return [
         Register.on_exit(joint_state_broadcaster_spawner, context),
-        Register.on_exit(fr3_arm_controller_spawner, context),
+        Register.on_exit(arm_controller_spawner, context),
         Register.on_start(fr3_gripper, context),
         (
             Register.on_exit(gripper_action_controller_spawner, context)
