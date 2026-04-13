@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+# 
+# SPDX-License-Identifier: Apache-2.0
+unusedFunction:*/tests/*.cpp
+unusedFunction:*/test/*.cpp
