@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import time
 
 from alliander_utilities.config_objects import Imu
