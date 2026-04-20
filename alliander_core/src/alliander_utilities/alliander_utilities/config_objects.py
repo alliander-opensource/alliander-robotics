@@ -331,6 +331,17 @@ class GPS(Platform):
     diagnostic_timeouts: tuple[int, int, int] = (3, 5, 10)
 
 
+@dataclass
+class Lift(Platform):
+    """Configuration for a Lift platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+    """
+
+    platform_type: str = "Lift"
+
+
 # Configurations containing lists of platforms:
 @dataclass
 class PlatformList(Config):
@@ -342,7 +353,7 @@ class PlatformList(Config):
 
     platforms: List[
         Annotated[
-            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS],
+            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS, Lift],
             Discriminator(field="platform_type", include_supertypes=True),
         ]
     ] = field(default_factory=list)
