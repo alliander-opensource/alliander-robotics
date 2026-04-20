@@ -18,6 +18,10 @@ diagnostics:
   base_image: allianderrobotics/base
   repository: allianderrobotics/diagnostics
   dockerfile: alliander_diagnostics/alliander_diagnostics.Dockerfile
+ewellix:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/ewellix
+  dockerfile: alliander_ewellix/alliander_ewellix.Dockerfile
 franka:
   base_image: allianderrobotics/base
   repository: allianderrobotics/franka

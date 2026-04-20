@@ -13,6 +13,7 @@ from alliander_core.src.alliander_utilities.alliander_utilities.config_objects i
     Arm,
     Camera,
     Lidar,
+    Lift,
     Platform,
     PlatformList,
     SimulatorConfig,
@@ -107,6 +108,11 @@ class PredefinedConfigurations:
     @register_configuration("zed")
     def config_zed(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("zed", (0, 0, 0.5), namespace="zed")]
+
+    # Ewellix:
+    @register_configuration("ewellix")
+    def config_ewellix(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [Lift("ewellix")]
 
     # Franka:
     @register_configuration("franka")
