@@ -1,2 +1,3 @@
+pub mod camera;
 pub mod error;
-pub mod stream;
+pub mod ros;

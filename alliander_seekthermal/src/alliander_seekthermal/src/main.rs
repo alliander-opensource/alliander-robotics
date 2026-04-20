@@ -1,5 +1,5 @@
+use alliander_seekthermal::camera::CameraClient;
 use alliander_seekthermal::error::Result;
-use alliander_seekthermal::stream::CameraClient;
 const CAMERA_IP: &str = "192.168.68.65:80";
 
 #[tokio::main]
