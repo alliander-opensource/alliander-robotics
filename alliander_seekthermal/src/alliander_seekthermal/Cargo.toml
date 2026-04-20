@@ -5,5 +5,6 @@ edition = "2024"
 
 [dependencies]
 log = "0.4.29"
+r2r = "0.9.5"
 thiserror = "2.0.18"
 tokio = { version = "1.52.1", features = ["full"] }
