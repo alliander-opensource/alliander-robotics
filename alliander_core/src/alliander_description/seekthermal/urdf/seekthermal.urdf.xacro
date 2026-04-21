@@ -1,133 +1,44 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0"?>
 <!--
 SPDX-FileCopyrightText: Alliander N. V.
-
 SPDX-License-Identifier: Apache-2.0
 -->
+<robot name="seekthermal_module">
 
-<!-- 
-Based on:
-1.https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/velodyne_description/urdf/VLP-16.urdf.xacro
-2.https://github.com/husarion/husarion_components_description/blob/ros2/urdf/velodyne_puck.urdf.xacro
--->
+  <link name="base_link"/>
+  <link name="seekthermal_link">
 
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="VLP-16">
-  <xacro:property name="M_PI" value="3.1415926535897931" />
-  <xacro:macro name="VLP-16"
-    params="
-    *origin 
-    namespace
-    parent
-    name:=velodyne
-    update_rate:=10 
-    lasers:=16 
-    samples:=1875 
-    min_range:=0.6
-    max_range:=130.0
-    min_angle:=-${M_PI} 
-    max_angle:=${M_PI}
-    ">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.105 0.050 0.050"/>
+      </geometry>
+      <material name="dark_grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
 
-    <link name="base_link">
-      <inertial>
-        <mass value="0.83" />
-        <origin xyz="0 0 0.03585" />
-        <inertia ixx="${(0.83 * (3.0*0.0516*0.0516 + 0.0717*0.0717)) / 12.0}" ixy="0" ixz="0"
-          iyy="${(0.83 * (3.0*0.0516*0.0516 + 0.0717*0.0717)) / 12.0}" iyz="0"
-          izz="${0.5 * 0.83 * (0.0516*0.0516)}" />
-      </inertial>
-      <visual>
-        <geometry>
-          <mesh filename="package://velodyne_description/meshes/VLP16_base_1.dae" />
-        </geometry>
-      </visual>
-      <visual>
-        <geometry>
-          <mesh filename="package://velodyne_description/meshes/VLP16_base_2.dae" />
-        </geometry>
-      </visual>
-      <collision>
-        <origin rpy="0 0 0" xyz="0 0 0.03585" />
-        <geometry>
-          <cylinder radius="0.0516" length="0.0717" />
-        </geometry>
-      </collision>
-    </link>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.105 0.050 0.050"/>
+      </geometry>
+    </collision>
 
-    <joint name="base_scan_joint" type="fixed">
-      <origin xyz="0 0 0.0377" rpy="0 0 0" />
-      <parent link="base_link" />
-      <child link="${name}" />
-    </joint>
+    <inertial>
+      <mass value="0.340"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.000142" ixy="0.0" ixz="0.0"
+                               iyy="0.000384" iyz="0.0"
+                                              izz="0.000384"/>
+    </inertial>
 
-    <link name="${name}">
-      <inertial>
-        <mass value="0.01" />
-        <origin xyz="0 0 0" />
-        <inertia ixx="1e-7" ixy="0" ixz="0" iyy="1e-7" iyz="0" izz="1e-7" />
-      </inertial>
-      <visual>
-        <origin xyz="0 0 -0.0377" />
-        <geometry>
-          <mesh filename="package://velodyne_description/meshes/VLP16_scan.dae" />
-        </geometry>
-      </visual>
-    </link>
+  </link>
 
-    <!-- Gazebo requires a joint to a link called "world" for statically mounted robots -->
-    <xacro:if value="${parent == 'world'}">
-      <link name="${parent}" />
-      <joint name="${parent}_joint" type="fixed">
-        <parent link="${parent}" />
-        <child link="base_link" />
-      </joint>
-    </xacro:if>
+  <joint name="seekthermal_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="seekthermal_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
 
-    <gazebo reference="${name}">
-      <sensor type="gpu_lidar" name="${namespace}">
-        <always_on>true</always_on>
-        <update_rate>${update_rate}</update_rate>
-
-        <topic>${namespace}/scan</topic>
-        <visualize>false</visualize>
-
-        <gz_frame_id>${namespace}/${name}</gz_frame_id>
-        <frame_id>${namespace}/${name}</frame_id>
-
-        <ray>
-          <scan>
-            <horizontal>
-              <samples>${samples}</samples>
-              <resolution>1</resolution>
-              <min_angle>${min_angle}</min_angle>
-              <max_angle>${max_angle}</max_angle>
-            </horizontal>
-            <vertical>
-              <samples>${lasers}</samples>
-              <resolution>1</resolution>
-              <min_angle>-${15.0*M_PI/180.0}</min_angle>
-              <max_angle> ${15.0*M_PI/180.0}</max_angle>
-            </vertical>
-          </scan>
-          <range>
-            <min>${min_range}</min>
-            <max>${max_range}</max>
-            <resolution>0.001</resolution>
-          </range>
-          <noise>
-            <type>gaussian</type>
-            <mean>0.0</mean>
-            <stddev>0.0</stddev>
-          </noise>
-        </ray>
-      </sensor>
-    </gazebo>
-
-  </xacro:macro>
-
-  <xacro:arg name="namespace" default="velodyne" />
-  <xacro:arg name="parent" default="" />
-  <xacro:VLP-16 namespace="$(arg namespace)" parent="$(arg parent)">
-    <origin xyz="0 0 0" rpy="0 0 0" />
-  </xacro:VLP-16>
 </robot>

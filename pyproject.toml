@@ -51,6 +51,7 @@ alliander-nav2 = [
     "pydantic>=2.12.5",
 ]
 alliander-seekthermal = [
+    "numpy>=2.4.4",
     "requests>=2.33.0",
 ]
 alliander-visualization = [

@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
+import subprocess
+import sys
 import time
 from typing import List, Optional
 
@@ -25,10 +29,6 @@ class SeekThermalBridge(Node):
         """Initialize the Seek Thermal camera bridge node."""
         super().__init__("camera_bridge")
 
-        self.declare_parameter("ip_address", "192.168.68.65")
-        self.ip_addr = (
-            self.get_parameter("ip_address").get_parameter_value().string_value
-        )
         self.declare_parameter("username", "admin")
         username = self.get_parameter("username").get_parameter_value().string_value
         self.declare_parameter("password", "admin")
@@ -42,14 +42,39 @@ class SeekThermalBridge(Node):
             CompressedImage, "/topic_out_image/compressed", 1
         )
         self.timer_ = self.create_timer(poll_period, self.timer_callback)
-        self.session = requests.Session()
-        self.token = None
+        self.session_ = requests.Session()
+        self.token_ = None
+
+        # look for OUI (Organizationally Unique Identifier) only
+        self.ip_addr = self.get_camera_address("ec:9a:0c:60")
+
+        if self.ip_addr is None:
+            print(
+                "Unable to find IP address of Seek Thermal camera (OUI EC:9A:0C:60). Make sure device is connected and pingable."
+            )
+            sys.exit(1)
 
         self.get_logger().info("Started Seek Thermal camera bridge node.")
 
-        while self.token is None:
+        while self.token_ is None:
             self.login(username, password)
             time.sleep(0.5)
+
+    def get_camera_address(self, target_mac: str) -> str | None:
+        """Gets the camera's IP address based on vendor OUI.
+
+        Args:
+            target_mac (str): target MAC address to look for (OUI only recommended).
+
+        Returns:
+            str | None: IP address if MAC address is found, None otherwise.
+        """
+        target_mac = target_mac.lower()
+        result = subprocess.run(["ip", "neigh", "show"], capture_output=True, text=True)
+        for line in result.stdout.splitlines():
+            if target_mac in line.lower():
+                return line.split()[0]
+        return None
 
     def login(self, username: str, password: str) -> None:
         """Authenticate with the camera API and store the bearer token.
@@ -58,13 +83,13 @@ class SeekThermalBridge(Node):
             username (str): Camera login username.
             password (str): Camera login password.
         """
-        resp = self.session.post(
+        resp = self.session_.post(
             f"http://{self.ip_addr}/session/login",
             json={"username": username, "password": password},
         ).json()
         if "token" in resp:
             self.get_logger().info("Logged in.")
-            self.token = resp["token"]
+            self.token_ = resp["token"]
         else:
             self.get_logger().info(f"Login did not succeed. Error: {resp['error']}")
 
@@ -74,17 +99,11 @@ class SeekThermalBridge(Node):
         Returns:
             bytes: Raw JPEG image bytes from the camera.
         """
-        resp = self.session.get(
-            f"http://{self.ip_addr}/image/minmax",
-            headers={"Authorization": f"Bearer {self.token}", "Accept": "image/jpeg"},
-        )
-        self.get_logger().info(f"Minmax response: {resp.text}")
-        resp = self.session.get(
+        resp = self.session_.get(
             f"http://{self.ip_addr}/image/current",
-            headers={"Authorization": f"Bearer {self.token}", "Accept": "image/jpeg"},
+            headers={"Authorization": f"Bearer {self.token_}", "Accept": "image/jpeg"},
         )
         resp.raise_for_status()
-        self.get_logger().info(resp.text)
         return resp.content
 
     def convert_image(self, jpeg_bytes: bytes) -> CompressedImage:
@@ -100,6 +119,11 @@ class SeekThermalBridge(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.format = "jpeg"
         msg.data = jpeg_bytes
+
+        if len(jpeg_bytes) > 0:
+            self.get_logger().info(
+                "Publishing current image. This log will appear only once.", once=True
+            )
 
         return msg
 
