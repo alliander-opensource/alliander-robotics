@@ -1,12 +1,23 @@
 use crate::error::{CameraError, Result};
 
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
+#[derive(Debug)]
 pub struct CameraResponse {
     status_code: usize,
     body: Option<String>,
     image: Option<Vec<u8>>,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct LoginResponse {
+    succeeded: bool,
+    uservalid: bool,
+    token: String,
+    error: String,
 }
 
 impl CameraResponse {
@@ -35,6 +46,11 @@ pub struct CameraClient {
     stream: TcpStream,
 }
 
+/// Camera HTTP client class.
+/// This is done using a TcpStream, because both the reqwest and ureq libraries do not specify
+/// header order. The G300 needs a specific header order for parsing data, so any request done with
+/// either of these libraries will fail. Notably, Python's requests library does not have this
+/// issue.
 impl CameraClient {
     pub async fn new(ip_addr: &str) -> Result<Self> {
         let stream = TcpStream::connect(ip_addr).await?;
@@ -47,10 +63,17 @@ impl CameraClient {
 
     pub async fn login(&mut self) -> Result<bool> {
         let body = "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}";
-        let response = self.post(body).await?;
-        println!("{}", String::from_utf8_lossy(&response));
+        let mut succeeded = false;
 
-        Ok(true)
+        let response_str = self.post(body).await?;
+        let resp = self.extract_response(response_str)?;
+        if let Some(b) = resp.body {
+            let r: LoginResponse =
+                serde_json::from_str(&b).map_err(|_| CameraError::InvalidResponse)?;
+            self.token = Some(r.token);
+            succeeded = r.succeeded;
+        }
+        Ok(succeeded)
     }
 
     fn extract_response(&self, response: Vec<u8>) -> Result<CameraResponse> {

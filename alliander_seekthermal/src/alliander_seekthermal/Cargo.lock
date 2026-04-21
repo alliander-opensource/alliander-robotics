@@ -43,6 +43,8 @@ dependencies = [
  "log",
  "r2r",
  "r2r_msg_gen",
+ "serde",
+ "serde_json",
  "thiserror 2.0.18",
  "tokio",
 ]
