@@ -7,33 +7,11 @@ FROM $BASE_IMAGE
 ARG COLCON_BUILD_SEQUENTIAL
 ENV ROS_DISTRO=jazzy
 
-ENV RUSTUP_HOME=/root/rustup
-ENV CARGO_HOME=/root/cargo
-
-# Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-
-ENV PATH="/root/cargo/bin:${PATH}"
-
-# Install ROS dependencies 
-RUN apt update && apt install -y --no-install-recommends \
-  ros-$ROS_DISTRO-velodyne-description \
-  ros-$ROS_DISTRO-pointcloud-to-laserscan \
-  && rm -rf /var/lib/apt/lists/* \
-  && apt autoremove -y \
-  && apt clean
-
-# Install core packages:
+# Install repo package:
 WORKDIR /$WORKDIR/ros
 COPY alliander_core/src/ /$WORKDIR/ros/src
+COPY alliander_seekthermal/src/ /$WORKDIR/ros/src
 RUN /$WORKDIR/colcon_build.sh
-
-# Install repo package:
-WORKDIR $WORKDIR
-RUN mkdir -p /$WORKDIR/rust/
-COPY alliander_seekthermal/src/ /$WORKDIR/rust/
-WORKDIR /$WORKDIR/rust/alliander_seekthermal/
-RUN . /opt/ros/jazzy/setup.sh && cargo build
 
 # Install python dependencies:
 WORKDIR $WORKDIR

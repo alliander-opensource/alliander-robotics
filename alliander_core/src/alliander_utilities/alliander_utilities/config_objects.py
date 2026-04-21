@@ -294,9 +294,11 @@ class Camera(Platform):
 
     Attributes:
         platform_type (str): Type identifier for the platform.
+        ip_address (str): IP address of the camera.
     """
 
     platform_type: str = "Camera"
+    ip_address: str = "10.15.20.6"
 
 
 @dataclass

@@ -107,6 +107,9 @@ alliander-nav2 = [
     { name = "numpy" },
     { name = "pydantic" },
 ]
+alliander-seekthermal = [
+    { name = "requests" },
+]
 alliander-visualization = [
     { name = "nicegui" },
     { name = "numpy" },
@@ -161,6 +164,7 @@ alliander-nav2 = [
     { name = "numpy", specifier = ">=2.4.1" },
     { name = "pydantic", specifier = ">=2.12.5" },
 ]
+alliander-seekthermal = [{ name = "requests", specifier = ">=2.33.0" }]
 alliander-visualization = [
     { name = "nicegui", specifier = ">=3.7.0" },
     { name = "numpy", specifier = ">=2.4.1" },
