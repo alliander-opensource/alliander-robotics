@@ -1,5 +1,6 @@
 use crate::error::{CameraError, Result};
 
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -134,5 +135,13 @@ impl CameraClient {
         self.stream.read_to_end(&mut response).await?;
 
         Ok(response)
+    }
+
+    pub async fn get(&self, endpoint: &str) -> Result<reqwest::Response> {
+        let resp = reqwest::get(format!("http://{0}/{endpoint}", self.ip_address))
+            .await
+            .map_err(|_| CameraError::InvalidResponse)?;
+
+        Ok(resp)
     }
 }
