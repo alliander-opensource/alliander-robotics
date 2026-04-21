@@ -25,7 +25,7 @@ class MetaQuestNode(Node):
 
         self.create_timer(0.001, self.publish_tf)
         self.create_timer(0.01, self.publish_joystick)
-        self.get_logger().info("Reader node initialized.")
+        self.get_logger().info("Meta Quest Node initialized.")
 
     def publish_joystick(self) -> None:
         """Publish the joystick data."""

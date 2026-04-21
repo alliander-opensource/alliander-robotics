@@ -7,7 +7,7 @@ from alliander_utilities.config_objects import PlatformList
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
 from launch import LaunchContext, LaunchDescription
-from launch.actions import OpaqueFunction
+from launch.actions import ExecuteProcess, OpaqueFunction
 from launch_ros.actions import Node, SetParameter
 
 platform_list_arg = LaunchArgument("platform_list", "")
@@ -47,6 +47,8 @@ def launch_setup(context: LaunchContext) -> list:
         namespace=namespace,
     )
 
+    scrcpy = ExecuteProcess(cmd=["scrcpy", "--stay-awake", "--no-audio"])
+
     meta_manager = Node(
         package="alliander_meta",
         executable="meta_manager",
@@ -56,8 +58,9 @@ def launch_setup(context: LaunchContext) -> list:
 
     return [
         SetParameter(name="use_sim_time", value=platforms[0].simulation),
-        Register.on_start(meta_quest_node, context),
+        Register.on_log(meta_quest_node, "Meta Quest Node initialized.", context),
         Register.on_start(meta_manager, context),
+        Register.on_start(scrcpy, context),
     ]
 
 

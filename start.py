@@ -396,11 +396,16 @@ class Compose:
                 "interval": "1s",
                 "retries": 1000,
             }
+            # Make all services depend on meta, if meta is enabled:
+            if self.meta and name != "alliander_meta":
+                if "depends_on" not in service:
+                    service["depends_on"] = {}
+                service["depends_on"]["alliander_meta"] = {
+                    "condition": "service_healthy"
+                }
+
             # Make visualization depenend on all other services:
-            if (
-                "alliander_visualization" in services
-                and name != "alliander_visualization"
-            ):
+            if self.visualization and name != "alliander_visualization":
                 services["alliander_visualization"]["depends_on"][name] = {
                     "condition": "service_healthy"
                 }
