@@ -108,6 +108,12 @@ class PredefinedConfigurations:
     def config_zed(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("zed", (0, 0, 0.5), namespace="zed")]
 
+    @register_configuration("seekthermal")
+    def config_seekthermal(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [
+            Camera("seekthermal", (0, 0, 0.5), namespace="seekthermal")
+        ]
+
     # Franka:
     @register_configuration("franka")
     def config_franka(self) -> None:  # noqa: D102
