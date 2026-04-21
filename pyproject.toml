@@ -42,7 +42,7 @@ alliander-gazebo = [
 ]
 alliander-meta = [
     "numpy>=2.4.1",
-    "pure-python-adb>=0.3.0.dev0",
+    "pure-python-adb-reborn>=1.0.0",
     "scipy>=1.17.0",
 ]
 alliander-moveit = [
