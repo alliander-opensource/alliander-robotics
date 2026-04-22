@@ -97,6 +97,8 @@ def launch_setup(context: LaunchContext) -> list:
         Register.on_start(madgwick_filter_node, context)
         if not imu_config.simulation
         else SKIP,
+        # there seems to be a delay before the IMU is available for
+        # xsens_mti_node, so wait until madgwick filter is started
         Register.on_log(
             hardware,
             "Still waiting for data on topics imu/data_raw and imu/mag...",
