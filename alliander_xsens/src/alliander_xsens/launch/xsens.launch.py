@@ -33,13 +33,14 @@ def launch_setup(context: LaunchContext) -> list:
     pid = "0301"
     imu_device = None
 
+    try:
+        os.unlink("/dev/xsens")
+    except FileNotFoundError:
+        pass
+
     while imu_device is None and not imu_config.simulation:
         for device in list_ports.grep(f"{vid}:{pid}"):
             print(f"Found IMU device {device}")
-            try:
-                os.unlink("/dev/xsens")
-            except FileNotFoundError:
-                pass
             os.symlink(device.name, "/dev/xsens")
             imu_device = device.name
         if imu_device is None:
