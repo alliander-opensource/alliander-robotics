@@ -332,8 +332,8 @@ class GPS(Platform):
 
 
 @dataclass
-class Imu(Platform):
-    """Configuration for an Imu platform.
+class IMU(Platform):
+    """Configuration for an IMU platform.
 
     Attributes:
         platform_type (str): Type identifier for the platform.
@@ -355,7 +355,7 @@ class PlatformList(Config):
 
     platforms: List[
         Annotated[
-            Union[Platform, Arm, Vehicle, Camera, GPS, Imu, Lidar],
+            Union[Platform, Arm, Vehicle, Camera, GPS, IMU, Lidar],
             Discriminator(field="platform_type", include_supertypes=True),
         ]
     ] = field(default_factory=list)
