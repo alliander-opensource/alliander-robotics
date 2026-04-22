@@ -93,9 +93,17 @@ def launch_setup(context: LaunchContext) -> list:
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.on_start(hardware, context) if not imu_config.simulation else SKIP,
         Register.on_start(imu_bridge_node, context),
-        Register.on_start(madgwick_filter_node, context),
+        Register.on_start(madgwick_filter_node, context)
+        if not imu_config.simulation
+        else SKIP,
+        Register.on_log(
+            hardware,
+            "Still waiting for data on topics imu/data_raw and imu/mag...",
+            context,
+        )
+        if not imu_config.simulation
+        else SKIP,
     ]
 
 
