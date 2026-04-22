@@ -4,7 +4,7 @@
 
 import time
 
-from alliander_utilities.config_objects import Imu
+from alliander_utilities.config_objects import IMU
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
 from alliander_utilities.register import Register
@@ -26,7 +26,7 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    imu_config = Imu.from_str(platform_arg.string_value(context))
+    imu_config = IMU.from_str(platform_arg.string_value(context))
 
     vid = "2639"
     pid = "0301"

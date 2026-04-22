@@ -5,6 +5,7 @@ import subprocess
 
 from alliander_utilities.config_objects import (
     GPS,
+    IMU,
     Arm,
     Camera,
     Lidar,
@@ -51,6 +52,8 @@ class ApplyConfigurations:
                     self.add_depth_camera(Camera.from_str(platform.to_str()))
                 case "GPS":
                     self.add_gps(GPS.from_str(platform.to_str()))
+                case "IMU":
+                    self.add_imu(IMU.from_str(platform.to_str()))
                 case _:
                     raise NotImplementedError(
                         f"Configuration for platform {type(platform).__name__} is not implemented."
@@ -180,3 +183,12 @@ class ApplyConfigurations:
             platform (GPS): The GPS platform configuration.
         """
         Rviz.add_satellite(f"/{platform.namespace}/gps/fix")
+
+    @staticmethod
+    def add_imu(_platform: IMU) -> None:
+        """Add IMU configurtions to Rviz and Vizanti.
+
+        Args:
+            platform (IMU): The IMU platform configuration,
+        """
+        pass
