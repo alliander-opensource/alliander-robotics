@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 import time
 
 from alliander_utilities.config_objects import IMU
@@ -35,6 +36,11 @@ def launch_setup(context: LaunchContext) -> list:
     while imu_device is None and not imu_config.simulation:
         for device in list_ports.grep(f"{vid}:{pid}"):
             print(f"Found IMU device {device}")
+            try:
+                os.unlink("/dev/xsens")
+            except FileNotFoundError:
+                pass
+            os.symlink(device.name, "/dev/xsens")
             imu_device = device.name
         if imu_device is None:
             print(
