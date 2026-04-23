@@ -286,6 +286,8 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     if nav2.gps:
         remappings.append(("/gps/fix", f"/{namespace_gps}/fix"))
         remappings.append(("/fromLL", f"/{namespace_gps}/fromLL"))
+    if nav2.imu_topic != "":
+        remappings.append(("imu/data", nav2.imu_topic))
 
     all_lifecycle_nodes["waypoint_follower"] = LifecycleNode(
         package="nav2_waypoint_follower",
