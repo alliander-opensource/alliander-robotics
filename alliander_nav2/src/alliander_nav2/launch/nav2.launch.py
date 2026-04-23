@@ -101,7 +101,19 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
             "global_frame": f"{namespace_vehicle}/odom",
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
             "rolling_window": nav2.gps,
+            "width": 10,
+            "height": 10,
             "plugins": plugins,
+            "obstacle_layer": {
+                "scan": {
+                    "topic": f"/{namespace_lidar}/scan",
+                    "obstacle_max_range": 10.0,
+                    "raytrace_max_range": 10.0,
+                }
+            },
+            "inflation_layer": {
+                "inflation_radius": float(5),  # width / 2
+            },
         },
         root_key=namespace_vehicle,
     )
@@ -127,7 +139,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     controller_server_params = AdaptedYaml(
         get_file_path("alliander_nav2", ["config", "nav2"], "controller_server.yaml"),
-        {"odom_topic": f"/{namespace_vehicle}/odom"},
+        {"odom_topic": f"/{namespace_vehicle}/odometry/filtered"},
         root_key=namespace_vehicle,
     )
 
@@ -157,7 +169,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
                 "alliander_nav2", ["config", "nav2"], "behavior_tree.xml"
             ),
             "robot_base_frame": f"{namespace_vehicle}/base_footprint",
-            "odom_topic": f"/{namespace_vehicle}/odom",
+            "odom_topic": f"/{namespace_vehicle}/odometry/filtered",
         },
         root_key=namespace_vehicle,
     )
@@ -174,7 +186,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
             "base_frame_id": f"{namespace_vehicle}/base_footprint",
             "odom_frame_id": f"{namespace_vehicle}/odom",
             "cmd_vel_in_topic": f"/{namespace_vehicle}/cmd_vel_raw",
-            "cmd_vel_out_topic": f"/{namespace_vehicle}/cmd_vel",
+            "cmd_vel_out_topic": f"/{namespace_vehicle}/cmd_vel_nav",
             "scan": {
                 "topic": f"/{namespace_lidar}/scan",
             },
@@ -299,7 +311,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     )
 
     pub_topic = (
-        f"/{namespace_vehicle}/cmd_vel"
+        f"/{namespace_vehicle}/cmd_vel_nav"
         if not nav2.collision_monitor
         else f"/{namespace_vehicle}/cmd_vel_raw"
     )
@@ -310,7 +322,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
 
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
-        SetRemap(src="/cmd_vel", dst=pub_topic),
+        SetRemap(src=f"/{namespace_vehicle}/cmd_vel", dst=pub_topic),
         *[Register.on_start(node, context) for node in register_lifecycle_nodes],
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
         Register.on_log(nav2_manager, "Controller is ready.", context)

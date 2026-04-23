@@ -32,8 +32,8 @@ def launch_setup(context: LaunchContext) -> list:
             {
                 "ip": gps_config.ip_address,
                 "port": 5000,
-                "frame_id": "gps",
-                "tf_prefix": gps_config.parent.namespace,
+                "frame_id": "base_link",
+                "tf_prefix": gps_config.namespace,
             },
         ],
         remappings=[

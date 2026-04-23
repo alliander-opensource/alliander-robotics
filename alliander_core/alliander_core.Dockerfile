@@ -12,6 +12,7 @@ ENV WORKDIR=alliander
 RUN apt update && apt install -y -qq --no-install-recommends \
   bash \
   build-essential \
+  clang-tidy \
   curl \
   flake8 \
   git \

@@ -103,7 +103,7 @@ class UserInterfaceNode(Node):
 
         self.ui = UserInterface(self)
         connected = 0
-        controllers = 3 * [None]
+        controllers: list[ArmControl | VehicleControl | None] = [None, None, None]
         for platform in platform_list.platforms:
             if connected == COLS:
                 self.get_logger().warn(

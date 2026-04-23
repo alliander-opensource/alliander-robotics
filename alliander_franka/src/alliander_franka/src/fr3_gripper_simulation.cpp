@@ -6,7 +6,6 @@
 
 Fr3Gripper::Fr3Gripper() : Node("fr3_gripper") {
   std::string ns = this->get_namespace();
-  std::string node_name = this->get_name();
 
   client = rclcpp_action::create_client<ParallelGripperCommand>(
       this, ns + "/gripper_action_controller/gripper_cmd");
@@ -63,17 +62,14 @@ void Fr3Gripper::execute<Grasp>(
   goal.command.position = {respect_limits(goal_handle->get_goal()->width)};
   goal.command.effort = {goal_handle->get_goal()->force};
 
-  send_goal(goal);
+  bool goal_result = send_goal(goal);
 
   auto result = std::make_shared<typename Grasp::Result>();
-  auto success = true;
-  if (rclcpp::ok()) {
-    result->success = success;
-    if (success) {
-      goal_handle->succeed(result);
-    } else {
-      goal_handle->abort(result);
-    }
+  result->success = goal_result;
+  if (goal_result) {
+    goal_handle->succeed(result);
+  } else {
+    goal_handle->abort(result);
   }
 };
 
@@ -89,17 +85,14 @@ void Fr3Gripper::execute<Homing>(
   auto goal = ParallelGripperCommand::Goal();
   goal.command.position = {upper_limit};
 
-  send_goal(goal);
+  bool goal_result = send_goal(goal);
 
   auto result = std::make_shared<typename Homing::Result>();
-  auto success = true;
-  if (rclcpp::ok()) {
-    result->success = success;
-    if (success) {
-      goal_handle->succeed(result);
-    } else {
-      goal_handle->abort(result);
-    }
+  result->success = goal_result;
+  if (goal_result) {
+    goal_handle->succeed(result);
+  } else {
+    goal_handle->abort(result);
   }
 };
 
@@ -114,17 +107,14 @@ void Fr3Gripper::execute<Move>(
   auto goal = ParallelGripperCommand::Goal();
   goal.command.position = {respect_limits(goal_handle->get_goal()->width)};
 
-  send_goal(goal);
+  bool goal_result = send_goal(goal);
 
   auto result = std::make_shared<typename Move::Result>();
-  auto success = true;
-  if (rclcpp::ok()) {
-    result->success = success;
-    if (success) {
-      goal_handle->succeed(result);
-    } else {
-      goal_handle->abort(result);
-    }
+  result->success = goal_result;
+  if (goal_result) {
+    goal_handle->succeed(result);
+  } else {
+    goal_handle->abort(result);
   }
 };
 

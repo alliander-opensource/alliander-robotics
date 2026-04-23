@@ -26,6 +26,9 @@ from start import Compose
 LAUNCH_TIMEOUT = 90  # seconds
 COMPOSE_FILE = "/alliander_robotics/compose_pytest.yml"
 HOST_COMPOSE_FILE = "/alliander_robotics/compose.yml"
+MAX_ROS_DOMAIN_ID = (
+    232  # https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Domain-ID.html
+)
 
 
 class Configurations:
@@ -34,10 +37,12 @@ class Configurations:
     Attributes:
         mode (str): The mode of testing.
         changed_packages (set[str]): The set of packages that have changed.
+        ros_domain_id (int): ROS domain ID in which the test will be executed.
     """
 
     mode: str
     changed_packages: set[str]
+    ros_domain_id: int = 0
 
 
 def pytest_addoption(parser: Parser) -> None:
@@ -95,12 +100,19 @@ def control_class(request: SubRequest) -> Generator:
     Yields:
         Generator: Starts and stops Docker containers for each module.
     """
+    Configurations.ros_domain_id = (Configurations.ros_domain_id + 1) % (
+        MAX_ROS_DOMAIN_ID + 1
+    )  # Loop back to ID 0 if new ID exceeds the allowed maximum
+
+    os.environ["ROS_DOMAIN_ID"] = f"{Configurations.ros_domain_id}"
     print("")
     cprint(f"[{request.cls.__name__}]: started", "blue")
     services = create_compose_file(request)
     if Configurations.mode != "all":
         skip_if_no_changes(services)
     pull_missing_images()
+    wait_for_removal_nodes()
+
     process = start_containers(services)
 
     yield
@@ -137,7 +149,7 @@ def create_compose_file(request: SubRequest) -> list:
     Returns:
         list: The list of services defined in the compose file.
     """
-    compose = Compose()
+    compose = Compose(Configurations.ros_domain_id)
     if os.getenv("NO_NVIDIA", default="false").lower() == "true":
         compose.mode = "configuration-no-nvidia"
     else:
@@ -218,6 +230,24 @@ def pull_missing_images() -> None:
     if services_to_pull:
         cprint(f"Pulling missing images: {services_to_pull}", "yellow")
         subprocess.run(cmd, timeout=3600, shell=True, check=True)
+
+
+def wait_for_removal_nodes() -> None:
+    """Wait for all active nodes to be stopped before moving on."""
+    cprint("Checking ros2 node list before starting containers.", "blue")
+
+    while active_nodes := subprocess.check_output(
+        ["ros2", "node", "list"],
+        stdin=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    ):
+        cprint(
+            f"Waiting for the following nodes to exit: {active_nodes.decode('utf-8').strip()}",
+            "red",
+        )
+        time.sleep(1)
+
+    cprint("No more nodes active, moving on.", "blue")
 
 
 def start_containers(services: list) -> subprocess.Popen:

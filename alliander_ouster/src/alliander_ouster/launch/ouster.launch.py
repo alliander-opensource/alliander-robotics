@@ -47,7 +47,6 @@ def launch_setup(context: LaunchContext) -> list:
         {"platform_config": lidar_config.to_str()},
     )
 
-    target_frame = ""
     pointcloud_to_laserscan_node = Node(
         package="pointcloud_to_laserscan",
         executable="pointcloud_to_laserscan_node",
@@ -57,7 +56,6 @@ def launch_setup(context: LaunchContext) -> list:
         ],
         parameters=[
             {
-                "target_frame": target_frame,
                 "min_height": 0.1,
                 "max_height": 2.0,
                 "range_min": 0.05,
