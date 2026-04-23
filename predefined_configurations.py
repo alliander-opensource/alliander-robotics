@@ -239,6 +239,7 @@ class PredefinedConfigurations:
         vehicle.nav2_config.controller = "mppi"
         vehicle.nav2_config.navigation = True
         vehicle.nav2_config.gps = True
+        vehicle.nav2_config.imu_topic = "/xsens/imu/data"
         vehicle.nav2_config.window_size = 50
         lidar = Lidar(
             "velodyne",

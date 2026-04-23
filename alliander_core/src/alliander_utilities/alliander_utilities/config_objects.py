@@ -208,6 +208,7 @@ class Nav2Config(Config):
         navigation (bool): Whether to enable navigation.
         gps (bool): Whether to enable GPS integration.
         controller (Literal["dwb", "graceful_motion", "mppi", "pure_pursuit", "rotation_shim", "vector_pursuit"]): Navigation controller type to use.
+        imu_topic (str): Topic on which IMU data is expected (defaults to /{vehicle_namespace}/imu/data).
         map (Literal["simulation_map", "ipkw", "ipkw_buiten"]): Map to use for navigation.
         window_size (int): Window size parameter.
     """
@@ -224,6 +225,7 @@ class Nav2Config(Config):
         "rotation_shim",
         "vector_pursuit",
     ] = "vector_pursuit"
+    imu_topic: str = ""
     map: Literal["simulation_map", "ipkw", "ipkw_buiten"] = "simulation_map"
     window_size: int = 10
 
