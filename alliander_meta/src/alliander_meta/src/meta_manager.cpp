@@ -26,43 +26,57 @@ MetaManager::MetaManager()
   tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
   // Subscriptions:
-  sub_joystick = this->create_subscription<sensor_msgs::msg::Joy>(
+  sub_joystick = this->create_subscription<Joy>(
       "/" + namespace_meta + "/joystick", 10,
       std::bind(&MetaManager::callback_joystick, this, std::placeholders::_1));
 
   // Publishers:
-  pub_servo_target = this->create_publisher<geometry_msgs::msg::PoseStamped>(
+  pub_servo_target = this->create_publisher<PoseStamped>(
       "/franka/servo_node/pose_target_cmds", 10);
 
   // Clients:
-  srv_client_arm_home =
-      this->create_client<alliander_interfaces::srv::StringSrv>(
-          "/" + namespace_arm + "/moveit_manager/move_to_configuration");
+  srv_client_arm_home = this->create_client<StringSrv>(
+      "/" + namespace_arm + "/moveit_manager/move_to_configuration");
+  srv_client_switch_servo_command_type = this->create_client<ServoCommandType>(
+      "/" + namespace_arm + "/servo_node/switch_command_type");
 }
 
 // Set the hand frame to the current pose of the end-effector when the
 // joystick trigger is pressed, and publish the target frame as long as the
 // trigger is held down.
-void MetaManager::callback_joystick(
-    const sensor_msgs::msg::Joy::SharedPtr msg) {
+bool BUTTON_A_PRESSED = false;
+bool GRIP_PRESSED = false;
+
+void MetaManager::callback_joystick(const Joy::SharedPtr msg) {
   // Return if the arm is busy:
   if (BUSY) {
     return;
   }
 
+  auto BUTTON_A = bool(msg->buttons[0]);
+  auto TRIGGER = bool(msg->axes[0] == 1.0f);
+  auto GRIP = bool(msg->axes[1] == 1.0f);
+
   // Move arm to home position when button A is pressed:
-  auto BUTTON_A = bool(msg->buttons[1]);
-  auto TRIGGER_PRESSED = bool(msg->axes[5] == 1.0f);
   if (!BUTTON_A) {
     BUTTON_A_PRESSED = false;
   }
-  if (BUTTON_A && !BUTTON_A_PRESSED && !TRIGGER_PRESSED) {
+  if (BUTTON_A && !BUTTON_A_PRESSED && !TRIGGER) {
     move_arm_to_home();
     BUTTON_A_PRESSED = true;
   }
 
+  // Switch servo command type when grip is pressed:
+  if (!GRIP) {
+    GRIP_PRESSED = false;
+  }
+  if (GRIP && !GRIP_PRESSED && !TRIGGER) {
+    switch_servo_command_type();
+    GRIP_PRESSED = true;
+  }
+
   // Return if the trigger is not pressed:
-  if (!TRIGGER_PRESSED) {
+  if (!TRIGGER) {
     OUTDATED = true;
     return;
   }
@@ -81,6 +95,35 @@ void MetaManager::callback_joystick(
 
   // Publish the target:
   publish_servo_target();
+}
+
+// Switch the servo command type to POSE:
+void MetaManager::switch_servo_command_type() {
+  auto request = std::make_shared<ServoCommandType::Request>();
+  request->command_type = 2;
+
+  if (!srv_client_switch_servo_command_type->service_is_ready()) {
+    RCLCPP_WARN(this->get_logger(),
+                "'Switch servo command type' service not available.");
+  }
+
+  srv_client_switch_servo_command_type->async_send_request(
+      request, [this](rclcpp::Client<ServoCommandType>::SharedFuture future) {
+        try {
+          auto response = future.get();
+
+          if (response->success) {
+            RCLCPP_INFO(this->get_logger(), "Servo command type is POSE.");
+          } else {
+            RCLCPP_WARN(this->get_logger(),
+                        "Failed to set servo command type.");
+          }
+        } catch (const std::exception& e) {
+          RCLCPP_ERROR(this->get_logger(),
+                       "'Switch servo command type' service call failed: %s",
+                       e.what());
+        }
+      });
 }
 
 // Set the end-effector target to the current pose of the end-effector:

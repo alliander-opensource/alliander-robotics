@@ -29,15 +29,15 @@ def launch_setup(context: LaunchContext) -> list:
     platforms = PlatformList.from_str(platform_list_arg.string_value(context)).platforms
 
     # Create default namespaces which can be ignored when left unchanged
-    arm_namespace = "/arm"
-    vehicle_namespace = "/vehicle"
+    arm_namespace = "arm"
+    vehicle_namespace = "vehicle"
 
     # Find arm / vehicle platforms in the platform list
     for platform in platforms:
         match platform.platform_type:
             case "Arm":
-                if arm_namespace == "/arm":
-                    arm_namespace = f"/{platform.namespace}"
+                if arm_namespace == "arm":
+                    arm_namespace = platform.namespace
                 else:
                     warnings.warn(
                         "No support for multiple arms yet, only accepting the first arm.",
@@ -46,8 +46,8 @@ def launch_setup(context: LaunchContext) -> list:
                     )
 
             case "Vehicle":
-                if vehicle_namespace == "/vehicle":
-                    vehicle_namespace = f"/{platform.namespace}"
+                if vehicle_namespace == "vehicle":
+                    vehicle_namespace = platform.namespace
                 else:
                     warnings.warn(
                         "No support for multiple vehicles yet, only accepting the first vehicle.",
@@ -58,7 +58,7 @@ def launch_setup(context: LaunchContext) -> list:
             case _:
                 pass
 
-    if arm_namespace == "/arm" and vehicle_namespace == "/vehicle":
+    if arm_namespace == "arm" and vehicle_namespace == "vehicle":
         raise RuntimeError(
             "No arm/vehicle platform present, cancelling the joystick manager."
         )
@@ -68,16 +68,8 @@ def launch_setup(context: LaunchContext) -> list:
         executable="joystick_manager",
         name="joystick_manager",
         parameters=[
-            {"arm_cmd_topic": f"{arm_namespace}/servo_node/delta_twist_cmds"},
-            {"arm_frame_id": f"{arm_namespace[1:]}/fr3_link1"},
-            {"arm_gripper_name": f"{arm_namespace}/gripper"},
-            {
-                "arm_home_service": f"{arm_namespace}/moveit_manager/move_to_configuration"
-            },
-            {"arm_pause_servo_service": f"{arm_namespace}/servo_node/pause_servo"},
-            {"vehicle_cmd_topic": f"{vehicle_namespace}/cmd_vel_joy"},
-            {"vehicle_estop_reset": f"{vehicle_namespace}/hardware/e_stop_reset"},
-            {"vehicle_estop_trigger": f"{vehicle_namespace}/hardware/e_stop_trigger"},
+            {"namespace_arm": arm_namespace},
+            {"namespace_vehicle": vehicle_namespace},
         ],
     )
 

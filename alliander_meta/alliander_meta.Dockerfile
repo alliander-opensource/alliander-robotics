@@ -18,6 +18,9 @@ RUN apt update && apt install -y \
   && cd scrcpy \
   && ./install_release.sh
 
+# Install ROS depenencies:
+RUN apt update && apt install -y ros-$ROS_DISTRO-moveit-msgs
+
 # Install repo packages:
 WORKDIR /$WORKDIR/ros
 COPY alliander_core/src/ /$WORKDIR/ros/src

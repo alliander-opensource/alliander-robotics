@@ -9,6 +9,7 @@
 #include <alliander_interfaces/srv/string_srv.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
+#include <moveit_msgs/srv/servo_command_type.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 
@@ -16,6 +17,7 @@ typedef geometry_msgs::msg::PoseStamped PoseStamped;
 typedef geometry_msgs::msg::TransformStamped TransformStamped;
 typedef sensor_msgs::msg::Joy Joy;
 typedef alliander_interfaces::srv::StringSrv StringSrv;
+typedef moveit_msgs::srv::ServoCommandType ServoCommandType;
 
 /// Class to interact with a Meta Quest 3.
 class MetaManager : public rclcpp::Node {
@@ -47,14 +49,15 @@ class MetaManager : public rclcpp::Node {
   // Clients
   /// Client to move the arm back to home position
   rclcpp::Client<StringSrv>::SharedPtr srv_client_arm_home;
+  /// Client to change the command type of the servo node
+  rclcpp::Client<ServoCommandType>::SharedPtr
+      srv_client_switch_servo_command_type;
 
   // State
   /// True when the end-effector target must be reset
   bool OUTDATED = true;
   /// True when the arm is currently moving using a service call
   bool BUSY = false;
-  /// True when button A is pressed
-  bool BUTTON_A_PRESSED = false;
   /// Start of the hand frame when the trigger is pressed
   TransformStamped hand_start;
   /// Start of the end-effector target frame when the trigger is pressed
@@ -71,4 +74,6 @@ class MetaManager : public rclcpp::Node {
   void publish_servo_target();
   /// Call the service to move the robot arm to its home position
   void move_arm_to_home();
+  /// Call the service to switch the command type of the servo node
+  void switch_servo_command_type();
 };

@@ -35,8 +35,9 @@ class MetaQuestNode(Node):
         joy = Joy()
         joy.axes = [0.0] * 6
         joy.buttons = [0] * 10
-        joy.axes[5] = self.reader.get_trigger_value("right")
-        joy.buttons[1] = self.reader.get_button_state("A")
+        joy.axes[0] = self.reader.get_trigger_value("right")
+        joy.axes[1] = self.reader.get_grip_value("right")
+        joy.buttons[0] = self.reader.get_button_state("A")
         joy.header.stamp = self.get_clock().now().to_msg()
         self.pub_joy.publish(joy)
 

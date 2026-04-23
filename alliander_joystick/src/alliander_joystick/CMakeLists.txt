@@ -13,12 +13,13 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(moveit_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(alliander_interfaces REQUIRED)
 
 # C++ executables:
 include_directories(include)
-add_executable(joystick_manager 
+add_executable(joystick_manager
   src/main.cpp
   src/joystick_manager.cpp
 )
@@ -30,6 +31,7 @@ ament_target_dependencies(joystick_manager
   rclcpp_action
   geometry_msgs
   sensor_msgs
+  moveit_msgs
   std_srvs
   alliander_interfaces
 )

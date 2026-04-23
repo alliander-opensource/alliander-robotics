@@ -11,7 +11,7 @@ from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register, RegisteredLaunchDescription
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
-from launch.actions import ExecuteProcess, OpaqueFunction
+from launch.actions import OpaqueFunction
 from launch_ros.actions import Node, SetParameter
 
 platform_arg = LaunchArgument("platform_config", "")
@@ -111,17 +111,6 @@ def launch_setup(context: LaunchContext) -> list:
         namespace=arm_config.namespace,
     )
 
-    switch_servo_type_to_twist = ExecuteProcess(
-        cmd=[
-            "ros2",
-            "service",
-            "call",
-            f"/{arm_config.namespace}/servo_node/switch_command_type",
-            "moveit_msgs/srv/ServoCommandType",
-            "{command_type: 2}",
-        ]
-    )
-
     return [
         SetParameter(name="use_sim_time", value=arm_config.simulation),
         Register.group(utilities, context),
@@ -130,7 +119,6 @@ def launch_setup(context: LaunchContext) -> list:
         ),
         Register.on_log(moveit_manager, "Moveit Manager initialized.", context),
         Register.on_log(moveit_servo, "Servo initialized successfully", context),
-        Register.on_exit(switch_servo_type_to_twist, context),
     ]
 
 
