@@ -25,8 +25,6 @@ EXAMPLE_POSE = PoseStamped()
 EXAMPLE_POSE.header.frame_id = "map"
 EXAMPLE_POSE.pose.position.x = 0.4
 EXAMPLE_POSE.pose.position.z = 0.1
-EXAMPLE_POSE.pose.orientation.x = 1.0
-EXAMPLE_POSE.pose.orientation.w = 0.0
 
 COLS = 2  # Number of columns in the UI and maximum number of platforms to control
 CENTER_DEFAULT = (51.966960, 5.940906)  # Default map center (latitude, longitude)

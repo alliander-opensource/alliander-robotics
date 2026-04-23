@@ -7,7 +7,7 @@
 thread_priority: 40
 publish_period: 0.03
 max_expected_latency: 0.1
-move_group_name: arm
+move_group_name: arm_and_tcp
 active_subgroup: ""
 
 ############################# INCOMING COMMAND SETTINGS ########################
