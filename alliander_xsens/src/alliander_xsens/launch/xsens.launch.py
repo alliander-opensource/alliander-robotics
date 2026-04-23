@@ -2,9 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-import time
-
 from alliander_utilities.config_objects import IMU
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
@@ -13,7 +10,6 @@ from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import Node
-from serial.tools import list_ports
 
 platform_arg = LaunchArgument("platform_config", "")
 
@@ -28,26 +24,6 @@ def launch_setup(context: LaunchContext) -> list:
         list: The actions to start.
     """
     imu_config = IMU.from_str(platform_arg.string_value(context))
-
-    vid = "2639"
-    pid = "0301"
-    imu_device = None
-
-    try:
-        os.unlink("/dev/xsens")
-    except FileNotFoundError:
-        pass
-
-    while imu_device is None and not imu_config.simulation:
-        for device in list_ports.grep(f"{vid}:{pid}"):
-            print(f"Found IMU device {device}")
-            os.symlink(device.name, "/dev/xsens")
-            imu_device = device.name
-        if imu_device is None:
-            print(
-                f"No Xsens IMU device (VID:PID {vid}:{pid}) found yet, make sure one is connected."
-            )
-            time.sleep(1.0)
 
     state_publisher = state_publisher_node(
         namespace=imu_config.namespace,
@@ -71,6 +47,8 @@ def launch_setup(context: LaunchContext) -> list:
         package="xsens_mti_ros2_driver",
         executable="xsens_mti_node",
         parameters=[parameter_file],
+        respawn=True,
+        respawn_delay=2.0,
         remappings=[
             ("/imu/acceleration", "imu/acceleration"),
             ("/imu/angular_velocity", "imu/angular_velocity"),
@@ -100,15 +78,17 @@ def launch_setup(context: LaunchContext) -> list:
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.on_start(imu_bridge_node, context),
-        Register.on_start(madgwick_filter_node, context)
+        Register.on_start(imu_bridge_node, context)
         if not imu_config.simulation
         else SKIP,
-        # there seems to be a delay before the IMU is available for
-        # xsens_mti_node, so wait until madgwick filter is started
-        Register.on_log(
+        Register.on_start(
+            madgwick_filter_node,
+            context,
+        )
+        if not imu_config.simulation
+        else SKIP,
+        Register.on_start(
             hardware,
-            "Still waiting for data on topics imu/data_raw and imu/mag...",
             context,
         )
         if not imu_config.simulation
