@@ -16,7 +16,6 @@ import rclpy
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
 from _pytest.fixtures import SubRequest
-from alliander_utilities.config_objects import PlatformList, SimulatorConfig
 from rclpy.node import Node
 from termcolor import cprint
 
@@ -146,14 +145,14 @@ def create_compose_file(request: SubRequest) -> list:
     compose.predefined_configuration = PredefinedConfigurations()
     compose.visualization = False
 
-    platform_list = PlatformList()
-    platform_list.platforms = request.cls.platforms.values()
-    compose.predefined_configuration.plat_conf = platform_list
+    compose.predefined_configuration.plat_conf.platforms = (
+        request.cls.platforms.values()
+    )
 
     load_ui = os.getenv("GAZEBO_UI", default="false").lower() == "true"
     world = getattr(request.cls, "world", "empty.sdf")
-    sim_config = SimulatorConfig(load_ui=load_ui, world=world)
-    compose.predefined_configuration.sim_conf = sim_config
+    compose.predefined_configuration.sim_conf.load_ui = load_ui
+    compose.predefined_configuration.sim_conf.world = world
 
     # Propagate dev mounts
     dev_mounts = os.getenv("DEV_MOUNTS", default="false") == "true"

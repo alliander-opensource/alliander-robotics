@@ -405,7 +405,10 @@ class Compose:
                 }
 
             # Make visualization depenend on all other services:
-            if self.visualization and name != "alliander_visualization":
+            if (
+                "alliander_visualization" in services
+                and name != "alliander_visualization"
+            ):
                 services["alliander_visualization"]["depends_on"][name] = {
                     "condition": "service_healthy"
                 }

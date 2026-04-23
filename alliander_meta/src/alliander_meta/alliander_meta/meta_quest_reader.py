@@ -6,6 +6,9 @@
 # https://github.com/NeuracoreAI/meta_quest_teleop/blob/main/meta_quest_teleop/reader.py
 # https://github.com/NeuracoreAI/meta_quest_teleop/blob/main/meta_quest_teleop/buttons_parser.py
 
+# ruff: noqa
+# ty: ignore
+
 import os
 import sys
 import threading
@@ -24,7 +27,7 @@ def parse_buttons(text: str) -> dict[str, Any]:
 
     Returns:
         Dictionary with button states.
-    """
+    """  # noqa: DOC1, DOC2, DOC5
     split_text = text.split(",")
     buttons: dict[str, Any] = {}
     if "R" in split_text:  # right hand if available
@@ -76,7 +79,7 @@ def parse_buttons(text: str) -> dict[str, Any]:
 
 
 def eprint(*args: Any, **kwargs: Any) -> None:
-    """Print error messages to stderr."""
+    """Print error messages to stderr."""  # noqa: DOC1, DOC2, DOC5
     RED = "\033[1;31m"
     sys.stderr.write(RED)
     print(*args, file=sys.stderr, **kwargs)
@@ -109,7 +112,7 @@ class MetaQuestReader:
             run: Whether to start reader immediately. Defaults to True.
             axis_mask: Mask for axes [x, y, z, roll, pitch, yaw]. 1 = enabled, 0 = disabled.
                        Masked axes (x, y, z, roll, pitch, yaw) will be zeroed.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         self.running = False
         self.last_transforms: dict[str, Any] | None = {}
         self.last_buttons: dict[str, Any] | None = {}
@@ -205,7 +208,7 @@ class MetaQuestReader:
 
         Returns:
             The Meta Quest device.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         try:
             client.remote_connect(self.ip_address, self.port)
         except RuntimeError as e:
@@ -239,7 +242,7 @@ class MetaQuestReader:
 
         Returns:
             The Meta Quest device.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         try:
             devices = client.devices()
         except RuntimeError as e:
@@ -261,7 +264,7 @@ class MetaQuestReader:
 
         Returns:
             The Meta Quest device.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         # Default is "127.0.0.1" and 5037
         client = AdbClient(host="127.0.0.1", port=5037)
         if self.ip_address is not None:
@@ -279,7 +282,7 @@ class MetaQuestReader:
             verbose: Whether to print messages. Defaults to True.
             reinstall: Whether to reinstall the APK if it is already installed.
                 Defaults to False.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         try:
             installed = self.device.is_installed(self.APK_name)
             if not installed or reinstall:
@@ -313,7 +316,7 @@ class MetaQuestReader:
 
         Args:
             verbose: Whether to print messages. Defaults to True.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         try:
             installed = self.device.is_installed(self.APK_name)
             if installed:
@@ -355,7 +358,7 @@ class MetaQuestReader:
 
         Returns:
             Tuple of transformations and button states.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         try:
             transforms_string, buttons_string = string.split("&")
         except ValueError as e:
@@ -396,7 +399,7 @@ class MetaQuestReader:
 
         Returns:
             Extracted data.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         output = ""
         if self.tag in line:
             try:
@@ -412,7 +415,7 @@ class MetaQuestReader:
 
         Returns:
             Tuple of transformations and button states.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         with self._lock:
             return self.last_transforms, self.last_buttons
 
@@ -424,7 +427,7 @@ class MetaQuestReader:
 
         Returns:
             Masked 4x4 transformation matrix (OpenXR coordinates)
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         # Start with current transform
 
         transform_translation = transform[:3, 3]
@@ -459,7 +462,7 @@ class MetaQuestReader:
         Returns:
             4x4 numpy array transformation matrix, or None if not
             available
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         hand_key = self._normalize_hand_key(hand)
 
         # Use hand key directly as the pointer transform key
@@ -492,7 +495,7 @@ class MetaQuestReader:
         Returns:
             4x4 transformation matrix in ROS coordinates, or None if not
             available
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         transform_openxr = self.get_hand_controller_transform_openxr(hand)
 
         if transform_openxr is None:
@@ -515,7 +518,7 @@ class MetaQuestReader:
 
         Returns:
             True if button is pressed, False otherwise
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         with self._lock:
             return self._latest_buttons.get(button_name, False)
 
@@ -530,7 +533,7 @@ class MetaQuestReader:
         Returns:
             Float value in range [0.0, 1.0] where 0.0 is not pressed and
             1.0 is fully pressed
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         hand_key = self._normalize_hand_key(hand)
         button_name = "leftGrip" if hand_key == "l" else "rightGrip"
         with self._lock:
@@ -552,7 +555,7 @@ class MetaQuestReader:
         Returns:
             Float value in range [0.0, 1.0] where 0.0 is not pressed and
             1.0 is fully pressed
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         hand_key = self._normalize_hand_key(hand)
         button_name = "leftTrig" if hand_key == "l" else "rightTrig"
         with self._lock:
@@ -574,7 +577,7 @@ class MetaQuestReader:
         Returns:
             Tuple (x, y) where both x and y are in range [-1.0, 1.0]
             Returns (0.0, 0.0) if not available
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         hand_key = self._normalize_hand_key(hand)
         button_name = "leftJS" if hand_key == "l" else "rightJS"
         with self._lock:
@@ -598,7 +601,7 @@ class MetaQuestReader:
         Args:
             event: Event name
             callback: Function to call when event occurs
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         # make sure the event is a valid event
         if event not in self._callbacks:
             raise ValueError(
@@ -616,7 +619,7 @@ class MetaQuestReader:
 
         Returns:
             The same matrix if valid, None if invalid
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         if np.allclose(matrix, 0.0):
             return None
 
@@ -634,7 +637,7 @@ class MetaQuestReader:
 
         Returns:
             'l' or 'r'
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         if hand in ("left", "l"):
             return "l"
         elif hand in ("right", "r"):
@@ -649,7 +652,7 @@ class MetaQuestReader:
 
         Args:
             buttons: Dictionary of button states
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         # Use lock to prevent race conditions when called from multiple threads
         callbacks_to_trigger = []
         with self._lock:
@@ -694,7 +697,7 @@ class MetaQuestReader:
 
         Args:
             connection: Connection to read from.
-        """
+        """  # noqa: DOC1, DOC2, DOC5
         file_obj = connection.socket.makefile(mode="rb", buffering=1024)
         while self.running:
             try:
