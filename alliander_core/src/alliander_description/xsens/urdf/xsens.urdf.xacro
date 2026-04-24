@@ -3,45 +3,94 @@
 SPDX-FileCopyrightText: Alliander N. V.
 SPDX-License-Identifier: Apache-2.0
 -->
-<robot name="imu_module">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="imu_module">
 
-  <link name="base_link"/>
-  <link name="imu_link">
+  <xacro:macro name="xsens_imu"
+    params="
+    namespace
+    parent
+    name:=xsens
+    use_sim:=false
+    ">
 
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-	<mesh filename="package://alliander_description/xsens/meshes/MTi-6x0R.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-      <material name="dark_grey">
-        <color rgba="0.2 0.2 0.2 1.0"/>
-      </material>
-    </visual>
+    <link name="base_link"/>
+    <link name="imu_link">
 
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <!-- 56.5 x 40.9 x 24.75 mm in metres -->
-        <box size="0.0565 0.0409 0.02475"/>
-      </geometry>
-    </collision>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://alliander_description/xsens/meshes/MTi-6x0R.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="dark_grey">
+          <color rgba="0.2 0.2 0.2 1.0"/>
+        </material>
+      </visual>
 
-    <inertial>
-      <!-- Approximate mass: 50g -->
-      <mass value="0.050"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <!-- Box inertia tensor: I = m/12 * (a² + b²) for each axis -->
-      <inertia ixx="8.22e-6" ixy="0" ixz="0"
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <!-- 56.5 x 40.9 x 24.75 mm in metres -->
+          <box size="0.0565 0.0409 0.02475"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <!-- Approximate mass: 50g -->
+        <mass value="0.050"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <!-- Box inertia tensor: I = m/12 * (a² + b²) for each axis -->
+        <inertia ixx="8.22e-6" ixy="0" ixz="0"
                                iyy="1.59e-5" iyz="0"
                                               izz="2.03e-5"/>
-    </inertial>
+      </inertial>
 
-  </link>
+    </link>
 
-  <joint name="imu_joint" type="fixed">
-    <parent link="base_link"/>
-    <child  link="imu_link"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-  </joint>
+    <joint name="imu_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="imu_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- MTi-6x0 IMU sensor specification: https://www.xsens.com/hubfs/Downloads/Manuals/MTi-600-series-datasheet.pdf -->
+    <xacro:if value="${use_sim}">
+      <gazebo reference="imu_link">
+        <sensor name="${namespace}/imu" type="imu">
+          <always_on>true</always_on>
+          <update_rate>100</update_rate>
+          <topic>${namespace}/imu/data</topic>
+          <visualize>false</visualize>
+          <enable_metrics>false</enable_metrics>
+          <gz_frame_id>imu_link</gz_frame_id>
+          <imu>
+            <orientation_reference_frame>
+              <localization>ENU</localization>
+            </orientation_reference_frame>
+            <angular_velocity>
+              <!-- Gyroscope noise density: 0.01 deg/s/sqrt(Hz), in-run bias: 2 deg/h -->
+              <x><noise type="gaussian"><mean>0.0</mean><stddev>1.75e-4</stddev><bias_mean>9.7e-6</bias_mean><bias_stddev>0.0</bias_stddev></noise></x>
+              <y><noise type="gaussian"><mean>0.0</mean><stddev>1.75e-4</stddev><bias_mean>9.7e-6</bias_mean><bias_stddev>0.0</bias_stddev></noise></y>
+              <z><noise type="gaussian"><mean>0.0</mean><stddev>1.75e-4</stddev><bias_mean>9.7e-6</bias_mean><bias_stddev>0.0</bias_stddev></noise></z>
+            </angular_velocity>
+            <linear_acceleration>
+              <!-- Accelerometer noise density: 0.003 m/s²/sqrt(Hz), in-run bias: 0.01 mg -->
+              <x><noise type="gaussian"><mean>0.0</mean><stddev>3.0e-3</stddev><bias_mean>9.8e-5</bias_mean><bias_stddev>0.0</bias_stddev></noise></x>
+              <y><noise type="gaussian"><mean>0.0</mean><stddev>3.0e-3</stddev><bias_mean>9.8e-5</bias_mean><bias_stddev>0.0</bias_stddev></noise></y>
+              <z><noise type="gaussian"><mean>0.0</mean><stddev>3.0e-3</stddev><bias_mean>9.8e-5</bias_mean><bias_stddev>0.0</bias_stddev></noise></z>
+            </linear_acceleration>
+          </imu>
+        </sensor>
+      </gazebo>
+    </xacro:if>
+
+  </xacro:macro>
+
+  <xacro:arg name="namespace" default="xsens" />
+  <xacro:arg name="parent" default="" />
+  <xacro:arg name="use_sim" default="false" />
+  <xacro:xsens_imu
+    namespace="$(arg namespace)"
+    parent="$(arg parent)"
+    use_sim="$(arg use_sim)" />
 
 </robot>

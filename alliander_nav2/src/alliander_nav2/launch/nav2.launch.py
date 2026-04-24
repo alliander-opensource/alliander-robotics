@@ -98,11 +98,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         root_key=namespace_vehicle,
     )
 
-    topic_imu = (
-        f"/{namespace_vehicle}/imu/data"
-        if vehicle_config.simulation
-        else f"/{namespace_imu}/imu/data"
-    )
     ekf_global_params = AdaptedYaml(
         get_file_path("alliander_nav2", ["config", "nav2"], "ekf_global.yaml"),
         {
@@ -110,7 +105,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
             "base_link_frame": f"{namespace_vehicle}/base_footprint",
             "odom0": f"/{namespace_vehicle}/odometry/wheels",
             "odom1": f"/{namespace_gps}/odometry/gps",
-            "imu0": topic_imu,
+            "imu0": f"/{namespace_imu}/imu/data",
         },
         root_key=namespace_vehicle,
     )
@@ -349,7 +344,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         parameters=[navsat_transform_params.file],
         remappings=[
             ("odometry/filtered", f"/{namespace_vehicle}/odometry/global"),
-            ("imu", topic_imu),
+            ("imu", f"/{namespace_imu}/imu/data"),
         ],
     )
 
