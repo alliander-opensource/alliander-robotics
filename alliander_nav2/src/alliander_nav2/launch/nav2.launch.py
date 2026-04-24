@@ -334,7 +334,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         package="robot_localization",
         executable="ekf_node",
         name="ekf_global",
-        namespace=vehicle_config.namespace,
+        namespace=namespace_vehicle,
         parameters=[ekf_global_params.file],
         remappings=[
             ("odometry/filtered", f"/{namespace_vehicle}/odometry/global"),
