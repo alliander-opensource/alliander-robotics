@@ -5,7 +5,7 @@
 ################################ GENERAL CONFIG ################################
 
 thread_priority: 40
-publish_period: 0.03
+publish_period: 0.001
 max_expected_latency: 0.1
 move_group_name: arm_and_tcp
 active_subgroup: ""
@@ -16,8 +16,8 @@ cartesian_command_in_topic: "~/delta_twist_cmds"
 joint_command_in_topic: "~/delta_joint_cmds"
 command_in_type: "unitless"
 scale:
-  linear: 4.0
-  rotational: 5.0
+  linear: 0.4
+  rotational: 0.8
   joint: 0.5
 incoming_command_timeout: 0.1
 
@@ -54,7 +54,7 @@ smoothing_filter_plugin_name: "online_signal_smoothing::ButterworthFilterPlugin"
 
 ############################# COLLISION MONITOR ################################
 
-check_collisions: false
+check_collisions: true
 self_collision_proximity_threshold: 0.01
 scene_collision_proximity_threshold: 0.02
 collision_check_rate: 10.0
