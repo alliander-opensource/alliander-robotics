@@ -248,7 +248,7 @@ class PredefinedConfigurations:
             ip_address="10.15.20.5",
         )
         gps = GPS("gps", position=(-0.08, -0.25, 0.2), orientation=(0, 0, -90))
-        imu = IMU("xsens", position=(-0.23, -0.08, 0.18), orientation=(0, 0, -90))
+        imu = IMU("xsens", position=(-0.23, -0.08, 0.18), orientation=(0, 0, 180))
         camera = Camera("realsense", (0.18, 0, 0.2))
 
         link(vehicle, lidar)
