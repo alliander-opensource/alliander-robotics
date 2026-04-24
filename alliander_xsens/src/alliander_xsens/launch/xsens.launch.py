@@ -9,7 +9,7 @@ from alliander_utilities.register import Register
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 
 platform_arg = LaunchArgument("platform_config", "")
 
@@ -30,6 +30,7 @@ def launch_setup(context: LaunchContext) -> list:
         platform="xsens",
         xacro="xsens.urdf.xacro",
         xacro_arguments={
+            "use_sim": str(imu_config.simulation),
             "parent": "" if imu_config.parent.link else "world",
         },
     )
@@ -76,6 +77,7 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     return [
+        SetParameter(name="use_sim_time", value=imu_config.simulation),
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
         Register.on_start(imu_bridge_node, context)
