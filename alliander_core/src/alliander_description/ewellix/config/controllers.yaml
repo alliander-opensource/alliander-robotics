@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Based on: 
+# https://github.com/clearpathrobotics/ewellix_lift_common/blob/0.2.1/ewellix_description/config/control/jpc.yaml
+
+/**:
+  controller_manager:
+    ros__parameters:
+      update_rate: 10 # Hz
+      handle_exceptions: false
+
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+
+      lift_position_controller:
+        type: position_controllers/JointGroupPositionController
+
+  lift_position_controller:
+    ros__parameters:
+      joints:
+        - lift_lower_joint

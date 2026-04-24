@@ -54,6 +54,7 @@ class Compose:
             "${HOME}/.nix-profile/bin/nvim:/usr/bin/nvim",
             "/nix/store:/nix/store",
             "./pyproject.toml:/alliander/pyproject.toml",
+            "./alliander_core/src/alliander_description:/alliander/ros/src/alliander_description",
             "./alliander_core/src/alliander_utilities:/alliander/ros/src/alliander_utilities",
         ],
     }
