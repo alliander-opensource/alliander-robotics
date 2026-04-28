@@ -16,6 +16,7 @@ from alliander_core.src.alliander_utilities.alliander_utilities.config_objects i
     Platform,
     PlatformList,
     SimulatorConfig,
+    ThermalCamera,
     Vehicle,
     VisualizationConfig,
     link,
@@ -111,8 +112,12 @@ class PredefinedConfigurations:
     @register_configuration("seekthermal")
     def config_seekthermal(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [
-            Camera("seekthermal", (0, 0, 0.5), namespace="seekthermal")
+            ThermalCamera(
+                "seekthermal", (0, -3, 0.5), (0, 0, 90), namespace="seekthermal"
+            )
         ]
+
+        self.sim_conf.world = "thermal_camera.sdf"
 
     # Franka:
     @register_configuration("franka")

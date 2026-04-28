@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-from alliander_utilities.config_objects import Camera
+from alliander_utilities.config_objects import ThermalCamera
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
 from launch import LaunchContext, LaunchDescription
@@ -20,9 +20,7 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    camera_config = Camera.from_str(platform_arg.string_value(context))
-
-    frame_prefix = camera_config.namespace + "/" if camera_config.namespace else ""
+    camera_config = ThermalCamera.from_str(platform_arg.string_value(context))
 
     seekthermal_bridge_node = Node(
         package="alliander_seekthermal",
@@ -30,8 +28,14 @@ def launch_setup(context: LaunchContext) -> list:
         output="both",
         parameters=[
             {
-                "frame_id": frame_prefix + "seekthermal",
+                "frame_id": f"/{camera_config.namespace}/seekthermal_link_optical",
             }
+        ],
+        remappings=[
+            (
+                "/topic_out_image/compressed",
+                "thermal/image/compressed",
+            )
         ],
         namespace=camera_config.namespace,
     )

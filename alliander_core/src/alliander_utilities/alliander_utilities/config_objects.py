@@ -300,6 +300,17 @@ class Camera(Platform):
 
 
 @dataclass
+class ThermalCamera(Platform):
+    """Configuration for a ThermalCamera platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+    """
+
+    platform_type: str = "ThermalCamera"
+
+
+@dataclass
 class Lidar(Platform):
     """Configuration for a Lidar platform.
 
@@ -342,7 +353,7 @@ class PlatformList(Config):
 
     platforms: List[
         Annotated[
-            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS],
+            Union[Platform, Arm, Vehicle, Lidar, Camera, ThermalCamera, GPS],
             Discriminator(field="platform_type", include_supertypes=True),
         ]
     ] = field(default_factory=list)

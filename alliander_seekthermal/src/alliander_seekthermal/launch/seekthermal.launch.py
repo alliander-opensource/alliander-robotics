@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from alliander_utilities.config_objects import Camera
+from alliander_utilities.config_objects import ThermalCamera
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
 from alliander_utilities.register import Register, RegisteredLaunchDescription
@@ -22,14 +22,16 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    camera_config = Camera.from_str(platform_arg.string_value(context))
+    camera_config = ThermalCamera.from_str(platform_arg.string_value(context))
 
     state_publisher = state_publisher_node(
         namespace=camera_config.namespace,
         platform="seekthermal",
-        xacro="seekthermal.urdf.xacro",
+        xacro="seekthermal_g300.urdf.xacro",
         xacro_arguments={
+            "namespace": camera_config.namespace,
             "parent": "" if camera_config.parent.link else "world",
+            "use_sim": str(camera_config.simulation),
         },
     )
 
