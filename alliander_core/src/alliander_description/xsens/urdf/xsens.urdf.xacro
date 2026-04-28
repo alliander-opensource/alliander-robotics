@@ -46,6 +46,16 @@ SPDX-License-Identifier: Apache-2.0
 
     </link>
 
+    <!-- Gazebo requires a joint to a link called "world" for statically mounted robots -->
+    <xacro:if value="${parent == 'world'}">
+      <link name="${parent}" />
+      <joint name="${parent}_joint" type="fixed">
+        <parent link="${parent}" />
+        <child link="base_link" />
+      </joint>
+    </xacro:if>
+
+    <!-- Since Xsens publishes data on imu_link on hardware -->
     <joint name="imu_joint" type="fixed">
       <parent link="base_link"/>
       <child  link="imu_link"/>
@@ -61,7 +71,7 @@ SPDX-License-Identifier: Apache-2.0
           <topic>${namespace}/imu/data</topic>
           <visualize>false</visualize>
           <enable_metrics>false</enable_metrics>
-          <gz_frame_id>imu_link</gz_frame_id>
+	  <gz_frame_id>${namespace}/imu_link</gz_frame_id>
           <imu>
             <orientation_reference_frame>
               <localization>ENU</localization>
