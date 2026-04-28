@@ -50,6 +50,10 @@ alliander-nav2 = [
     "numpy>=2.4.1",
     "pydantic>=2.12.5",
 ]
+alliander-seekthermal = [
+    "numpy>=2.4.4",
+    "requests>=2.33.0",
+]
 alliander-visualization = [
     "nicegui>=3.7.0",
     "numpy>=2.4.1",
