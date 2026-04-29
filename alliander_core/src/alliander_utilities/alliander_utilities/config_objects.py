@@ -175,7 +175,11 @@ class Platform(Config):
             case "franka":
                 return "fr3_link0" if self.parent.namespace else "world"
             case _:
-                return "base_link" if self.parent.namespace else "world"
+                return (
+                    "base_link"
+                    if self.parent.namespace or not self.simulation
+                    else "world"
+                )
 
     def default_link_to_child(self) -> str:
         """Get the default link used to connect to a child platform.
