@@ -48,8 +48,6 @@ def launch_setup(context: LaunchContext) -> list:
         package="xsens_mti_ros2_driver",
         executable="xsens_mti_node",
         parameters=[parameter_file],
-        respawn=True,
-        respawn_delay=2.0,
         remappings=[
             ("/imu/acceleration", "imu/acceleration"),
             ("/imu/angular_velocity", "imu/angular_velocity"),
