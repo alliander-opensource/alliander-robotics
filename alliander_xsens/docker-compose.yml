@@ -6,6 +6,8 @@ services:
     image: allianderrobotics/xsens
     container_name: alliander_xsens
     runtime: nvidia
+    # USB device is not found by Xsens node first time after boot
+    restart: on-failure:3  
     network_mode: host
     privileged: true
     mem_limit: 6gb
