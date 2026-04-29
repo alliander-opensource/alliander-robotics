@@ -10,7 +10,7 @@ ENV ROS_DISTRO=jazzy
 # Install Ewellix packages:
 WORKDIR /$WORKDIR/external
 RUN apt update \
-  && apt install -y ros-$ROS_DISTRO-ewellix-description \
+  && apt install -y ros-$ROS_DISTRO-ewellix-description ros-$ROS_DISTRO-ros2-controllers \
   && git clone -b 0.2.3 https://github.com/clearpathrobotics/ewellix_lift.git src/ewellix_lift \
   && git clone https://github.com/joshnewans/serial.git src/serial \
   && rosdep update --rosdistro $ROS_DISTRO \

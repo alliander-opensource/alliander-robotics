@@ -8,7 +8,7 @@
 /**:
   controller_manager:
     ros__parameters:
-      update_rate: 10 # Hz
+      update_rate: 1000 # Hz
       handle_exceptions: false
 
       joint_state_broadcaster:
