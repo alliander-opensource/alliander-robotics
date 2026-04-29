@@ -310,6 +310,16 @@ class PredefinedConfigurations:
         link(vehicle, arm)
         self.plat_conf.platforms = [vehicle, arm]
 
+    @register_configuration("mm_ewellix")
+    def config_mm_ewellix(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        lift = Lift("ewellix", (0, 0, 0.14))
+        arm = Arm("franka")
+
+        link(vehicle, lift)
+        link(lift, arm)
+        self.plat_conf.platforms = [vehicle, lift, arm]
+
     @register_configuration("mm_velodyne")
     def config_mm_velodyne(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
