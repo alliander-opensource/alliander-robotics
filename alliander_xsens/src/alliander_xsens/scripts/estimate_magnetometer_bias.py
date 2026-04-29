@@ -43,13 +43,16 @@ class MagneticBiasEstimator(Node):
     midpoint bias and optionally renders a 3-D scatter plot of the collected
     measurements.
 
-    Args:
-        csv_file: Optional path to a CSV file with pre-recorded measurements.
-            When provided the node estimates the bias immediately from the file
-            rather than waiting for live messages.
     """
 
     def __init__(self, csv_file: str = "") -> None:
+        """Initialize the MagneticBiasEstimator.
+
+        Args:
+            csv_file (str): Optional path to a CSV file with pre-recorded measurements.
+                When provided the node estimates the bias immediately from the file
+                rather than waiting for live messages.
+        """
         super().__init__("magnetic_bias_estimator")
         self.sub_mag = self.create_subscription(
             MagneticField, MAG_TOPIC, self.mag_callback, 1
@@ -130,10 +133,14 @@ class MagneticBiasEstimator(Node):
         Args:
             csv_file: Path to the comma-separated data file.
         """
-        import numpy as np
+        import numpy as np  # noqa: PLC0415
 
         data = np.loadtxt(csv_file, delimiter=",", skiprows=1)
-        self.mag_x, self.mag_y, self.mag_z = data[:, 0], data[:, 1], data[:, 2]
+        self.mag_x, self.mag_y, self.mag_z = (
+            data[:, 0].tolist(),
+            data[:, 1].tolist(),
+            data[:, 2].tolist(),
+        )
         self.num_mag_received = len(self.mag_x)
 
         self.estimate_bias()

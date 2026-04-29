@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-from alliander_utilities.adapted_yaml import AdaptedYaml
 from alliander_utilities.config_objects import GPS
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.launch_utils import SKIP, state_publisher_node, static_tf_node
@@ -9,7 +8,7 @@ from alliander_utilities.register import Register, RegisteredLaunchDescription
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import Node, SetParameter
+from launch_ros.actions import SetParameter
 
 T, F = True, False
 

@@ -15,7 +15,7 @@ from launch_ros.actions import LifecycleNode, Node, SetParameter, SetRemap
 platform_arg = LaunchArgument("platform_config", "")
 
 
-def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
+def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
     """The launch setup.
 
     Args:

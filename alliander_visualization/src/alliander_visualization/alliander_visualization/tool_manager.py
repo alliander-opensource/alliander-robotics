@@ -186,9 +186,9 @@ class ApplyConfigurations:
 
     @staticmethod
     def add_imu(_platform: IMU) -> None:
-        """Add IMU configurtions to Rviz and Vizanti.
+        """Add IMU configurtions to Rviz and Vizanti. Currently not implemented.
 
         Args:
-            platform (IMU): The IMU platform configuration,
+            _platform (IMU): The IMU platform configuration.
         """
         pass
