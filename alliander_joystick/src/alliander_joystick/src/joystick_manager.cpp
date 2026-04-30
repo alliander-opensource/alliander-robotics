@@ -5,17 +5,8 @@
 #include "joystick_manager.hpp"
 
 JoystickManager::JoystickManager(rclcpp::Node::SharedPtr node) : node(node) {
-  arm_topic = node->get_parameter("arm_cmd_topic").as_string();
-  arm_frame_id = node->get_parameter("arm_frame_id").as_string();
-  arm_gripper_name = node->get_parameter("arm_gripper_name").as_string();
-  arm_home_service = node->get_parameter("arm_home_service").as_string();
-  arm_pause_servo_service =
-      node->get_parameter("arm_pause_servo_service").as_string();
-  vehicle_topic = node->get_parameter("vehicle_cmd_topic").as_string();
-  vehicle_estop_reset_service =
-      node->get_parameter("vehicle_estop_reset").as_string();
-  vehicle_estop_trigger_service =
-      node->get_parameter("vehicle_estop_trigger").as_string();
+  namespace_arm = node->get_parameter("namespace_arm").as_string();
+  namespace_vehicle = node->get_parameter("namespace_vehicle").as_string();
 
   initialize_joystick_manager();
 
@@ -36,27 +27,29 @@ void JoystickManager::initialize_joystick_manager() {
       std::bind(&JoystickManager::joy_cb, this, _1));
 
   // Publishers
-  pub_arm_vel =
-      node->create_publisher<geometry_msgs::msg::TwistStamped>(arm_topic, 10);
+  pub_arm_vel = node->create_publisher<geometry_msgs::msg::TwistStamped>(
+      "/" + namespace_arm + "/servo_node/delta_twist_cmds", 10);
   pub_vehicle_vel = node->create_publisher<geometry_msgs::msg::TwistStamped>(
-      vehicle_topic, 10);
+      "/" + namespace_vehicle + "/cmd_vel_joy", 10);
 
   // Service clients
   srv_client_estop_trigger = node->create_client<std_srvs::srv::Trigger>(
-      vehicle_estop_trigger_service);
-  srv_client_estop_reset =
-      node->create_client<std_srvs::srv::Trigger>(vehicle_estop_reset_service);
-  srv_client_pause_servo =
-      node->create_client<std_srvs::srv::SetBool>(arm_pause_servo_service);
+      "/" + namespace_vehicle + "/hardware/e_stop_trigger");
+  srv_client_estop_reset = node->create_client<std_srvs::srv::Trigger>(
+      "/" + namespace_vehicle + "/hardware/e_stop_reset");
+  srv_client_pause_servo = node->create_client<std_srvs::srv::SetBool>(
+      "/" + namespace_arm + "/servo_node/pause_servo");
   srv_client_arm_home =
       node->create_client<alliander_interfaces::srv::StringSrv>(
-          arm_home_service);
+          "/" + namespace_arm + "/moveit_manager/move_to_configuration");
+  srv_client_switch_servo_command_type = node->create_client<ServoCommandType>(
+      "/" + namespace_arm + "/servo_node/switch_command_type");
 
   // Action clients
   action_client_gripper_open = rclcpp_action::create_client<TriggerAction>(
-      node, arm_gripper_name + "/open");
+      node, "/" + namespace_arm + "/open");
   action_client_gripper_close = rclcpp_action::create_client<TriggerAction>(
-      node, arm_gripper_name + "/close");
+      node, "/" + namespace_arm + "/close");
 
   // Log initial mode
   switch (current_mode) {
@@ -125,11 +118,13 @@ void JoystickManager::handle_button_input(const std::vector<int32_t>& buttons) {
         return;
       case vehicle_mode:
         RCLCPP_INFO(node->get_logger(), "Switch to ARM mode.");
+        switch_servo_command_type();
         current_mode = arm_mode;
         pub_vehicle_vel->publish(geometry_msgs::msg::TwistStamped{});
         return;
       case no_mode:
         RCLCPP_INFO(node->get_logger(), "Switch to ARM mode.");
+        switch_servo_command_type();
         current_mode = arm_mode;
         return;
       default:
@@ -222,7 +217,7 @@ void JoystickManager::handle_arm_movement(const float& x, const float& y,
                                           const float& rotation) {
   geometry_msgs::msg::TwistStamped twist;
   twist.header.stamp = node->now();
-  twist.header.frame_id = arm_frame_id;
+  twist.header.frame_id = namespace_arm + "/" + "fr3_link1";
 
   twist.twist.linear.x = (std::abs(x) > dead_axis_zone)
                              ? (x * arm_speed_scale)
@@ -280,6 +275,35 @@ void JoystickManager::move_arm_to_home() {
 
         // Unblock arm once service call finishes
         arm_busy = false;
+      });
+}
+
+// Switch the servo command type to TWIST:
+void JoystickManager::switch_servo_command_type() {
+  auto request = std::make_shared<ServoCommandType::Request>();
+  request->command_type = 1;
+
+  if (!srv_client_switch_servo_command_type->service_is_ready()) {
+    RCLCPP_WARN(node->get_logger(),
+                "'Switch servo command type' service not available.");
+  }
+
+  srv_client_switch_servo_command_type->async_send_request(
+      request, [this](rclcpp::Client<ServoCommandType>::SharedFuture future) {
+        try {
+          auto response = future.get();
+
+          if (response->success) {
+            RCLCPP_INFO(node->get_logger(), "Servo command type is TWIST.");
+          } else {
+            RCLCPP_WARN(node->get_logger(),
+                        "Failed to set servo command type.");
+          }
+        } catch (const std::exception& e) {
+          RCLCPP_ERROR(node->get_logger(),
+                       "'Switch servo command type' service call failed: %s",
+                       e.what());
+        }
       });
 }
 

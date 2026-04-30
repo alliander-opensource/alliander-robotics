@@ -43,6 +43,11 @@ RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
     && cd src/franka_ros2 \
     && git sparse-checkout set franka_msgs
 
+# Install debug tools:
+RUN apt update && apt install -y --no-install-recommends \
+    ros-$ROS_DISTRO-plotjuggler-ros \
+    ros-$ROS_DISTRO-rqt-tf-tree
+
 # Setup configuration files:
 COPY .devcontainer/dev/.dev_bashrc /.dev_bashrc
 RUN echo "source /.dev_bashrc" >> /home/$REMOTE_USER/.bashrc
@@ -52,6 +57,7 @@ COPY alliander_core/src/ /alliander/ros/src
 COPY alliander_diagnostics/src/ /alliander/ros/src
 COPY alliander_franka/src/ /alliander/ros/src
 COPY alliander_joystick/src/ /alliander/ros/src
+COPY alliander_meta/src/ /alliander/ros/src
 COPY alliander_moveit/src/ /alliander/ros/src
 COPY alliander_nav2/src/ /alliander/ros/src
 COPY alliander_xsens/src/ /alliander/ros/src

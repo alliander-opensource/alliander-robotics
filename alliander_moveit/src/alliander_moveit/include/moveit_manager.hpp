@@ -27,7 +27,6 @@
 #include <std_srvs/srv/set_bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <string>
-#include <vector>
 
 #include "geometry_msgs/msg/transform_stamped.hpp"
 
@@ -64,6 +63,8 @@ class MoveitManager {
   moveit::planning_interface::MoveGroupInterface move_group;
   /// Interface to control the planning scene
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+  /// Joint model group for the arm with tcp
+  const moveit::core::JointModelGroup* jmg_arm_and_tcp;
   /// Joint model group for the arm
   const moveit::core::JointModelGroup* jmg_arm;
   /// Joint model group for the hand
@@ -86,8 +87,6 @@ class MoveitManager {
   moveit_visual_tools::MoveItVisualTools moveit_visual_tools;
   /// The goal pose for the end effector
   PoseStamped goal_pose;
-  /// The arm-end pose in the TCP frame, used to publish EE markers.
-  PoseStamped arm_end_in_tcp_frame;
   /// A handle to run a subprocess
   boost::process::child process;
   /// A group to manage multiple subprocesses

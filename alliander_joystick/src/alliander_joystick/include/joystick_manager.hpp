@@ -9,6 +9,7 @@
 #include <alliander_interfaces/srv/string_srv.hpp>
 #include <cstdint>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <moveit_msgs/srv/servo_command_type.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_options.hpp>
@@ -22,6 +23,7 @@
 using std::placeholders::_1;
 using std::placeholders::_2;
 typedef alliander_interfaces::action::TriggerAction TriggerAction;
+typedef moveit_msgs::srv::ServoCommandType ServoCommandType;
 
 enum Button {
   A = 0,   // Switch between platform modes
@@ -62,28 +64,19 @@ class JoystickManager {
   /// Client to move the arm back to home position
   rclcpp::Client<alliander_interfaces::srv::StringSrv>::SharedPtr
       srv_client_arm_home;
+  /// Client to change the command type of the servo node
+  rclcpp::Client<ServoCommandType>::SharedPtr
+      srv_client_switch_servo_command_type;
   /// Client to trigger the arm's gripper to open
   rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_open;
   /// Client to trigger the arm's gripper to close
   rclcpp_action::Client<TriggerAction>::SharedPtr action_client_gripper_close;
 
   // ROS2 get parameter variables:
-  /// The arm twist topic
-  std::string arm_topic;
-  /// Frame ID of the arm
-  std::string arm_frame_id;
-  /// Name of the arm's gripper
-  std::string arm_gripper_name;
-  /// Service name with which the arm can be moved back to its home position
-  std::string arm_home_service;
-  /// Service name with which the arm's servo node can be paused
-  std::string arm_pause_servo_service;
-  /// The vehicle twist topic
-  std::string vehicle_topic;
-  /// Service name for resetting the vehicle's E-stop
-  std::string vehicle_estop_reset_service;
-  /// Service name for triggering the vehicle's E-stop
-  std::string vehicle_estop_trigger_service;
+  /// The namespace of the arm
+  std::string namespace_arm;
+  /// The namespace of the vehicle
+  std::string namespace_vehicle;
 
   // Other variables:
   /// Previous input values of the Joy message
@@ -181,6 +174,11 @@ class JoystickManager {
    * @brief send service request to move the arm back to its home position.
    */
   void move_arm_to_home();
+
+  /**
+   * @brief Call the service to switch the command type of the servo node
+   */
+  void switch_servo_command_type();
 
   /**
    * @brief (un)pause the servo node via a service request.
