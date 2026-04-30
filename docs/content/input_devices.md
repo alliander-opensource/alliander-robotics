@@ -30,13 +30,19 @@ Next, connect the Quest to the host device via USB. You should see the Quest as:
 ID XXXX:YYYY Oculus VR, Inc. Quest 3
 ```
 
-Where `XXXX` and `YYYY` are four numbers. Next, create an udev rule for the Quest, by adding the following line to `/etc/udev/rules.d/51-android.rules`:
+Where `XXXX` and `YYYY` are four numbers. Next, create an udev rule for the Quest, by adding the following line to `/etc/udev/rules.d/51-android.rules` (create this file of it does not exist yet):
 
 ```bash
 SUBSYSTEM=="usb", ATTR{idVendor}=="XXXX", ATTR{idProduct}=="YYYY", MODE="0666", GROUP="plugdev"
 ```
 
-Make sure to replace `XXXX` and `YYYY` with the correct numbers. Now, run `adb devices` and select `Always allow from this computer` on the Quest. You should see the following response:
+Make sure to replace `XXXX` and `YYYY` with the correct numbers. To reload the udev rules after this change, run:
+
+```bash
+sudo udevadm control --reload-rules
+```
+
+Now, run `adb devices` and select `Always allow from this computer` on the Quest. You should see the following response:
 
 ```bash
 List of devices attached
