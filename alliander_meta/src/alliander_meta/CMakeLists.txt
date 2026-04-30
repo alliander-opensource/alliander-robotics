@@ -3,41 +3,47 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.5)
-project(alliander_joystick)
+project(alliander_meta)
 
 # CMake dependencies:
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 
 # Other dependencies:
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_action REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(moveit_msgs REQUIRED)
-find_package(std_srvs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(alliander_interfaces REQUIRED)
+
+# Python package:
+ament_python_install_package(${PROJECT_NAME})
+
+# Python executables:
+install(
+  DIRECTORY src_py/
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # C++ executables:
 include_directories(include)
-add_executable(joystick_manager
-  src/main.cpp
-  src/joystick_manager.cpp
-)
-target_include_directories(joystick_manager PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(joystick_manager
+add_executable(meta_manager src/meta_manager.cpp)
+ament_target_dependencies(meta_manager
   rclcpp
-  rclcpp_action
   geometry_msgs
   sensor_msgs
   moveit_msgs
-  std_srvs
+  tf2
+  tf2_msgs
+  tf2_ros
   alliander_interfaces
 )
 
 install(
-  TARGETS joystick_manager
+  TARGETS meta_manager
   DESTINATION lib/${PROJECT_NAME}
 )
 

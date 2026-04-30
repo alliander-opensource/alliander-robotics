@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+services:
+  alliander_meta:
+    image: allianderrobotics/meta
+    container_name: alliander_meta
+    network_mode: host
+    privileged: true
+    mem_limit: 6gb
+    tty: true
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "/dev:/dev"
+    env_file:
+      - .env
+    command: ["/bin/bash", "-c", "ros2 launch alliander_meta meta.launch.py"]

@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
   <xacro:arg name="xyz_ee" default="0 0 0" />
   <xacro:arg name="rpy_ee" default="0 0 ${-pi/4}" />
   <xacro:arg name="tcp_xyz" default="0 0 0.1034" />
-  <xacro:arg name="tcp_rpy" default="0 0 0" />
+  <xacro:arg name="tcp_rpy" default="3.1415 0 0" />
 
   <!-- Custom arguments: -->
   <xacro:arg name="namespace" default="" />

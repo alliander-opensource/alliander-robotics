@@ -10,7 +10,7 @@ MoveitManager::MoveitManager(rclcpp::Node::SharedPtr node_)
       move_group(
           node,
           moveit::planning_interface::MoveGroupInterface::Options(
-              "arm",
+              "arm_and_tcp",
               moveit::planning_interface::MoveGroupInterface::ROBOT_DESCRIPTION,
               node->get_namespace())),
       rviz_visual_tools(base_frame, marker_topic, node),
@@ -20,6 +20,8 @@ MoveitManager::MoveitManager(rclcpp::Node::SharedPtr node_)
   namespace_arm = std::string(node->get_namespace()).erase(0, 1);
   namespace_camera = node->get_parameter("namespace_camera").as_string();
 
+  jmg_arm_and_tcp =
+      move_group.getRobotModel()->getJointModelGroup("arm_and_tcp");
   jmg_arm = move_group.getRobotModel()->getJointModelGroup("arm");
   jmg_hand = move_group.getRobotModel()->getJointModelGroup("hand");
   jmg_tcp = move_group.getRobotModel()->getJointModelGroup("tcp");
@@ -30,11 +32,6 @@ MoveitManager::MoveitManager(rclcpp::Node::SharedPtr node_)
 
   auto link_tcp = jmg_tcp->getLinkModelNames().back();
   move_group.setEndEffectorLink(link_tcp);
-
-  auto link_arm_end = jmg_arm->getLinkModelNames().back();
-  PoseStamped arm_end_in_arm_frame;
-  arm_end_in_arm_frame.header.frame_id = link_arm_end;
-  arm_end_in_tcp_frame = change_frame(arm_end_in_arm_frame, link_tcp);
 
   initialize_services();
   RCLCPP_INFO(node->get_logger(), "Moveit Manager initialized.");
@@ -204,7 +201,7 @@ bool MoveitManager::plan_and_execute(std::string planning_type) {
 
   moveit_visual_tools.deleteAllMarkers("Path");
   moveit_visual_tools.deleteAllMarkers("Sphere");
-  moveit_visual_tools.publishTrajectoryLine(plan.trajectory, jmg_arm);
+  moveit_visual_tools.publishTrajectoryLine(plan.trajectory, jmg_arm_and_tcp);
   moveit_visual_tools.trigger();
 
   error_code = move_group.execute(plan);
@@ -248,27 +245,9 @@ void MoveitManager::add_marker(
 void MoveitManager::visualize_grasp_pose(
     const std::shared_ptr<PoseStampedSrv::Request> request,
     std::shared_ptr<PoseStampedSrv::Response> response) {
-  // Broadcast a tf frame at the desired Tool Center Point location:
-  TransformStamped tf;
-  tf.header = request->pose.header;
-  tf.header.stamp = node->now();
-  tf.transform.translation.x = request->pose.pose.position.x;
-  tf.transform.translation.y = request->pose.pose.position.y;
-  tf.transform.translation.z = request->pose.pose.position.z;
-  tf.transform.rotation = request->pose.pose.orientation;
-  tf.child_frame_id = "desired_tcp";
-  tf_broadcaster.sendTransform(tf);
-
-  // Define the arm_end_link in the desired_tcp_frame and convert to base:
-  PoseStamped arm_end_in_desired_tcp_frame;
-  arm_end_in_desired_tcp_frame.header.frame_id = "desired_tcp";
-  arm_end_in_desired_tcp_frame.pose = arm_end_in_tcp_frame.pose;
-  auto arm_end_in_base_frame = change_frame(arm_end_in_desired_tcp_frame);
-
-  // Publish the End Effector marker:
   std::vector<double> positions = {0.04};
-  moveit_visual_tools.publishEEMarkers(arm_end_in_base_frame.pose, jmg_hand,
-                                       positions, rviz_visual_tools::BLUE);
+  moveit_visual_tools.publishEEMarkers(request->pose.pose, jmg_hand, positions,
+                                       rviz_visual_tools::BLUE);
   response->success = true;
 }
 
@@ -278,7 +257,10 @@ void MoveitManager::create_plan(
   move_group.setPoseTarget(request->pose);
   auto error_code = move_group.plan(plan);
   if (error_code != moveit::core::MoveItErrorCode::SUCCESS) {
-    RCLCPP_ERROR(node->get_logger(), "Failed to generate plan.");
+    RCLCPP_ERROR(node->get_logger(), "Failed to generate plan, error code: %d",
+                 error_code.val);
+    response->success = false;
+    return;
   }
 
   // Visualize the goal state in RViz:
