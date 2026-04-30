@@ -63,7 +63,11 @@ class ImageManager:
         changed_packages = utils.get_changed_packages()
         for repository in self.selected:
             package = f"alliander_{repository}"
-            tag = utils.get_git_branch() if package in changed_packages else "latest"
+            tag = (
+                "latest"
+                if set({package, "alliander_core"}).isdisjoint(changed_packages)
+                else utils.get_git_branch()
+            )
             tag = "latest" if tag == "main" else tag
             if pull:
                 self.run_pull_subprocess(repository, tag)
