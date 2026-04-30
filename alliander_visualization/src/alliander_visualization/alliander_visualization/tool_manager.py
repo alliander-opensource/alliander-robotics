@@ -51,6 +51,8 @@ class ApplyConfigurations:
                     self.add_depth_camera(Camera.from_str(platform.to_str()))
                 case "GPS":
                     self.add_gps(GPS.from_str(platform.to_str()))
+                case "Lift":
+                    pass
                 case _:
                     raise NotImplementedError(
                         f"Configuration for platform {type(platform).__name__} is not implemented."
