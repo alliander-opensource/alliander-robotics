@@ -58,6 +58,7 @@ alliander-visualization = [
     "tornado>=6.5.4",
 ]
 alliander-xsens = [
+    "matplotlib>=3.10.9",
     "pyserial>=3.5",
 ]
 ros = [
