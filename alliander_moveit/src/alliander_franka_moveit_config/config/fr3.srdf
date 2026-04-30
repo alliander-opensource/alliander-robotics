@@ -28,6 +28,16 @@ are defined
     group-->
     <!--SUBGROUPS:
     Groups can also be formed by referencing to already defined group names-->
+    <group name="arm_and_tcp">
+        <joint name="fr3_joint1" />
+        <joint name="fr3_joint2" />
+        <joint name="fr3_joint3" />
+        <joint name="fr3_joint4" />
+        <joint name="fr3_joint5" />
+        <joint name="fr3_joint6" />
+        <joint name="fr3_joint7" />
+        <link name="fr3_hand_tcp" />
+    </group>
     <group name="arm">
         <joint name="fr3_joint1" />
         <joint name="fr3_joint2" />
@@ -50,7 +60,7 @@ are defined
     <!--GROUP_STATES:
     Purpose: Define a named state for a particular group, in terms of joint values. This is
     useful to define states like 'folded arms'-->
-    <group_state name="home" group="arm">
+    <group_state name="home" group="arm_and_tcp">
         <joint name="fr3_joint1" value="0" />
         <joint name="fr3_joint2" value="-0.78539816339" />
         <joint name="fr3_joint3" value="0" />
@@ -59,7 +69,7 @@ are defined
         <joint name="fr3_joint6" value="1.57079632679" />
         <joint name="fr3_joint7" value="0.78539816339" />
     </group_state>
-    <group_state name="drop" group="arm">
+    <group_state name="drop" group="arm_and_tcp">
         <joint name="fr3_joint1" value="-1.57079632679" />
         <joint name="fr3_joint2" value="-0.65" />
         <joint name="fr3_joint3" value="0" />
@@ -71,7 +81,7 @@ are defined
 
     <!--END_EFFECTOR:
     Purpose: Represent information about an end effector.-->
-    <end_effector name="hand" parent_link="fr3_link7" group="hand" parent_group="arm" />
+    <end_effector name="hand" parent_link="fr3_hand_tcp" group="hand" parent_group="arm_and_tcp" />
     <!--DISABLE_COLLISIONS:
     By default it is assumed that any link of the robot could potentially come into
     collision with any other link in the robot. This tag disables collision checking between a

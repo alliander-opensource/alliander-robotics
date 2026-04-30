@@ -42,6 +42,10 @@ joystick:
   base_image: allianderrobotics/base
   repository: allianderrobotics/joystick
   dockerfile: alliander_joystick/alliander_joystick.Dockerfile
+meta:
+  base_image: allianderrobotics/base
+  repository: allianderrobotics/meta
+  dockerfile: alliander_meta/alliander_meta.Dockerfile
 moveit:
   base_image: allianderrobotics/base
   repository: allianderrobotics/moveit

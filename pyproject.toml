@@ -43,6 +43,11 @@ alliander-gazebo = [
 alliander-gps = [
     "pydantic>=2.12.5",
 ]
+alliander-meta = [
+    "numpy>=2.4.1",
+    "pure-python-adb-reborn>=1.0.0",
+    "scipy>=1.17.0"
+]
 alliander-moveit = [
     "xmltodict>=1.0.2",
 ]
@@ -61,7 +66,7 @@ ros = [
     "lark>=1.3.1",
 ]
 testing = [
-    "pytest>=9.0.2",
+    "pytest>=9.0.3",
     "pytest-timeout>=2.4.0",
 ]
 
