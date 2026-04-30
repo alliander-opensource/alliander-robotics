@@ -28,6 +28,7 @@ SERVICE = typing.Literal[
     "linting",
     "documentation",
     "joystick",
+    "meta",
     "diagnostics",
 ]
 MODE = typing.Literal[
@@ -74,6 +75,7 @@ class Compose:
         self.dev = False
         self.gazebo_ui = False
         self.joystick = False
+        self.meta = False
         self.rviz_yaml = False
 
         self.ros_domain_id = ros_domain_id
@@ -171,6 +173,11 @@ class Compose:
                 f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
                 {},
             ),
+            "meta": (
+                "alliander_meta",
+                f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
+                {},
+            ),
             "diagnostics": (
                 "alliander_diagnostics",
                 (
@@ -241,7 +248,10 @@ class Compose:
 
         # Use the branch tag if the package has changes:
         name_branch = subprocess.getoutput("git rev-parse --abbrev-ref HEAD")
-        if package in self.changed_packages and name_branch != "main":
+        if (
+            not set({package, "alliander_core"}).isdisjoint(self.changed_packages)
+            and name_branch != "main"
+        ):
             service["image"] += f":{name_branch}"
 
         if self.mode == "configuration-no-nvidia":
@@ -389,6 +399,8 @@ class Compose:
                     services["alliander_visualization"]["depends_on"] = {}
                 if self.joystick:
                     self.add_service(content, "joystick")
+                if self.meta:
+                    self.add_service(content, "meta")
 
         # Add healthchecks to all services:
         for name, service in services.items():
@@ -397,6 +409,14 @@ class Compose:
                 "interval": "1s",
                 "retries": 1000,
             }
+            # Make all services depend on meta, if meta is enabled:
+            if self.meta and name != "alliander_meta":
+                if "depends_on" not in service:
+                    service["depends_on"] = {}
+                service["depends_on"]["alliander_meta"] = {
+                    "condition": "service_healthy"
+                }
+
             # Make visualization depenend on all other services:
             if (
                 "alliander_visualization" in services
@@ -526,6 +546,14 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-m",
+        "--meta",
+        required=False,
+        action="store_true",
+        help="Add this flag to enable Meta Quest control for arm platforms.",
+    )
+
+    parser.add_argument(
         "--rviz",
         required=False,
         action="store_true",
@@ -552,6 +580,7 @@ if __name__ == "__main__":
         compose.simulator = not args.hardware
         compose.visualization = args.visualization
         compose.joystick = args.joystick
+        compose.meta = args.meta
         compose.rviz_yaml = args.rviz
         compose.mode = "configuration"
     elif isinstance(args.pytest, list):

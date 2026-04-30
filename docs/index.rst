@@ -19,6 +19,7 @@
    content/getting_started.md
    content/system.md
    content/platforms.md
+   content/input_devices.md
 
    content/moveit.md
    content/grasping.md
