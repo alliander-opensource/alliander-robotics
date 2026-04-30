@@ -241,7 +241,10 @@ class Compose:
 
         # Use the branch tag if the package has changes:
         name_branch = subprocess.getoutput("git rev-parse --abbrev-ref HEAD")
-        if package in self.changed_packages and name_branch != "main":
+        if (
+            not set({package, "alliander_core"}).isdisjoint(self.changed_packages)
+            and name_branch != "main"
+        ):
             service["image"] += f":{name_branch}"
 
         if self.mode == "configuration-no-nvidia":
