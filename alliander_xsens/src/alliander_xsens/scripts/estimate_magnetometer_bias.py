@@ -70,7 +70,11 @@ class MagneticBiasEstimator(Node):
             self.parse_csv(csv_file)
 
     def mag_callback(self, msg: MagneticField) -> None:
-        """Append an incoming magnetometer sample to the internal buffers."""
+        """Append an incoming magnetometer sample to the internal buffers.
+
+        Args:
+            msg (MagneticField): Magnetic field message from IMU.
+        """
         self.get_logger().info("Received magnetic field message.", once=True)
         self.num_mag_received += 1
         self.stamp_mag_received = time.time()
@@ -131,7 +135,7 @@ class MagneticBiasEstimator(Node):
         a single header row that is skipped during loading.
 
         Args:
-            csv_file: Path to the comma-separated data file.
+            csv_file (str): Path to the comma-separated data file.
         """
         import numpy as np  # noqa: PLC0415
 
