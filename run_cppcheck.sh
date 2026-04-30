@@ -7,5 +7,5 @@ cppcheck \
   --suppressions-list=.cppcheck-suppressions \
   --enable=warning,performance,portability,style \
   --error-exitcode=1 \
-  $(find . -name *.cpp)
+  $(find . -name *.cpp | grep -v '.venv\|.nvim')
 
