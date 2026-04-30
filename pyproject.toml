@@ -8,6 +8,7 @@ version = "0.1.0"
 requires-python = "==3.12.*"
 dependencies = [
     "mashumaro>=3.17",
+    "pyserial>=3.5",
     "pyyaml>=6.0.3",
     "termcolor>=3.3.0",
     "xacro>=2.1.1",
@@ -55,6 +56,10 @@ alliander-visualization = [
     "numpy>=2.4.1",
     "simplejpeg>=1.9.0",
     "tornado>=6.5.4",
+]
+alliander-xsens = [
+    "matplotlib>=3.10.9",
+    "pyserial>=3.5",
 ]
 ros = [
     "catkin-pkg>=1.1.0",

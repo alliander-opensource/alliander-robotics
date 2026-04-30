@@ -331,6 +331,19 @@ class GPS(Platform):
     diagnostic_timeouts: tuple[int, int, int] = (3, 5, 10)
 
 
+@dataclass
+class IMU(Platform):
+    """Configuration for an IMU platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+        usb_device (str): USB device path, e.g. /dev/imu.
+    """
+
+    platform_type: str = "IMU"
+    usb_device: str = "/dev/imu"
+
+
 # Configurations containing lists of platforms:
 @dataclass
 class PlatformList(Config):
@@ -342,7 +355,7 @@ class PlatformList(Config):
 
     platforms: List[
         Annotated[
-            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS],
+            Union[Platform, Arm, Vehicle, Camera, GPS, IMU, Lidar],
             Discriminator(field="platform_type", include_supertypes=True),
         ]
     ] = field(default_factory=list)
