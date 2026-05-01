@@ -42,6 +42,9 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             namespace_gps = child.namespace
         if child.platform_type == "IMU" and not namespace_imu:
             namespace_imu = child.namespace
+    # if no external IMU is found, use the vehicle's internal IMU
+    if not namespace_imu:
+        namespace_imu = namespace_vehicle
 
     # Define configuration:
     lifecycle_nodes_names = []
