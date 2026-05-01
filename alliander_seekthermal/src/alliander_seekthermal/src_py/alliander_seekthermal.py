@@ -89,7 +89,7 @@ class SeekThermalBridge(Node):
 
         if self.ip_addr is None:
             print(
-                "Unable to find IP address of Seek Thermal camera (OUI EC:9A:0C:60). Make sure device is connected and pingable."
+                "Unable to find IP address of Seek Thermal camera (OUI EC:9A:0C:60). Make sure device is connected and pingable. You may need to reset the camera by long-pressing the RESET pin. Exiting."
             )
             sys.exit(1)
 

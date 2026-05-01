@@ -117,6 +117,18 @@ A Realsense camera can be launched in simulation by creating a configuration wit
 
 One can use a Realsense by connecting it with the host device using USB.
 
+## Seek Thermal
+
+![SeekThermal](../img/seekthermal/seekthermal.png)
+
+### Simulation Seek Thermal
+
+A Seek Thermal camera can be launched in simulation by creating a configuration with a *ThermalCamera* of type *seekthermal*.
+
+### Hardware Seek Thermal
+
+To use the Seek Thermal camera, connect it to a PoE injector's *OUT* port. A PoE injector is shipped as an accessory with the G300, and can be plugged into a power socket. Connect the *IN* port to your device, then launch the *alliander_seekthermal* container. If you get a connection error, you may need to press the *RESET* pin on the G300 while it is connected to your device in order for the G300 to follow your device's network rules. 
+
 ## ZED
 
 ![ZED](../img/zed/ZED.png)
