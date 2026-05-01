@@ -6,6 +6,7 @@
 import subprocess
 import sys
 import time
+from enum import Enum
 from typing import List, Optional
 
 import rclpy
@@ -14,6 +15,28 @@ from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.timer import Timer
 from sensor_msgs.msg import CompressedImage
+
+
+class ColorPalette(Enum):
+    """Class representing different G300 color palettes.
+
+    Attributes:
+        WHITEHOT: cold is black, hot is white.
+        BLACKHOT: cold is white, hot is black.
+        SPECTRA: from blue, through green and yellow, to red.
+        TYRIAN: from dark purple, through red, to white.
+        IRON: from purple, through red, to white.
+        AMBER: from black to lighter shades of yellow.
+        HI: like white hot, but hottest areas are yellow, red, and black.
+    """
+
+    WHITEHOT = 0
+    BLACKHOT = 1
+    SPECTRA = 2
+    TYRIAN = 4
+    IRON = 5
+    AMBER = 6
+    HI = 7
 
 
 class SeekThermalBridge(Node):
@@ -44,6 +67,15 @@ class SeekThermalBridge(Node):
         self.frame_id: str = (
             self.get_parameter("frame_id").get_parameter_value().string_value
         )
+
+        self.declare_parameter("color_palette", "tyrian")
+        palette = self.get_parameter("color_palette").get_parameter_value().string_value
+        try:
+            self.color_palette = ColorPalette[palette.upper()]
+        except KeyError:
+            self.get_logger().error(
+                f"Invalid color palette {palette}. Options are {[p.value for p in ColorPalette]}. Defaulting to {ColorPalette(4).name}."
+            )
 
         self.publisher_: Publisher = self.create_publisher(
             CompressedImage, "/topic_out_image/compressed", 1
@@ -103,14 +135,14 @@ class SeekThermalBridge(Node):
         else:
             self.get_logger().info(f"Login did not succeed. Error: {resp['error']}")
 
-    def get_current_image(self) -> bytes:
+    def get_image(self) -> bytes:
         """Fetch the current JPEG image from the camera.
 
         Returns:
             bytes: Raw JPEG image bytes from the camera.
         """
         resp = self.session_.get(
-            f"http://{self.ip_addr}/image/current",
+            f"http://{self.ip_addr}/image/palette/{self.color_palette.value}",
             headers={"Authorization": f"Bearer {self.token_}", "Accept": "image/jpeg"},
         )
         resp.raise_for_status()
@@ -140,7 +172,7 @@ class SeekThermalBridge(Node):
 
     def timer_callback(self) -> None:
         """Poll the camera for a new image and publish it to the ROS topic."""
-        image = self.get_current_image()
+        image = self.get_image()
         image_ros = self.convert_image(image)
         self.publisher_.publish(image_ros)
 
