@@ -183,12 +183,3 @@ class ApplyConfigurations:
             platform (GPS): The GPS platform configuration.
         """
         Rviz.add_satellite(f"/{platform.namespace}/gps/fix")
-
-    @staticmethod
-    def add_imu(_platform: IMU) -> None:
-        """Add IMU configurtions to Rviz and Vizanti. Currently not implemented.
-
-        Args:
-            _platform (IMU): The IMU platform configuration.
-        """
-        pass
