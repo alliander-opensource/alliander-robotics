@@ -161,11 +161,11 @@ class Rviz:  # noqa PLR0904
                 "Name": topic,
                 "Topic": {"Value": topic},
                 "Pose Style": "Arrows",
-                "Pose Color": "255; 85; 255",
-                "Shaft Length": 0.3,
-                "Head Length": 0.2,
-                "Shaft Diameter": 0.05,
-                "Head Diameter": 0.1,
+                "Pose Color": "255; 225; 0",
+                "Shaft Length": 0.05,
+                "Head Length": 0.01,
+                "Shaft Diameter": 0.015,
+                "Head Diameter": 0.015,
             }
         )
 
