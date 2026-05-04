@@ -5,7 +5,6 @@ import subprocess
 
 from alliander_utilities.config_objects import (
     GPS,
-    IMU,
     Arm,
     Camera,
     Lidar,
