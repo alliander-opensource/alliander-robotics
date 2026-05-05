@@ -114,14 +114,6 @@ class PredefinedConfigurations:
     def config_ewellix(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Lift("ewellix")]
 
-    @register_configuration("ewellix_velodyne")
-    def config_ewellix_velodyne(self) -> None:  # noqa: D102
-        lift = Lift("ewellix")
-        lidar = Lidar("velodyne")
-
-        link(lift, lidar)
-        self.plat_conf.platforms = [lift, lidar]
-
     @register_configuration("ewellix_franka")
     def config_ewellix_franka(self) -> None:  # noqa: D102
         lift = Lift("ewellix")
