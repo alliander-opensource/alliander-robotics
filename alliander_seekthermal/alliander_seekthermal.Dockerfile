@@ -9,6 +9,7 @@ ENV ROS_DISTRO=jazzy
 
 # Install dependencies:
 RUN apt update && apt install -y --no-install-recommends \
+  arp-scan \
   iproute2 \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \

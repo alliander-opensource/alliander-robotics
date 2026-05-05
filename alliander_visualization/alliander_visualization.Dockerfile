@@ -10,6 +10,7 @@ ENV ROS_DISTRO=jazzy
 # Install ROS dependencies 
 RUN apt update && apt install -y --no-install-recommends \
   ros-dev-tools \
+  ros-$ROS_DISTRO-image-transport-plugins \
   ros-$ROS_DISTRO-launch-pytest \
   ros-$ROS_DISTRO-plotjuggler-ros \
   ros-$ROS_DISTRO-rmw-cyclonedds-cpp \

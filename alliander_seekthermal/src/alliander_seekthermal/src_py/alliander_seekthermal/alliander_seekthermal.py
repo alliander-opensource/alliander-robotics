@@ -3,7 +3,6 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-import subprocess
 import sys
 import time
 from enum import Enum
@@ -15,6 +14,8 @@ from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.timer import Timer
 from sensor_msgs.msg import CompressedImage
+
+from alliander_seekthermal.mac_finder import MacAddressFinder
 
 
 class ColorPalette(Enum):
@@ -67,15 +68,18 @@ class SeekThermalBridge(Node):
         self.frame_id: str = (
             self.get_parameter("frame_id").get_parameter_value().string_value
         )
+        self.declare_parameter("camera_mac", "ec:9a:0c:60")
+        mac_addr = self.get_parameter("camera_mac").get_parameter_value().string_value
 
         self.declare_parameter("color_palette", "tyrian")
         palette = self.get_parameter("color_palette").get_parameter_value().string_value
         try:
-            self.color_palette = ColorPalette[palette.upper()]
+            self.color_palette_ = ColorPalette[palette.upper()]
         except KeyError:
-            self.get_logger().error(
+            self.get_logger().warn(
                 f"Invalid color palette {palette}. Options are {[p.value for p in ColorPalette]}. Defaulting to {ColorPalette(4).name}."
             )
+            self.color_palette = ColorPalette(4)
 
         self.publisher_: Publisher = self.create_publisher(
             CompressedImage, "/topic_out_image/compressed", 1
@@ -85,38 +89,30 @@ class SeekThermalBridge(Node):
         self.token_: Optional[str] = None
 
         # look for OUI (Organizationally Unique Identifier) only
-        self.ip_addr: Optional[str] = self.get_camera_address("ec:9a:0c:60")
-
+        mac_addr_finder = MacAddressFinder(self.get_logger(), mac_addr)
+        self.ip_addr: Optional[str] = mac_addr_finder.find_ip()
         if self.ip_addr is None:
-            print(
-                "Unable to find IP address of Seek Thermal camera (OUI EC:9A:0C:60). Make sure device is connected and pingable. You may need to reset the camera by long-pressing the RESET pin. Exiting."
+            self.get_logger().info(
+                f"Unable to find IP address of Seek Thermal camera (OUI MAC {mac_addr}). Make sure device is connected and pingable. You may need to reset the camera by long-pressing the RESET pin. Exiting."
             )
             sys.exit(1)
+        else:
+            self.get_logger().info(f"Found camera with IP {self.ip_addr}.")
 
         self.get_logger().info("Started Seek Thermal camera bridge node.")
 
+        self._await_login(username, password)
+
+    def _await_login(self, username: str, password: str) -> None:
+        """Block until a successful login is obtained.
+
+        Args:
+            username (str): Camera login username.
+            password (str): Camera login password.
+        """
         while self.token_ is None:
             self.login(username, password)
             time.sleep(0.5)
-
-    @staticmethod
-    def get_camera_address(target_mac: str) -> str | None:
-        """Gets the camera's IP address based on vendor OUI.
-
-        Args:
-            target_mac (str): target MAC address to look for (OUI only recommended).
-
-        Returns:
-            str | None: IP address if MAC address is found, None otherwise.
-        """
-        target_mac = target_mac.lower()
-        result = subprocess.run(
-            ["ip", "neigh", "show"], capture_output=True, text=True, check=False
-        )
-        for line in result.stdout.splitlines():
-            if target_mac in line.lower():
-                return line.split()[0]
-        return None
 
     def login(self, username: str, password: str) -> None:
         """Authenticate with the camera API and store the bearer token.
@@ -142,7 +138,7 @@ class SeekThermalBridge(Node):
             bytes: Raw JPEG image bytes from the camera.
         """
         resp = self.session_.get(
-            f"http://{self.ip_addr}/image/palette/{self.color_palette.value}",
+            f"http://{self.ip_addr}/image/palette/{self.color_palette_.value}",
             headers={"Authorization": f"Bearer {self.token_}", "Accept": "image/jpeg"},
         )
         resp.raise_for_status()
