@@ -71,15 +71,17 @@ class SeekThermalBridge(Node):
         self.declare_parameter("camera_mac", "ec:9a:0c:60")
         mac_addr = self.get_parameter("camera_mac").get_parameter_value().string_value
 
-        self.declare_parameter("color_palette", "tyrian")
-        palette = self.get_parameter("color_palette").get_parameter_value().string_value
+        self.declare_parameter("color_palette", "whitehot")
+        palette_str = (
+            self.get_parameter("color_palette").get_parameter_value().string_value
+        )
         try:
-            self.color_palette_ = ColorPalette[palette.upper()]
+            color_palette = ColorPalette[palette_str.upper()]
         except KeyError:
             self.get_logger().warn(
-                f"Invalid color palette {palette}. Options are {[p.value for p in ColorPalette]}. Defaulting to {ColorPalette(4).name}."
+                f"Invalid color palette {palette_str}. Options are {[p.value for p in ColorPalette]}. Defaulting to {ColorPalette(4).name}."
             )
-            self.color_palette = ColorPalette(4)
+            color_palette = ColorPalette(4)
 
         self.publisher_: Publisher = self.create_publisher(
             CompressedImage, "/topic_out_image/compressed", 1
@@ -102,6 +104,7 @@ class SeekThermalBridge(Node):
         self.get_logger().info("Started Seek Thermal camera bridge node.")
 
         self._await_login(username, password)
+        self._set_palette(color_palette)
 
     def _await_login(self, username: str, password: str) -> None:
         """Block until a successful login is obtained.
@@ -131,6 +134,20 @@ class SeekThermalBridge(Node):
         else:
             self.get_logger().info(f"Login did not succeed. Error: {resp['error']}")
 
+    def _set_palette(self, palette: ColorPalette) -> None:
+        """Sets the color scheme to a specified palette.
+
+        Args:
+            palette (ColorPalette): The palette to set. See also ColorPalette enum class definition.
+        """
+        self.get_logger().info(f"Setting color palette to {palette.name}.")
+        resp = self.session_.post(
+            f"http://{self.ip_addr}/settings/image",
+            json={"lut": palette.value},
+            headers={"Authorization": f"Bearer {self.token_}", "Accept": "image/jpeg"},
+        )
+        resp.raise_for_status()
+
     def get_image(self) -> bytes:
         """Fetch the current JPEG image from the camera.
 
@@ -138,7 +155,7 @@ class SeekThermalBridge(Node):
             bytes: Raw JPEG image bytes from the camera.
         """
         resp = self.session_.get(
-            f"http://{self.ip_addr}/image/palette/{self.color_palette_.value}",
+            f"http://{self.ip_addr}/image/current",
             headers={"Authorization": f"Bearer {self.token_}", "Accept": "image/jpeg"},
         )
         resp.raise_for_status()
