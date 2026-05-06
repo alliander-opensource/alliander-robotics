@@ -116,10 +116,12 @@ class Rviz:  # noqa PLR0904
             {
                 "Enabled": True,
                 "Class": "rviz_default_plugins/PointCloud2",
-                "Topic": {"Value": f"/{namespace}/scan/points"},
+                "Topic": {
+                    "Value": f"/{namespace}/scan/points",
+                    "Reliability Policy": "Best Effort",
+                },
                 "Name": namespace,
-                "Use rainbow": False,
-                "Min Color": "170; 0; 255",
+                "Use rainbow": True,
                 "Alpha": 0.3,
             }
         )
