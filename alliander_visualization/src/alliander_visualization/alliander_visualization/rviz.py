@@ -116,10 +116,12 @@ class Rviz:  # noqa PLR0904
             {
                 "Enabled": True,
                 "Class": "rviz_default_plugins/PointCloud2",
-                "Topic": {"Value": f"/{namespace}/scan/points"},
+                "Topic": {
+                    "Value": f"/{namespace}/scan/points",
+                    "Reliability Policy": "Best Effort",
+                },
                 "Name": namespace,
-                "Use rainbow": False,
-                "Min Color": "170; 0; 255",
+                "Use rainbow": True,
                 "Alpha": 0.3,
             }
         )
@@ -161,11 +163,11 @@ class Rviz:  # noqa PLR0904
                 "Name": topic,
                 "Topic": {"Value": topic},
                 "Pose Style": "Arrows",
-                "Pose Color": "255; 85; 255",
-                "Shaft Length": 0.3,
-                "Head Length": 0.2,
-                "Shaft Diameter": 0.05,
-                "Head Diameter": 0.1,
+                "Pose Color": "255; 225; 0",
+                "Shaft Length": 0.05,
+                "Head Length": 0.01,
+                "Shaft Diameter": 0.015,
+                "Head Diameter": 0.015,
             }
         )
 
