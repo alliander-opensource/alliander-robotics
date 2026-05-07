@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-[tools.setuptools]
+[tool.setuptools]
 packages = ["alliander_robotics"]
 
-[tools.setuptools.package-data]
+[tool.setuptools.package-data]
 alliander_robotics = ["**/*"]
 
 [project]
