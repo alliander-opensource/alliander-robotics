@@ -47,7 +47,7 @@ runs:
       run: |
         echo "BASE_IMAGE=$(yq .${{ inputs.component }}.base_image components.yml)" >> $GITHUB_OUTPUT
         echo "REPOSITORY=$(yq .${{ inputs.component }}.repository components.yml)" >> $GITHUB_OUTPUT
-        echo "DOCKERFILE=$(yq .${{ inputs.component }}.dockerfile components.yml)" >> $GITHUB_OUTPUT
+        echo "DOCKERFILE=alliander_robotics/$(yq .${{ inputs.component }}.dockerfile components.yml)" >> $GITHUB_OUTPUT
     - name: Setup Docker Buildx
       uses: docker/setup-buildx-action@v4
     - name: Docker login

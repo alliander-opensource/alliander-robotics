@@ -25,3 +25,5 @@ GENERATE_LATEX = NO
 FILE_PATTERNS = *.cpp \
 		*.h \
 		*.hpp
+
+EXCLUDE_PATTERNS = /alliander_robotics/build/*

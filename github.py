@@ -7,7 +7,7 @@ import sys
 
 import requests
 
-import utils
+from alliander_robotics import utils
 
 
 def select_components(components: str) -> None:

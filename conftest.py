@@ -19,9 +19,9 @@ from _pytest.fixtures import SubRequest
 from rclpy.node import Node
 from termcolor import cprint
 
-import utils
-from predefined_configurations import PredefinedConfigurations
-from start import Compose
+from alliander_robotics import utils
+from alliander_robotics.compose import Compose
+from alliander_robotics.predefined_configurations import PredefinedConfigurations
 
 LAUNCH_TIMEOUT = 90  # seconds
 COMPOSE_FILE = "/alliander_robotics/compose_pytest.yml"

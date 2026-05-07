@@ -7,7 +7,7 @@ import sys
 
 from termcolor import colored, cprint
 
-import utils
+from alliander_robotics import utils
 
 DOCKER_ORGANIZATION = "allianderrobotics"
 
@@ -107,7 +107,7 @@ class ImageManager:
             cache_str = "--no-cache"
 
         cmd = f"docker build \
-            -f {self.components[repository]['dockerfile']} \
+            -f alliander_robotics/{self.components[repository]['dockerfile']} \
             --build-arg BASE_IMAGE={self.components[repository]['base_image']} \
             --platform linux/{self.arch} \
             -t {DOCKER_ORGANIZATION}/{repository}:{tag} {cache_str} \

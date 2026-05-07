@@ -58,14 +58,14 @@ COPY .devcontainer/dev/.dev_bashrc /.dev_bashrc
 RUN echo "source /.dev_bashrc" >> /home/$REMOTE_USER/.bashrc
 
 # Copy repo packages:
-COPY alliander_core/src/ /alliander/ros/src
-COPY alliander_diagnostics/src/ /alliander/ros/src
-COPY alliander_franka/src/ /alliander/ros/src
-COPY alliander_joystick/src/ /alliander/ros/src
-COPY alliander_meta/src/ /alliander/ros/src
-COPY alliander_moveit/src/ /alliander/ros/src
-COPY alliander_nav2/src/ /alliander/ros/src
-COPY alliander_xsens/src/ /alliander/ros/src
+COPY alliander_robotics/alliander_core/src/ /alliander/ros/src
+COPY alliander_robotics/alliander_diagnostics/src/ /alliander/ros/src
+COPY alliander_robotics/alliander_franka/src/ /alliander/ros/src
+COPY alliander_robotics/alliander_joystick/src/ /alliander/ros/src
+COPY alliander_robotics/alliander_meta/src/ /alliander/ros/src
+COPY alliander_robotics/alliander_moveit/src/ /alliander/ros/src
+COPY alliander_robotics/alliander_nav2/src/ /alliander/ros/src
+COPY alliander_robotics/alliander_xsens/src/ /alliander/ros/src
 
 # Build repo packages:
 RUN /alliander/colcon_build.sh

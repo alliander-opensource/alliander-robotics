@@ -2,7 +2,7 @@
 # 
 # SPDX-License-Identifier: Apache-2.0
 
-__pycache__/
+**/__pycache__/
 ignore/
 .config/
 .vscode/
