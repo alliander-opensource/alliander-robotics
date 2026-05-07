@@ -13,6 +13,7 @@ from alliander_core.src.alliander_utilities.alliander_utilities.config_objects i
     Arm,
     Camera,
     Lidar,
+    Lift,
     Platform,
     PlatformList,
     SimulatorConfig,
@@ -107,6 +108,19 @@ class PredefinedConfigurations:
     @register_configuration("zed")
     def config_zed(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("zed", (0, 0, 0.5), namespace="zed")]
+
+    # Ewellix:
+    @register_configuration("ewellix")
+    def config_ewellix(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [Lift("ewellix")]
+
+    @register_configuration("ewellix_franka")
+    def config_ewellix_franka(self) -> None:  # noqa: D102
+        lift = Lift("ewellix")
+        arm = Arm("franka")
+
+        link(lift, arm)
+        self.plat_conf.platforms = [lift, arm]
 
     # Franka:
     @register_configuration("franka")
@@ -287,6 +301,16 @@ class PredefinedConfigurations:
 
         link(vehicle, arm)
         self.plat_conf.platforms = [vehicle, arm]
+
+    @register_configuration("mm_ewellix")
+    def config_mm_ewellix(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        lift = Lift("ewellix", (0, 0, 0.14))
+        arm = Arm("franka")
+
+        link(vehicle, lift)
+        link(lift, arm)
+        self.plat_conf.platforms = [vehicle, lift, arm]
 
     @register_configuration("mm_velodyne")
     def config_mm_velodyne(self) -> None:  # noqa: D102

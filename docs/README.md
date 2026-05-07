@@ -6,9 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Alliander Robotics
 
-This repository shares all developments happening within the Alliander Robotics team. Projects include inspection robotics, gas leak detection, and operating robots under voltage. 
+This repository shares all developments happening within the Alliander Robotics team. Projects include inspection robotics, gas leak detection, and operating robots under voltage.
 
-# Goals for sharing
+## Goals for sharing
+
 Our goal for sharing this software is to encourage research on robotic implementations in the energy network to help with the energy transition. The software is not intended for production use.
 
 | [![drawing](img/logo/github.jpg)](https://github.com/alliander-opensource/alliander-robotics) | [![drawing](img/logo/read_the_docs.jpg)](https://alliander-opensource.github.io/alliander-robotics) |
@@ -16,9 +17,11 @@ Our goal for sharing this software is to encourage research on robotic implement
 
 ## Robots
 
-| ![drawing](img/vendor/fr3.jpg) | ![drawing](img/vendor/hp.jpg) |
-| :----------------------------: | :---------------------------: |
-|       Franka Research 3        |       Husarion Panther        |
+| ![drawing](img/vendor/hp.jpg)  |  ![drawing](img/vendor/hl.png)  |
+|:------------------------------:|:-------------------------------:|
+|        Husarion Panther        |          Husarion Lynx          |
+| ![drawing](img/vendor/fr3.jpg) | ![drawing](img/vendor/ur7e.png) |
+|       Franka Research 3        |      Universal Robots UR7e      |
 
 ## License
 
