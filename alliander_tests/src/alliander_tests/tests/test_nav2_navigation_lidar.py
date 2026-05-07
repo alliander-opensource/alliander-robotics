@@ -106,14 +106,28 @@ class _TestNavigationLidar:
         )
 
 
-for vehicle in ["panther", "lynx"]:
-    for lidar in ["velodyne", "ouster"]:
+for i, vehicle in enumerate(
+    [
+        "panther",
+        "lynx",
+        "lynx",
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+    ]
+):
+    for j, lidar in enumerate(["velodyne", "ouster", "velodyne", "ouster", "velodyne"]):
         vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
         link(vehicle_platform, lidar_platform)
         vehicle_platform.nav2_config.navigation = True
         test_class = type(
-            f"Test{vehicle.capitalize()}{lidar.capitalize()}LidarNavigation",
+            f"Test{vehicle.capitalize()}{lidar.capitalize()}LidarNavigation{i}.{j}",
             (_TestNavigationLidar,),
             {"platforms": {"vehicle": vehicle_platform, "lidar": lidar_platform}},
         )

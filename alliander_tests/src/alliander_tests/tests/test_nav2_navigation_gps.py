@@ -100,8 +100,22 @@ class _TestNavigationGPS:
         )
 
 
-for vehicle in ["panther", "lynx"]:
-    for lidar in ["velodyne", "ouster"]:
+for i, vehicle in enumerate(
+    [
+        "panther",
+        "lynx",
+        "lynx",
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+        "panther",
+        "lynx",
+    ]
+):
+    for j, lidar in enumerate(["velodyne", "ouster", "velodyne", "ouster", "velodyne"]):
         for gps in ["gps"]:
             vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
             lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
@@ -111,7 +125,7 @@ for vehicle in ["panther", "lynx"]:
             vehicle_platform.nav2_config.navigation = True
             vehicle_platform.nav2_config.gps = True
             test_class = type(
-                f"Test{vehicle.capitalize()}{lidar.capitalize()}{gps.capitalize()}Navigation",
+                f"Test{vehicle.capitalize()}{lidar.capitalize()}{gps.capitalize()}Navigation{i}.{j}",
                 (_TestNavigationGPS,),
                 {
                     "platforms": {
