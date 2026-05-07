@@ -348,7 +348,8 @@ class IMU(Platform):
 
     platform_type: str = "IMU"
     usb_device: str = "/dev/imu"
-      
+
+
 @dataclass
 class Lift(Platform):
     """Configuration for a Lift platform.
