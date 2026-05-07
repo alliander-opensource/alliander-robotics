@@ -11,7 +11,6 @@ ENV ROS_DISTRO=jazzy
 RUN apt update && apt install -y --no-install-recommends \
   ros-$ROS_DISTRO-husarion-components-description \
   ros-$ROS_DISTRO-nmea-navsat-driver \
-  ros-$ROS_DISTRO-robot-localization \
   && rm -rf /var/lib/apt/lists/* \
   && apt autoremove -y \
   && apt clean

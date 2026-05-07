@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+services:
+  alliander_xsens:
+    image: allianderrobotics/xsens
+    container_name: alliander_xsens
+    runtime: nvidia
+    # USB device is not found by Xsens node first time after boot
+    restart: on-failure:3  
+    network_mode: host
+    privileged: true
+    mem_limit: 6gb
+    tty: true
+    env_file:
+      - .env
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "/dev:/dev"
+    command: ["/bin/bash", "-c", "ros2 launch alliander_xsens xsens.launch.py"]

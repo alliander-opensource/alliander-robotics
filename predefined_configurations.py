@@ -10,9 +10,11 @@ from typing import Callable, Dict
 
 from alliander_core.src.alliander_utilities.alliander_utilities.config_objects import (
     GPS,
+    IMU,
     Arm,
     Camera,
     Lidar,
+    Lift,
     Platform,
     PlatformList,
     SimulatorConfig,
@@ -105,6 +107,10 @@ class PredefinedConfigurations:
     def config_realsense(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("realsense", (0, 0, 0.5))]
 
+    @register_configuration("xsens")
+    def config_xsens(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [IMU("xsens", (0, 0, 0.5))]
+
     @register_configuration("zed")
     def config_zed(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("zed", (0, 0, 0.5), namespace="zed")]
@@ -118,6 +124,19 @@ class PredefinedConfigurations:
         ]
 
         self.sim_conf.world = "thermal_camera.sdf"
+        
+    # Ewellix:
+    @register_configuration("ewellix")
+    def config_ewellix(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [Lift("ewellix")]
+
+    @register_configuration("ewellix_franka")
+    def config_ewellix_franka(self) -> None:  # noqa: D102
+        lift = Lift("ewellix")
+        arm = Arm("franka")
+
+        link(lift, arm)
+        self.plat_conf.platforms = [lift, arm]
 
     # Franka:
     @register_configuration("franka")
@@ -253,12 +272,14 @@ class PredefinedConfigurations:
             ip_address="10.15.20.5",
         )
         gps = GPS("gps", position=(-0.08, -0.25, 0.2), orientation=(0, 0, -90))
+        imu = IMU("xsens", position=(-0.23, -0.08, 0.18), orientation=(0, 0, 180))
         camera = Camera("realsense", (0.18, 0, 0.2))
 
         link(vehicle, lidar)
         link(vehicle, gps)
+        link(vehicle, imu)
         link(vehicle, camera)
-        self.plat_conf.platforms = [vehicle, lidar, gps, camera]
+        self.plat_conf.platforms = [vehicle, lidar, gps, imu, camera]
         self.viz_conf.gui = True
         self.sim_conf.world = "map_5.954036_51.977320"
 
@@ -298,6 +319,16 @@ class PredefinedConfigurations:
 
         link(vehicle, arm)
         self.plat_conf.platforms = [vehicle, arm]
+
+    @register_configuration("mm_ewellix")
+    def config_mm_ewellix(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        lift = Lift("ewellix", (0, 0, 0.14))
+        arm = Arm("franka")
+
+        link(vehicle, lift)
+        link(lift, arm)
+        self.plat_conf.platforms = [vehicle, lift, arm]
 
     @register_configuration("mm_velodyne")
     def config_mm_velodyne(self) -> None:  # noqa: D102

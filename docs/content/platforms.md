@@ -105,6 +105,18 @@ A Lynx vehicle can be launched in simulation by creating a configuration with a 
 
 This section is equivalent to the [Hardware Panther](#hardware-panther) and [Configuration Panther](#configuration-panther) sections, except for the namespace here being `lynx` and the *Lenovo ThinkStation P360* will be replaced with a different computer.
 
+## Ewellix
+
+![Ewellix](../img/ewellix/ewellix.png)
+
+### Simulation Ewellix
+
+An Ewellix lift can be launched in simulation by creating a configuration with an *Lift* of type *ewellix*. One can control the lift by publish a command on the `lift_position_controller/commands` topic.
+
+### Hardware Ewellix
+
+One can use an Ewellix lift by connecting it with the host device using USB. One can control the lift by publish a command on the `lift_position_controller/commands` topic.
+
 ## Realsense
 
 ![Realsense](../img/realsense/realsense.png)
@@ -187,6 +199,17 @@ When using the Velodyne lidar, make sure that the IP-address of the host device 
 
 | ![Velodyne settings](../img/velodyne/velodyne_settings.png) | ![Teltonika settings](../img/teltonika/teltonika_settings.png) |
 |-------------------------------------------------------------|----------------------------------------------------------------|
+
+## Xsens IMU
+![Xsens](../img/xsens/imu.png)
+
+### Simulation Xsens
+
+An Xsens IMU can be launched by creating a configuration with an *IMU* of type *xsens*.
+
+### Hardware Xsens
+
+When using the Xsens IMU, make sure that the IMU shows up on your device (use *lsusb* to check) and that the Docker container runs with *privileged: true* (standard in our repo).
 
 ## Teltonika GPS
 

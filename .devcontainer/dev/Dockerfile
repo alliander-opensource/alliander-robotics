@@ -18,6 +18,7 @@ RUN apt update && apt install -y --no-install-recommends \
 
 # Install MoveIt: 
 RUN apt update && apt install -y --no-install-recommends \
+    ros-$ROS_DISTRO-imu-filter-madgwick \
     ros-$ROS_DISTRO-moveit \
     ros-$ROS_DISTRO-moveit-servo \
     ros-$ROS_DISTRO-moveit-visual-tools \
@@ -37,6 +38,11 @@ RUN apt update && apt install -y --no-install-recommends \
     && apt clean
 
 # Install custom msgs:
+RUN apt update && apt install -y --no-install-recommends \
+    ros-$ROS_DISTRO-ewellix-interfaces \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt autoremove -y \
+    && apt clean
 RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
     https://github.com/frankarobotics/franka_ros2.git src/franka_ros2 \
     && cd src/franka_ros2 \
@@ -59,6 +65,7 @@ COPY alliander_joystick/src/ /alliander/ros/src
 COPY alliander_meta/src/ /alliander/ros/src
 COPY alliander_moveit/src/ /alliander/ros/src
 COPY alliander_nav2/src/ /alliander/ros/src
+COPY alliander_xsens/src/ /alliander/ros/src
 
 # Build repo packages:
 RUN /alliander/colcon_build.sh

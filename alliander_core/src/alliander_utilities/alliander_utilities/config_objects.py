@@ -175,7 +175,11 @@ class Platform(Config):
             case "franka":
                 return "fr3_link0" if self.parent.namespace else "world"
             case _:
-                return "base_link" if self.parent.namespace else "world"
+                return (
+                    "base_link"
+                    if self.parent.namespace or not self.simulation
+                    else "world"
+                )
 
     def default_link_to_child(self) -> str:
         """Get the default link used to connect to a child platform.
@@ -191,6 +195,8 @@ class Platform(Config):
                 return "base_link"
             case "franka":
                 return "fr3_hand"
+            case "ewellix":
+                return "lift_mount"
             case _:
                 raise ValueError(
                     f"No link_to_child for unknown platform name: {self.name}"
@@ -342,6 +348,30 @@ class GPS(Platform):
     diagnostic_timeouts: tuple[int, int, int] = (3, 5, 10)
 
 
+@dataclass
+class IMU(Platform):
+    """Configuration for an IMU platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+        usb_device (str): USB device path, e.g. /dev/imu.
+    """
+
+    platform_type: str = "IMU"
+    usb_device: str = "/dev/imu"
+
+
+@dataclass
+class Lift(Platform):
+    """Configuration for a Lift platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+    """
+
+    platform_type: str = "Lift"
+
+
 # Configurations containing lists of platforms:
 @dataclass
 class PlatformList(Config):
@@ -353,7 +383,7 @@ class PlatformList(Config):
 
     platforms: List[
         Annotated[
-            Union[Platform, Arm, Vehicle, Lidar, Camera, ThermalCamera, GPS],
+            Union[Platform, Arm, Vehicle, Camera, GPS, IMU, Lidar, Lift, ThermalCamera],
             Discriminator(field="platform_type", include_supertypes=True),
         ]
     ] = field(default_factory=list)
