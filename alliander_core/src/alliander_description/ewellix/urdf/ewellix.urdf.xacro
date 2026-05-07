@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<!-- 
+Based on:
+https://github.com/clearpathrobotics/ewellix_lift_common/blob/0.2.1/ewellix_description/urdf/ewellix_lift.urdf.xacro 
+-->
+
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="ewellix">
+  <xacro:include filename="$(find alliander_description)/ewellix/urdf/adapted/ewellix_macro.xacro" />
+
+  <!-- Arguments -->
+  <xacro:arg name="type" default="ur_620" />
+  <xacro:arg name="tf_prefix" default="lift_" />
+  <xacro:arg name="add_plate" default="true" />
+  <xacro:arg name="add_mount" default="true" />
+  <xacro:arg name="parameters_file" default="$(find ewellix_description)/config/$(arg type).yaml" />
+  <xacro:arg name="generate_ros2_control_tag" default="true" />
+  <xacro:arg name="use_fake_hardware" default="false" />
+  <xacro:arg name="sim_gazebo" default="false" />
+  <xacro:arg name="port" default="/dev/ttyUSB0" />
+  <xacro:arg name="baud" default="38400" />
+  <xacro:arg name="timeout" default="1000" />
+  <xacro:arg name="conversion" default="3225" />
+  <xacro:arg name="rated_effort" default="2000" />
+  <xacro:arg name="tolerance" default="0.005" />
+
+  <!-- Custom arguments: -->
+  <xacro:arg name="namespace" default="" />
+  <xacro:arg name="parent" default="world" />
+  <xacro:arg name="childs" default="${[]}" />
+
+  <!-- Base Link -->
+  <link name="base_link" />
+
+  <!-- Ewellix Description -->
+  <xacro:ewellix_lift
+    parent="base_link"
+    tf_prefix="$(arg tf_prefix)"
+    add_plate="$(arg add_plate)"
+    add_mount="$(arg add_mount)"
+    parameters_file="$(arg parameters_file)"
+    generate_ros2_control_tag="$(arg generate_ros2_control_tag)"
+    use_fake_hardware="$(arg use_fake_hardware)"
+    sim_gazebo="$(arg sim_gazebo)"
+    port="$(arg port)"
+    baud="$(arg baud)"
+    timeout="$(arg timeout)"
+    conversion="$(arg conversion)"
+    rated_effort="$(arg rated_effort)"
+    tolerance="$(arg tolerance)"
+  >
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </xacro:ewellix_lift>
+
+  <!-- Gazebo -->
+  <xacro:if value="$(arg sim_gazebo)">
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>$(find alliander_description)/ewellix/config/controllers.yaml</parameters>
+        <ros>
+          <namespace>$(arg namespace)</namespace>
+        </ros>
+      </plugin>
+    </gazebo>
+
+    <!-- Gazebo requires a joint to a link called "world" for statically mounted robots: -->
+    <xacro:property name="parent" value="$(arg parent)" />
+    <xacro:if value="${parent == 'world'}">
+      <link name="${parent}" />
+      <joint name="${parent}_joint" type="fixed">
+        <parent link="${parent}" />
+        <child link="base_link" />
+      </joint>
+    </xacro:if>
+
+    <!-- Create detachable joints with given childs: -->
+    <xacro:include filename="$(find alliander_utilities)/urdf/detachable_joints.urdf.xacro" />
+    <xacro:detachable_joints childs="${$(arg childs)}" />
+
+    <!-- Preserve joint so that child link can be used for detachable joints: -->
+    <gazebo reference="lift_mount_joint">
+      <preserveFixedJoint>true</preserveFixedJoint>
+    </gazebo>
+  </xacro:if>
+</robot>

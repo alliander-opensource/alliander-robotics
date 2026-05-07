@@ -53,6 +53,8 @@ class ApplyConfigurations:
                     self.add_gps(GPS.from_str(platform.to_str()))
                 case "IMU":
                     pass
+                case "Lift":
+                    pass
                 case _:
                     raise NotImplementedError(
                         f"Configuration for platform {type(platform).__name__} is not implemented."

@@ -38,6 +38,11 @@ RUN apt update && apt install -y --no-install-recommends \
     && apt clean
 
 # Install custom msgs:
+RUN apt update && apt install -y --no-install-recommends \
+    ros-$ROS_DISTRO-ewellix-interfaces \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt autoremove -y \
+    && apt clean
 RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
     https://github.com/frankarobotics/franka_ros2.git src/franka_ros2 \
     && cd src/franka_ros2 \
