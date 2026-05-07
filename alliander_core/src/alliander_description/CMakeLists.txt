@@ -11,7 +11,7 @@ find_package(ament_cmake_python REQUIRED)
 
 # Shared folders:
 install(
-  DIRECTORY franka husarion nmea_gps ouster velodyne realsense xsens zed 
+  DIRECTORY franka husarion nmea_gps ouster realsense velodyne xsens zed 
   DESTINATION share/${PROJECT_NAME}
 )
 
