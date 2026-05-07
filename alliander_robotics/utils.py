@@ -83,7 +83,11 @@ def get_changed_packages(verbose: bool = False) -> set[str]:
         set[str]: A set of package names that have changed.
     """
     files = get_files_changed(verbose=verbose)
-    return {file.split("/")[1] for file in files if file.startswith("alliander_robotics/alliander_")}
+    return {
+        file.split("/")[1]
+        for file in files
+        if file.startswith("alliander_robotics/alliander_")
+    }
 
 
 def is_core_docker_changed() -> bool:
@@ -92,7 +96,10 @@ def is_core_docker_changed() -> bool:
     Returns:
         bool: True if the core docker image is changed, False otherwise.
     """
-    return "alliander_robotics/alliander_core/alliander_core.Dockerfile" in get_files_changed()
+    return (
+        "alliander_robotics/alliander_core/alliander_core.Dockerfile"
+        in get_files_changed()
+    )
 
 
 def is_core_files_changed() -> bool:
@@ -101,4 +108,7 @@ def is_core_files_changed() -> bool:
     Returns:
         bool: True if files in the core package are changed, False otherwise.
     """
-    return any(file.startswith("alliander_robotics/alliander_core/") for file in get_files_changed())
+    return any(
+        file.startswith("alliander_robotics/alliander_core/")
+        for file in get_files_changed()
+    )
