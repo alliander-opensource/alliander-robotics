@@ -83,6 +83,9 @@ def get_bridge_topics(platforms: list[T]) -> list[str]:
             bridge_topics.append(
                 f"/{platform.namespace}/gps/fix@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat"
             )
+        if platform.platform_type == "ThermalCamera":
+            bridge_topics.append(
+                f"/{platform.namespace}/thermal/image@sensor_msgs/msg/Image@gz.msgs.Image"
         if platform.platform_type == "IMU":
             bridge_topics.append(
                 f"/{platform.namespace}/imu/data@sensor_msgs/msg/Imu@gz.msgs.IMU"

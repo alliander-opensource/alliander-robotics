@@ -3,15 +3,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.5)
-project(alliander_description)
+project(alliander_seekthermal)
 
 # CMake dependencies:
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
+find_package(ament_python REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+# Python executables:
+install(
+  DIRECTORY src_py/
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Shared folders:
 install(
-  DIRECTORY ewellix franka husarion nmea_gps ouster realsense seekthermal velodyne xsens zed 
+  DIRECTORY launch 
   DESTINATION share/${PROJECT_NAME}
 )
 

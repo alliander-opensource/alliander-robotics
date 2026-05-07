@@ -17,6 +17,7 @@ ignore/
 
 build/
 clangd/
+**/target/
 
 .cache
 .venv

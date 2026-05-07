@@ -9,6 +9,7 @@ from alliander_utilities.config_objects import (
     Camera,
     Lidar,
     PlatformList,
+    ThermalCamera,
     Vehicle,
     VisualizationConfig,
 )
@@ -49,6 +50,8 @@ class ApplyConfigurations:
                     self.add_lidar(Lidar.from_str(platform.to_str()))
                 case "Camera":
                     self.add_depth_camera(Camera.from_str(platform.to_str()))
+                case "ThermalCamera":
+                    self.add_thermal_camera(ThermalCamera.from_str(platform.to_str()))
                 case "GPS":
                     self.add_gps(GPS.from_str(platform.to_str()))
                 case "IMU":
@@ -175,6 +178,16 @@ class ApplyConfigurations:
             f"/{platform.namespace}/color/image_raw",
             f"/{platform.namespace}/depth/image_rect_raw",
         )
+
+    @staticmethod
+    def add_thermal_camera(platform: ThermalCamera) -> None:
+        """Add thermal camera configurations to RViz and Vizanti.
+
+        Args:
+            platform (ThermalCamera): The thermal camera platform configuration.
+        """
+        Rviz.add_image(f"/{platform.namespace}/thermal/image")
+        Rviz.add_image(f"/{platform.namespace}/thermal/image/compressed")
 
     @staticmethod
     def add_gps(platform: GPS) -> None:
