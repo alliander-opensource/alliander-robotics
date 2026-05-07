@@ -10,6 +10,7 @@ from typing import Callable, Dict
 
 from alliander_core.src.alliander_utilities.alliander_utilities.config_objects import (
     GPS,
+    IMU,
     Arm,
     Camera,
     Lidar,
@@ -104,6 +105,10 @@ class PredefinedConfigurations:
     @register_configuration("realsense")
     def config_realsense(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("realsense", (0, 0, 0.5))]
+
+    @register_configuration("xsens")
+    def config_xsens(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [IMU("xsens", (0, 0, 0.5))]
 
     @register_configuration("zed")
     def config_zed(self) -> None:  # noqa: D102
@@ -256,12 +261,14 @@ class PredefinedConfigurations:
             ip_address="10.15.20.5",
         )
         gps = GPS("gps", position=(-0.08, -0.25, 0.2), orientation=(0, 0, -90))
+        imu = IMU("xsens", position=(-0.23, -0.08, 0.18), orientation=(0, 0, 180))
         camera = Camera("realsense", (0.18, 0, 0.2))
 
         link(vehicle, lidar)
         link(vehicle, gps)
+        link(vehicle, imu)
         link(vehicle, camera)
-        self.plat_conf.platforms = [vehicle, lidar, gps, camera]
+        self.plat_conf.platforms = [vehicle, lidar, gps, imu, camera]
         self.viz_conf.gui = True
         self.sim_conf.world = "map_5.954036_51.977320"
 

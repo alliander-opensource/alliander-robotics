@@ -18,6 +18,7 @@ RUN apt update && apt install -y --no-install-recommends \
 
 # Install MoveIt: 
 RUN apt update && apt install -y --no-install-recommends \
+    ros-$ROS_DISTRO-imu-filter-madgwick \
     ros-$ROS_DISTRO-moveit \
     ros-$ROS_DISTRO-moveit-servo \
     ros-$ROS_DISTRO-moveit-visual-tools \
@@ -64,6 +65,7 @@ COPY alliander_joystick/src/ /alliander/ros/src
 COPY alliander_meta/src/ /alliander/ros/src
 COPY alliander_moveit/src/ /alliander/ros/src
 COPY alliander_nav2/src/ /alliander/ros/src
+COPY alliander_xsens/src/ /alliander/ros/src
 
 # Build repo packages:
 RUN /alliander/colcon_build.sh

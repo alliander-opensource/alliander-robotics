@@ -188,6 +188,17 @@ When using the Velodyne lidar, make sure that the IP-address of the host device 
 | ![Velodyne settings](../img/velodyne/velodyne_settings.png) | ![Teltonika settings](../img/teltonika/teltonika_settings.png) |
 |-------------------------------------------------------------|----------------------------------------------------------------|
 
+## Xsens IMU
+![Xsens](../img/xsens/imu.png)
+
+### Simulation Xsens
+
+An Xsens IMU can be launched by creating a configuration with an *IMU* of type *xsens*.
+
+### Hardware Xsens
+
+When using the Xsens IMU, make sure that the IMU shows up on your device (use *lsusb* to check) and that the Docker container runs with *privileged: true* (standard in our repo).
+
 ## Teltonika GPS
 
 ![Teltonika](../img/teltonika/nmea.png)

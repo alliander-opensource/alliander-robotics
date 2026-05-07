@@ -51,6 +51,8 @@ class ApplyConfigurations:
                     self.add_depth_camera(Camera.from_str(platform.to_str()))
                 case "GPS":
                     self.add_gps(GPS.from_str(platform.to_str()))
+                case "IMU":
+                    pass
                 case "Lift":
                     pass
                 case _:

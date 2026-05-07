@@ -338,6 +338,19 @@ class GPS(Platform):
 
 
 @dataclass
+class IMU(Platform):
+    """Configuration for an IMU platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+        usb_device (str): USB device path, e.g. /dev/imu.
+    """
+
+    platform_type: str = "IMU"
+    usb_device: str = "/dev/imu"
+
+
+@dataclass
 class Lift(Platform):
     """Configuration for a Lift platform.
 
@@ -359,7 +372,7 @@ class PlatformList(Config):
 
     platforms: List[
         Annotated[
-            Union[Platform, Arm, Vehicle, Lidar, Camera, GPS, Lift],
+            Union[Platform, Arm, Vehicle, Camera, GPS, IMU, Lidar, Lift],
             Discriminator(field="platform_type", include_supertypes=True),
         ]
     ] = field(default_factory=list)

@@ -15,7 +15,7 @@ from launch_ros.actions import LifecycleNode, Node, SetParameter, SetRemap
 platform_arg = LaunchArgument("platform_config", "")
 
 
-def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
+def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
     """The launch setup.
 
     Args:
@@ -34,11 +34,17 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
     # Extract lidar and gps namespaces from childs. The first found will be used:
     namespace_gps = ""
     namespace_lidar = ""
+    namespace_imu = ""
     for child in vehicle_config.childs:
         if child.platform_type == "Lidar" and not namespace_lidar:
             namespace_lidar = child.namespace
         if child.platform_type == "GPS" and not namespace_gps:
             namespace_gps = child.namespace
+        if child.platform_type == "IMU" and not namespace_imu:
+            namespace_imu = child.namespace
+    # if no external IMU is found, use the vehicle's internal IMU
+    if not namespace_imu:
+        namespace_imu = namespace_vehicle
 
     # Define configuration:
     lifecycle_nodes_names = []
@@ -93,6 +99,24 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
             "scan_topic": f"/{namespace_lidar}/scan",
         },
         root_key=namespace_vehicle,
+    )
+
+    ekf_global_params = AdaptedYaml(
+        get_file_path("alliander_nav2", ["config", "nav2"], "ekf_global.yaml"),
+        {
+            "odom_frame": f"{namespace_vehicle}/odom",
+            "base_link_frame": f"{namespace_vehicle}/base_footprint",
+            "odom0": f"/{namespace_vehicle}/odometry/wheels",
+            "odom1": f"/{namespace_gps}/odometry/gps",
+            "imu0": f"/{namespace_imu}/imu/data",
+        },
+        root_key=namespace_vehicle,
+    )
+
+    navsat_transform_params = AdaptedYaml(
+        get_file_path("alliander_nav2", ["config", "nav2"], "navsat_transform.yaml"),
+        {},
+        root_key=namespace_gps,
     )
 
     local_costmap_params = AdaptedYaml(
@@ -303,6 +327,30 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         namespace=namespace_vehicle,
     )
 
+    # robot-localization nodes
+    ekf_global = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_global",
+        namespace=namespace_vehicle,
+        parameters=[ekf_global_params.file],
+        remappings=[
+            ("odometry/filtered", f"/{namespace_vehicle}/odometry/global"),
+        ],
+    )
+
+    navsat_transform = Node(
+        package="robot_localization",
+        executable="navsat_transform_node",
+        name="navsat_transform",
+        namespace=namespace_gps,
+        parameters=[navsat_transform_params.file],
+        remappings=[
+            ("odometry/filtered", f"/{namespace_vehicle}/odometry/global"),
+            ("imu", f"/{namespace_imu}/imu/data"),
+        ],
+    )
+
     nav2_manager = Node(
         package="alliander_nav2",
         executable="nav2_manager.py",
@@ -324,6 +372,8 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0915
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
         SetRemap(src=f"/{namespace_vehicle}/cmd_vel", dst=pub_topic),
         *[Register.on_start(node, context) for node in register_lifecycle_nodes],
+        Register.on_start(ekf_global, context) if nav2.gps else SKIP,
+        Register.on_start(navsat_transform, context) if nav2.gps else SKIP,
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
         Register.on_log(nav2_manager, "Controller is ready.", context)
         if nav2.navigation
