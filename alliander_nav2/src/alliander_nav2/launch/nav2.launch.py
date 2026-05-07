@@ -227,6 +227,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         name="collision_monitor",
         parameters=[collision_monitor_params.file],
         namespace=namespace_vehicle,
+        respawn=True,
     )
 
     all_lifecycle_nodes["slam_toolbox"] = LifecycleNode(
@@ -241,6 +242,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         ],
         namespace=namespace_vehicle,
         remappings=[("/map", f"/{namespace_vehicle}/map")],
+        respawn=True,
     )
 
     all_lifecycle_nodes["map_server"] = LifecycleNode(
@@ -256,6 +258,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             }
         ],
         namespace=namespace_vehicle,
+        respawn=True,
     )
 
     all_lifecycle_nodes["amcl"] = LifecycleNode(
@@ -265,6 +268,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         parameters=[amcl_params.file],
         namespace=namespace_vehicle,
         remappings=[(f"/{namespace_vehicle}/initialpose", "/initialpose")],
+        respawn=True,
     )
 
     all_lifecycle_nodes["controller_server"] = LifecycleNode(
@@ -277,6 +281,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             follow_path_params.file,
         ],
         namespace=namespace_vehicle,
+        respawn=True,
     )
 
     all_lifecycle_nodes["planner_server"] = LifecycleNode(
@@ -288,6 +293,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             planner_server_params.file,
         ],
         namespace=namespace_vehicle,
+        respawn=True,
     )
 
     all_lifecycle_nodes["behavior_server"] = LifecycleNode(
@@ -296,6 +302,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         name="behavior_server",
         parameters=[behavior_server_params.file],
         namespace=namespace_vehicle,
+        respawn=True,
     )
 
     all_lifecycle_nodes["bt_navigator"] = LifecycleNode(
@@ -304,6 +311,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         name="bt_navigator",
         parameters=[bt_navigator_params.file],
         namespace=namespace_vehicle,
+        respawn=True,
     )
 
     remappings = []
@@ -317,6 +325,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         name="waypoint_follower",
         namespace=namespace_vehicle,
         remappings=remappings,
+        respawn=True,
     )
 
     lifecycle_manager = Node(
