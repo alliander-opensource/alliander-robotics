@@ -11,6 +11,7 @@ from typing import Callable, Dict
 from alliander_robotics.alliander_core.src.alliander_utilities.alliander_utilities.config_objects import (
     GPS,
     IMU,
+    Apriltag,
     Arm,
     Beamagine,
     Camera,
@@ -84,6 +85,11 @@ class PredefinedConfigurations:
             return fn
 
         return wrapper
+
+    # Apriltag:
+    @register_configuration("apriltag")
+    def config_apriltag(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [Apriltag("apriltag", (0, 0, 0.5))]
 
     # Sensors:
     @register_configuration("")
@@ -437,6 +443,19 @@ class PredefinedConfigurations:
         self.plat_conf.platforms = [vehicle, lidar, gps, imu, camera]
         self.viz_conf.gui = True
         self.sim_conf.world = "map_5.954036_51.977320"
+
+    @register_configuration("panther_docking")
+    def config_panther_docking(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        vehicle.nav2_config.navigation = True
+        lidar = Lidar("velodyne", position=(0.13, 0.17, 0.18))
+        camera = Camera("zed", (0.08, 0, 0.4), orientation=(0, 10, 0))
+        apriltag = Apriltag("apriltag", (4, 4, 0.3))
+
+        link(vehicle, camera)
+        link(vehicle, lidar)
+        self.plat_conf.platforms = [vehicle, camera, lidar, apriltag]
+        self.sim_conf.world = "walls.sdf"
 
     # Lynx:
     @register_configuration("lynx")

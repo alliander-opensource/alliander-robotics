@@ -116,6 +116,14 @@ class Parser(argparse.ArgumentParser):
         )
 
         self.add_argument(
+            "-i",
+            "--isaac",
+            required=False,
+            action="store_true",
+            help="Add this flag to enable Isaac software.",
+        )
+
+        self.add_argument(
             "--no-run",
             required=False,
             action="store_true",
@@ -136,6 +144,8 @@ class Parser(argparse.ArgumentParser):
         compose.joystick = args.joystick
         compose.gazebo_ui = args.ui
         compose.meta = args.meta
+        compose.isaac = args.isaac
+
         if args.configuration:
             config_setup.apply_configuration(args.configuration)
             compose.rviz_yaml = args.rviz

@@ -31,6 +31,7 @@ SERVICE = typing.Literal[
     "documentation-build",
     "joystick",
     "meta",
+    "isaac",
     "diagnostics",
 ]
 MODE = typing.Literal[
@@ -80,6 +81,7 @@ class Compose:
         self.gazebo_ui = False
         self.joystick = False
         self.meta = False
+        self.isaac = False
         self.rviz_yaml = False
 
         self.ros_domain_id = ros_domain_id
@@ -180,6 +182,11 @@ class Compose:
             "meta": (
                 "alliander_meta",
                 f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
+                {},
+            ),
+            "isaac": (
+                "alliander_isaac",
+                "",
                 {},
             ),
             "diagnostics": (
@@ -423,6 +430,8 @@ class Compose:
             case "configuration" | "configuration-no-nvidia":
                 self.add_service(content, "diagnostics")
                 for platform in self.predefined_configuration.plat_conf.platforms:
+                    if platform.platform_type == "Apriltag":
+                        continue
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
                         self.add_service(content, "moveit", platform)
@@ -437,6 +446,8 @@ class Compose:
                     self.add_service(content, "joystick")
                 if self.meta:
                     self.add_service(content, "meta")
+                if self.isaac:
+                    self.add_service(content, "isaac")
 
         # Add healthchecks to all services:
         for name, service in services.items():

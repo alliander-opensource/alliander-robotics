@@ -96,6 +96,10 @@ xsens:
   dockerfile: alliander_xsens/alliander_xsens.Dockerfile
 
 # CUDA components:
+isaac:
+  base_image: allianderrobotics/cuda
+  repository: allianderrobotics/isaac
+  dockerfile: alliander_isaac/alliander_isaac.Dockerfile
 zed:
   base_image: allianderrobotics/cuda
   repository: allianderrobotics/zed

@@ -268,6 +268,17 @@ class NtripConfig(Config):
 
 # Platforms:
 @dataclass
+class Apriltag(Platform):
+    """Configuration for an Apriltag.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+    """
+
+    platform_type: str = "Apriltag"
+
+
+@dataclass
 class Gripper(Platform):
     """Configuration for a Gripper platform.
 
@@ -443,6 +454,7 @@ class PlatformList(Config):
         Annotated[
             Union[
                 Platform,
+                Apriltag,
                 Arm,
                 Vehicle,
                 Camera,

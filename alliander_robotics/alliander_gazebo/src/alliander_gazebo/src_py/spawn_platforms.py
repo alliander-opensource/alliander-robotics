@@ -10,7 +10,9 @@ from typing import TypeVar
 
 import numpy as np
 import rclpy
+from alliander_gazebo.create_apriltag import create_apriltag
 from alliander_utilities.config_objects import Platform, PlatformList
+from alliander_utilities.ros_utils import get_file_path
 from rclpy.node import Node
 from scipy.spatial.transform import RigidTransform, Rotation
 
@@ -76,10 +78,21 @@ class SpawnPlatform(Node):
                     raise ValueError("Failed to define rotation for platform to spawn.")
                 orientation = rotation.as_euler("xyz")
 
-            self.spawn_platform(platform.namespace, position, orientation)
+            # Generate apriltags and load via file:
+            model_path = ""
+            if platform.platform_type == "Apriltag":
+                create_apriltag()
+                model_path = get_file_path(
+                    "alliander_gazebo", ["models", "apriltag"], "model.sdf"
+                )
+            self.spawn_platform(platform.namespace, position, orientation, model_path)
 
     def spawn_platform(
-        self, namespace: str, position: np.ndarray, orientation: np.ndarray
+        self,
+        namespace: str,
+        position: np.ndarray,
+        orientation: np.ndarray,
+        model_path: str = "",
     ) -> None:
         """Spawn a platform in the Gazebo simulation with a specified position and orientation.
 
@@ -87,35 +100,39 @@ class SpawnPlatform(Node):
             namespace (str): The namespace of the platform.
             position (np.ndarray): The position [x, y, z] of the platform.
             orientation (np.ndarray): The orientation [roll, pitch, yaw] of the platform.
+            model_path (str): The path to the model file to be used for spawning the platform instead of using the robot description topic.
         """
         self.get_logger().info(f"Spawn: {namespace} {position} {orientation}")
         x, y, z = position
         roll, pitch, yaw = orientation
-        subprocess.run(
-            [
-                "ros2",
-                "run",
-                "ros_gz_sim",
-                "create",
-                "-topic",
-                f"/{namespace}/robot_description",
-                "-name",
-                namespace,
-                "-x",
-                str(x),
-                "-y",
-                str(y),
-                "-z",
-                str(z),
-                "-R",
-                str(roll),
-                "-P",
-                str(pitch),
-                "-Y",
-                str(yaw),
-            ],
-            check=True,
-        )
+
+        cmd = [
+            "ros2",
+            "run",
+            "ros_gz_sim",
+            "create",
+            "-name",
+            namespace,
+            "-x",
+            str(x),
+            "-y",
+            str(y),
+            "-z",
+            str(z),
+            "-R",
+            str(roll),
+            "-P",
+            str(pitch),
+            "-Y",
+            str(yaw),
+        ]
+
+        if model_path:
+            cmd.extend(["-file", model_path])
+        else:
+            cmd.extend(["-topic", f"/{namespace}/robot_description"])
+
+        subprocess.run(cmd, check=True)
 
 
 def get_pose(model: str, link: str | None = None) -> dict:
