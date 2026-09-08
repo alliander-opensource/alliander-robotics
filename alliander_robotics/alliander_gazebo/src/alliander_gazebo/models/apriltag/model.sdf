@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<sdf version="1.6">
+    <model name="apriltag">
+        <self_collide>false</self_collide>
+        <static>true</static>
+        <link name='base_link'>
+            <pose>0 0 0 0 1.57 3.14</pose>
+            <collision name='collision'>
+                <geometry>
+                    <mesh>
+                        <uri>/tmp/apriltag.glb</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name='visual'>
+                <geometry>
+                    <mesh>
+                        <uri>/tmp/apriltag.glb</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+        </link>
+    </model>
+</sdf>

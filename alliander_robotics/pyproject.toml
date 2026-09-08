@@ -19,8 +19,11 @@ alliander-franka = [
 ]
 alliander-gazebo = [
     "numpy>=2.4.1",
+    "pillow>=12.3.0",
     "pyproj>=3.7.2",
+    "requests>=2.34.2",
     "scipy>=1.17.0",
+    "trimesh>=5.1.0",
     "xmltodict>=1.0.2",
 ]
 alliander-meta = [
