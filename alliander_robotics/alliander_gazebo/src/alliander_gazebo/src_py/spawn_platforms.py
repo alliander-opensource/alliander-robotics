@@ -52,16 +52,17 @@ class SpawnPlatform(Node):
             position = np.array(platform.position)
             orientation = np.array(platform.orientation)
 
-            if platform.parent.link:
+            parent = platform.parent
+            if parent.link:
                 # First define the transform from world to model:
-                model_pose = get_pose(platform.parent.namespace)
+                model_pose = self.get_pose(parent.namespace)
                 model_tf = RigidTransform.from_components(
                     model_pose["position"],
                     Rotation.from_euler("xyz", model_pose["orientation"]),
                 )
 
                 # Next define the transform from model to link:
-                link_pose = get_pose(platform.parent.namespace, platform.parent.link)
+                link_pose = self.get_pose(parent.namespace, parent.link)
                 link_tf = RigidTransform.from_components(
                     link_pose["position"],
                     Rotation.from_euler("xyz", link_pose["orientation"]),
@@ -131,42 +132,45 @@ class SpawnPlatform(Node):
 
         subprocess.run(cmd, check=True)
 
+    def get_pose(self, model: str, link: str | None = None) -> dict:
+        """Get the pose of a model or a specific link of a model in the Gazebo simulation.
 
-def get_pose(model: str, link: str | None = None) -> dict:
-    """Get the pose of a model or a specific link of a model in the Gazebo simulation.
+        Args:
+            model (str): The name of the model.
+            link (str | None): The name of the link.
 
-    Args:
-        model (str): The name of the model.
-        link (str | None): The name of the link.
+        Returns:
+            dict: A dictionary with the position and orientation of the link.
 
-    Returns:
-        dict: A dictionary with the position and orientation of the link.
+        Raises:
+            RuntimeError: If the link info could not be retrieved or parsed.
+        """
+        command = ["gz", "model", "-m", model]
+        if link:
+            command.extend(["-l", link])
 
-    Raises:
-        RuntimeError: If the link info could not be retrieved or parsed.
-    """
-    command = ["gz", "model", "-m", model]
-    if link:
-        command.extend(["-l", link])
-    message = subprocess.check_output(command, stderr=subprocess.DEVNULL).decode(
-        "utf-8"
-    )
-
-    lines = message.splitlines()
-    line_of_interest = None
-    for n, line in enumerate(lines):
-        if line == "  - Pose [ XYZ (m) ] [ RPY (rad) ]:":
-            if line_of_interest is not None:
-                raise RuntimeError("Found multiple lines containing pose information.")
-            line_of_interest = n
-    if line_of_interest is None:
-        raise RuntimeError(f"Could not find pose information for {model} - {link}.")
-    position = lines[line_of_interest + 1]
-    orientation = lines[line_of_interest + 2]
-    return {
-        "position": process_string(position),
-        "orientation": process_string(orientation),
-    }
+        while True:
+            message = subprocess.check_output(
+                command, stderr=subprocess.DEVNULL
+            ).decode("utf-8")
+            lines = message.splitlines()
+            line_of_interest = None
+            for n, line in enumerate(lines):
+                if line == "  - Pose [ XYZ (m) ] [ RPY (rad) ]:":
+                    if line_of_interest is not None:
+                        raise RuntimeError(
+                            "Found multiple lines containing pose information."
+                        )
+                    line_of_interest = n
+            if line_of_interest is None:
+                self.get_logger().warn(f"Pose for {model} not found, retrying...")
+                continue
+            position = lines[line_of_interest + 1]
+            orientation = lines[line_of_interest + 2]
+            return {
+                "position": process_string(position),
+                "orientation": process_string(orientation),
+            }
 
 
 def process_string(info_string: str) -> np.ndarray:
