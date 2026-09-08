@@ -328,7 +328,7 @@ def log_progress(action: Node | ExecuteProcess | None = None) -> None:
         msg += "(process) "
         for part in action.cmd:
             msg += part[0].text + " "
-    elif not action:
+    else:
         msg += "All actions are started!"
 
     LOGGER.info(colored(msg, "blue"))
