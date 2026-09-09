@@ -81,7 +81,6 @@ class Compose:
         self.gazebo_ui = False
         self.joystick = False
         self.meta = False
-        self.apriltag = False
         self.rviz_yaml = False
 
         self.ros_domain_id = ros_domain_id
@@ -431,8 +430,12 @@ class Compose:
                 self.add_service(content, self.mode)
             case "configuration" | "configuration-no-nvidia":
                 self.add_service(content, "diagnostics")
+                apriltag_added = False
                 for platform in self.predefined_configuration.plat_conf.platforms:
                     if platform.platform_type == "Apriltag":
+                        if not apriltag_added:
+                            self.add_service(content, "apriltag")
+                            apriltag_added = True
                         continue
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
@@ -448,8 +451,6 @@ class Compose:
                     self.add_service(content, "joystick")
                 if self.meta:
                     self.add_service(content, "meta")
-                if self.apriltag:
-                    self.add_service(content, "apriltag")
 
         # Add healthchecks to all services:
         for name, service in services.items():

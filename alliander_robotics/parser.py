@@ -116,14 +116,6 @@ class Parser(argparse.ArgumentParser):
         )
 
         self.add_argument(
-            "-a",
-            "--apriltag",
-            required=False,
-            action="store_true",
-            help="Add this flag to enable AprilTag software.",
-        )
-
-        self.add_argument(
             "--no-run",
             required=False,
             action="store_true",
@@ -144,7 +136,6 @@ class Parser(argparse.ArgumentParser):
         compose.joystick = args.joystick
         compose.gazebo_ui = args.ui
         compose.meta = args.meta
-        compose.apriltag = args.apriltag
 
         if args.configuration:
             config_setup.apply_configuration(args.configuration)
