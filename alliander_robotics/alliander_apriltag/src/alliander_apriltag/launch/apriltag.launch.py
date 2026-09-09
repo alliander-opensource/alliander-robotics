@@ -3,13 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from alliander_utilities.config_objects import Apriltag, PlatformList
+from alliander_utilities.config_objects import Apriltag, Camera, PlatformList
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
+from termcolor import colored
 
 platform_list_arg = LaunchArgument("platform_list", "")
 
@@ -25,13 +26,24 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
     """
     platform_list = PlatformList.from_str(platform_list_arg.string_value(context))
 
+    cameras = [
+        platform for platform in platform_list.platforms if isinstance(platform, Camera)
+    ]
+    if len(cameras) == 0:
+        print(colored("No cameras defined. Apriltag detection will not work.", "red"))
+        return []
+    elif len(cameras) > 1:
+        print(colored("Multiple cameras defined. Using the first one.", "yellow"))
+    image_topic = f"/{cameras[0].namespace}/color/image_raw"
+    camera_info_topic = f"/{cameras[0].namespace}/color/camera_info"
+
     apriltag_node = ComposableNode(
         package="isaac_ros_apriltag",
         plugin="nvidia::isaac_ros::apriltag::AprilTagNode",
         name="apriltag",
         remappings=[
-            ("/image", "/zed/color/image_raw"),
-            ("/camera_info", "/zed/color/camera_info"),
+            ("/image", image_topic),
+            ("/camera_info", camera_info_topic),
         ],
     )
 
