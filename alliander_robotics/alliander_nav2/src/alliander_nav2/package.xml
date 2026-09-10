@@ -22,10 +22,13 @@ SPDX-License-Identifier: Apache-2.0
   <depend>sensor_msgs</depend>
   <depend>robot_localization</depend>
 
+  <build_depend>opennav_docking_core</build_depend>
+
   <exec_depend>navigation2</exec_depend>
   <exec_depend>slam_toolbox</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
+    <!-- <opennav_docking_core plugin="${prefix}/plugins.xml" /> -->
   </export>
 </package>

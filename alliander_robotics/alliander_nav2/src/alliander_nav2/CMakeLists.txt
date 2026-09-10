@@ -29,8 +29,34 @@ install(
 
 # Shared folders:
 install(
-  DIRECTORY launch config 
+  DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
+)
+
+# Docking plugin:
+include_directories(include)
+find_package(nav2_util REQUIRED)
+find_package(opennav_docking_core REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(pluginlib REQUIRED)
+add_library(simple_charging_dock SHARED
+  src/dock_plugin.cpp
+)
+ament_target_dependencies(simple_charging_dock
+  nav2_util
+  opennav_docking_core
+  sensor_msgs
+  geometry_msgs
+  pluginlib
+)
+
+pluginlib_export_plugin_description_file(opennav_docking_core plugins.xml)
+
+install(TARGETS simple_charging_dock
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 ament_target_dependencies(bt_is_system_healthy_node

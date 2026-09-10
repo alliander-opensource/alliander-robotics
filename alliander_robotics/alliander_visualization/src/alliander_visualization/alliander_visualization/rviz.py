@@ -317,6 +317,18 @@ class Rviz:  # noqa PLR0904
         )
 
     @staticmethod
+    def add_pose(topic: str, color: str) -> None:
+        Rviz.displays.append(
+            {
+                "Enabled": True,
+                "Class": "rviz_default_plugins/Pose",
+                "Name": topic,
+                "Topic": {"Value": topic},
+                "Color": color,
+            }
+        )
+
+    @staticmethod
     def add_markers(topic: str = "/rviz_markers") -> None:
         """Add a MarkerArray display (e.g., for MoveItVisualTools).
 

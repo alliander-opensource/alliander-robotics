@@ -14,5 +14,5 @@ services:
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
-    command: ["/bin/bash", "-c", "ros2 launch alliander_nav2 nav2.launch.py"]
+    command: ["/bin/bash", "-c", "cd ros && colcon build --packages-select alliander_nav2 && ros2 launch alliander_nav2 nav2.launch.py"]
 

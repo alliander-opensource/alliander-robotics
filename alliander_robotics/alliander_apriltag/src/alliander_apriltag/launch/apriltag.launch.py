@@ -5,6 +5,7 @@
 
 from alliander_utilities.config_objects import Apriltag, Camera, PlatformList
 from alliander_utilities.launch_argument import LaunchArgument
+from alliander_utilities.launch_utils import static_tf_node
 from alliander_utilities.register import Register
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
@@ -75,9 +76,16 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         ],
     )
 
+    static_tf = static_tf_node(
+        parent_frame="tag36h11:0",
+        child_frame="dock",
+        orientation=(0.0, -1.57, 1.57),
+    )
+
     return [
         Register.on_start(apriltag_container, context),
         Register.on_start(apriltag_manager, context),
+        Register.on_start(static_tf, context),
     ]
 
 

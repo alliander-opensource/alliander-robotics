@@ -222,6 +222,7 @@ class Nav2Config(Config):
     slam: bool = False
     navigation: bool = False
     gps: bool = False
+    docking: bool = True
     controller: Literal[
         "dwb",
         "graceful_motion",
