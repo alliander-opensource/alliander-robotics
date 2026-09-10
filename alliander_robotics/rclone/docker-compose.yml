@@ -6,11 +6,11 @@ services:
     container_name: rclone_filesync
     image: allianderrobotics/rclone
     restart: unless-stopped
-    user: "${PUID:-1000}:${PGID:-1000}"
+    user: "1000:1000"
     build:
       dockerfile: rclone_filesync.Dockerfile
     env_file:
       - $HOME/rclone.env
     volumes:
-      - ${RCLONE_CONFIG_DIR:-$HOME/.config/rclone}:/config/rclone
-      - ${RCLONE_DATA_DIR:-$HOME/test_data}:/data
+      - $HOME/.config/rclone:/config/rclone
+      - $HOME/data:/data

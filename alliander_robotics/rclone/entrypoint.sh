@@ -4,10 +4,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-set -uo pipefail  # no -e: one failed upload shouldn't kill the loop
+set -uo pipefail
 
-# Default environment variables, should be defined in $HOME/rclone.env
-READY_DIR="${READY_DIR:-/data/ready}"
+# Default environment variables, to be defined in $HOME/rclone.env
+RCLONE_READY_DIR="${RCLONE_READY_DIR:-/data/ready}"
 RCLONE_REMOTE="${RCLONE_REMOTE:-google_drive_alliander_robotics:default}"
 RCLONE_LOG_LEVEL="${RCLONE_LOG_LEVEL:-INFO}"
 STABLE_WAIT_SECONDS="${STABLE_WAIT_SECONDS:-5}"
@@ -30,7 +30,7 @@ is_stable() {
 
     [ "$before" = "$after" ]
 }
- 
+
 upload_file() {
     local path="$1"
     local relative_path
@@ -39,7 +39,7 @@ upload_file() {
 
     [ -e "$path" ] || return 0
 
-    relative_path="${path#"$READY_DIR"/}"
+    relative_path="${path#"$RCLONE_READY_DIR"/}"
 
     if [ -d "$path" ]; then
         # Directory: preserve the directory itself and its full structure.
@@ -96,17 +96,18 @@ log "watching $RCLONE_READY_DIR -> $RCLONE_REMOTE (rescan every ${RESCAN_INTERVA
     done
 ) &
 
-# Upload anything that was already present when we started.
+# Upload anything that was already present from the start.
 scan_and_upload
 
-# Watch for new files/directories arriving in /data/ready.
-inotifywait -m -q \
+# Watch for new files and directories arriving in /data/ready.
+inotifywait -m -r -q \
     -e create \
     -e moved_to \
-    --format '%f' \
+    --format '%w%f' \
     "$RCLONE_READY_DIR" |
-while read -r name; do
-  upload_file "$RCLONE_READY_DIR/$name"
+while read -r path; do
+    upload_file "$path"
 done
- 
+
+
 wait

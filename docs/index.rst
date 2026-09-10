@@ -26,6 +26,7 @@
    content/nav2.md
 
    content/docker.md
+   content/rclone.md
    content/transitive.md
    content/workflows.md
 
