@@ -11,8 +11,9 @@ controller_server:
     transform_tolerance: 0.3
     goal_checker_plugins: ["general_goal_checker"]
     general_goal_checker:
-      plugin: "nav2_controller::PositionGoalChecker"
-      xy_goal_tolerance: 0.25
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.1
+      yaw_goal_tolerance: 0.05
     PathHandler:
       prune_distance: 5.5  # at least as large as furthest distance of interest by critic
 

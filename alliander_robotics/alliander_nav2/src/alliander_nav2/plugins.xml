@@ -1,0 +1,8 @@
+<class_libraries>
+    <library path="simple_charging_dock">
+        <class type="alliander_docking::SimpleChargingDock"
+            base_class_type="opennav_docking_core::ChargingDock">
+            <description>A simple charging dock plugin.</description>
+        </class>
+    </library>
+</class_libraries>

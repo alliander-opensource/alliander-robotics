@@ -152,6 +152,14 @@ class PredefinedConfigurations:
     def config_zed(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("zed", (0, 0, 0.5), namespace="zed")]
 
+    @register_configuration("zed_apriltag")
+    def config_zed_apriltag(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [
+            Camera("zed", (0, 0, 0.5), namespace="zed"),
+            Apriltag("tag0", (0.5, -0.2, 0.5), id=0, publish_topic="/tag0/pose"),
+            Apriltag("tag1", (0.5, 0.2, 0.5), id=1, publish_topic="/tag1/pose"),
+        ]
+
     @register_configuration("seekthermal")
     def config_seekthermal(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [
@@ -443,6 +451,23 @@ class PredefinedConfigurations:
         self.plat_conf.platforms = [vehicle, lidar, gps, imu, camera]
         self.viz_conf.gui = True
         self.sim_conf.world = "map_5.954036_51.977320"
+
+    @register_configuration("panther_docking")
+    def config_panther_docking(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        vehicle.nav2_config.navigation = True
+        lidar = Lidar("velodyne", position=(0.13, 0.17, 0.18))
+        camera = Camera("zed", (0.08, 0, 0.4), orientation=(0, 10, 0))
+        apriltag = Apriltag(
+            "apriltag",
+            (1.3, 0.5, 0.3),
+            publish_topic=f"/{vehicle.namespace}/detected_dock_pose",
+        )
+
+        link(vehicle, camera)
+        link(vehicle, lidar)
+        self.plat_conf.platforms = [vehicle, camera, lidar, apriltag]
+        self.sim_conf.world = "walls.sdf"
 
     # Lynx:
     @register_configuration("lynx")

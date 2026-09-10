@@ -222,6 +222,7 @@ class Nav2Config(Config):
     slam: bool = False
     navigation: bool = False
     gps: bool = False
+    docking: bool = True
     controller: Literal[
         "dwb",
         "graceful_motion",
@@ -274,16 +275,16 @@ class Apriltag(Platform):
     Attributes:
         platform_type (str): Type identifier for the platform.
         id (int): ID of the AprilTag.
-        family (str): Family of the AprilTag.
         size (float): Size of the AprilTag in meters.
         thickness (float): Thickness of the AprilTag in meters.
+        publish_topic (str): Topic to publish the detected poses to.
     """
 
     platform_type: str = "Apriltag"
     id: int = 0
-    family: str = "36h11"
     size: float = 0.22
     thickness: float = 0.001
+    publish_topic: str = ""
 
 
 @dataclass

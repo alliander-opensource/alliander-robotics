@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 services:
-  alliander_nav2:
-    image: allianderrobotics/nav2
-    container_name: alliander_nav2
+  alliander_apriltag:
+    image: allianderrobotics/apriltag
+    container_name: alliander_apriltag
+    runtime: nvidia
     network_mode: host
     privileged: true
     mem_limit: 6gb
@@ -14,5 +15,5 @@ services:
     volumes:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/dev:/dev"
-    command: ["/bin/bash", "-c", "cd ros && colcon build --packages-select alliander_nav2 && ros2 launch alliander_nav2 nav2.launch.py"]
+    command: ["/bin/bash", "-c", "ros2 launch alliander_apriltag apriltag.launch.py"]
 
