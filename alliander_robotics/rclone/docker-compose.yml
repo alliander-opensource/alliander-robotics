@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+services:
+  rclone_filesync:
+    container_name: rclone_filesync
+    image: allianderrobotics/rclone
+    restart: unless-stopped
+    user: "1000:1000"
+    build:
+      dockerfile: rclone_filesync.Dockerfile
+    env_file:
+      - $HOME/rclone.env
+    volumes:
+      - $HOME/.config/rclone:/config/rclone
+      - $HOME/data:/data
