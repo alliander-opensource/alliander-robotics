@@ -10,7 +10,8 @@ from typing import TypeVar
 
 import numpy as np
 import rclpy
-from alliander_utilities.config_objects import Platform, PlatformList
+from alliander_gazebo.create_apriltag import create_apriltag
+from alliander_utilities.config_objects import Apriltag, Platform, PlatformList
 from rclpy.node import Node
 from scipy.spatial.transform import RigidTransform, Rotation
 
@@ -51,16 +52,17 @@ class SpawnPlatform(Node):
             position = np.array(platform.position)
             orientation = np.array(platform.orientation)
 
-            if platform.parent.link:
+            parent = platform.parent
+            if parent.link:
                 # First define the transform from world to model:
-                model_pose = get_pose(platform.parent.namespace)
+                model_pose = self.get_pose(parent.namespace)
                 model_tf = RigidTransform.from_components(
                     model_pose["position"],
                     Rotation.from_euler("xyz", model_pose["orientation"]),
                 )
 
                 # Next define the transform from model to link:
-                link_pose = get_pose(platform.parent.namespace, platform.parent.link)
+                link_pose = self.get_pose(parent.namespace, parent.link)
                 link_tf = RigidTransform.from_components(
                     link_pose["position"],
                     Rotation.from_euler("xyz", link_pose["orientation"]),
@@ -76,10 +78,19 @@ class SpawnPlatform(Node):
                     raise ValueError("Failed to define rotation for platform to spawn.")
                 orientation = rotation.as_euler("xyz")
 
-            self.spawn_platform(platform.namespace, position, orientation)
+            # Generate apriltags and load via file:
+            model_path = ""
+            if isinstance(platform, Apriltag):
+                create_apriltag(platform, self)
+                model_path = f"/tmp/apriltag_{platform.id}.sdf"
+            self.spawn_platform(platform.namespace, position, orientation, model_path)
 
     def spawn_platform(
-        self, namespace: str, position: np.ndarray, orientation: np.ndarray
+        self,
+        namespace: str,
+        position: np.ndarray,
+        orientation: np.ndarray,
+        model_path: str = "",
     ) -> None:
         """Spawn a platform in the Gazebo simulation with a specified position and orientation.
 
@@ -87,72 +98,79 @@ class SpawnPlatform(Node):
             namespace (str): The namespace of the platform.
             position (np.ndarray): The position [x, y, z] of the platform.
             orientation (np.ndarray): The orientation [roll, pitch, yaw] of the platform.
+            model_path (str): The path to the model file to be used for spawning the platform instead of using the robot description topic.
         """
         self.get_logger().info(f"Spawn: {namespace} {position} {orientation}")
         x, y, z = position
         roll, pitch, yaw = orientation
-        subprocess.run(
-            [
-                "ros2",
-                "run",
-                "ros_gz_sim",
-                "create",
-                "-topic",
-                f"/{namespace}/robot_description",
-                "-name",
-                namespace,
-                "-x",
-                str(x),
-                "-y",
-                str(y),
-                "-z",
-                str(z),
-                "-R",
-                str(roll),
-                "-P",
-                str(pitch),
-                "-Y",
-                str(yaw),
-            ],
-            check=True,
-        )
 
+        cmd = [
+            "ros2",
+            "run",
+            "ros_gz_sim",
+            "create",
+            "-name",
+            namespace,
+            "-x",
+            str(x),
+            "-y",
+            str(y),
+            "-z",
+            str(z),
+            "-R",
+            str(roll),
+            "-P",
+            str(pitch),
+            "-Y",
+            str(yaw),
+        ]
 
-def get_pose(model: str, link: str | None = None) -> dict:
-    """Get the pose of a model or a specific link of a model in the Gazebo simulation.
+        if model_path:
+            cmd.extend(["-file", model_path])
+        else:
+            cmd.extend(["-topic", f"/{namespace}/robot_description"])
 
-    Args:
-        model (str): The name of the model.
-        link (str | None): The name of the link.
+        subprocess.run(cmd, check=True)
 
-    Returns:
-        dict: A dictionary with the position and orientation of the link.
+    def get_pose(self, model: str, link: str | None = None) -> dict:
+        """Get the pose of a model or a specific link of a model in the Gazebo simulation.
 
-    Raises:
-        RuntimeError: If the link info could not be retrieved or parsed.
-    """
-    command = ["gz", "model", "-m", model]
-    if link:
-        command.extend(["-l", link])
-    message = subprocess.check_output(command, stderr=subprocess.DEVNULL).decode(
-        "utf-8"
-    )
+        Args:
+            model (str): The name of the model.
+            link (str | None): The name of the link.
 
-    lines = message.splitlines()
-    line_of_interest = None
-    for n, line in enumerate(lines):
-        if line == "  - Pose [ XYZ (m) ] [ RPY (rad) ]:":
-            if line_of_interest is not None:
-                raise RuntimeError("Found multiple lines containing pose information.")
-            line_of_interest = n
-    if line_of_interest is None:
-        raise RuntimeError(f"Could not find pose information for {model} - {link}.")
-    position = lines[line_of_interest + 1]
-    orientation = lines[line_of_interest + 2]
-    return {
-        "position": process_string(position),
-        "orientation": process_string(orientation),
-    }
+        Returns:
+            dict: A dictionary with the position and orientation of the link.
+
+        Raises:
+            RuntimeError: If the link info could not be retrieved or parsed.
+        """
+        command = ["gz", "model", "-m", model]
+        if link:
+            command.extend(["-l", link])
+
+        while True:
+            message = subprocess.check_output(
+                command, stderr=subprocess.DEVNULL
+            ).decode("utf-8")
+            lines = message.splitlines()
+            line_of_interest = None
+            for n, line in enumerate(lines):
+                if line == "  - Pose [ XYZ (m) ] [ RPY (rad) ]:":
+                    if line_of_interest is not None:
+                        raise RuntimeError(
+                            "Found multiple lines containing pose information."
+                        )
+                    line_of_interest = n
+            if line_of_interest is None:
+                self.get_logger().warn(f"Pose for {model} not found, retrying...")
+                continue
+            position = lines[line_of_interest + 1]
+            orientation = lines[line_of_interest + 2]
+            return {
+                "position": process_string(position),
+                "orientation": process_string(orientation),
+            }
 
 
 def process_string(info_string: str) -> np.ndarray:

@@ -268,6 +268,25 @@ class NtripConfig(Config):
 
 # Platforms:
 @dataclass
+class Apriltag(Platform):
+    """Configuration for an Apriltag.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+        id (int): ID of the AprilTag.
+        family (str): Family of the AprilTag.
+        size (float): Size of the AprilTag in meters.
+        thickness (float): Thickness of the AprilTag in meters.
+    """
+
+    platform_type: str = "Apriltag"
+    id: int = 0
+    family: str = "36h11"
+    size: float = 0.22
+    thickness: float = 0.001
+
+
+@dataclass
 class Gripper(Platform):
     """Configuration for a Gripper platform.
 
@@ -443,6 +462,7 @@ class PlatformList(Config):
         Annotated[
             Union[
                 Platform,
+                Apriltag,
                 Arm,
                 Vehicle,
                 Camera,

@@ -42,6 +42,8 @@ class ApplyConfigurations:
         Rviz.set_fixed_frame("map")
 
         for platform in platform_list.platforms:
+            if platform.platform_type == "Apriltag":
+                continue
             Rviz.add_platform_model(platform.namespace)
             match platform.platform_type:
                 case "Arm":

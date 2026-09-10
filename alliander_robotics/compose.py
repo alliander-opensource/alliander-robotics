@@ -423,6 +423,8 @@ class Compose:
             case "configuration" | "configuration-no-nvidia":
                 self.add_service(content, "diagnostics")
                 for platform in self.predefined_configuration.plat_conf.platforms:
+                    if platform.platform_type == "Apriltag":
+                        continue
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
                         self.add_service(content, "moveit", platform)

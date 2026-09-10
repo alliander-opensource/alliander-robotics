@@ -11,6 +11,7 @@ from typing import Callable, Dict
 from alliander_robotics.alliander_core.src.alliander_utilities.alliander_utilities.config_objects import (
     GPS,
     IMU,
+    Apriltag,
     Arm,
     Beamagine,
     Camera,
@@ -84,6 +85,11 @@ class PredefinedConfigurations:
             return fn
 
         return wrapper
+
+    # Apriltag:
+    @register_configuration("apriltag")
+    def config_apriltag(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [Apriltag("apriltag", (0, 0, 0.5))]
 
     # Sensors:
     @register_configuration("")
