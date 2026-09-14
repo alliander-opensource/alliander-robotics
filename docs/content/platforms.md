@@ -317,3 +317,15 @@ ros2 action send_goal /robotiq/gripper_controller/action alliander_interfaces/ac
 ### Hardware RobotIQ
 
 When using the RobotIQ gripper, connect the power cable to a 24V, 1.5A power source and connect the communication cable to the ethernet port of the host device. One the host device, configure the wired connection to manually use an ip-address in the `192.168.1` range, for example `192.168.1.2`. The gripper uses the `192.168.1.11` address by default. After launching the RobotIQ configuration, one can control the gripper by sending one of the supported commands (activate, reset, open, close, wide-open, wide-close, pinch-open, pinch-close) to the `/robotiq/gripper_controller/action` action server as a string. The status of the gripper is published on the `/robotiq/status` topic as a JSON string and can be continuously visualized in the terminal using our `print_json` utility node: `ros2 run alliander_utilities print_json.py --ros-args -p topic:=/robotiq/status`.
+
+## Apriltag
+
+![Apriltag](../img/apriltag/apriltag.png)
+
+### Simulation Apriltag
+
+One can define an apriltag as a 'special' platform. Since an apriltag is not a sensor or a robot, no robot_description topic is published and therefore no model is visible in Rviz. Instead, a 3d-model of the apriltag is created and spawned into Gazebo when simulation is used. Since the `Apriltag` platform class inherits from the `Platform` base class, one can still link the apriltag as a child to another (moving) platform. Note that we only support apriltags (and not aruco markers) as apriltags are commonly used in ROS2 (for example by Nav2) and only the `36h11` family, as only these tags are [supported](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_apriltag/isaac_ros_apriltag/index.html#ros-parameters) by `isaac_ros_apriltag` on GPU. If a configuration with an apriltag and a camera is launched, the `alliander_apriltag` container is launched automatically.
+
+### Hardware Apriltag
+
+When launching a hardware configuration with at least a camera and apriltag definition, the `alliander_apriltag` container is still launched automatically. The `apriltag_manager` node will automatically publish the pose of the detected markers on the topic defined in the `Apriltag` platform object.

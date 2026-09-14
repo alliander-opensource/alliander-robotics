@@ -152,6 +152,14 @@ class PredefinedConfigurations:
     def config_zed(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("zed", (0, 0, 0.5), namespace="zed")]
 
+    @register_configuration("zed_apriltag")
+    def config_zed_apriltag(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [
+            Camera("zed", (0, 0, 0.5), namespace="zed"),
+            Apriltag("tag0", (0.5, -0.2, 0.5), id=0, publish_topic="/tag0/pose"),
+            Apriltag("tag1", (0.5, 0.2, 0.5), id=1, publish_topic="/tag1/pose"),
+        ]
+
     @register_configuration("seekthermal")
     def config_seekthermal(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [
