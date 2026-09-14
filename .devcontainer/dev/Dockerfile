@@ -9,40 +9,37 @@ ENV ROS_DISTRO=jazzy
 WORKDIR /alliander/ros
 
 # Install linting tools:
-RUN apt update && apt install -y --no-install-recommends \
-    doxygen \
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked \
+    apt update && apt install -y --no-install-recommends \
     clang \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt autoremove -y \
-    && apt clean  
+    doxygen \
+    reuse
+
+ADD https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash /tmp/download-actionlint.bash
+RUN bash /tmp/download-actionlint.bash latest /usr/bin
 
 # Install MoveIt: 
-RUN apt update && apt install -y --no-install-recommends \
-    ros-$ROS_DISTRO-imu-filter-madgwick \
-    ros-$ROS_DISTRO-moveit \
-    ros-$ROS_DISTRO-moveit-servo \
-    ros-$ROS_DISTRO-moveit-visual-tools \
-    ros-$ROS_DISTRO-moveit-ros-perception \
-    ros-$ROS_DISTRO-topic-tools \
-    ros-$ROS_DISTRO-navigation2 \
-    ros-$ROS_DISTRO-nav2-bringup \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt autoremove -y \
-    && apt clean
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked \
+    apt update && apt install -y --no-install-recommends \
+    ros-"$ROS_DISTRO"-imu-filter-madgwick \
+    ros-"$ROS_DISTRO"-moveit \
+    ros-"$ROS_DISTRO"-moveit-servo \
+    ros-"$ROS_DISTRO"-moveit-visual-tools \
+    ros-"$ROS_DISTRO"-moveit-ros-perception \
+    ros-"$ROS_DISTRO"-topic-tools \
+    ros-"$ROS_DISTRO"-navigation2 \
+    ros-"$ROS_DISTRO"-nav2-bringup
 
 # Install Nav2:
-RUN apt update && apt install -y --no-install-recommends \
-    ros-$ROS_DISTRO-nav2-simple-commander  \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt autoremove -y \
-    && apt clean
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked \
+    apt update && apt install -y --no-install-recommends \
+    ros-"$ROS_DISTRO"-nav2-simple-commander
 
 # Install custom msgs:
-RUN apt update && apt install -y --no-install-recommends \
-    ros-$ROS_DISTRO-ewellix-interfaces \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt autoremove -y \
-    && apt clean
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked \
+    apt update && apt install -y --no-install-recommends \
+    ros-"$ROS_DISTRO"-ewellix-interfaces
+
 RUN git clone --depth=1 --filter=blob:none -b v3.1.1 \
     https://github.com/frankarobotics/franka_ros2.git src/franka_ros2 \
     && cd src/franka_ros2 \
@@ -55,13 +52,18 @@ RUN git clone --depth=1 --filter=blob:none -b v4.6-0 \
     && sed -i '48,51d' isaac_ros_apriltag_interfaces/CMakeLists.txt
 
 # Install debug tools:
-RUN apt update && apt install -y --no-install-recommends \
-    ros-$ROS_DISTRO-plotjuggler-ros \
-    ros-$ROS_DISTRO-rqt-tf-tree
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked \
+    apt update && apt install -y --no-install-recommends \
+    ros-"$ROS_DISTRO"-plotjuggler-ros \
+    ros-"$ROS_DISTRO"-rqt-tf-tree
+
+# Install Node.js (for SonarQube extension):
+ADD https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-x64.tar.xz /tmp/node-v24.21.0-linux-x64.tar.xz
+RUN tar -xJf /tmp/node-v24.21.0-linux-x64.tar.xz -C /usr/local --strip-components=1
 
 # Setup configuration files:
 COPY .devcontainer/dev/.dev_bashrc /.dev_bashrc
-RUN echo "source /.dev_bashrc" >> /home/$REMOTE_USER/.bashrc
+RUN echo "source /.dev_bashrc" >> /home/"$REMOTE_USER"/.bashrc
 
 # Copy Alliander ROS packages with C++ code, install build dependencies and build the packages:
 COPY $SRC_DIRECTORY/alliander_apriltag/src /alliander/ros/src
@@ -81,7 +83,7 @@ RUN /alliander/colcon_build.sh --external
 
 # Install python dependencies:
 COPY $SRC_DIRECTORY/pyproject.toml /alliander/pyproject.toml
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv uv sync --all-groups
+RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv uv lock && uv sync --frozen --no-build --all-groups
 
 WORKDIR /alliander
 CMD ["sleep", "infinity"]
