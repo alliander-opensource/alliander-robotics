@@ -14,7 +14,6 @@ SPDX-License-Identifier: Apache-2.0
   <maintainer email="robots@alliander.com">Alliander Robotics</maintainer>
   <license>Apache 2.0</license>
 
-  <exec_depend>doxygen</exec_depend>
   <exec_depend>moveit_configs_utils</exec_depend>
   <exec_depend>nav2_simple_commander</exec_depend>
   <exec_depend>nav2_msgs</exec_depend>
