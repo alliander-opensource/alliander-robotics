@@ -10,7 +10,7 @@ from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
 from launch_ros.actions import ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
-from termcolor import colored
+from termcolor import cprint
 
 platform_list_arg = LaunchArgument("platform_list", "")
 
@@ -26,14 +26,26 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
     """
     platform_list = PlatformList.from_str(platform_list_arg.string_value(context))
 
+    apriltags = [
+        platform
+        for platform in platform_list.platforms
+        if isinstance(platform, Apriltag)
+    ]
+    if len(apriltags) == 0:
+        cprint("No apriltags defined. Apriltag detection will not work.", "red")
+        return []
+    elif len(apriltags) > 1:
+        cprint("Multiple apriltags defined. Using first size for detection.", "yellow")
+    size: float = apriltags[0].size
+
     cameras = [
         platform for platform in platform_list.platforms if isinstance(platform, Camera)
     ]
     if len(cameras) == 0:
-        print(colored("No cameras defined. Apriltag detection will not work.", "red"))
+        cprint("No cameras defined. Apriltag detection will not work.", "red")
         return []
     elif len(cameras) > 1:
-        print(colored("Multiple cameras defined. Using the first one.", "yellow"))
+        cprint("Multiple cameras defined. Using the first one.", "yellow")
     image_topic = f"/{cameras[0].namespace}/color/image_raw"
     camera_info_topic = f"/{cameras[0].namespace}/color/camera_info"
 
@@ -45,6 +57,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             ("/image", image_topic),
             ("/camera_info", camera_info_topic),
         ],
+        parameters=[{"size": size}],
     )
 
     apriltag_container = ComposableNodeContainer(
@@ -57,12 +70,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         ],
         output="screen",
     )
-
-    apriltags = [
-        platform
-        for platform in platform_list.platforms
-        if isinstance(platform, Apriltag)
-    ]
 
     apriltag_manager = Node(
         package="alliander_apriltag",

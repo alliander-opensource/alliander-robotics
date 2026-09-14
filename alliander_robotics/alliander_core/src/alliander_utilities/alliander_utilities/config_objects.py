@@ -281,7 +281,7 @@ class Apriltag(Platform):
 
     platform_type: str = "Apriltag"
     id: int = 0
-    size: float = 0.22
+    size: float = 0.14
     thickness: float = 0.001
     publish_topic: str = ""
 
