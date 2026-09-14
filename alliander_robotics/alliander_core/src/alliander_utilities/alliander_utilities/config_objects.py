@@ -213,6 +213,9 @@ class Nav2Config(Config):
         slam (bool): Whether to enable SLAM.
         navigation (bool): Whether to enable navigation.
         gps (bool): Whether to enable GPS integration.
+        docking (bool): Whether to enable docking.
+        docking_staging_offset (float): Staging offset for docking.
+        docking_final_offset (float): Final offset for docking.
         controller (Literal["dwb", "graceful_motion", "mppi", "pure_pursuit", "rotation_shim", "vector_pursuit"]): Navigation controller type to use.
         map (Literal["simulation_map", "ipkw", "ipkw_buiten"]): Map to use for navigation.
         window_size (int): Window size parameter.
@@ -222,6 +225,9 @@ class Nav2Config(Config):
     slam: bool = False
     navigation: bool = False
     gps: bool = False
+    docking: bool = False
+    docking_staging_offset: float = -1.0
+    docking_final_offset: float = -0.4
     controller: Literal[
         "dwb",
         "graceful_motion",
@@ -274,16 +280,22 @@ class Apriltag(Platform):
     Attributes:
         platform_type (str): Type identifier for the platform.
         id (int): ID of the AprilTag.
-        family (str): Family of the AprilTag.
         size (float): Size of the AprilTag in meters.
         thickness (float): Thickness of the AprilTag in meters.
+        publish_topic (str): Topic to publish the detected poses to.
+        child_frame (str): Optional child frame of the AprilTag.
+        child_frame_position (tuple): Position of the child frame relative to the AprilTag.
+        child_frame_orientation (tuple): Orientation of the child frame relative to the AprilTag.
     """
 
     platform_type: str = "Apriltag"
     id: int = 0
-    family: str = "36h11"
     size: float = 0.22
     thickness: float = 0.001
+    publish_topic: str = ""
+    child_frame: str = ""
+    child_frame_position: tuple = (0, 0, 0)
+    child_frame_orientation: tuple = (0, 0, 0)
 
 
 @dataclass

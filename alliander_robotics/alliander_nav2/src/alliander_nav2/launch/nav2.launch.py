@@ -57,6 +57,8 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
     if nav2.slam:
         lifecycle_nodes_names.append("slam_toolbox")
         use_map_localization = False
+    if nav2.docking:
+        lifecycle_nodes_names.append("docking_server")
     if nav2.gps:
         if not namespace_gps:
             raise ValueError("Namespace for GPS must be provided when using GPS.")
@@ -224,8 +226,29 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         root_key=namespace_vehicle,
     )
 
+    docking_server_params = AdaptedYaml(
+        get_file_path("alliander_nav2", ["config", "nav2"], "docking_server.yaml"),
+        {
+            "base_frame": f"{namespace_vehicle}/base_link",
+            "fixed_frame": f"{namespace_vehicle}/odom",
+            "charging_dock": {
+                "staging_x_offset": nav2.docking_staging_offset,
+                "external_detection_translation_x": nav2.docking_final_offset,
+            },
+        },
+        root_key=namespace_vehicle,
+    )
+
     # Define lifecycle nodes:
     all_lifecycle_nodes = {}
+
+    all_lifecycle_nodes["docking_server"] = LifecycleNode(
+        package="opennav_docking",
+        executable="opennav_docking",
+        name="docking_server",
+        parameters=[docking_server_params.file],
+        namespace=namespace_vehicle,
+    )
 
     all_lifecycle_nodes["collision_monitor"] = LifecycleNode(
         package="nav2_collision_monitor",
