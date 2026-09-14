@@ -452,6 +452,26 @@ class PredefinedConfigurations:
         self.viz_conf.gui = True
         self.sim_conf.world = "map_5.954036_51.977320"
 
+    @register_configuration("panther_docking")
+    def config_panther_docking(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        vehicle.nav2_config.navigation = True
+        vehicle.nav2_config.docking = True
+        lidar = Lidar("velodyne", position=(0.13, 0.17, 0.18))
+        camera = Camera("zed", (0.08, 0, 0.4), orientation=(0, 10, 0))
+        apriltag = Apriltag(
+            "apriltag",
+            (1.5, 0.0, 0.5),
+            publish_topic=f"/{vehicle.namespace}/detected_dock_pose",
+            child_frame="dock",
+            child_frame_orientation=(0, -1.57, -1.57),
+        )
+
+        link(vehicle, camera)
+        link(vehicle, lidar)
+        self.plat_conf.platforms = [vehicle, camera, lidar, apriltag]
+        self.sim_conf.world = "walls.sdf"
+
     # Lynx:
     @register_configuration("lynx")
     def config_lynx(self) -> None:  # noqa: D102
@@ -510,6 +530,26 @@ class PredefinedConfigurations:
         link(vehicle, lidar)
         link(vehicle, imu)
         self.plat_conf.platforms = [vehicle, lidar, imu]
+        self.sim_conf.world = "walls.sdf"
+
+    @register_configuration("lynx_docking")
+    def config_lynx_docking(self) -> None:  # noqa: D102
+        vehicle = Vehicle("lynx", (0, 0, 0.2))
+        vehicle.nav2_config.navigation = True
+        vehicle.nav2_config.docking = True
+        lidar = Lidar("ouster", (0.06, 0.0, 0.25))
+        camera = Camera("zed", (0.15, 0, 0.23))
+        apriltag = Apriltag(
+            "apriltag",
+            (1.0, 0.0, 0.5),
+            publish_topic=f"/{vehicle.namespace}/detected_dock_pose",
+            child_frame="dock",
+            child_frame_orientation=(0, -1.57, -1.57),
+        )
+
+        link(vehicle, camera)
+        link(vehicle, lidar)
+        self.plat_conf.platforms = [vehicle, camera, lidar, apriltag]
         self.sim_conf.world = "walls.sdf"
 
     # Mobile Manipulators:
