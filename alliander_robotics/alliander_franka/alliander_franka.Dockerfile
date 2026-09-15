@@ -33,7 +33,7 @@ WORKDIR $WORKDIR
 COPY $SRC_DIRECTORY/pyproject.toml /$WORKDIR/pyproject.toml
 RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv uv lock \
   && uv sync --frozen --no-build --group alliander-franka \
-  && cat <<EOF > /root/.bashrc
+  && cat <<EOF >> /root/.bashrc
 export PYTHONPATH="$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH"
 export PATH="$(dirname $(dirname $(uv python find)))/bin:\$PATH"
 EOF
