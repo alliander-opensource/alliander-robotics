@@ -1,6 +1,3 @@
-//SPDX-FileCopyrightText: Alliander N. V.
-//
-//SPDX-License-Identifier: Apache-2.0
 {
   "name": "dev",
   "remoteUser": "ubuntu",
@@ -48,7 +45,8 @@
         "redhat.vscode-xml",
         "github.vscode-pull-request-github",
         "davidanson.vscode-markdownlint",
-        "redhat.vscode-xml"
+        "redhat.vscode-xml",
+        "sonarsource.sonarlint-vscode"
       ]
     }
   }
