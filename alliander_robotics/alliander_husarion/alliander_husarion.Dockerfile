@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Alliander N. V.
 #
 # SPDX-License-Identifier: Apache-2.0
-ARG BASE_IMAGE=ubuntu:latest
+ARG BASE_IMAGE=ubuntu:noble
 FROM $BASE_IMAGE AS builder
 
 ##############################
@@ -16,22 +16,25 @@ WORKDIR /$WORKDIR/external
 RUN git clone --depth=1 --filter=blob:none --sparse -b 2.3.1 https://github.com/husarion/husarion_ugv_ros.git src/husarion_ugv_ros \
   && cd src/husarion_ugv_ros \
   && git sparse-checkout set husarion_ugv_description
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /$WORKDIR/rosdep_install.sh --build
-RUN /$WORKDIR/colcon_build.sh --external
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /"$WORKDIR"/rosdep_install.sh --build
+RUN /"$WORKDIR"/colcon_build.sh --external
 
 # Install alliander packages:
 WORKDIR /$WORKDIR/ros
 COPY $SRC_DIRECTORY/alliander_core/src/ /$WORKDIR/ros/src
 COPY $SRC_DIRECTORY/alliander_husarion/src/ /$WORKDIR/ros/src
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /$WORKDIR/rosdep_install.sh --build
-RUN /$WORKDIR/colcon_build.sh
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /"$WORKDIR"/rosdep_install.sh --build
+RUN /"$WORKDIR"/colcon_build.sh
 
 # Install python dependencies:
 WORKDIR $WORKDIR
 COPY $SRC_DIRECTORY/pyproject.toml /$WORKDIR/pyproject.toml
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv uv sync  \
-  && echo "export PYTHONPATH=\"$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH\"" >> /root/.bashrc \
-  && echo "export PATH=\"$(dirname $(dirname $(uv python find)))/bin:\$PATH\"" >> /root/.bashrc
+RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv uv lock \
+  && uv sync --frozen --no-build \
+  && cat <<EOF >> /root/.bashrc
+export PYTHONPATH="$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH"
+export PATH="$(dirname $(dirname $(uv python find)))/bin:\$PATH"
+EOF
 
 ##############################
 # Runtime stage
@@ -47,13 +50,13 @@ COPY --from=builder /root/.bashrc /root/.bashrc
 # Copy external packages and install runtime dependencies:
 WORKDIR /$WORKDIR/external
 COPY --from=builder /$WORKDIR/external /$WORKDIR/external
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /$WORKDIR/rosdep_install.sh --exec
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /"$WORKDIR"/rosdep_install.sh --exec
 RUN rm -rf src build log
 
 # Copy alliander packages and install runtime dependencies:
 WORKDIR /$WORKDIR/ros
 COPY --from=builder /$WORKDIR/ros /$WORKDIR/ros
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /$WORKDIR/rosdep_install.sh --exec
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /"$WORKDIR"/rosdep_install.sh --exec
 
 # Finalize
 WORKDIR /$WORKDIR

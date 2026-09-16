@@ -24,7 +24,6 @@ def launch_setup(context: LaunchContext) -> list:
         list: The actions to start.
     """
     vehicle_config = Vehicle.from_str(platform_arg.string_value(context))
-    parent = vehicle_config.parent
 
     state_publisher = state_publisher_node(
         namespace=vehicle_config.namespace,
