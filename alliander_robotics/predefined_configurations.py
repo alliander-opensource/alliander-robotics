@@ -144,6 +144,14 @@ class PredefinedConfigurations:
     def config_realsense(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("realsense", (0, 0, 0.5))]
 
+    @register_configuration("realsense_apriltag")
+    def config_realsense_apriltag(self) -> None:  # noqa: D102
+        self.plat_conf.platforms = [
+            Camera("realsense", (0, 0, 0.5)),
+            Apriltag("tag0", (0.5, -0.2, 0.5), id=0, publish_topic="/tag0/pose"),
+            Apriltag("tag1", (0.5, 0.2, 0.5), id=1, publish_topic="/tag1/pose"),
+        ]
+
     @register_configuration("xsens")
     def config_xsens(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [IMU("xsens", (0, 0, 0.5))]
