@@ -19,7 +19,7 @@ Additionally, Rclone supports a wide range of providers, which allows us to easi
 ## Configuration
 Rclone needs to be configured locally on the computer, for which [this guide](https://rclone.org/drive/#configuration) can be followed.
 
-The configuration requires getting a token from Google drive. If this token has not been created yet, follow [this guide](https://rclone.org/drive/#making-your-own-client-id) to set up a `client_id`. Note that although the instructions include a step where one should publish the app, it is not actually required to do this.
+The configuration requires getting a token from Google drive. If this token has not been created yet, follow [this guide](https://rclone.org/drive/#making-your-own-client-id) to set up a `client_id`. It is important to also publish the app, otherwise the access token needs to be refreshed every 7 days.
 Find the `client_id` back at:
 > [Google Cloud](https://console.cloud.google.com/) > APIs & Services >
 *select the project that contains the client ID at the top of the page* >
@@ -50,18 +50,17 @@ To activate the Rclone file synchronisation task, one requires to activate the c
 RCLONE_READY_DIR=<data_ready_directory_path>
 RCLONE_REMOTE=<rclone_configured_name:unique_robot_name>
 RCLONE_LOG_LEVEL=<log_level>
-STABLE_WAIT_SECONDS=<integer>
+RCLONE_FILE_AGE_SECONDS=<integer>
 RESCAN_INTERVAL_SECONDS=<integer>
 
 # Container timezone
 TZ=UTC
 ```
 
-Create the file if it doesn't exist yet and fill the required variables. Build the container if that has not been done yet. Next, one can start the container:
+Create the file if it doesn't exist yet and fill the required variables. Next, one can start the container:
 
 ```bash
 cd alliander_robotics/rclone
-docker container build --no-cache rclone_filesync
 docker compose up -d
 ```
 
