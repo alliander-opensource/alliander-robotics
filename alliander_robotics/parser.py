@@ -136,6 +136,7 @@ class Parser(argparse.ArgumentParser):
         compose.joystick = args.joystick
         compose.gazebo_ui = args.ui
         compose.meta = args.meta
+
         if args.configuration:
             config_setup.apply_configuration(args.configuration)
             compose.rviz_yaml = args.rviz
