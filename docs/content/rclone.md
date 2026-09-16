@@ -17,7 +17,13 @@ With this tool we can automatically move all files in a specific folder that is 
 Additionally, Rclone supports a wide range of providers, which allows us to easily switch between providers without having to adjust the functionality of the file upload itself, making this a future-proof choice.
 
 ## Configuration
-Rclone needs to be configured locally on the computer, for which [this guide](https://rclone.org/drive/#configuration) can be followed.
+If not present yet, first install rclone locally on the computer:
+
+```bash
+sudo -v ; curl https://rclone.org/install.sh | sudo bash
+```
+
+Rclone also needs to be configured locally, for which [this guide](https://rclone.org/drive/#configuration) can be followed.
 
 The configuration requires getting a token from Google drive. If this token has not been created yet, follow [this guide](https://rclone.org/drive/#making-your-own-client-id) to set up a `client_id`. It is important to also publish the app, otherwise the access token needs to be refreshed every 7 days.
 Find the `client_id` back at:
@@ -40,6 +46,8 @@ scope = drive
 token = {"access_token":"...","token_type":"...","refresh_token":"...","expiry":"..."}
 team_drive =
 ```
+
+Note: it is not necessary to follow all of these steps for every new device. Only `rclone config` needs to be run on the new device, copy the existing `client_id` and `client_secret`, and generate a new token on a computer that has access to a browser.
 
 ## Docker Setup
 
