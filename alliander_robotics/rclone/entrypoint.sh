@@ -17,7 +17,7 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
 }
 
-no_scan_just_upload() {
+upload_files() {
     if rclone move "$RCLONE_READY_DIR" "$RCLONE_REMOTE" \
             --delete-empty-src-dirs \
             --min-age "$RCLONE_FILE_AGE_SECONDS"s \
@@ -35,5 +35,5 @@ log "watching $RCLONE_READY_DIR -> $RCLONE_REMOTE (rescan every ${RESCAN_INTERVA
 
 while true; do
     sleep "$RESCAN_INTERVAL_SECONDS"
-    no_scan_just_upload
+    upload_files
 done

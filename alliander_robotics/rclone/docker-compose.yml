@@ -6,6 +6,7 @@ services:
     container_name: rclone_filesync
     image: rclone/rclone:latest
     restart: unless-stopped
+    user: "${PUID}:${PGID}"
     env_file:
       - $HOME/rclone.env
     volumes:
