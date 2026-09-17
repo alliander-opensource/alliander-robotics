@@ -31,6 +31,7 @@ SERVICE = typing.Literal[
     "documentation-build",
     "joystick",
     "meta",
+    "apriltag",
     "diagnostics",
 ]
 MODE = typing.Literal[
@@ -180,6 +181,13 @@ class Compose:
             "meta": (
                 "alliander_meta",
                 f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'",
+                {},
+            ),
+            "apriltag": (
+                "alliander_apriltag",
+                (
+                    f" platform_list:='{self.predefined_configuration.plat_conf.to_str()}'"
+                ),
                 {},
             ),
             "diagnostics": (
@@ -422,8 +430,12 @@ class Compose:
                 self.add_service(content, self.mode)
             case "configuration" | "configuration-no-nvidia":
                 self.add_service(content, "diagnostics")
+                apriltag_added = False
                 for platform in self.predefined_configuration.plat_conf.platforms:
                     if platform.platform_type == "Apriltag":
+                        if not apriltag_added:
+                            self.add_service(content, "apriltag")
+                            apriltag_added = True
                         continue
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
