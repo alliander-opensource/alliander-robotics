@@ -49,7 +49,7 @@ def launch_setup(context: LaunchContext) -> list:
         {"platform_config": beamagine_config.to_str()},
     )
 
-    convert_32FC1_to_16UC1 = Node(  # noqa: N806
+    convert_32fc1_to_16uc1 = Node(
         package="alliander_utilities_depth_camera",
         executable="convert_32FC1_to_16UC1",
         namespace=beamagine_config.namespace,
@@ -58,7 +58,7 @@ def launch_setup(context: LaunchContext) -> list:
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.on_start(convert_32FC1_to_16UC1, context)
+        Register.on_start(convert_32fc1_to_16uc1, context)
         if beamagine_config.simulation
         else SKIP,
         Register.group(hardware, context) if not beamagine_config.simulation else SKIP,

@@ -76,13 +76,11 @@ documentation = [
     "sphinxcontrib-video>=0.4.2",
 ]
 linting = [
-    "actionlint-py>=1.7.12",
     "clang-format>=22.1.5",
     "flake8>=7.3.0",
     "flake8-pyproject>=1.2.4",
     "pre-commit>=4.5.1",
     "pydoclint>=0.8.3",
-    "reuse>=6.2.0",
     "ruff>=0.14.13",
     "ty>=0.0.12",
     "zizmor>=1.26.1"

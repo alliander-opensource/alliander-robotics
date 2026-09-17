@@ -60,16 +60,16 @@ class Register:
 
     Attributes:
         group_id (int): A unique identifier for the group of registered actions.
-        register (list["Register" | str]): A list of registered actions, which can be of type Node or ExecuteProcess, or a string representing a group.
-        actions (int): The total number of actions registered.
-        started (int): The number of actions that have been started.
+        actions (list["Register" | str]): A list of registered actions, which can be of type Node or ExecuteProcess, or a string representing a group.
+        actions_total (int): The total number of actions registered.
+        actions_started (int): The number of actions that have been started.
         all_started (bool): A flag indicating whether all registered actions have been started.
     """
 
     group_id: int = 0
-    register: list["Register" | str] = []
-    actions: int = 0
-    started: int = 0
+    actions: list["Register" | str] = []
+    actions_total: int = 0
+    actions_started: int = 0
     all_started: bool = False
 
     @staticmethod
@@ -86,9 +86,9 @@ class Register:
     def reset() -> None:
         """Reset the register. Useful for pytest since it can launch ros multiple times in the same session."""
         Register.group_id = 0
-        Register.register = []
-        Register.actions = 0
-        Register.started = 0
+        Register.actions = []
+        Register.actions_total = 0
+        Register.actions_started = 0
 
     @staticmethod
     def next(*_: Any) -> LaunchDescription:
@@ -101,9 +101,9 @@ class Register:
             LaunchDescription: A launch description containing the next action to start, or an empty launch description if all actions have been started.
         """
         item = None
-        Register.started += 1
+        Register.actions_started += 1
         while not isinstance(item, Register):
-            if len(Register.register) == 1:
+            if len(Register.actions) == 1:
                 log_progress()
                 Register.all_started = True
                 LOGGER.info(colored("Startup complete.", "green"))
@@ -111,7 +111,7 @@ class Register:
                     f.write("")
                 Register.reset()
                 return LaunchDescription([])
-            item = Register.register.pop(1)
+            item = Register.actions.pop(1)
         action = item.action
         log_progress(item.action)
         if action is None:
@@ -138,10 +138,10 @@ class Register:
         group = context.launch_configurations.get(CONF_NAME)
 
         if group:
-            index = Register.register.index(group)
-            Register.register.insert(index, name)
+            index = Register.actions.index(group)
+            Register.actions.insert(index, name)
         else:
-            Register.register.append(name)
+            Register.actions.append(name)
         return launch_description
 
     @staticmethod
@@ -295,9 +295,9 @@ class Register:
         """
         self.action = action
         group = context.launch_configurations.get(CONF_NAME)
-        index = Register.register.index(group) if group else len(Register.register)
-        Register.register.insert(index, self)
-        Register.actions += 1
+        index = Register.actions.index(group) if group else len(Register.actions)
+        Register.actions.insert(index, self)
+        Register.actions_total += 1
 
         if index == 0:
             log_progress(action)
@@ -317,10 +317,10 @@ def log_progress(action: Node | ExecuteProcess | None = None) -> None:
     Args:
         action (Node | ExecuteProcess | None): The action that has been started, or None if all actions have been started.
     """
-    if Register.started == 0:
+    if Register.actions_started == 0:
         msg = "[START] "
     else:
-        msg = f"[{Register.started}/{Register.actions}] "
+        msg = f"[{Register.actions_started}/{Register.actions_total}] "
 
     if isinstance(action, Node):
         msg += "(node) " + action.node_package + " " + action.node_executable
