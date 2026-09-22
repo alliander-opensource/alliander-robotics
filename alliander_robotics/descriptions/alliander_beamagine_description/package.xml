@@ -8,14 +8,15 @@ SPDX-License-Identifier: Apache-2.0
 -->
 
 <package format="3">
-  <name>alliander_description</name>
+  <name>alliander_beamagine_description</name>
   <version>0.1.0</version>
-  <description>Contains common Alliander Robotics robot descriptions.</description>
+  <description>Contains the Beamagine robot descriptions.</description>
   <maintainer email="robots@alliander.com">Alliander Robotics</maintainer>
   <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <depend>alliander_description</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

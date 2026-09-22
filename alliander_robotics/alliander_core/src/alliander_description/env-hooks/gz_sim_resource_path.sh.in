@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+ament_prepend_unique_value GZ_SIM_RESOURCE_PATH "@CMAKE_INSTALL_PREFIX@/share"
