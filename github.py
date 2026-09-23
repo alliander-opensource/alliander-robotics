@@ -23,7 +23,15 @@ def select_components(components: str) -> None:
     cuda_components = set(utils.load_components(group="cuda_images").keys())
 
     changed_packages = utils.get_changed_packages(verbose=True)
-    changed_components = {p.removeprefix("alliander_") for p in changed_packages}
+    if any("_description" in item for item in changed_packages):
+        # changes in URDF/config means gazebo/rviz need rebuilds
+        changed_packages.add("alliander_gazebo")
+        changed_packages.add("alliander_visualization")
+
+    changed_components = {
+        p.removeprefix("alliander_").removesuffix("_description")
+        for p in changed_packages
+    }
 
     if not utils.is_core_files_changed() and components != "all":
         ubuntu_components = ubuntu_components.intersection(changed_components)
