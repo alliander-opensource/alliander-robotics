@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="drotek_antenna">
+  <xacro:macro name="drotek_da435"
+    params="
+    namespace:=ublox
+    parent
+    use_sim:=true
+    ">
+
+    <!-- Gazebo requires a joint to a link called "world" for statically mounted robots -->
+    <xacro:if value="${parent == 'world'}">
+      <link name="${parent}" />
+      <joint name="${parent}_joint" type="fixed">
+	<parent link="${parent}" />
+	<child link="base_link" />
+      </joint>
+    </xacro:if>
+
+    <link name="base_link"/>
+    <link name="drotek_link">
+
+      <visual>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+	<geometry>
+	  <cylinder length="0.041" radius="0.02"/>
+	</geometry>
+	<material name="black">
+	  <color rgba="0 0 0 1"/>
+	</material>
+      </visual>
+
+      <collision>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+	<geometry>
+	  <cylinder length="0.041" radius="0.02"/>
+	</geometry>
+      </collision>
+
+      <inertial>
+	<mass value="0.032"/>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+	<inertia ixx="0.00064" ixy="0.0" ixz="0.0"
+				 iyy="0.0007683" iyz="0.0"
+						izz="0.0007683"/>
+      </inertial>
+
+    </link>
+
+    <joint name="drotek_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="drotek_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    
+    <!-- Gazebo sensor -->
+    <xacro:if value="${use_sim}">
+      <gazebo reference="drotek_link">
+	<sensor name="navsat" type="navsat">
+	  <always_on>1</always_on>
+	  <update_rate>5</update_rate>
+	  <topic>${namespace}/gps/fix_raw</topic>
+	  <gz_frame_id>${namespace}/base_link</gz_frame_id>
+	  <navsat>
+	    <position_sensing>
+	      <horizontal>
+		<noise type="gaussian">
+		  <mean>0.0</mean>
+		  <stddev>2e-7</stddev>
+		</noise>
+	      </horizontal>
+	      <vertical>
+		<noise type="gaussian">
+		  <mean>0.0</mean>
+		  <stddev>2e-7</stddev>
+		</noise>
+	      </vertical>
+	    </position_sensing>  
+	  </navsat>
+	</sensor>
+      </gazebo>
+    </xacro:if>
+  </xacro:macro>
+  <xacro:arg name="namespace" default="drotek" />
+  <xacro:arg name="parent" default="" />
+  <xacro:drotek_da435 namespace="$(arg namespace)" parent="$(arg parent)" />
+</robot>

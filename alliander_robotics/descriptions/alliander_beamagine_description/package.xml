@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 <package format="3">
   <name>alliander_beamagine_description</name>
   <version>0.1.0</version>
-  <description>Contains the Beamagine robot descriptions.</description>
+  <description>Contains the Beamagine robot description.</description>
   <maintainer email="robots@alliander.com">Alliander Robotics</maintainer>
   <license>Apache 2.0</license>
 

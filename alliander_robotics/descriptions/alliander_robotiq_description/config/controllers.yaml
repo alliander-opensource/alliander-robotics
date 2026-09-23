@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+/**:
+  controller_manager:
+    ros__parameters:
+      update_rate: 500
+
+      joint_state_broadcaster:
+        type: joint_state_broadcaster/JointStateBroadcaster
+
+      position_controller:
+        type: position_controllers/JointGroupPositionController
+
+  position_controller:
+    ros__parameters:
+      joints:
+        - finger_1_joint_1
+        - finger_1_joint_2
+        - finger_1_joint_3
+        - finger_2_joint_1
+        - finger_2_joint_2
+        - finger_2_joint_3
+        - finger_middle_joint_1
+        - finger_middle_joint_2
+        - finger_middle_joint_3
+        - palm_finger_1_joint
+        - palm_finger_2_joint

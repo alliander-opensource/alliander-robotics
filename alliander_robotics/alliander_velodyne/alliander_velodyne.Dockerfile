@@ -21,6 +21,7 @@ RUN /$WORKDIR/colcon_build.sh --external
 WORKDIR /$WORKDIR/ros
 COPY $SRC_DIRECTORY/alliander_core/src/ /$WORKDIR/ros/src
 COPY $SRC_DIRECTORY/alliander_velodyne/src/ /$WORKDIR/ros/src
+COPY $SRC_DIRECTORY/descriptions/alliander_velodyne_description/ /$WORKDIR/ros/src/alliander_velodyne_description/
 RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /$WORKDIR/rosdep_install.sh --build
 RUN /$WORKDIR/colcon_build.sh
 

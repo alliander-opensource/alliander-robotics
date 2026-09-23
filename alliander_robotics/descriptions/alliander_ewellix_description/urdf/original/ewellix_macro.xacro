@@ -1,0 +1,279 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="ewellix_link" params="
+    name
+    mesh
+    maximum
+    minimum
+    mass
+    *material">
+    <!-- Parameters -->
+    <xacro:property name="size"
+      value="${dict([
+      ('x', fabs(maximum.x-minimum.x)),
+      ('y', fabs(maximum.y-minimum.y)),
+      ('z', fabs(maximum.z-minimum.z))
+      ])}"/>
+
+    <xacro:property name="thickness" value="0.001"/>
+
+    <xacro:property
+      name="ixx"
+      value="${mass/12 * (size['y']**2 + size['z']**2)}"/>
+    <xacro:property
+      name="iyy"
+      value="${mass/12 * (size['x']**2 + size['z']**2)}"/>
+    <xacro:property
+      name="izz"
+      value="${mass/12 * (size['x']**2 + size['y']**2)}"/>
+
+    <!-- Link -->
+    <link name="${name}">
+      <visual>
+        <origin xyz="0.0 0.0 ${-minimum.z}" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <mesh filename="${mesh}"/>
+        </geometry>
+        <xacro:insert_block name="material"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0.0 0.0 ${size['z']/2}" rpy="0.0 0.0 0.0"/>
+        <geometry>
+          <box size="${size['x']} ${size['y']} ${size['z']}"/>
+        </geometry>
+        <xacro:insert_block name="material"/>
+      </collision>
+
+      <inertial>
+        <mass value="${mass}"/>
+        <origin xyz="0.0 0.0 ${size['z']/2}" rpy="0.0 0.0 0.0"/>
+        <inertia
+          ixx="${ixx}" ixy="0.0" ixz="0.0"
+          iyy="${iyy}" iyz="0.0"
+          izz="${izz}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <xacro:macro name="ewellix_prismatic_link" params="
+    name
+    mesh
+    maximum
+    minimum
+    mass
+    *material">
+    <!-- Link -->
+    <!-- Fixed Joint -->
+  </xacro:macro>
+
+  <!-- Common Macro for Ewellix Lift -->
+  <xacro:macro name="ewellix_lift" params="
+    parent
+    tf_prefix
+    add_plate:=true
+    add_mount:=true
+    initial_positions:=${dict(upper=0.0, lower=0.0)}
+    parameters_file:='$(find ewellix_description)/config/tlt_x25.yaml'
+    generate_ros2_control_tag:=false
+    use_fake_hardware:=false
+    sim_gazebo:=false
+    port='/dev/ttyUSB0'
+    baud=38400
+    timeout=1000
+    conversion=3225
+    rated_effort=2000
+    tolerance=0.005
+    *origin">
+    <!-- Parameters -->
+    <xacro:property name="parameters" value="${xacro.load_yaml(parameters_file)}"/>
+
+    <!-- Plate -->
+    <xacro:if value="${add_plate}">
+      <xacro:ewellix_link
+        name="${tf_prefix}plate_link"
+        mesh="package://ewellix_description/meshes/${parameters.plate.mesh}"
+        maximum="${parameters.plate.max}"
+        minimum="${parameters.plate.min}"
+        mass="${parameters.plate.mass}">
+        <material name="${parameters.plate.material.name}">
+        <color rgba="${parameters.plate.material.color}"/>
+        </material>
+      </xacro:ewellix_link>
+
+      <joint name="${tf_prefix}plate_joint" type="fixed">
+        <child link="${tf_prefix}plate_link"/>
+        <parent link="${parent}"/>
+        <xacro:insert_block name="origin"/>
+      </joint>
+
+      <joint name="${tf_prefix}base_joint" type="fixed">
+        <child link="${tf_prefix}base_link"/>
+        <parent link="${tf_prefix}plate_link"/>
+        <origin xyz="0.0 0.0 ${fabs(parameters.plate.max.z - parameters.plate.min.z) + parameters.base.offset}" rpy="0.0 0.0 0.0"/>
+      </joint>
+    </xacro:if>
+    <xacro:unless value="${add_plate}">
+      <joint name="${tf_prefix}base_joint" type="fixed">
+        <child link="${tf_prefix}base_link"/>
+        <parent link="${parent}"/>
+        <xacro:insert_block name="origin"/>
+      </joint>
+    </xacro:unless>
+
+    <!-- Base -->
+    <xacro:ewellix_link
+      name="${tf_prefix}base_link"
+      mesh="package://ewellix_description/meshes/${parameters.base.mesh}"
+      maximum="${parameters.base.max}"
+      minimum="${parameters.base.min}"
+      mass="${parameters.base.mass}">
+      <material name="${parameters.base.material.name}">
+      <color rgba="${parameters.base.material.color}"/>
+      </material>
+    </xacro:ewellix_link>
+
+    <!-- Lower Tower -->
+    <xacro:ewellix_link
+      name="${tf_prefix}lower_link"
+      mesh="package://ewellix_description/meshes/${parameters.lower.mesh}"
+      maximum="${parameters.lower.max}"
+      minimum="${parameters.lower.min}"
+      mass="${parameters.lower.mass}">
+      <material name="${parameters.lower.material.name}">
+      <color rgba="${parameters.lower.material.color}"/>
+      </material>
+    </xacro:ewellix_link>
+
+    <joint name="${tf_prefix}lower_joint" type="prismatic">
+      <child link="${tf_prefix}lower_link"/>
+      <parent link="${tf_prefix}base_link"/>
+      <origin
+        xyz="0.0 0.0 ${parameters.lower.offset}"
+        rpy="0.0 0.0 0.0"/>
+      <limit
+        effort="${parameters.lower.joint.limit.effort}"
+        lower="${parameters.lower.joint.limit.lower}"
+        upper="${parameters.lower.joint.limit.upper}"
+        velocity="${parameters.lower.joint.limit.velocity}"/>
+      <axis xyz="0 0 1"/>
+      <dynamics friction="0.01" damping="0.01"/>
+    </joint>
+
+    <!-- Upper Tower -->
+    <xacro:ewellix_link
+      name="${tf_prefix}upper_link"
+      mesh="package://ewellix_description/meshes/${parameters.upper.mesh}"
+      maximum="${parameters.upper.max}"
+      minimum="${parameters.upper.min}"
+      mass="${parameters.upper.mass}">
+      <material name="${parameters.upper.material.name}">
+      <color rgba="${parameters.upper.material.color}"/>
+      </material>
+    </xacro:ewellix_link>
+
+    <joint name="${tf_prefix}upper_joint" type="prismatic">
+      <child link="${tf_prefix}upper_link"/>
+      <parent link="${tf_prefix}lower_link"/>
+      <origin
+        xyz="0.0 0.0 ${parameters.upper.offset}"
+        rpy="0.0 0.0 0.0"/>
+      <axis xyz="0 0 1"/>
+      <limit
+        effort="${parameters.upper.joint.limit.effort}"
+        lower="${parameters.upper.joint.limit.lower}"
+        upper="${parameters.upper.joint.limit.upper}"
+        velocity="${parameters.upper.joint.limit.velocity}"/>
+      <dynamics friction="0.01" damping="0.01"/>
+      <mimic joint="${tf_prefix}lower_joint"/>
+    </joint>
+
+    <!-- Mount -->
+    <xacro:if value="${add_mount and parameters.get('mount')}">
+      <!-- Mount: Arm Mounting Plate -->
+      <xacro:ewellix_link
+        name="${tf_prefix}mount_link"
+        mesh="package://ewellix_description/meshes/${parameters.mount.mesh}"
+        maximum="${parameters.mount.max}"
+        minimum="${parameters.mount.min}"
+        mass="${parameters.mount.mass}">
+        <material name="${parameters.mount.material.name}">
+        <color rgba="${parameters.mount.material.color}"/>
+        </material>
+      </xacro:ewellix_link>
+
+      <joint name="${tf_prefix}_mount_link_joint" type="fixed">
+        <child link="${tf_prefix}mount_link"/>
+        <parent link="${tf_prefix}upper_link"/>
+        <origin
+          xyz="0.0 0.0 ${fabs(parameters.upper.max.z - parameters.upper.min.z) + parameters.mount.offset}"
+          rpy="0.0 0.0 0.0"/>
+      </joint>
+
+      <link name="${tf_prefix}mount"/>
+      <joint name="${tf_prefix}mount_joint" type="fixed">
+        <child link="${tf_prefix}mount"/>
+        <parent link="${tf_prefix}mount_link"/>
+        <origin
+          xyz="0.0 0.0 ${fabs(parameters.mount.max.z - parameters.mount.min.z)}"
+          rpy="0.0 0.0 0.0"/>
+      </joint>
+
+    </xacro:if>
+    <xacro:unless value="${add_mount and parameters.get('mount')}">
+      <!-- Mount: Virtual Link -->
+      <link name="${tf_prefix}mount"/>
+
+      <joint name="${tf_prefix}mount_joint" type="fixed">
+        <child link="${tf_prefix}mount"/>
+        <parent link="${tf_prefix}upper_link"/>
+        <origin
+          xyz="0.0 0.0 ${fabs(parameters.upper.max.z - parameters.upper.min.z)}"
+          rpy="0.0 0.0 0.0"/>
+      </joint>
+    </xacro:unless>
+
+    <!-- ROS 2 Controls -->
+    <xacro:if value="${generate_ros2_control_tag}">
+      <ros2_control name="${tf_prefix}hardware" type="system">
+        <hardware>
+          <xacro:if value="${sim_gazebo}">
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+          </xacro:if>
+          <xacro:if value="${use_fake_hardware}">
+            <plugin>mock_components/GenericSystem</plugin>
+            <param name="state_following_offset">0.0</param>
+            <param name="calculate_dynamics">true</param>
+          </xacro:if>
+          <xacro:unless value="${use_fake_hardware or sim_gazebo}">
+            <plugin>ewellix_driver/EwellixHardwareInterface</plugin>
+            <param name="port">${port}</param>
+            <param name="baud">${baud}</param>
+            <param name="timeout">${timeout}</param>
+            <param name="conversion">${conversion}</param>
+            <param name="rated_effort">${rated_effort}</param>
+            <param name="tolerance">${tolerance}</param>
+            <param name="encoder_limits_lower">${parameters.encoder_limits.lower}</param>
+            <param name="encoder_limits_upper">${parameters.encoder_limits.upper}</param>
+          </xacro:unless>
+        </hardware>
+        <joint name="${tf_prefix}lower_joint">
+          <command_interface name="position"/>
+          <state_interface name="position">
+            <param name="initial_value">${parameters.lower.joint.limit.lower}</param>
+          </state_interface>
+          <state_interface name="velocity"/>
+          <state_interface name="effort"/>
+        </joint>
+        <xacro:if value="${sim_gazebo or use_fake_hardware}">
+          <joint name="${tf_prefix}upper_joint">
+            <param name="mimic">${tf_prefix}lower_joint</param>
+            <param name="multiplier">1</param>
+          </joint>
+        </xacro:if>
+      </ros2_control>
+    </xacro:if>
+
+  </xacro:macro>
+</robot>

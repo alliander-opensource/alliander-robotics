@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="seekthermal_module">
+  <xacro:macro name="seekthermal_g300"
+    params="
+    namespace
+    parent
+    use_sim:=true
+    ">
+
+    <!-- Gazebo requires a joint to a link called "world" for statically mounted robots -->
+    <xacro:if value="${parent == 'world'}">
+      <link name="${parent}" />
+      <joint name="${parent}_joint" type="fixed">
+	<parent link="${parent}" />
+	<child link="base_link" />
+      </joint>
+    </xacro:if>
+
+    <link name="base_link"/>
+    <link name="seekthermal_link">
+
+      <visual>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+	<geometry>
+	  <box size="0.105 0.050 0.050"/>
+	</geometry>
+	<material name="dark_grey">
+	  <color rgba="0.2 0.2 0.2 1.0"/>
+	</material>
+      </visual>
+
+      <collision>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+	<geometry>
+	  <box size="0.105 0.050 0.050"/>
+	</geometry>
+      </collision>
+
+      <inertial>
+	<mass value="0.340"/>
+	<origin xyz="0 0 0" rpy="0 0 0"/>
+	<inertia ixx="0.000142" ixy="0.0" ixz="0.0"
+				 iyy="0.000384" iyz="0.0"
+						izz="0.000384"/>
+      </inertial>
+
+    </link>
+
+    <joint name="seekthermal_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="seekthermal_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="seekthermal_link_optical"/>
+    <joint name="seekthermal_optical_joint" type="fixed">
+      <parent link="seekthermal_link"/>
+      <child  link="seekthermal_link_optical"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <xacro:if value="${use_sim}">
+      <gazebo reference="seekthermal_link_optical">
+	<sensor type="thermal" name="seekthermal">
+	  <always_on>true</always_on>
+	  <update_rate>9.0</update_rate>
+
+	  <topic>${namespace}/thermal/image</topic>
+	  <visualize>true</visualize>
+
+	  <gz_frame_id>${namespace}/seekthermal_link_optical</gz_frame_id>
+	  <camera>
+	    <horizontal_fov>${58.0/180.0*pi}</horizontal_fov>
+	    <vertical_fov>${42.0/180.0*pi}</vertical_fov>
+	    <image>
+	      <width>320</width>
+	      <height>240</height>
+	      <format>L16</format>
+	    </image>
+	    <clip>
+	      <near>0.1</near>
+	      <far>100.0</far>
+	    </clip>
+	  </camera>
+
+	  <plugin
+	    filename="ignition-gazebo-thermal-sensor-system"
+	    name="gz::sim::systems::ThermalSensor">
+	    <!-- -20 °C to 550 °C  -->
+	    <min_temp>253.15</min_temp>
+	    <max_temp>823.15</max_temp>
+	    <!-- 570 degrees / 16 bits ~ 0.009 degrees resolution -->
+	    <resolution>0.01</resolution>
+	  </plugin>
+	</sensor>
+      </gazebo>
+    </xacro:if>
+  </xacro:macro>
+  <xacro:arg name="namespace" default="seekthermal" />
+  <xacro:arg name="parent" default="" />
+  <xacro:seekthermal_g300 namespace="$(arg namespace)" parent="$(arg parent)" />
+</robot>

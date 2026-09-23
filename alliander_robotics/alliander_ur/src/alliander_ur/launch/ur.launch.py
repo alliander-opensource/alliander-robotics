@@ -44,7 +44,7 @@ def launch_setup(context: LaunchContext) -> list:
         xacro_arguments={
             "simulation": str(arm_config.simulation),
             "simulation_controllers": get_file_path(
-                "alliander_description", ["ur", "config"], "controllers.yaml"
+                "alliander_ur_description", ["config"], "controllers.yaml"
             ),
             "ros_namespace": arm_config.namespace,
             "childs": str(

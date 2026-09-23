@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!-- 
+Based on:
+https://github.com/UniversalRobots/Universal_Robots_ROS2_GZ_Simulation/blob/2.5.0/ur_simulation_gz/urdf/ur_gz.ros2_control.xacro
+A copy of the original file is located in the /original directory.
+To compare the two files in VSCode, see:
+https://code.visualstudio.com/docs/editing/codebasics#_compare-files
+ -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find ur_description)/urdf/inc/ur_joint_control.xacro" />
+
+  <xacro:macro name="ur_ros2_control" params="
+    name
+    tf_prefix
+    transmission_hw_interface:=hardware_interface/PositionJointInterface
+    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=1.57,wrist_1_joint=-1.57,wrist_2_joint=-1.57,wrist_3_joint=-1.57)}
+    ">
+
+
+    <!-- Add URDF transmission elements (for ros_control) -->
+    <!--<xacro:ur_arm_transmission prefix="${prefix}" hw_interface="${transmission_hw_interface}" />-->
+    <!-- Placeholder for ros2_control transmission which don't yet exist -->
+
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+
+      <xacro:ur_joint_control_description
+        tf_prefix="${tf_prefix}"
+        initial_positions="${initial_positions}"
+      />
+      </ros2_control>
+  </xacro:macro>
+</robot>
