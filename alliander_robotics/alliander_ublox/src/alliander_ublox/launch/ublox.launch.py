@@ -28,7 +28,7 @@ def launch_setup(context: LaunchContext) -> list:
 
     state_publisher = state_publisher_node(
         namespace=gps_config.namespace,
-        platform="drotek",
+        platform="ublox",
         xacro="drotek_da435.urdf.xacro",
         xacro_arguments={
             "namespace": gps_config.namespace,

@@ -27,7 +27,7 @@ def launch_setup(context: LaunchContext) -> list:
     ns: str = f"/{lift_config.namespace}" if lift_config.namespace else ""
 
     controllers_config = get_file_path(
-        "alliander_description", ["ewellix", "config"], "controllers.yaml"
+        "alliander_ewellix_description", ["config"], "controllers.yaml"
     )
 
     ros2_control_node = Node(

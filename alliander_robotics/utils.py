@@ -101,6 +101,7 @@ def get_changed_packages(verbose: bool = False) -> set[str]:
         file.split("/")[1]
         for file in files
         if file.startswith("alliander_robotics/alliander_")
+        or file.startswith("alliander_robotics/descriptions/alliander_")
     }
 
 

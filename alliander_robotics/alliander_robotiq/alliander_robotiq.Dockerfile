@@ -16,6 +16,7 @@ ENV ROS_DISTRO=jazzy
 WORKDIR /$WORKDIR/ros
 COPY $SRC_DIRECTORY/alliander_core/src/ /$WORKDIR/ros/src
 COPY $SRC_DIRECTORY/alliander_robotiq/src/ /$WORKDIR/ros/src
+COPY $SRC_DIRECTORY/descriptions/alliander_robotiq_description/ /$WORKDIR/ros/src/alliander_robotiq_description/
 RUN apt update && rosdep update --rosdistro $ROS_DISTRO && rosdep install --from-paths /$WORKDIR/ros/src -y -i -t build
 RUN /$WORKDIR/colcon_build.sh
 

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:macro name="detachable_joints" params="childs:=^">
+    <xacro:if value="${childs}">
+
+      <!-- Select the child from the list: -->
+      <xacro:property name="child" value="${childs.pop(0)}" />
+
+      <!-- If child is not empty, select the model and link names: -->
+      <xacro:if value="${child}">
+        <xacro:property name="parent_link" value="${child.pop(0)}" />
+        <xacro:property name="child_model" value="${child.pop(0)}" />
+        <xacro:property name="child_link" value="${child.pop(0)}" />
+
+        <!-- Create the detachable joint: -->
+        <gazebo>
+          <plugin filename="gz-sim-detachable-joint-system"
+            name="gz::sim::systems::DetachableJoint">
+            <parent_link>${parent_link}</parent_link>
+            <child_model>${child_model}</child_model>
+            <child_link>${child_link}</child_link>
+          </plugin>
+        </gazebo>
+
+        <!-- Use a recursive call for the next child: -->
+        <xacro:detachable_joints />
+
+      </xacro:if>
+    </xacro:if>
+  </xacro:macro>
+</robot>
