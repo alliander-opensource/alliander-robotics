@@ -11,3 +11,18 @@ SPDX-License-Identifier: Apache-2.0
 .button {
   font-size: 20px;
 }
+
+.waypoint-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #2b6cb0;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+}
