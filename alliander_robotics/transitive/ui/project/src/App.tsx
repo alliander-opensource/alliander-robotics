@@ -9,6 +9,7 @@ import type { Subscription } from "./capabilities/RosTool";
 import { RosTool } from "./capabilities/RosTool";
 import { Teleoperation } from "./capabilities/Teleoperation";
 import { Map } from "./Map";
+import { MissionPanel } from "./MissionPanel";
 import { WaypointPanel } from "./WaypointPanel";
 import type { Waypoint } from "./waypoints";
 import {
@@ -130,6 +131,10 @@ function App() {
   const teleoperation = <Teleoperation device={device} />;
   const healthMonitor = <HealthMonitor device={device} time={time} />;
 
+  const missionPanel = (
+    <MissionPanel device={device} waypoints={waypoints} position={position} />
+  );
+
   const waypointPanel = (
     <WaypointPanel
       waypoints={waypoints}
@@ -165,7 +170,10 @@ function App() {
         </div>
         <div className="mapRow">
           <div className="map">{map}</div>
-          <div className="panel">{waypointPanel}</div>
+          <div className="panelStack">
+            <div className="mission">{missionPanel}</div>
+            <div className="waypoints">{waypointPanel}</div>
+          </div>
         </div>
       </div>
     </>
