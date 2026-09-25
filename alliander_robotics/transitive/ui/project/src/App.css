@@ -37,8 +37,20 @@ body {
 
 }
 
-.map {
+.mapRow {
   height: 50%;
+  display: flex;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.map {
+  width: 90%;
+}
+
+.panel {
+  width: 10%;
+  overflow: scroll;
   border-style: solid;
   border-width: 1px;
 }
