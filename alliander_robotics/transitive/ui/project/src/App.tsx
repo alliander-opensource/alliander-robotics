@@ -9,13 +9,16 @@ import type { Subscription } from "./capabilities/RosTool";
 import { RosTool } from "./capabilities/RosTool";
 import { Teleoperation } from "./capabilities/Teleoperation";
 import { Map } from "./Map";
+import { WaypointPanel } from "./WaypointPanel";
 import type { Waypoint } from "./waypoints";
 import {
   addWaypoint,
   removeWaypoint,
   moveWaypoint,
   reorderWaypoint,
+  clearWaypoints,
 } from "./waypoints";
+import { downloadWaypoints, readWaypointsFile } from "./waypointIO";
 
 type Device = "simulation" | "lynx" | "panther" | "none";
 const DEVICE: Device = "simulation";
@@ -103,8 +106,22 @@ function App() {
   const onMove = (id: number, lat: number, lng: number) => {
     setWaypoints((wps) => moveWaypoint(wps, id, lat, lng));
   };
-  const onReorder = (id: number, direction: "up" | "down") =>
+  const onReorder = (id: number, direction: "up" | "down") => {
     setWaypoints((wps) => reorderWaypoint(wps, id, direction));
+  };
+  const onSave = () => {
+    downloadWaypoints(waypoints);
+  };
+  const onLoad = async (file: File) => {
+    try {
+      setWaypoints(await readWaypointsFile(file));
+    } catch (err) {
+      console.error("Failed to load waypoints:", err);
+    }
+  };
+  const onClear = () => {
+    setWaypoints((wps) => clearWaypoints(wps));
+  };
 
   // Define ROS tool
   const subscriptions: Subscription[] = [gps_subscription, clock_subscription];
@@ -112,6 +129,17 @@ function App() {
 
   const teleoperation = <Teleoperation device={device} />;
   const healthMonitor = <HealthMonitor device={device} time={time} />;
+
+  const waypointPanel = (
+    <WaypointPanel
+      waypoints={waypoints}
+      onRemove={onRemove}
+      onReorder={onReorder}
+      onSave={onSave}
+      onLoad={onLoad}
+      onClear={onClear}
+    />
+  );
 
   const map = (
     <Map
@@ -135,7 +163,10 @@ function App() {
           {healthMonitor}
           {rosTool}
         </div>
-        <div className="map">{map}</div>
+        <div className="mapRow">
+          <div className="map">{map}</div>
+          <div className="panel">{waypointPanel}</div>
+        </div>
       </div>
     </>
   );
