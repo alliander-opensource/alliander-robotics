@@ -37,6 +37,7 @@ RUN /"$WORKDIR"/colcon_build.sh --external
 WORKDIR /$WORKDIR/ros
 COPY $SRC_DIRECTORY/alliander_core/src/ /$WORKDIR/ros/src
 COPY $SRC_DIRECTORY/alliander_beamagine/src/ /$WORKDIR/ros/src
+COPY $SRC_DIRECTORY/descriptions/alliander_beamagine_description/ /$WORKDIR/ros/src/alliander_beamagine_description/
 COPY $SRC_DIRECTORY/utilities/depth_camera/ /$WORKDIR/ros/src/depth_camera
 RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /"$WORKDIR"/rosdep_install.sh --build
 RUN /"$WORKDIR"/colcon_build.sh

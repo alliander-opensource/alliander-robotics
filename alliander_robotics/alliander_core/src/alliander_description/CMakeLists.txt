@@ -11,9 +11,8 @@ find_package(ament_cmake_python REQUIRED)
 
 # Shared folders:
 install(
-  DIRECTORY beamagine common drotek ewellix franka husarion nmea_gps ouster realsense robotiq seekthermal ur velodyne xsens zed
+  DIRECTORY env-hooks urdf 
   DESTINATION share/${PROJECT_NAME}
 )
 
-ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.sh.in")
-ament_package()
+ament_package(CONFIG_EXTRAS "alliander_description-extras.cmake")

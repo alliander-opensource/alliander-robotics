@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+SPDX-License-Identifier: Apache-2.0
+-->
+<!-- 
+Specs based on:
+https://beamagine.com/wp-content/uploads/2022/05/DIGITAL-L3CAM-Robotic-vehicles-brochure.pdf
+https://github.com/beamaginelidar/l3cam_ros2
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="l3cam">
+  <xacro:macro name="l3cam"
+    params="
+    namespace
+    parent
+    use_sim:=true
+    lasers:=12 
+    samples:=1024
+    ">
+
+    <!-- Gazebo requires a joint to a link called "world" for statically mounted robots -->
+    <xacro:if value="${parent == 'world'}">
+      <link name="${parent}" />
+      <joint name="${parent}_joint" type="fixed">
+        <parent link="${parent}" />
+        <child link="base_link" />
+      </joint>
+    </xacro:if>
+
+    <link name="base_link" />
+    <link name="beamagine_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://alliander_beamagine_description/meshes/beamagine.dae" />
+        </geometry>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.105 0.050 0.050" />
+        </geometry>
+      </collision>
+
+      <inertial>
+        <mass value="0.340" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <inertia ixx="0.000142" ixy="0.0" ixz="0.0"
+          iyy="0.000384" iyz="0.0"
+          izz="0.000384" />
+      </inertial>
+
+    </link>
+
+    <joint name="beamagine_joint" type="fixed">
+      <parent link="base_link" />
+      <child link="beamagine_link" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </joint>
+
+    <link name="beamagine_camera_frame" />
+    <joint name="beamagine_joint_camera_frame" type="fixed">
+      <parent link="beamagine_link" />
+      <child link="beamagine_camera_frame" />
+      <origin xyz="0.2 0 0" rpy="0 0 0" />
+    </joint>
+
+
+    <link name="beamagine_camera_optical_frame" />
+    <joint name="beamagine_joint_camera_optical_frame" type="fixed">
+      <parent link="beamagine_camera_frame" />
+      <child link="beamagine_camera_optical_frame" />
+      <origin xyz="0 0 0" rpy="-${pi/2} 0.0 -${pi/2}" />
+    </joint>
+
+    <!-- Add gazebo plugin: -->
+    <xacro:if value="${use_sim}">
+      <gazebo reference="beamagine_camera_frame">
+
+        <!-- rgb_camera: -->
+        <sensor type="camera" name="beamagine_color">
+          <always_on>true</always_on>
+          <update_rate>30.0</update_rate>
+
+          <topic>${namespace}/color/image_raw</topic>
+          <visualize>false</visualize>
+
+          <gz_frame_id>${namespace}/beamagine_camera_optical_frame</gz_frame_id>
+          <camera>
+            <image>
+              <width>640</width>
+              <height>480</height>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>300.0</far>
+            </clip>
+          </camera>
+        </sensor>
+
+        <!-- thermal camera -->
+        <sensor type="thermal" name="beamagine_thermal">
+          <always_on>true</always_on>
+          <update_rate>9.0</update_rate>
+
+          <topic>${namespace}/thermal/image</topic>
+          <visualize>true</visualize>
+
+          <gz_frame_id>${namespace}/beamagine_camera_optical_frame</gz_frame_id>
+          <camera>
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>L16</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100.0</far>
+            </clip>
+          </camera>
+
+          <plugin
+            filename="ignition-gazebo-thermal-sensor-system"
+            name="gz::sim::systems::ThermalSensor">
+            <!-- -20 °C to 550 °C  -->
+            <min_temp>253.15</min_temp>
+            <max_temp>823.15</max_temp>
+            <!-- 570 degrees / 16 bits ~ 0.009 degrees resolution -->
+            <resolution>0.01</resolution>
+          </plugin>
+        </sensor>
+
+        <!-- lidar -->
+        <sensor type="gpu_lidar" name="beamagine_lidar">
+          <always_on>true</always_on>
+          <update_rate>10</update_rate>
+
+          <topic>${namespace}/scan</topic>
+          <visualize>false</visualize>
+
+          <gz_frame_id>${namespace}/beamagine_camera_frame</gz_frame_id>
+
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>${samples}</samples>
+                <resolution>1</resolution>
+                <min_angle>-${30/180*pi}</min_angle>
+                <max_angle> ${30/180*pi}</max_angle>
+              </horizontal>
+              <vertical>
+                <samples>${lasers}</samples>
+                <resolution>1</resolution>
+                <min_angle>-${10*pi/180.0}</min_angle>
+                <max_angle> ${10*pi/180.0}</max_angle>
+              </vertical>
+            </scan>
+            <range>
+              <min>1.5</min>
+              <max>300.0</max>
+              <resolution>0.1</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0.0</mean>
+              <stddev>0.0</stddev>
+            </noise>
+          </ray>
+        </sensor>
+
+      </gazebo>
+    </xacro:if>
+
+  </xacro:macro>
+  <xacro:arg name="namespace" default="l3cam" />
+  <xacro:arg name="parent" default="" />
+  <xacro:l3cam namespace="$(arg namespace)" parent="$(arg parent)" />
+</robot>

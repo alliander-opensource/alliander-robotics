@@ -25,7 +25,7 @@ def state_publisher_node(
     """
     if xacro_arguments is None:
         xacro_arguments = {}
-    xacro_path = get_file_path("alliander_description", [platform, "urdf"], xacro)
+    xacro_path = get_file_path(f"alliander_{platform}_description", ["urdf"], xacro)
     robot_description = get_robot_description(xacro_path, xacro_arguments)
     return Node(
         package="robot_state_publisher",
