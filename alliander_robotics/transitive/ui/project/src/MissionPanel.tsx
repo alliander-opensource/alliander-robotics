@@ -15,10 +15,12 @@ export function MissionPanel({
   device,
   waypoints,
   position,
+  onWaypointsChange,
 }: {
   device: string;
   waypoints: Waypoint[];
   position: [number, number] | null;
+  onWaypointsChange: (waypoints: Waypoint[]) => void;
 }) {
   const [jwtToken, setJwtToken] = useState("");
   const [jwtError, setJwtError] = useState<string | null>(null);
@@ -40,6 +42,7 @@ export function MissionPanel({
         device={device}
         waypoints={waypoints}
         position={position}
+        onWaypointsChange={onWaypointsChange}
       />
     </CapabilityContextProvider>
   );
@@ -49,10 +52,12 @@ export function MissionControls({
   device,
   waypoints,
   position,
+  onWaypointsChange,
 }: {
   device: string;
   waypoints: Waypoint[];
   position: [number, number] | null;
+  onWaypointsChange: (waypoints: Waypoint[]) => void;
 }) {
   const { isReady, publish, callService } = useContext(CapabilityContext);
 
@@ -66,23 +71,30 @@ export function MissionControls({
 
     publish(
       2,
-      device + "/gps_waypoints",
+      "/gps_waypoints",
       "geographic_msgs/msg/GeoPath",
       toGeoPath(waypoints),
     );
 
     setStatus("running");
     setRemaining(waypoints);
+    console.log("Started mission.");
   };
 
   const onStop = () => {
     if (!isReady?.()) return;
 
-    callService(2, device + "/stop", "std_srvs/srv/Trigger", {}, (err, _) => {
-      if (err) {
-        console.warn("Failed to stop mission", err);
-      }
-    });
+    callService(
+      2,
+      "/panther/nav2_manager/stop",
+      "std_srvs/srv/Trigger",
+      {},
+      (err, _) => {
+        if (err) {
+          console.warn("Failed to stop mission", err);
+        }
+      },
+    );
 
     setStatus("idle");
     setRemaining([]);
@@ -90,13 +102,21 @@ export function MissionControls({
 
   const onPauseResume = () => {
     if (status === "running") {
-      callService(2, device + "/stop", "std_srvs/srv/Trigger", {}, (err, _) => {
-        if (err) {
-          console.warn("Failed to pause mission", err);
-        }
-      });
+      callService(
+        2,
+        "/panther/nav2_manager/stop",
+        "std_srvs/srv/Trigger",
+        {},
+        (err, _) => {
+          if (err) {
+            console.warn("Failed to pause mission", err);
+          }
+        },
+      );
+      const stillToVisit = remainingWaypoints(waypoints, position);
       setStatus("paused");
-      setRemaining(remainingWaypoints(waypoints, position));
+      setRemaining(stillToVisit);
+      onWaypointsChange(stillToVisit);
     } else {
       publish(
         2,

@@ -73,7 +73,7 @@ function App() {
     </div>
   );
 
-  //Subscription on GPS topic:
+  // Subscription on GPS topic:
   const gps_callback = (data: any) => {
     if (data && data.length >= 2) {
       setPosition([data[0], data[1]]);
@@ -131,8 +131,17 @@ function App() {
   const teleoperation = <Teleoperation device={device} />;
   const healthMonitor = <HealthMonitor device={device} time={time} />;
 
+  const onWaypointsChange = (wps: Waypoint[]) => {
+    setWaypoints(wps);
+  };
+
   const missionPanel = (
-    <MissionPanel device={device} waypoints={waypoints} position={position} />
+    <MissionPanel
+      device={device}
+      waypoints={waypoints}
+      position={position}
+      onWaypointsChange={onWaypointsChange}
+    />
   );
 
   const waypointPanel = (
