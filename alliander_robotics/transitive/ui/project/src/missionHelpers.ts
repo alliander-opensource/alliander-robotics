@@ -16,27 +16,26 @@ export function toGeoPath(waypoints: Waypoint[]) {
 export function remainingWaypoints(
   waypoints: Waypoint[],
   position: [number, number] | null,
-) {
+): Waypoint[] {
   // TODO: we should base this on feedback from the robot about its current waypoint
-  if (position === null) {
+  if (position === null || waypoints.length === 0) {
     return waypoints;
   }
 
-  var closest_wp_idx = 0;
-  var min_dist = 1e9;
-  for (const wp of waypoints) {
-    var dist = getDistance(position, wp);
-    if (dist < min_dist) {
-      min_dist = dist;
-      closest_wp_idx = wp.id;
+  let closestIndex = 0;
+  let minDist = Infinity;
+  waypoints.forEach((wp, index) => {
+    const dist = getDistance(position, wp);
+    if (dist < minDist) {
+      minDist = dist;
+      closestIndex = index;
     }
-  }
+  });
 
-  console.debug("Closest waypoint: ", closest_wp_idx);
-  return waypoints.splice(0, closest_wp_idx);
+  console.debug("Closest waypoint index:", closestIndex);
+  return waypoints.slice(closestIndex);
 }
 
 function getDistance(curr: [number, number], wp: Waypoint) {
-  // TODO: indexing correct?
   return Math.sqrt((curr[0] - wp.lat) ** 2 + (curr[1] - wp.lng) ** 2);
 }
