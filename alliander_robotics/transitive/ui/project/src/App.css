@@ -48,6 +48,12 @@ body {
   width: 90%;
 }
 
+.panelStack {
+  width: 15%;
+  display: flex;
+  flex-direction: column;
+}
+
 .panel {
   width: 15%;
   overflow: scroll;
