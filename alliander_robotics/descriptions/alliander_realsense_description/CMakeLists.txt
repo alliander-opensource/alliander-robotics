@@ -7,7 +7,6 @@ project(alliander_realsense_description)
 
 # CMake dependencies:
 find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
 find_package(alliander_description REQUIRED)
 
 # Shared folders:
