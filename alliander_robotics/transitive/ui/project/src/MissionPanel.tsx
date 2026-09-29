@@ -66,7 +66,7 @@ export function MissionControls({
 
     publish(
       2,
-      "/gps_waypoints",
+      device + "/gps_waypoints",
       "geographic_msgs/msg/GeoPath",
       toGeoPath(waypoints),
     );
@@ -78,7 +78,7 @@ export function MissionControls({
   const onStop = () => {
     if (!isReady?.()) return;
 
-    callService(2, "~/stop", "std_srvs/srv/Trigger", {}, (err, _) => {
+    callService(2, device + "/stop", "std_srvs/srv/Trigger", {}, (err, _) => {
       if (err) {
         console.warn("Failed to stop mission", err);
       }
@@ -90,7 +90,7 @@ export function MissionControls({
 
   const onPauseResume = () => {
     if (status === "running") {
-      callService(2, "~/stop", "std_srvs/srv/Trigger", {}, (err, _) => {
+      callService(2, device + "/stop", "std_srvs/srv/Trigger", {}, (err, _) => {
         if (err) {
           console.warn("Failed to pause mission", err);
         }
@@ -112,7 +112,12 @@ export function MissionControls({
     <div>
       <div className="missionActions">
         Mission
-        <button onClick={() => onStart()} disabled={status === "running"}>
+        <button
+          onClick={() => onStart()}
+          disabled={
+            status === "running" || status == "paused" || waypoints.length === 0
+          }
+        >
           Start
         </button>
         <button onClick={() => onStop()} disabled={status === "idle"}>
