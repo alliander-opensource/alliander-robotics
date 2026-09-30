@@ -94,9 +94,6 @@ class Register:
     def next(*_: Any) -> LaunchDescription:
         """Returns the next action to start based on the order of registration.
 
-        Args:
-            *_ (Any): Ignored. Additional arguments from `OnProcessStart` or `OnProcessExit`.
-
         Returns:
             LaunchDescription: A launch description containing the next action to start, or an empty launch description if all actions have been started.
         """
