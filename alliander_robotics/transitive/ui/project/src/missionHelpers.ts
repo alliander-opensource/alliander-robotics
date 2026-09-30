@@ -1,3 +1,7 @@
+// # SPDX-FileCopyrightText: Alliander N. V.
+//
+// # SPDX-License-Identifier: Apache-2.0
+
 import type { Waypoint } from "./waypoints";
 
 export function toGeoPath(waypoints: Waypoint[]) {
