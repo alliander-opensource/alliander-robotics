@@ -53,21 +53,23 @@ export function WaypointPanel({
   return (
     <div>
       <div className="waypointActions">
-        Waypoints
-        <button onClick={onSave} disabled={waypoints.length === 0}>
-          Save
-        </button>
-        <button onClick={() => fileInputRef.current?.click()}>Load</button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/json,.json"
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
-        <button onClick={onClear} disabled={waypoints.length === 0}>
-          Clear
-        </button>
+        <div className="sectionTitle">Waypoints</div>
+        <div className="buttonRow">
+          <button onClick={onSave} disabled={waypoints.length === 0}>
+            Save
+          </button>
+          <button onClick={() => fileInputRef.current?.click()}>Load</button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+          <button onClick={onClear} disabled={waypoints.length === 0}>
+            Clear
+          </button>
+        </div>
       </div>
       {waypointList}
     </div>

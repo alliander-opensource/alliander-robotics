@@ -61,7 +61,7 @@ function Controls({ position }: { position?: [number, number] | null }) {
   );
 }
 
-export function Map({
+export function MapComponent({
   position,
   waypoints,
   onAdd,
