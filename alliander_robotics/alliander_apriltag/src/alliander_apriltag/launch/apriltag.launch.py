@@ -48,7 +48,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         cprint("Multiple cameras defined. Using the first one.", "yellow")
 
     image_raw = f"/{cameras[0].namespace}/color/image_raw"
-    image_ready = f"/{cameras[0].namespace}/color/image_ready"
+    image_bgr = f"/{cameras[0].namespace}/color/image_bgr"
     camera_info_topic = f"/{cameras[0].namespace}/color/camera_info"
 
     convert = cameras[0].name == "zed" and not cameras[0].simulation
@@ -57,7 +57,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         package="isaac_ros_apriltag",
         plugin="nvidia::isaac_ros::apriltag::AprilTagNode",
         remappings=[
-            ("/image", image_ready if convert else image_raw),
+            ("/image", image_bgr if convert else image_raw),
             ("/camera_info", camera_info_topic),
         ],
         parameters=[{"size": size}],
@@ -73,7 +73,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         ],
         remappings=[
             ("image_raw", image_raw),
-            ("image", image_ready),
+            ("image", image_bgr),
         ],
     )
 
