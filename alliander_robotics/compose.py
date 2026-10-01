@@ -60,6 +60,7 @@ class Compose:
             "/nix/store:/nix/store",
             "./pyproject.toml:/alliander/pyproject.toml",
             "./alliander_robotics/alliander_core/src/alliander_description:/alliander/ros/src/alliander_description",
+            "./alliander_robotics/descriptions:/alliander/ros/src/descriptions",
             "./alliander_robotics/alliander_core/src/alliander_utilities:/alliander/ros/src/alliander_utilities",
         ],
     }
