@@ -34,7 +34,9 @@ RUN k="/usr/share/keyrings/nvidia-isaac-ros.gpg" \
   && grep -qxF "$s" $f || echo "$s" | sudo tee -a $f
 
 # Install NVIDIA packages:
-RUN apt update && apt install -y ros-${ROS_DISTRO}-isaac-ros-apriltag
+RUN apt update && apt install -y \
+  ros-${ROS_DISTRO}-isaac-ros-apriltag \
+  ros-${ROS_DISTRO}-isaac-ros-image-proc
 
 # Install alliander packages:
 WORKDIR /$WORKDIR/ros

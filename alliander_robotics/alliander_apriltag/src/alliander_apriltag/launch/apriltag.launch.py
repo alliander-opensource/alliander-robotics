@@ -46,28 +46,46 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         return []
     elif len(cameras) > 1:
         cprint("Multiple cameras defined. Using the first one.", "yellow")
-    image_topic = f"/{cameras[0].namespace}/color/image_raw"
+
+    image_raw = f"/{cameras[0].namespace}/color/image_raw"
+    image_ready = f"/{cameras[0].namespace}/color/image_ready"
     camera_info_topic = f"/{cameras[0].namespace}/color/camera_info"
+
+    convert = cameras[0].name == "zed" and not cameras[0].simulation
 
     apriltag_node = ComposableNode(
         package="isaac_ros_apriltag",
         plugin="nvidia::isaac_ros::apriltag::AprilTagNode",
-        name="apriltag",
         remappings=[
-            ("/image", image_topic),
+            ("/image", image_ready if convert else image_raw),
             ("/camera_info", camera_info_topic),
         ],
         parameters=[{"size": size}],
     )
 
+    converter_node = ComposableNode(
+        package="isaac_ros_image_proc",
+        plugin="nvidia::isaac_ros::image_proc::ImageFormatConverterNode",
+        parameters=[
+            {
+                "encoding_desired": "bgr8",
+            }
+        ],
+        remappings=[
+            ("image_raw", image_raw),
+            ("image", image_ready),
+        ],
+    )
+
+    composable_nodes = [apriltag_node]
+    if convert:
+        composable_nodes.append(converter_node)
     apriltag_container = ComposableNodeContainer(
         package="rclcpp_components",
         name="apriltag_container",
         namespace="",
         executable="component_container_mt",
-        composable_node_descriptions=[
-            apriltag_node,
-        ],
+        composable_node_descriptions=composable_nodes,
         output="screen",
     )
 
