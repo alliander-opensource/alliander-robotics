@@ -47,6 +47,13 @@ def launch_setup(context: LaunchContext) -> list:
         orientation=vehicle_config.orientation,
     )
 
+    fallback_velocity = Node(
+        package="alliander_husarion",
+        executable="fallback_velocity",
+        name="cmd_vel_fallback",
+        namespace=vehicle_config.namespace,
+    )
+
     twist_mux = Node(
         package="twist_mux",
         executable="twist_mux",
@@ -56,6 +63,11 @@ def launch_setup(context: LaunchContext) -> list:
             {"use_stamped": True},
             {
                 "topics": {
+                    "fallback": {
+                        "topic": "cmd_vel_fallback",
+                        "timeout": 0.0,
+                        "priority": 1,
+                    },
                     "navigation": {
                         "topic": "cmd_vel_nav",
                         "timeout": 0.5,
@@ -87,6 +99,7 @@ def launch_setup(context: LaunchContext) -> list:
         if vehicle_config.simulation
         else SKIP,
         Register.on_start(static_tf, context) if not vehicle_config.nav2 else SKIP,
+        Register.on_start(fallback_velocity, context),
         Register.on_start(twist_mux, context),
         Register.group(controllers, context) if vehicle_config.simulation else SKIP,
         Register.on_start(sleep_infinity, context),
