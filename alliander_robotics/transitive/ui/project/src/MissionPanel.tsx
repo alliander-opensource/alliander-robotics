@@ -5,10 +5,7 @@
 import { useContext, useEffect, useState } from "react";
 import type { Waypoint } from "./waypoints";
 import { generateJWT } from "./capabilities/jwt";
-import {
-  CapabilityContext,
-  CapabilityContextProvider,
-} from "@transitive-sdk/utils-web";
+import { CapabilityContext, CapabilityContextProvider } from "@transitive-sdk/utils-web";
 import { remainingWaypoints, toGeoPath } from "./missionHelpers";
 
 export function MissionPanel({
@@ -26,12 +23,10 @@ export function MissionPanel({
   const [jwtError, setJwtError] = useState<string | null>(null);
 
   useEffect(() => {
-    generateJWT(device, "@transitive-robotics/ros-tool").then(
-      ({ jwtToken, jwtError }) => {
-        setJwtToken(jwtToken);
-        setJwtError(jwtError);
-      },
-    );
+    generateJWT(device, "@transitive-robotics/ros-tool").then(({ jwtToken, jwtError }) => {
+      setJwtToken(jwtToken);
+      setJwtError(jwtError);
+    });
   }, [device]);
 
   if (!jwtToken) return <div>{jwtError ?? "Loading..."}</div>;
@@ -62,68 +57,46 @@ export function MissionControls({
   const { isReady, publish, callService } = useContext(CapabilityContext);
 
   const [status, setStatus] = useState<"idle" | "running" | "paused">("idle");
-  const [remaining, setRemaining] = useState<Waypoint[]>([]);
+  const [namespace, setNamespace] = useState(device);
+
+  const stopService = `/${namespace}/nav2_manager/stop`;
 
   const onStart = () => {
-    setStatus("idle");
-
     if (!isReady?.()) return;
 
-    publish(
-      2,
-      "/gps_waypoints",
-      "geographic_msgs/msg/GeoPath",
-      toGeoPath(waypoints),
-    );
+    publish(2, "/gps_waypoints", "geographic_msgs/msg/GeoPath", toGeoPath(waypoints));
 
     setStatus("running");
-    setRemaining(waypoints);
-    console.log("Started mission.");
+    console.debug("Mission started");
   };
 
   const onStop = () => {
     if (!isReady?.()) return;
 
-    callService(
-      2,
-      "/panther/nav2_manager/stop",
-      "std_srvs/srv/Trigger",
-      {},
-      (err, _) => {
-        if (err) {
-          console.warn("Failed to stop mission", err);
-        }
-      },
-    );
+    callService(2, stopService, "std_srvs/srv/Trigger", {}, (err, suc) => {
+      if (err) {
+        console.warn("Failed to stop mission", err);
+      } else {
+        console.debug("Mission stopped", suc);
+      }
+    });
 
     setStatus("idle");
-    setRemaining([]);
   };
 
   const onPauseResume = () => {
     if (status === "running") {
-      callService(
-        2,
-        "/panther/nav2_manager/stop",
-        "std_srvs/srv/Trigger",
-        {},
-        (err, _) => {
-          if (err) {
-            console.warn("Failed to pause mission", err);
-          }
-        },
-      );
-      const stillToVisit = remainingWaypoints(waypoints, position);
+      callService(2, stopService, "std_srvs/srv/Trigger", {}, (err, suc) => {
+        if (err) {
+          console.warn("Failed to pause mission", err);
+        } else {
+          console.debug("Mission paused", suc);
+        }
+      });
+      onWaypointsChange(remainingWaypoints(waypoints, position));
       setStatus("paused");
-      setRemaining(stillToVisit);
-      onWaypointsChange(stillToVisit);
     } else {
-      publish(
-        2,
-        "/gps_waypoints",
-        "geographic_msgs/msg/GeoPath",
-        toGeoPath(remaining),
-      );
+      publish(2, "/gps_waypoints", "geographic_msgs/msg/GeoPath", toGeoPath(waypoints));
       setStatus("running");
     }
   };
@@ -131,21 +104,28 @@ export function MissionControls({
   return (
     <div>
       <div className="missionActions">
-        Mission
-        <button
-          onClick={() => onStart()}
-          disabled={
-            status === "running" || status == "paused" || waypoints.length === 0
-          }
-        >
-          Start
-        </button>
-        <button onClick={() => onStop()} disabled={status === "idle"}>
-          Stop
-        </button>
-        <button onClick={() => onPauseResume()} disabled={status === "idle"}>
-          {status === "paused" ? "Resume" : "Pause"}
-        </button>
+        <div className="sectionTitle">Mission</div>
+        <div className="fieldLabel">Namespace:</div>
+        <input
+          type="text"
+          value={namespace}
+          onChange={(event) => setNamespace(event.target.value)}
+          placeholder="vehicle_namespace"
+        />
+        <div className="buttonRow">
+          <button
+            onClick={() => onStart()}
+            disabled={status === "running" || status == "paused" || waypoints.length === 0}
+          >
+            Start
+          </button>
+          <button onClick={() => onStop()} disabled={status === "idle"}>
+            Stop
+          </button>
+          <button onClick={() => onPauseResume()} disabled={status === "idle"}>
+            {status === "paused" ? "Resume" : "Pause"}
+          </button>
+        </div>
       </div>
     </div>
   );

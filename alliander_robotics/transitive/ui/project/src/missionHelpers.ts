@@ -4,7 +4,33 @@
 
 import type { Waypoint } from "./waypoints";
 
-export function toGeoPath(waypoints: Waypoint[]) {
+interface GeoPoint {
+  latitude: number;
+  longitude: number;
+  altitude: number;
+}
+
+interface Quaternion {
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+}
+
+interface GeoPoseStamped {
+  header: { frame_id: string };
+  pose: {
+    position: GeoPoint;
+    orientation: Quaternion;
+  };
+}
+
+interface GeoPath {
+  header: { frame_id: string };
+  poses: GeoPoseStamped[];
+}
+
+export function toGeoPath(waypoints: Waypoint[]): GeoPath {
   return {
     header: { frame_id: "map" },
     poses: waypoints.map((wp) => ({
@@ -36,10 +62,9 @@ export function remainingWaypoints(
     }
   });
 
-  console.debug("Closest waypoint index:", closestIndex);
   return waypoints.slice(closestIndex);
 }
 
 function getDistance(curr: [number, number], wp: Waypoint) {
-  return Math.sqrt((curr[0] - wp.lat) ** 2 + (curr[1] - wp.lng) ** 2);
+  return Math.hypot(curr[0] - wp.lat, curr[1] - wp.lng);
 }
