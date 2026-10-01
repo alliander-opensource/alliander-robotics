@@ -8,7 +8,7 @@ import { HealthMonitor } from "./capabilities/HealthMonitor";
 import type { Subscription } from "./capabilities/RosTool";
 import { RosTool } from "./capabilities/RosTool";
 import { Teleoperation } from "./capabilities/Teleoperation";
-import { Map } from "./Map";
+import { MapComponent } from "./Map";
 import { MissionPanel } from "./MissionPanel";
 import { WaypointPanel } from "./WaypointPanel";
 import type { Waypoint } from "./waypoints";
@@ -131,16 +131,12 @@ function App() {
   const teleoperation = <Teleoperation device={device} />;
   const healthMonitor = <HealthMonitor device={device} time={time} />;
 
-  const onWaypointsChange = (wps: Waypoint[]) => {
-    setWaypoints(wps);
-  };
-
   const missionPanel = (
     <MissionPanel
       device={device}
       waypoints={waypoints}
       position={position}
-      onWaypointsChange={onWaypointsChange}
+      onWaypointsChange={setWaypoints}
     />
   );
 
@@ -156,7 +152,7 @@ function App() {
   );
 
   const map = (
-    <Map
+    <MapComponent
       position={position}
       waypoints={waypoints}
       onAdd={onAdd}

@@ -45,20 +45,47 @@ body {
 }
 
 .map {
-  width: 90%;
+  width: 83%;
 }
 
 .panelStack {
-  width: 15%;
+  width: 17%;
   display: flex;
   flex-direction: column;
 }
 
-.panel {
-  width: 15%;
+.mission {
+  border-style: solid;
+  border-width: 1px;
+}
+
+.waypoints {
+  flex: 1;
   overflow: scroll;
   border-style: solid;
   border-width: 1px;
+}
+
+.missionActions,
+.waypointActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  padding: 0.5em;
+}
+
+.sectionTitle {
+  font-weight: bold;
+}
+
+.fieldLabel {
+  margin-top: 0.25em;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.25em;
 }
 
 .leaflet-container {
