@@ -85,7 +85,7 @@ export function MapComponent({
   const route: [number, number][] = waypoints.map((w) => [w.lat, w.lng]);
 
   const map = (
-    <MapContainer center={position ? position : HOME} zoom={ZOOM} maxZoom={MAX_ZOOM}>
+    <MapContainer center={position ?? HOME} zoom={ZOOM} maxZoom={MAX_ZOOM}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
