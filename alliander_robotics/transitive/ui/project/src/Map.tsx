@@ -4,6 +4,7 @@
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useEffect, useRef } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -38,6 +39,13 @@ function ClickToAdd({ onAdd }: { onAdd: (lat: number, lng: number) => void }) {
 
 function Controls({ position }: { position?: [number, number] | null }) {
   const map = useMap();
+  const controlsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (controlsRef.current) {
+      L.DomEvent.disableClickPropagation(controlsRef.current);
+    }
+  }, []);
 
   function home() {
     map.setView(HOME, ZOOM);
@@ -50,7 +58,7 @@ function Controls({ position }: { position?: [number, number] | null }) {
   }
 
   return (
-    <div className="leaflet-bottom leaflet-left leaflet-control controls">
+    <div ref={controlsRef} className="leaflet-bottom leaflet-left leaflet-control controls">
       <button onClick={home}>
         <span className="button">🏠</span>
       </button>
@@ -77,24 +85,14 @@ export function MapComponent({
   const route: [number, number][] = waypoints.map((w) => [w.lat, w.lng]);
 
   const map = (
-    <MapContainer
-      center={position ? position : HOME}
-      zoom={ZOOM}
-      maxZoom={MAX_ZOOM}
-    >
+    <MapContainer center={position ? position : HOME} zoom={ZOOM} maxZoom={MAX_ZOOM}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         maxNativeZoom={18}
         maxZoom={MAX_ZOOM}
       />
-      {position && (
-        <CircleMarker
-          center={position}
-          radius={5}
-          fillOpacity={1}
-        ></CircleMarker>
-      )}
+      {position && <CircleMarker center={position} radius={5} fillOpacity={1}></CircleMarker>}
       {route.length > 1 && <Polyline positions={route} />}
       {waypoints.map((w, i) => (
         <Marker
