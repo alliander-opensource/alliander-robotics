@@ -26,13 +26,6 @@ docking_server:
       external_detection_rotation_pitch: -1.57
       external_detection_rotation_yaw: 0.0
 
-    # Dock instances
-    docks: ["dock"]
-    dock:
-      type: "charging_dock"
-      frame: dock
-      pose: [0.0, 0.0, 0.0]
-
     controller:
       v_linear_min: 0.05
       v_linear_max: 0.05

@@ -398,7 +398,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         package="alliander_nav2",
         executable="nav2_manager.py",
         namespace=namespace_vehicle,
-        parameters=[{"costmap_size": float(nav2.window_size)}],
+        parameters=[{"docking_staging_offset": nav2.docking_staging_offset}],
         remappings=remappings,
     )
 

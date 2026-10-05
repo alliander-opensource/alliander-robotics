@@ -464,7 +464,10 @@ class PredefinedConfigurations:
     def config_panther_docking(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
         vehicle.nav2_config.navigation = True
+        vehicle.nav2_config.slam = True
         vehicle.nav2_config.docking = True
+        vehicle.nav2_config.docking_staging_offset = -1.0
+        vehicle.nav2_config.docking_final_offset = -0.3
         lidar = Lidar("velodyne", position=(0.13, 0.17, 0.18))
         camera = Camera("zed", (0.08, 0, 0.4), orientation=(0, 10, 0))
         apriltag = Apriltag(
