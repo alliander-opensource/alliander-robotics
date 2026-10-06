@@ -59,3 +59,9 @@ docker compose up
 ```
 
 The Web UI is locally served using Vite and the terminal shows the address to open the web page.
+
+### Waypoints and missions
+Inside the Web UI is a map on which you can place waypoints. The placed waypoints will be shown on the Waypoints panel on the right. You can move (drag them on the map), remove (right-click on the map or X on the panel), and re-order (the arrows on the panel) waypoints. Separate buttons allow you to Save waypoints to a JSON file on your device, or to Load waypoints in from a JSON file that you upload.
+
+The Mission panel above it enables you to Start, Stop, Pause, and Resume missions. Resume's current implementation finds the closest waypoint to the robot, and removes all waypoints before that. The robot will then resume its mission from this closest waypoint. 
+Make sure to correctly fill out the Namespace for your robot topic.
