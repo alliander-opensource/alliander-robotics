@@ -95,6 +95,7 @@ export function MapComponent({ ros }: Readonly<{ ros: Ros }>) {
   const waypointPanel = <WaypointPanel wp={wp} />;
 
   const position = ros.subscriptions.position;
+  const plan = ros.subscriptions.plan;
   const map = (
     <MapContainer center={position ?? HOME} zoom={ZOOM} maxZoom={MAX_ZOOM}>
       <TileLayer
@@ -124,6 +125,7 @@ export function MapComponent({ ros }: Readonly<{ ros: Ros }>) {
           pane={ROBOT_PANE}
         />
       )}
+      {plan && <Polyline positions={plan} color="rgb(25, 255, 0)" />}
       <ClickToAdd onAdd={wp.onAdd} />
       <Controls position={position} />
     </MapContainer>
