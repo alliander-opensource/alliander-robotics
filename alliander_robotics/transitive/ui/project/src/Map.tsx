@@ -3,14 +3,14 @@
 // # SPDX-License-Identifier: Apache-2.0
 
 import 'leaflet/dist/leaflet.css';
-import { CircleMarker, MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { CircleMarker, MapContainer, Polyline, TileLayer, useMap } from 'react-leaflet';
 import './Map.css';
 
 const HOME: [number, number] = [52.06, 5.38];
 const ZOOM: number = 7;
 const MAX_ZOOM = 20;
 
-export function Map({ position }: { position?: [number, number] | null }) {
+export function Map({ position, plan }: { position?: [number, number] | null, plan?: [number, number][] | null }) {
 
     function Controls() {
         const map = useMap();
@@ -41,6 +41,7 @@ export function Map({ position }: { position?: [number, number] | null }) {
             maxZoom={MAX_ZOOM}
         />
         {position && <CircleMarker center={position} radius={5} fillOpacity={1}></CircleMarker>}
+        {plan && <Polyline positions={plan} color='rgb(25, 255, 0)' />}
         <Controls />
     </MapContainer>
 
