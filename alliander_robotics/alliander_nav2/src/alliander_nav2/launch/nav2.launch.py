@@ -73,6 +73,8 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             plugins.remove("static_layer")
         lifecycle_nodes_names.extend(
             [
+                "keepout_filter_mask_server",  # TODO: find correct spot.
+                "keepout_costmap_filter_info_server",  # TODO: find correct spot.
                 "controller_server",
                 "planner_server",
                 "behavior_server",
@@ -120,6 +122,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         root_key=namespace_vehicle,
     )
 
+    # plugins.append("voxel_layer")
     local_costmap_params = AdaptedYaml(
         get_file_path("alliander_nav2", ["config", "nav2"], "local_costmap.yaml"),
         {
@@ -129,6 +132,12 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             "width": 10,
             "height": 10,
             "plugins": plugins,
+            "filters": ["keepout_filter"],
+            "keepout_filter": {
+                "plugin": "nav2_costmap_2d::KeepoutFilter",
+                "enabled": True,
+                "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
+            },
             "obstacle_layer": {
                 "scan": {
                     "topic": f"/{namespace_lidar}/scan",
@@ -143,6 +152,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         root_key=namespace_vehicle,
     )
 
+    # plugins.remove("voxel_layer")
     global_costmap_params = AdaptedYaml(
         get_file_path("alliander_nav2", ["config", "nav2"], "global_costmap.yaml"),
         {
@@ -151,6 +161,12 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             "width": nav2.window_size,
             "height": nav2.window_size,
             "plugins": plugins,
+            "filters": ["keepout_filter"],
+            "keepout_filter": {
+                "plugin": "nav2_costmap_2d::KeepoutFilter",
+                "enabled": True,
+                "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
+            },
             "obstacle_layer": {
                 "scan": {
                     "topic": f"/{namespace_lidar}/scan",
@@ -224,6 +240,23 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         root_key=namespace_vehicle,
     )
 
+    keepout_mask_server_params = AdaptedYaml(
+        get_file_path("alliander_nav2", ["config", "nav2"], "keepout_mask_server_params.yaml"),
+        {
+            "topic_name": f"/{namespace_vehicle}/keepout_filter_mask",
+        },
+        root_key=namespace_vehicle,
+    )
+
+    keepout_filter_info_server_params = AdaptedYaml(
+        get_file_path("alliander_nav2", ["config", "nav2"], "keepout_filter_info_server_params.yaml"),
+        {
+            "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
+            "mask_topic": f"/{namespace_vehicle}/keepout_filter_mask",
+        },
+        root_key=namespace_vehicle,
+    )
+
     # Define lifecycle nodes:
     all_lifecycle_nodes = {}
 
@@ -261,6 +294,29 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
                 "topic_name": f"/{namespace_vehicle}/map",
             }
         ],
+        namespace=namespace_vehicle,
+    )
+
+    all_lifecycle_nodes["keepout_filter_mask_server"] = LifecycleNode(
+        package="nav2_map_server",
+        executable="map_server",
+        name="keepout_filter_mask_server",
+        parameters=[
+            keepout_mask_server_params.file,
+            {
+                "yaml_filename": get_file_path(
+                    "alliander_nav2", ["config", "maps"], "keepout_mask.yaml",
+                ),
+            }
+        ],
+        namespace=namespace_vehicle,
+    )
+
+    all_lifecycle_nodes["keepout_costmap_filter_info_server"] = LifecycleNode(
+        package="nav2_map_server",
+        executable="costmap_filter_info_server",
+        name="keepout_costmap_filter_info_server",
+        parameters=[keepout_filter_info_server_params.file],
         namespace=namespace_vehicle,
     )
 

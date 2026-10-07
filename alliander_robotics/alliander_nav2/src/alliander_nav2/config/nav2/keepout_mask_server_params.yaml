@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+keepout_filter_mask_server:
+  ros__parameters:
+    topic_name: substitute_me
+    # yaml_filename: ""

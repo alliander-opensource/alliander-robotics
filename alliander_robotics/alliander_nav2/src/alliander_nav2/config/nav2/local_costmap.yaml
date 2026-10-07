@@ -16,7 +16,12 @@ local_costmap:
       width: substitute_me
       height: substitute_me
       footprint: "[[0.4045, 0.424], [0.4045, -0.424], [-0.4045, -0.424], [-0.4045, 0.424]]"
-      plugins: ["obstacle_layer", "inflation_layer"]
+      plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
+      filters: ["keepout_filter"]
+      keepout_filter:
+        plugin: "nav2_costmap_2d::KeepoutFilter"
+        enabled: True
+        filter_info_topic: "keepout_costmap_filter_info"
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
