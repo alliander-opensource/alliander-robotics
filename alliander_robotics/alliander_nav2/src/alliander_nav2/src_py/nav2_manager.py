@@ -10,10 +10,11 @@ import rclpy
 from alliander_utilities.ros_utils import spin_executor
 from geographic_msgs.msg import GeoPath, GeoPoseStamped
 from geometry_msgs.msg import PoseStamped
-from nav2_simple_commander.robot_navigator import BasicNavigator
+from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 from nav_msgs.msg import Path
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
+from std_msgs.msg import Int32
 from std_srvs.srv import Trigger
 
 
@@ -29,6 +30,12 @@ class Nav2Manager(Node):
         self.create_subscription(Path, "/waypoints", self.cb_waypoints, 10)
         self.create_subscription(GeoPath, "/gps_waypoints", self.cb_gps_waypoints, 10)
         self.create_service(Trigger, "~/stop", self.cb_stop)
+
+        self.progress_pub = self.create_publisher(Int32, "~/reached_count", 10)
+        self.route_length = 0
+        self.reached_count = 0
+        self.route_active = False
+        self.create_timer(0.5, self.cb_progress)
 
         self.get_logger().info("Controller is ready.")
 
@@ -61,7 +68,39 @@ class Nav2Manager(Node):
         for geo_pose_stamped in msg.poses:
             geo_pose_stamped: GeoPoseStamped
             geo_poses.append(geo_pose_stamped.pose)
+        self.route_length = len(geo_poses)
+        self.route_active = True
+        self.set_reached_count(0)
         self.basic_navigator.followGpsWaypoints(geo_poses)
+
+    def set_reached_count(self, count: int) -> None:
+        """Store and publish how many waypoints of the active route are reached.
+
+        Args:
+            count (int): Number of reached waypoints, counted from the start of the route.
+        """
+        self.reached_count = count
+        self.progress_pub.publish(Int32(data=count))
+
+    def cb_progress(self) -> None:
+        """Timer callback that keeps reached_count up to date with Nav2's feedback.
+
+        Nav2 reports the index of the waypoint it is heading to, so every earlier
+        waypoint counts as reached. If the route finishes successfully, all of
+        its waypoints count as reached.
+        """
+        if not self.route_active:
+            return
+
+        if not self.basic_navigator.isTaskComplete():
+            feedback = self.basic_navigator.getFeedback()
+            if feedback is not None:
+                self.set_reached_count(feedback.current_waypoint)
+            return
+
+        self.route_active = False
+        if self.basic_navigator.getResult() == TaskResult.SUCCEEDED:
+            self.set_reached_count(self.route_length)
 
     def cb_stop(
         self, _: Trigger.Request, response: Trigger.Response
@@ -107,7 +146,6 @@ def main(args: list | None = None) -> None:
     rclpy.init(args=args)
     node = Nav2Manager()
 
-    # Use an executor to avoid problems with BasicNavigator's internal spinning:
     executor = SingleThreadedExecutor()
     executor.add_node(node)
     spin_executor(executor)

@@ -1,0 +1,35 @@
+/*
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.panelActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  padding: 0.5em;
+}
+
+.sectionTitle {
+  font-weight: bold;
+}
+
+.fieldLabel {
+  margin-top: 0.25em;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.25em;
+}
+
+.reached {
+  color: #757575;
+}
+
+.current {
+  color: #2e7d32;
+  font-weight: bold;
+}
