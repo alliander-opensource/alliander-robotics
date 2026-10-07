@@ -4,7 +4,7 @@
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -14,20 +14,76 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
+
+import { MissionPanel } from "./MissionPanel";
+import { WaypointPanel } from "./WaypointPanel";
 import "./Map.css";
+import { useWaypoints } from "./useWaypoints";
 import type { Waypoint } from "./waypoints";
+import type { Device } from "./missionHelpers";
+import { pendingWaypoints } from "./missionHelpers";
 
 const HOME: [number, number] = [52.06, 5.38];
 const ZOOM: number = 7;
 const MAX_ZOOM = 20;
+const ROBOT_PANE = "robotPane";
 
-function waypointIcon(index: number) {
+function waypointIcon(index: number, reached: boolean, current: boolean) {
+  const classes = ["waypoint-marker", reached && "reached", current && "current"]
+    .filter(Boolean)
+    .join(" ");
   return L.divIcon({
     className: "",
-    html: `<div class="waypoint-marker">${index + 1}</div>`,
+    html: `<div class="${classes}">${index + 1}</div>`,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
   });
+}
+
+function RobotPane() {
+  const map = useMap();
+  if (!map.getPane(ROBOT_PANE)) {
+    const pane = map.createPane(ROBOT_PANE);
+    pane.style.zIndex = "650";
+  }
+  return null;
+}
+
+function WaypointMarker({
+  index,
+  waypoint,
+  reached,
+  current,
+  onMove,
+  onRemove,
+}: {
+  index: number;
+  waypoint: Waypoint;
+  reached: boolean;
+  current: boolean;
+  onMove: (id: number, lat: number, lng: number) => void;
+  onRemove: (id: number) => void;
+}) {
+  const icon = useMemo(() => waypointIcon(index, reached, current), [index, reached, current]);
+  const position = useMemo<[number, number]>(
+    () => [waypoint.lat, waypoint.lng],
+    [waypoint.lat, waypoint.lng],
+  );
+
+  return (
+    <Marker
+      position={position}
+      icon={icon}
+      draggable
+      eventHandlers={{
+        dragend: (e) => {
+          const latlng = e.target.getLatLng();
+          onMove(waypoint.id, latlng.lat, latlng.lng);
+        },
+        contextmenu: () => onRemove(waypoint.id),
+      }}
+    />
+  );
 }
 
 function ClickToAdd({ onAdd }: { onAdd: (lat: number, lng: number) => void }) {
@@ -71,18 +127,50 @@ function Controls({ position }: { position?: [number, number] | null }) {
 
 export function MapComponent({
   position,
-  waypoints,
-  onAdd,
-  onRemove,
-  onMove,
+  device,
 }: {
   position?: [number, number] | null;
-  waypoints: Waypoint[];
-  onAdd: (lat: number, lng: number) => void;
-  onRemove: (id: number) => void;
-  onMove: (id: number, lat: number, lng: number) => void;
+  device: Device;
 }) {
+  const {
+    waypoints,
+    reached,
+    onReachedChange,
+    onAdd,
+    onRemove,
+    onMove,
+    onReorder,
+    onSave,
+    onLoad,
+    onClear,
+  } = useWaypoints();
   const route: [number, number][] = waypoints.map((w) => [w.lat, w.lng]);
+
+  const [missionActive, setMissionActive] = useState(false);
+  const current = missionActive ? (pendingWaypoints(waypoints, reached)[0]?.id ?? null) : null;
+
+  const missionPanel = (
+    <MissionPanel
+      device={device}
+      waypoints={waypoints}
+      reached={reached}
+      onReachedChange={onReachedChange}
+      onMissionActiveChange={setMissionActive}
+    />
+  );
+
+  const waypointPanel = (
+    <WaypointPanel
+      waypoints={waypoints}
+      reached={reached}
+      current={current}
+      onRemove={onRemove}
+      onReorder={onReorder}
+      onSave={onSave}
+      onLoad={onLoad}
+      onClear={onClear}
+    />
+  );
 
   const map = (
     <MapContainer center={position ?? HOME} zoom={ZOOM} maxZoom={MAX_ZOOM}>
@@ -92,27 +180,32 @@ export function MapComponent({
         maxNativeZoom={18}
         maxZoom={MAX_ZOOM}
       />
-      {position && <CircleMarker center={position} radius={5} fillOpacity={1}></CircleMarker>}
+      <RobotPane />
       {route.length > 1 && <Polyline positions={route} />}
       {waypoints.map((w, i) => (
-        <Marker
+        <WaypointMarker
           key={w.id}
-          position={[w.lat, w.lng]}
-          icon={waypointIcon(i)}
-          draggable
-          eventHandlers={{
-            dragend: (e) => {
-              const latlng = e.target.getLatLng();
-              onMove(w.id, latlng.lat, latlng.lng);
-            },
-            contextmenu: () => onRemove(w.id),
-          }}
+          index={i}
+          waypoint={w}
+          reached={reached.has(w.id)}
+          current={w.id === current}
+          onMove={onMove}
+          onRemove={onRemove}
         />
       ))}
+      {position && <CircleMarker center={position} radius={5} fillOpacity={1} pane={ROBOT_PANE} />}
       <ClickToAdd onAdd={onAdd} />
       <Controls position={position} />
     </MapContainer>
   );
 
-  return map;
+  return (
+    <div className="mapRow">
+      <div className="map">{map}</div>
+      <div className="panelStack">
+        <div className="mission">{missionPanel}</div>
+        <div className="waypoints">{waypointPanel}</div>
+      </div>
+    </div>
+  );
 }

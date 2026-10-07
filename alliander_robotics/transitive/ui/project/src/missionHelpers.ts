@@ -4,6 +4,8 @@
 
 import type { Waypoint } from "./waypoints";
 
+export type Device = "simulation" | "lynx" | "panther" | "none";
+
 interface GeoPoint {
   latitude: number;
   longitude: number;
@@ -43,28 +45,6 @@ export function toGeoPath(waypoints: Waypoint[]): GeoPath {
   };
 }
 
-export function remainingWaypoints(
-  waypoints: Waypoint[],
-  position: [number, number] | null,
-): Waypoint[] {
-  // TODO: we should base this on feedback from the robot about its current waypoint
-  if (position === null || waypoints.length === 0) {
-    return waypoints;
-  }
-
-  let closestIndex = 0;
-  let minDist = Infinity;
-  waypoints.forEach((wp, index) => {
-    const dist = getDistance(position, wp);
-    if (dist < minDist) {
-      minDist = dist;
-      closestIndex = index;
-    }
-  });
-
-  return waypoints.slice(closestIndex);
-}
-
-function getDistance(curr: [number, number], wp: Waypoint) {
-  return Math.hypot(curr[0] - wp.lat, curr[1] - wp.lng);
+export function pendingWaypoints(waypoints: Waypoint[], reached: Set<number>): Waypoint[] {
+  return waypoints.filter((wp) => !reached.has(wp.id));
 }
