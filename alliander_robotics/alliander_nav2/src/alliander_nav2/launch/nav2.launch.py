@@ -73,7 +73,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             plugins.remove("static_layer")
         lifecycle_nodes_names.extend(
             [
-                "keepout_filter_mask_server",  # TODO: find correct spot.
                 "keepout_costmap_filter_info_server",  # TODO: find correct spot.
                 "controller_server",
                 "planner_server",
@@ -122,7 +121,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         root_key=namespace_vehicle,
     )
 
-    # plugins.append("voxel_layer")
     local_costmap_params = AdaptedYaml(
         get_file_path("alliander_nav2", ["config", "nav2"], "local_costmap.yaml"),
         {
@@ -152,7 +150,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         root_key=namespace_vehicle,
     )
 
-    # plugins.remove("voxel_layer")
     global_costmap_params = AdaptedYaml(
         get_file_path("alliander_nav2", ["config", "nav2"], "global_costmap.yaml"),
         {
@@ -297,21 +294,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         namespace=namespace_vehicle,
     )
 
-    all_lifecycle_nodes["keepout_filter_mask_server"] = LifecycleNode(
-        package="nav2_map_server",
-        executable="map_server",
-        name="keepout_filter_mask_server",
-        parameters=[
-            keepout_mask_server_params.file,
-            {
-                "yaml_filename": get_file_path(
-                    "alliander_nav2", ["config", "maps"], "keepout_mask.yaml",
-                ),
-            }
-        ],
-        namespace=namespace_vehicle,
-    )
-
     all_lifecycle_nodes["keepout_costmap_filter_info_server"] = LifecycleNode(
         package="nav2_map_server",
         executable="costmap_filter_info_server",
@@ -435,6 +417,12 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         remappings=remappings,
     )
 
+    dynamic_keepout_zones = Node(
+        package="alliander_nav2",
+        executable="dynamic_keepout_zones.py",
+        namespace=namespace_vehicle,
+    )
+
     pub_topic = (
         f"/{namespace_vehicle}/cmd_vel_nav"
         if not nav2.collision_monitor
@@ -448,6 +436,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
         SetRemap(src=f"/{namespace_vehicle}/cmd_vel", dst=pub_topic),
+        Register.on_start(dynamic_keepout_zones, context) if nav2.gps else SKIP,
         *[Register.on_start(node, context) for node in register_lifecycle_nodes],
         Register.on_start(ekf_global, context) if nav2.gps else SKIP,
         Register.on_start(navsat_transform, context) if nav2.gps else SKIP,
