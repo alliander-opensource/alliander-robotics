@@ -17,6 +17,11 @@ global_costmap:
       robot_base_frame: substitute_me
       footprint: "[[0.4045, 0.424], [0.4045, -0.424], [-0.4045, -0.424], [-0.4045, 0.424]]"
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      filters: ["keepout_filter"]
+      keepout_filter:
+        plugin: "nav2_costmap_2d::KeepoutFilter"
+        enabled: True
+        filter_info_topic: "keepout_costmap_filter_info"
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
       obstacle_layer:
