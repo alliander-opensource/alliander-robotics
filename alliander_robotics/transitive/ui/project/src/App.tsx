@@ -17,6 +17,7 @@ function App() {
   const device_stored = sessionStorage.getItem(DEVICE) as Device | null;
   const [device] = useState<Device>(device_stored ?? DEVICE);
   const [position, setPosition] = useState<[number, number] | null>(null);
+  const [plan, setPlan] = useState<[number, number][] | null>(null);
   const [time, setTime] = useState<number | null>(null);
 
   const handleDeviceChange = (value: Device) => {
@@ -67,6 +68,26 @@ function App() {
     callback: gps_callback,
   };
 
+  // Subscription on plan_gps topic:
+  const plan_callback = (data: any) => {
+    let plan: [number, number][] = [];
+    if (data && data.length >= 1) {
+      const GeoPath = data[0];
+      for (const GeoPoseStamped of GeoPath) {
+        const GeoPose = GeoPoseStamped.pose;
+        const GeoPoint = GeoPose.position;
+        console.log(GeoPoint);
+        plan.push([GeoPoint.latitude, GeoPoint.longitude]);
+      }
+    }
+    setPlan(plan);
+  };
+  const plan_subscription: Subscription = {
+    topic: '/panther/plan_gps',
+    fields: ['/poses'],
+    callback: plan_callback,
+  };
+
   // Subscription on Clock topic:
   const clock_callback = (data: any) => {
     if (data && data.length >= 1) {
@@ -80,13 +101,13 @@ function App() {
   };
 
   // Define ROS tool
-  const subscriptions: Subscription[] = [gps_subscription, clock_subscription];
+  const subscriptions: Subscription[] = [gps_subscription, clock_subscription, plan_subscription];
   const rosTool = <RosTool device={device} subscriptions={subscriptions} />;
 
   const teleoperation = <Teleoperation device={device} />;
   const healthMonitor = <HealthMonitor device={device} time={time} />;
 
-  const map = <Map position={position} />;
+  const map = <Map position={position} plan={plan} />;
 
   return (
     <>
