@@ -86,9 +86,9 @@ const RosBridge = ({
   const ready = !!capability.isReady?.();
   const messages = capability.deviceData?.ros?.[ROS_VERSION]?.messages;
 
-  const [, tick] = useState(0);
+  const [_tick, setTick] = useState(0);
   useEffect(() => {
-    const interval = setInterval(() => tick((t) => t + 1), POLL_INTERVAL_MS);
+    const interval = setInterval(() => setTick((t) => t + 1), POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
 
@@ -167,7 +167,7 @@ export function RosProvider({
           service.name,
           service.type,
           request,
-          (error: unknown, response: Response) => (error ? reject(error) : resolve(response)),
+          (error: Error, response: Response) => (error ? reject(error) : resolve(response)),
         );
       }),
     [],
