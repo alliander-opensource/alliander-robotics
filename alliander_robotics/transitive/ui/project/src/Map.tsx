@@ -15,12 +15,12 @@ import {
   useMapEvents,
 } from "react-leaflet";
 
+import type { MissionProps } from "./MissionPanel";
 import { MissionPanel } from "./MissionPanel";
 import { WaypointPanel } from "./WaypointPanel";
 import "./Map.css";
 import { useWaypoints } from "./useWaypoints";
 import type { Waypoint } from "./waypoints";
-import type { Device } from "./missionHelpers";
 import { pendingWaypoints } from "./missionHelpers";
 
 const HOME: [number, number] = [52.06, 5.38];
@@ -127,10 +127,10 @@ function Controls({ position }: { position?: [number, number] | null }) {
 
 export function MapComponent({
   position,
-  device,
+  missionProps,
 }: {
   position?: [number, number] | null;
-  device: Device;
+  missionProps: MissionProps;
 }) {
   const {
     waypoints,
@@ -151,7 +151,7 @@ export function MapComponent({
 
   const missionPanel = (
     <MissionPanel
-      device={device}
+      props={missionProps}
       waypoints={waypoints}
       reached={reached}
       onReachedChange={onReachedChange}
