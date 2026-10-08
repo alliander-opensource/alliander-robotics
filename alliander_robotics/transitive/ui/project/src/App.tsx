@@ -5,11 +5,12 @@
 import { useState } from "react";
 import "./App.css";
 import { HealthMonitor } from "./capabilities/HealthMonitor";
-import type { Subscription } from "./capabilities/RosTool";
-import { RosTool } from "./capabilities/RosTool";
+import type { Publisher, Service, Subscription } from "./capabilities/RosTool";
+import { RosProvider, RosTool } from "./capabilities/RosTool";
 import { Teleoperation } from "./capabilities/Teleoperation";
 import { MapComponent } from "./Map";
 import type { Device } from "./missionHelpers";
+import type { MissionProps } from "./MissionPanel";
 
 const DEVICES: Device[] = ["simulation", "lynx", "panther", "none"];
 const DEFAULT_DEVICE: Device = "simulation";
@@ -21,6 +22,8 @@ function App() {
   );
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [time, setTime] = useState<number | null>(null);
+  const [namespace, setNamespace] = useState<string>(device);
+  const [reachedCount, setReachedCount] = useState<number | null>(null);
 
   const handleDeviceChange = (value: Device) => {
     sessionStorage.setItem(DEVICE_STORAGE_KEY, value);
@@ -62,26 +65,64 @@ function App() {
     callback: clockCallback,
   };
 
-  const subscriptions: Subscription[] = [gpsSubscription, clockSubscription];
-  const rosTool = <RosTool device={device} subscriptions={subscriptions} />;
+  // Subscription on nav2 manager progress topic:
+  const reachedCountCallback = (data: any) => {
+    if (data && data.length >= 1) {
+      setReachedCount(data[0]);
+    }
+  };
+  const reachedCountSubscription: Subscription = {
+    topic: `/${namespace}/nav2_manager/reached_count`,
+    fields: ["/data"],
+    callback: reachedCountCallback,
+  };
+
+  // Publisher on GPS waypoints topic:
+  const waypointsPublisher: Publisher = {
+    topic: "/gps_waypoints",
+    type: "geographic_msgs/msg/GeoPath",
+  };
+
+  // Service to stop the nav2 manager:
+  const stopService: Service = {
+    name: `/${namespace}/nav2_manager/stop`,
+    type: "std_srvs/srv/Trigger",
+  };
+
+  const subscriptions: Subscription[] = [
+    gpsSubscription,
+    clockSubscription,
+    reachedCountSubscription,
+  ];
+  const missionProps: MissionProps = {
+    namespace,
+    onNamespaceChange: setNamespace,
+    waypointsPublisher,
+    stopService,
+    reachedCount,
+  };
+
+  const rosTool = <RosTool device={device} />;
   const teleoperation = <Teleoperation device={device} />;
   const healthMonitor = <HealthMonitor device={device} time={time} />;
 
-  const map = <MapComponent position={position} device={device} />;
+  const map = <MapComponent position={position} missionProps={missionProps} />;
 
   return (
-    <div className="app">
-      <div className="title">
-        <h1>Alliander Robotics Dashboard</h1>
-        {deviceSelector}
+    <RosProvider device={device} subscriptions={subscriptions}>
+      <div className="app">
+        <div className="title">
+          <h1>Alliander Robotics Dashboard</h1>
+          {deviceSelector}
+        </div>
+        <div className="cards">
+          {teleoperation}
+          {healthMonitor}
+          {rosTool}
+        </div>
+        {map}
       </div>
-      <div className="cards">
-        {teleoperation}
-        {healthMonitor}
-        {rosTool}
-      </div>
-      {map}
-    </div>
+    </RosProvider>
   );
 }
 

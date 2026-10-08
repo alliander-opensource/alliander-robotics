@@ -32,6 +32,11 @@ interface GeoPath {
   poses: GeoPoseStamped[];
 }
 
+export interface TriggerResponse {
+  success: boolean;
+  message: string;
+}
+
 export function toGeoPath(waypoints: Waypoint[]): GeoPath {
   return {
     header: { frame_id: "map" },
