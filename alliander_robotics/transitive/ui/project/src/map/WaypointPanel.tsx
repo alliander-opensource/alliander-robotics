@@ -2,37 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef } from "react";
 import type { ChangeEvent } from "react";
-import type { Waypoint } from "./waypoints";
+import { useRef } from "react";
 import "./panels.css";
+import type { UseWaypoints } from "./useWaypoints";
 
-export function WaypointPanel({
-  waypoints,
-  reached,
-  current,
-  onRemove,
-  onReorder,
-  onSave,
-  onLoad,
-  onClear,
-}: {
-  waypoints: Waypoint[];
-  reached: Set<number>;
-  current: number | null;
-  onRemove: (id: number) => void;
-  onReorder: (id: number, direction: "up" | "down") => void;
-  onSave: () => void;
-  onLoad: (file: File) => void;
-  onClear: () => void;
-}) {
+export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isEmpty = waypoints.length === 0;
+  const isEmpty = wp.waypoints.length === 0;
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      onLoad(file);
+      wp.onLoad(file);
     }
     e.target.value = "";
   };
@@ -42,7 +24,7 @@ export function WaypointPanel({
       <div className="panelActions">
         <div className="sectionTitle">Waypoints</div>
         <div className="buttonRow">
-          <button onClick={onSave} disabled={isEmpty}>
+          <button onClick={wp.onSave} disabled={isEmpty}>
             Save
           </button>
           <button onClick={() => fileInputRef.current?.click()}>Load</button>
@@ -53,32 +35,32 @@ export function WaypointPanel({
             onChange={handleFileChange}
             hidden
           />
-          <button onClick={onClear} disabled={isEmpty}>
+          <button onClick={wp.onClear} disabled={isEmpty}>
             Clear
           </button>
         </div>
       </div>
       <ol>
-        {waypoints.map((w, i) => (
+        {wp.waypoints.map((w, i) => (
           <li
             key={w.id}
             className={
-              [reached.has(w.id) && "reached", w.id === current && "current"]
+              [wp.reached.has(w.id) && "reached", w.id === wp.current && "current"]
                 .filter(Boolean)
                 .join(" ") || undefined
             }
           >
             {i + 1}: {w.lat.toFixed(5)}, {w.lng.toFixed(5)}
-            <button onClick={() => onReorder(w.id, "up")} disabled={i === 0}>
+            <button onClick={() => wp.onReorder(w.id, "up")} disabled={i === 0}>
               ↑
             </button>
             <button
-              onClick={() => onReorder(w.id, "down")}
-              disabled={i === waypoints.length - 1}
+              onClick={() => wp.onReorder(w.id, "down")}
+              disabled={i === wp.waypoints.length - 1}
             >
               ↓
             </button>
-            <button onClick={() => onRemove(w.id)}>✕</button>
+            <button onClick={() => wp.onRemove(w.id)}>✕</button>
           </li>
         ))}
       </ol>

@@ -13,6 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { Ros } from "../ros/ros";
 import "./card.css";
 import { generateJWT } from "./jwt";
 
@@ -36,7 +37,7 @@ export interface Service {
   type: string;
 }
 
-interface Ros {
+interface RosContext {
   ready: boolean;
   publish: (publisher: Publisher, message: object) => void;
   callService: <Response = unknown>(service: Service, request: object) => Promise<Response>;
@@ -46,7 +47,7 @@ const notReady = () => {
   throw new Error("ROS is not ready.");
 };
 
-const RosContext = createContext<Ros>({
+const RosContext = createContext<RosContext>({
   ready: false,
   publish: notReady,
   callService: () => Promise.reject(new Error("ROS is not ready.")),
@@ -127,13 +128,13 @@ const RosBridge = ({
 // Single connection to the ros-tool capability
 export function RosProvider({
   device,
-  subscriptions,
+  ros,
   children,
-}: {
+}: Readonly<{
   device: string;
-  subscriptions: Subscription[];
+  ros: Ros;
   children: ReactNode;
-}) {
+}>) {
   const [jwtToken, setJwtToken] = useState("");
   const [jwtError, setJwtError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -173,17 +174,17 @@ export function RosProvider({
     [],
   );
 
-  const ros = useMemo(() => ({ ready, publish, callService }), [ready, publish, callService]);
+  const ros_context = useMemo(() => ({ ready, publish, callService }), [ready, publish, callService]);
   const status = useMemo(() => ({ error: jwtError, messages }), [jwtError, messages]);
 
   return (
-    <RosContext.Provider value={ros}>
+    <RosContext.Provider value={ros_context}>
       <RosStatusContext.Provider value={status}>
         {jwtToken && (
           <div hidden>
             <CapabilityContextProvider jwt={jwtToken}>
               <RosBridge
-                subscriptions={subscriptions}
+                subscriptions={ros.subscription_list}
                 apiRef={apiRef}
                 onReadyChange={setReady}
                 onMessagesChange={setMessages}

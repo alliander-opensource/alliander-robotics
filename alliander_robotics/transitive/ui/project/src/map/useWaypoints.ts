@@ -3,17 +3,30 @@
 // # SPDX-License-Identifier: Apache-2.0
 
 import { useState } from "react";
+import { downloadWaypoints, readWaypointsFile } from "./waypointIO";
 import type { Waypoint } from "./waypoints";
 import {
   addWaypoint,
-  removeWaypoint,
-  moveWaypoint,
-  reorderWaypoint,
   clearWaypoints,
+  moveWaypoint,
+  removeWaypoint,
+  reorderWaypoint,
 } from "./waypoints";
-import { downloadWaypoints, readWaypointsFile } from "./waypointIO";
 
-export function useWaypoints() {
+export interface UseWaypoints {
+  waypoints: Waypoint[];
+  reached: Set<number>;
+  onAdd: (lat: number, lng: number) => void;
+  onRemove: (id: number) => void;
+  onMove: (id: number, lat: number, lng: number) => void;
+  onReorder: (id: number, direction: "up" | "down") => void;
+  onSave: () => void;
+  onLoad: (file: File) => Promise<void>;
+  onClear: () => void;
+  onReachedChange: (reached: Set<number>) => void;
+}
+
+export function UseWaypoints() {
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [reached, setReached] = useState<Set<number>>(new Set());
 
@@ -43,10 +56,9 @@ export function useWaypoints() {
     setWaypoints((wps) => clearWaypoints(wps));
   };
 
-  return {
+  const use_waypoints: UseWaypoints = {
     waypoints,
     reached,
-    onReachedChange: setReached,
     onAdd,
     onRemove,
     onMove,
@@ -54,5 +66,8 @@ export function useWaypoints() {
     onSave,
     onLoad,
     onClear,
+    onReachedChange: setReached,
   };
+
+  return use_waypoints;
 }
