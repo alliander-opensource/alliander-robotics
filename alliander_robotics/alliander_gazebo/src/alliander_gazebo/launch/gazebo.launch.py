@@ -60,28 +60,33 @@ def get_sdf_file(world: str) -> str:
 T = TypeVar("T", bound=Platform)
 
 
-def get_bridge_topics(platforms: list[T]) -> list[str]:
+def get_bridge_topics(platforms: list[T]) -> tuple[list[str], list[str]]:
     """Get the list of topics to bridge between ROS and Gazebo.
 
     Args:
         platforms (list[T]): The list of platforms in the simulation.
 
     Returns:
-        list[str]: The list of topics to bridge.
+        tuple[list[str], list[str]]: The list of topics to bridge and the list of image topics to bridge.
     """
     bridge_topics = ["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"]
+    bridge_image_topics = []
     for platform in platforms:
         if platform.platform_type in {"Lidar", "Beamagine"}:
             bridge_topics.append(
                 f"/{platform.namespace}/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
             )
         if platform.platform_type in {"Camera", "Beamagine"}:
+            bridge_image_topics.extend(
+                [
+                    f"/{platform.namespace}/color/image_raw",
+                    f"/{platform.namespace}/depth/image_rect_raw_float",
+                ]
+            )
             bridge_topics.extend(
                 [
                     f"/{platform.namespace}/color/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
-                    f"/{platform.namespace}/color/image_raw@sensor_msgs/msg/Image@gz.msgs.Image",
                     f"/{platform.namespace}/depth/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
-                    f"/{platform.namespace}/depth/image_rect_raw_float@sensor_msgs/msg/Image@gz.msgs.Image",
                 ]
             )
         if platform.platform_type == "GPS":
@@ -96,7 +101,7 @@ def get_bridge_topics(platforms: list[T]) -> list[str]:
             bridge_topics.append(
                 f"/{platform.namespace}/imu/data@sensor_msgs/msg/Imu@gz.msgs.IMU"
             )
-    return bridge_topics
+    return bridge_topics, bridge_image_topics
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -131,10 +136,16 @@ def launch_setup(context: LaunchContext) -> list:
         additional_env=GazeboRosPaths.get_env(),  # ty: ignore
     )
 
+    bridge_topics, bridge_image_topics = get_bridge_topics(platforms.platforms)
     bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=get_bridge_topics(platforms.platforms),
+        arguments=bridge_topics,
+    )
+    bridge_image = Node(
+        package="ros_gz_image",
+        executable="image_bridge",
+        arguments=bridge_image_topics,
     )
 
     spawn_platforms = Node(
@@ -186,6 +197,7 @@ def launch_setup(context: LaunchContext) -> list:
             "Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)]",
             context,
         ),
+        Register.on_start(bridge_image, context),
         Register.on_log(spawn_platforms, "All platforms spawned!", context),
         *[Register.on_start(node, context) for node in navsat_covariance_nodes],
         Register.on_start(unpause_sim, context),
