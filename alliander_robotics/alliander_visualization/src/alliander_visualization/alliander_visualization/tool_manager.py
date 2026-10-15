@@ -182,7 +182,7 @@ class ApplyConfigurations:
         Args:
             platform (Camera): The camera platform configuration.
         """
-        Rviz.add_image(f"/{platform.namespace}/color/image_raw")
+        Rviz.add_image(f"/{platform.namespace}/color/image")
 
     @staticmethod
     def add_depth_camera(platform: Camera) -> None:
@@ -192,10 +192,11 @@ class ApplyConfigurations:
             platform (Camera): The camera platform configuration.
         """
         ApplyConfigurations.add_rgb_camera(platform)
-        Rviz.add_image(f"/{platform.namespace}/depth/image_rect_raw")
+        Rviz.add_image(f"/{platform.namespace}/depth/image")
         Rviz.add_depth_cloud(
-            f"/{platform.namespace}/color/image_raw",
-            f"/{platform.namespace}/depth/image_rect_raw",
+            f"/{platform.namespace}/color/image",
+            f"/{platform.namespace}/depth/image",
+            f"/{platform.namespace}/color/camera_info",
         )
 
     @staticmethod

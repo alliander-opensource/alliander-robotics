@@ -25,7 +25,7 @@ class _TestCamera:
         """
         assert_for_message(
             Image,
-            f"/{self.platforms['camera'].namespace}/color/image_raw",
+            f"/{self.platforms['camera'].namespace}/color/image",
             timeout=timeout,
         )
 
@@ -49,7 +49,7 @@ class _TestCamera:
         """
         assert_for_message(
             Image,
-            f"/{self.platforms['camera'].namespace}/depth/image_rect_raw",
+            f"/{self.platforms['camera'].namespace}/depth/image",
             timeout=timeout,
         )
 

@@ -54,42 +54,18 @@ SPDX-License-Identifier: Apache-2.0
     <xacro:if value="${gazebo}">
       <gazebo reference="${namespace}_${align}_camera_frame">
 
-        <!-- rgb_camera: -->
-        <sensor type="camera" name="zed2i_color">
+        <!-- RGBD sensor -->
+        <sensor name="zed" type="rgbd_camera">
           <always_on>true</always_on>
           <update_rate>30.0</update_rate>
+          <topic>zed</topic>
 
-          <topic>${namespace}/color/image_raw</topic>
-          <visualize>false</visualize>
-
-          <gz_frame_id>${namespace}/${namespace}_${align}_camera_frame_optical</gz_frame_id>
           <camera>
+            <optical_frame_id>${namespace}/${namespace}_${align}_camera_frame_optical</optical_frame_id>
             <horizontal_fov>${110.0/180.0*pi}</horizontal_fov>
             <image>
               <width>640</width>
-              <height>480</height>
-            </image>
-            <clip>
-              <near>0.1</near>
-              <far>300.0</far>
-            </clip>
-          </camera>
-        </sensor>
-
-        <!-- depth camera -->
-        <sensor type="depth_camera" name="zed2i_depth">
-          <always_on>true</always_on>
-          <update_rate>30.0</update_rate>
-
-          <topic>${namespace}/depth/image_rect_raw_float</topic>
-          <visualize>false</visualize>
-
-          <gz_frame_id>${namespace}/${namespace}_${align}_camera_frame_optical</gz_frame_id>
-          <camera>
-            <horizontal_fov>${110.0/180.0*pi}</horizontal_fov>
-            <image>
-              <width>640</width>
-              <height>480</height>
+              <height>360</height>
             </image>
             <clip>
               <near>0.2</near>

@@ -9,7 +9,6 @@ from alliander_utilities.register import Register, RegisteredLaunchDescription
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import Node
 
 platform_arg = LaunchArgument("platform_config", "")
 
@@ -47,19 +46,10 @@ def launch_setup(context: LaunchContext) -> list:
         {"namespace": camera_config.namespace},
     )
 
-    convert_32FC1_to_16UC1 = Node(  # noqa: N806
-        package="alliander_utilities_depth_camera",
-        executable="convert_32FC1_to_16UC1",
-        namespace=camera_config.namespace,
-    )
-
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
         Register.group(hardware, context) if not camera_config.simulation else SKIP,
-        Register.on_start(convert_32FC1_to_16UC1, context)
-        if camera_config.simulation
-        else SKIP,
     ]
 
 
