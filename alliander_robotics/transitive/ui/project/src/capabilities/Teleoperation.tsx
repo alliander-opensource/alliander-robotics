@@ -11,7 +11,7 @@ import './Teleoperation.css';
 export function Teleoperation({ device }: { device: string }) {
   const [jwtToken, setJwtToken] = useState('');
   const [jwtError, setJwtError] = useState<string | null>(null);
-  const [cameraTopic, setCameraTopic] = useState('/zed/color/image_raw');
+  const [cameraTopic, setCameraTopic] = useState('/zed/color/image');
   const [capability, setCapability] = useState(<div className="teleop-capability"></div>);
 
   // Generate JWT token on mount

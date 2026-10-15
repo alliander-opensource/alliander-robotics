@@ -52,15 +52,13 @@ def launch_setup(context: LaunchContext) -> list:
         name=namespace,
         parameters=node_parameters,
         remappings=[
-            (f"/{namespace}/left/camera_info", f"/{namespace}/color/camera_info"),
             (
-                f"/{namespace}/rgb/color/rect/image",
-                f"/{namespace}/color/image_raw",
+                f"/{namespace}/rgb/color/rect/camera_info",
+                f"/{namespace}/color/camera_info",
             ),
-            (
-                f"/{namespace}/depth/depth_registered",
-                f"/{namespace}/depth/image_rect_raw",
-            ),
+            (f"/{namespace}/rgb/color/rect/image", f"/{namespace}/color/image"),
+            (f"/{namespace}/depth/depth_registered", f"/{namespace}/depth/image"),
+            (f"/{namespace}/point_cloud/cloud_registered", f"/{namespace}/points"),
         ],
         extra_arguments=[{"use_intra_process_comms": True}],
     )
