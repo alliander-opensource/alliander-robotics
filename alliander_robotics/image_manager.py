@@ -73,7 +73,9 @@ class ImageManager:
                 if set({package, "alliander_core"}).isdisjoint(changed_packages)
                 else utils.get_git_branch()
             )
+
             tag = "latest" if tag == "main" else tag
+
             if pull:
                 self.run_pull_subprocess(repository, tag)
             if build:
@@ -92,8 +94,9 @@ class ImageManager:
             "blue",
         )
 
-        cmd = f"docker pull {DOCKER_ORGANIZATION}/{repository}:{tag}"
-        subprocess.run(cmd, shell=True, check=True)
+        subprocess.run(
+            ["docker", "pull", f"{DOCKER_ORGANIZATION}/{repository}:{tag}"], check=True
+        )
 
     def run_build_subprocess(self, repository: str, tag: str = "latest") -> None:
         """Runs a docker build command to build a specific image.
@@ -107,9 +110,9 @@ class ImageManager:
             "blue",
         )
 
-        cache_str = ""
+        cache_args = []
         if self.no_cache:
-            cache_str = "--no-cache"
+            cache_args = ["--no-cache"]
 
         base_image_tag = (
             "latest" if not utils.is_core_docker_changed() else utils.get_git_branch()
@@ -117,14 +120,24 @@ class ImageManager:
         base_image_tag = "latest" if repository in {"base", "cuda"} else base_image_tag
         base_image_tag = "latest" if base_image_tag == "main" else base_image_tag
 
-        cmd = f"docker build \
-            -f {self.components[repository]['dockerfile']} \
-            --build-arg SRC_DIRECTORY={self.components[repository]['src_directory']} \
-            --build-arg BASE_IMAGE={self.components[repository]['base_image']}:{base_image_tag} \
-            --platform linux/{self.arch} \
-            -t {DOCKER_ORGANIZATION}/{repository}:{tag} {cache_str} \
-            ."
-        subprocess.run(cmd, shell=True, check=True)
+        component = self.components[repository]
+        cmd = [
+            "docker",
+            "build",
+            "-f",
+            component["dockerfile"],
+            "--build-arg",
+            f"SRC_DIRECTORY={component['src_directory']}",
+            "--build-arg",
+            f"BASE_IMAGE={component['base_image']}:{base_image_tag}",
+            "--platform",
+            f"linux/{self.arch}",
+            "-t",
+            f"{DOCKER_ORGANIZATION}/{repository}:{tag}",
+            *cache_args,
+            ".",
+        ]
+        subprocess.run(cmd, check=True)
 
 
 class Parser(argparse.ArgumentParser):
