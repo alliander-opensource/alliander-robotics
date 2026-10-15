@@ -11,7 +11,7 @@ from termcolor import colored, cprint
 from alliander_robotics import utils
 
 DOCKER_ORGANIZATION = "allianderrobotics"
-TAG_REGEX = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}")
+TAG_REGEX = re.compile(r"\w[\w.-]{0,127}", re.ASCII)
 REPO_REGEX = re.compile(r"[a-z0-9]+(?:[._-][a-z0-9]+)*")
 
 
