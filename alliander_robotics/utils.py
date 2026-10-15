@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import os
-import re
 import subprocess
 import sys
 
@@ -16,15 +15,8 @@ def get_git_branch() -> str:
 
     Returns:
         str: The name of the current git branch.
-
-    Raises:
-        ValueError: If the branch name contains invalid characters (or is too long)
     """
-    branch = subprocess.getoutput("git rev-parse --abbrev-ref HEAD").replace("/", "-")
-    if not re.fullmatch(r"[A-Za-z0-9_.-][A-Za-z0-9_.-]{0,127}", branch):
-        # Docker imposes these restrictions on tags anyway
-        raise ValueError(f"Invalid Docker branch: {branch!r}")
-    return branch
+    return subprocess.getoutput("git rev-parse --abbrev-ref HEAD").replace("/", "-")
 
 
 def get_files_changed(verbose: bool = False) -> list[str]:

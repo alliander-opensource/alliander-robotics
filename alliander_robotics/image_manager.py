@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import argparse
+import re
 import subprocess
 import sys
 
@@ -10,6 +11,8 @@ from termcolor import colored, cprint
 from alliander_robotics import utils
 
 DOCKER_ORGANIZATION = "allianderrobotics"
+TAG_REGEX = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}")
+REPO_REGEX = re.compile(r"[a-z0-9]+(?:[._-][a-z0-9]+)*")
 
 
 class ImageManager:
@@ -88,12 +91,17 @@ class ImageManager:
         Args:
             repository (str): repository of the docker image to build.
             tag (str): tag of the docker image to pull.
+
+        Raises:
+            ValueError: If repository or tag name contains illegal characters.
         """
         cprint(
             f"\n\n\n---------- Pulling {DOCKER_ORGANIZATION}/{repository}:{tag} ----------",
             "blue",
         )
 
+        if not TAG_REGEX.fullmatch(repository) or not TAG_REGEX.fullmatch(tag):
+            raise ValueError("Invalid repository or tag")
         subprocess.run(
             ["docker", "pull", f"{DOCKER_ORGANIZATION}/{repository}:{tag}"], check=True
         )
@@ -104,6 +112,9 @@ class ImageManager:
         Args:
             repository (str): repository of the docker image to build.
             tag (str): tag of the docker image to build.
+
+        Raises:
+            ValueError: If repository or tag name contains illegal characters.
         """
         cprint(
             f"\n\n\n---------- Building {DOCKER_ORGANIZATION}/{repository}:{tag} ----------",
@@ -137,6 +148,8 @@ class ImageManager:
             *cache_args,
             ".",
         ]
+        if not TAG_REGEX.fullmatch(repository) or not TAG_REGEX.fullmatch(tag):
+            raise ValueError("Invalid repository or tag")
         subprocess.run(cmd, check=True)
 
 
