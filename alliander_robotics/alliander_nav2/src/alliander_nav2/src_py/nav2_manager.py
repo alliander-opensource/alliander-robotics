@@ -4,23 +4,27 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import copy
 import time
 
 import rclpy
 import tf2_geometry_msgs  # ruff: ignore[unused-import] (required for tf transform)
 from alliander_interfaces.action import TriggerAction
+from alliander_nav2.docking_control import DockingControl
+from alliander_nav2.speed_control import Speed, SpeedControl
 from alliander_utilities.ros_utils import spin_executor
 from geographic_msgs.msg import GeoPath, GeoPoseStamped
 from geometry_msgs.msg import PoseStamped
-from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+from nav2_simple_commander.robot_navigator import BasicNavigator
 from nav_msgs.msg import Path
-from rclpy.action import ActionServer
+from rclpy.action import ActionServer, CancelResponse
 from rclpy.action.server import ServerGoalHandle
+from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 from tf2_ros import Buffer, TransformListener
+
+NAVIGATION_SPEED = Speed(linear=2.0, angular=3.14)
 
 
 class Nav2Manager(Node):
@@ -29,22 +33,54 @@ class Nav2Manager(Node):
     def __init__(self) -> None:
         """Initialize the Nav2Manager node."""
         super().__init__("nav2_manager")
-        self.declare_parameter("docking_staging_offset", -1.0)
-        self.docking_staging_offset: float = self.get_parameter(
-            "docking_staging_offset"
-        ).value
 
         self.basic_navigator: BasicNavigator = BasicNavigator()
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
+        self.speed_control = SpeedControl(self)
+        self.docking_control = DockingControl(
+            self, self.tf_buffer, self.basic_navigator, self.speed_control
+        )
 
-        self.create_subscription(PoseStamped, "/goal_pose", self.cb_goal_pose, 10)
-        self.create_subscription(Path, "/waypoints", self.cb_waypoints, 10)
-        self.create_subscription(GeoPath, "/gps_waypoints", self.cb_gps_waypoints, 10)
+        callback_group = ReentrantCallbackGroup()
+        self.create_subscription(
+            PoseStamped,
+            "/goal_pose",
+            self.cb_goal_pose,
+            10,
+            callback_group=callback_group,
+        )
+        self.create_subscription(
+            Path,
+            "/waypoints",
+            self.cb_waypoints,
+            10,
+            callback_group=callback_group,
+        )
+        self.create_subscription(
+            GeoPath,
+            "/gps_waypoints",
+            self.cb_gps_waypoints,
+            10,
+            callback_group=callback_group,
+        )
+
         self.create_service(Trigger, "~/stop", self.cb_stop)
 
-        ActionServer(self, TriggerAction, "~/dock_robot", self.cb_dock_robot)
-        ActionServer(self, TriggerAction, "~/undock_robot", self.cb_undock_robot)
+        ActionServer(
+            self,
+            TriggerAction,
+            "~/dock_robot",
+            self.cb_dock_robot,
+            cancel_callback=self.cb_docking_cancel,
+        )
+        ActionServer(
+            self,
+            TriggerAction,
+            "~/undock_robot",
+            self.cb_undock_robot,
+            cancel_callback=self.cb_docking_cancel,
+        )
 
         self.get_logger().info("Controller is ready.")
 
@@ -58,7 +94,7 @@ class Nav2Manager(Node):
             TriggerAction.Result: The result of the action.
         """
         result = TriggerAction.Result()
-        result.success = self.dock_robot()
+        result.success = self.docking_control.dock_robot()
         goal_handle.succeed() if result.success else goal_handle.abort()
         return result
 
@@ -72,61 +108,18 @@ class Nav2Manager(Node):
             TriggerAction.Result: The result of the action.
         """
         result = TriggerAction.Result()
-        self.basic_navigator.undockRobot()
-        while not self.basic_navigator.isTaskComplete():
-            self.get_logger().info("Undocking...")
-            time.sleep(1)
-        result.success = self.basic_navigator.getResult() == TaskResult.SUCCEEDED
+        result.success = self.docking_control.undock_robot()
         goal_handle.succeed() if result.success else goal_handle.abort()
         return result
 
-    def dock_robot(self) -> bool:
-        """Dock the robot by first navigating to a staging pose and then performing the final docking maneuver.
+    def cb_docking_cancel(self, _: ServerGoalHandle) -> CancelResponse:
+        """Callback when a dock robot action is canceled.
 
         Returns:
-            bool: True if docking was successful, False otherwise.
+            CancelResponse: The response indicating whether the cancel request is accepted.
         """
-        # Define poses:
-        pose_dock = PoseStamped()
-        pose_dock.header.frame_id = "dock"
-        pose_stage = copy.deepcopy(pose_dock)
-        pose_stage.pose.position.x = self.docking_staging_offset
-
-        # Navigate to staging pose until no further progress is made (task is completed immediately):
-        while True:
-            try:
-                pose_stage_map = self.tf_buffer.transform(pose_stage, "map")
-            except Exception as e:
-                self.get_logger().error(f"Failed to transform pose to map frame: {e}")
-                return False
-
-            self.basic_navigator.goToPose(pose_stage_map)
-            if self.basic_navigator.isTaskComplete():
-                break
-            while not self.basic_navigator.isTaskComplete():
-                self.get_logger().info("Navigating to staging pose...")
-                time.sleep(1)
-
-        # Abort if the staging pose was not reached successfully:
-        task_result: TaskResult = self.basic_navigator.getResult()
-        if task_result != TaskResult.SUCCEEDED:
-            self.get_logger().error("Failed to reach staging pose.")
-            return False
-
-        # Perform the final docking maneuver:
-        try:
-            pose_dock_map = self.tf_buffer.transform(pose_dock, "map")
-        except Exception as e:
-            self.get_logger().error(f"Failed to transform pose to map frame: {e}")
-            return False
-        self.basic_navigator.dockRobotByPose(
-            pose_dock_map, "charging_dock", nav_to_dock=False
-        )
-        while not self.basic_navigator.isTaskComplete():
-            self.get_logger().info("Docking...")
-            time.sleep(1)
-        task_result: TaskResult = self.basic_navigator.getResult()
-        return task_result == TaskResult.SUCCEEDED
+        self.docking_control.cancel()
+        return CancelResponse.ACCEPT
 
     def cb_goal_pose(self, msg: PoseStamped) -> None:
         """Callback on receiving a PoseStamped message with a goal pose.
@@ -135,7 +128,8 @@ class Nav2Manager(Node):
             msg (PoseStamped): The received PoseStamped message.
         """
         self.get_logger().info("Received new goal pose for navigation.")
-        self.basic_navigator.goToPose(msg)
+        if self.speed_control.set_max_speed(NAVIGATION_SPEED):
+            self.basic_navigator.goToPose(msg)
 
     def cb_waypoints(self, msg: Path) -> None:
         """Callback on receiving a Path message with waypoints.
@@ -144,7 +138,8 @@ class Nav2Manager(Node):
             msg (Path): The received Path message.
         """
         self.get_logger().info("Received new waypoints for navigation.")
-        self.basic_navigator.followWaypoints(msg.poses)
+        if self.speed_control.set_max_speed(NAVIGATION_SPEED):
+            self.basic_navigator.followWaypoints(msg.poses)
 
     def cb_gps_waypoints(self, msg: GeoPath) -> None:
         """Callback on receiving a GeoPoseStamped message with GPS waypoints.
@@ -153,11 +148,12 @@ class Nav2Manager(Node):
             msg (GeoPath): The received GeoPath message.
         """
         self.get_logger().info("Received new GPS waypoints for navigation.")
-        geo_poses = []
-        for geo_pose_stamped in msg.poses:
-            geo_pose_stamped: GeoPoseStamped
-            geo_poses.append(geo_pose_stamped.pose)
-        self.basic_navigator.followGpsWaypoints(geo_poses)
+        if self.speed_control.set_max_speed(NAVIGATION_SPEED):
+            geo_poses = []
+            for geo_pose_stamped in msg.poses:
+                geo_pose_stamped: GeoPoseStamped
+                geo_poses.append(geo_pose_stamped.pose)
+            self.basic_navigator.followGpsWaypoints(geo_poses)
 
     def cb_stop(
         self, _: Trigger.Request, response: Trigger.Response
