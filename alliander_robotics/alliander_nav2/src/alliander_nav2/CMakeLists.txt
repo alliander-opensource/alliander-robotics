@@ -21,6 +21,9 @@ add_library(bt_is_system_healthy_node SHARED
   src/diagnostics_health_check.cpp
 )
 
+# Python package:
+ament_python_install_package(${PROJECT_NAME})
+
 # Python executables:
 install(
   DIRECTORY src_py/
@@ -29,7 +32,7 @@ install(
 
 # Shared folders:
 install(
-  DIRECTORY launch config 
+  DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 
