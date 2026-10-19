@@ -9,7 +9,7 @@ import { RosProvider, RosTool } from "./capabilities/RosTool";
 import { Teleoperation } from "./capabilities/Teleoperation";
 import { MapComponent } from "./map/Map";
 import type { Device } from "./missionHelpers";
-import { Ros } from "./ros/ros";
+import { createRos } from "./ros/ros";
 
 const DEVICES: Device[] = ["simulation", "lynx", "panther", "none"];
 const DEFAULT_DEVICE: Device = "simulation";
@@ -38,7 +38,7 @@ function App() {
   );
 
   // ROS:
-  const { ros } = Ros(namespace);
+  const ros = createRos(namespace);
 
   // Capabilities:
   const rosTool = <RosTool device={device} />;

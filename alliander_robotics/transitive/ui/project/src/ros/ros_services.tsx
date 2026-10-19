@@ -1,18 +1,21 @@
+// SPDX-FileCopyrightText: Alliander N. V.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import type { Service } from "../capabilities/RosTool";
 
-
 export interface Services {
-    nav2_stop: Service;
+  nav2_stop: Service;
 }
 
 export function Services(namespace: string) {
+  const services: Services = {
+    nav2_stop: {
+      name: `/${namespace}/nav2_manager/stop`,
+      type: "std_srvs/srv/Trigger",
+    },
+  };
 
-    const services: Services = {
-        nav2_stop: {
-            name: `/${namespace}/nav2_manager/stop`,
-            type: "std_srvs/srv/Trigger",
-        },
-    };
-
-    return { services };
+  return { services };
 }
+
