@@ -30,8 +30,8 @@ const ROBOT_PANE = "robotPane";
 function RobotPane() {
   const map = useMap();
   if (!map.getPane(ROBOT_PANE)) {
-    const pane = map.createPane(ROBOT_PANE);
-    pane.style.zIndex = "650";
+    // tooltip z-index (650) is above markers (waypoints) but below pop-ups
+    map.createPane(ROBOT_PANE).classList.add("leaflet-tooltip-pane");
   }
   return null;
 }
@@ -43,7 +43,9 @@ function ClickToAdd({ onAdd }: { onAdd: (lat: number, lng: number) => void }) {
   return null;
 }
 
-function Controls({ position }: Readonly<{ position?: [number, number] | null }>) {
+function Controls({
+  position,
+}: Readonly<{ position?: [number, number] | null }>) {
   const map = useMap();
   const controlsRef = useRef<HTMLDivElement>(null);
 
@@ -64,7 +66,10 @@ function Controls({ position }: Readonly<{ position?: [number, number] | null }>
   }
 
   return (
-    <div ref={controlsRef} className="leaflet-bottom leaflet-left leaflet-control controls">
+    <div
+      ref={controlsRef}
+      className="leaflet-bottom leaflet-left leaflet-control controls"
+    >
       <button onClick={home}>
         <span className="button">🏠</span>
       </button>
@@ -84,7 +89,9 @@ export function MapComponent({ ros }: Readonly<{ ros: Ros }>) {
     ? (pendingWaypoints(wp.waypoints, wp.reached)[0]?.id ?? null)
     : null;
 
-  const missionPanel = <MissionPanel ros={ros} wp={wp} onMissionActiveChange={setMissionActive} />;
+  const missionPanel = (
+    <MissionPanel ros={ros} wp={wp} onMissionActiveChange={setMissionActive} />
+  );
   const waypointPanel = <WaypointPanel wp={wp} />;
 
   const position = ros.subscriptions.position;
@@ -109,7 +116,14 @@ export function MapComponent({ ros }: Readonly<{ ros: Ros }>) {
           onRemove={wp.onRemove}
         />
       ))}
-      {position && <CircleMarker center={position} radius={5} fillOpacity={1} pane={ROBOT_PANE} />}
+      {position && (
+        <CircleMarker
+          center={position}
+          radius={5}
+          fillOpacity={1}
+          pane={ROBOT_PANE}
+        />
+      )}
       <ClickToAdd onAdd={wp.onAdd} />
       <Controls position={position} />
     </MapContainer>

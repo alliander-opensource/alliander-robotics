@@ -84,11 +84,11 @@ export function MissionPanel({
         >
           Start
         </button>
-        <button onClick={onStop} disabled={!ready || status === "idle"}>
-          Stop
-        </button>
         <button onClick={onPauseResume} disabled={!ready || status === "idle"}>
           {status === "paused" ? "Resume" : "Pause"}
+        </button>
+        <button onClick={onStop} disabled={!ready || status === "idle"}>
+          Stop
         </button>
       </div>
     </div>

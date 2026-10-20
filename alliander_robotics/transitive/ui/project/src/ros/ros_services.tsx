@@ -2,7 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Service } from "../capabilities/RosTool";
+export interface Service {
+  name: string;
+  type: string;
+}
 
 export interface Services {
   nav2_stop: Service;
@@ -18,4 +21,3 @@ export function Services(namespace: string) {
 
   return { services };
 }
-

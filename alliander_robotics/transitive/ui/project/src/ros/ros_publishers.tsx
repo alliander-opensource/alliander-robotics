@@ -2,7 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Publisher } from "../capabilities/RosTool";
+export interface Publisher {
+  topic: string;
+  type: string;
+}
 
 export interface Publishers {
   geopath: Publisher;
@@ -18,4 +21,3 @@ export function Publishers() {
 
   return { publishers };
 }
-

@@ -3,7 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from "react";
-import type { Subscription } from "../capabilities/RosTool";
+
+export interface Subscription {
+  topic: string;
+  fields: string[];
+  callback: (data: any) => void;
+}
 
 export interface Subscriptions {
   time: number | null;
@@ -50,4 +55,3 @@ export function Subscriptions(namespace: string) {
 
   return { subscriptions, subscription_list };
 }
-

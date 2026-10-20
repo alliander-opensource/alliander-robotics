@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Subscription } from "../capabilities/RosTool";
+import type { Subscription } from "./ros_subscriptions";
 import { Publishers } from "./ros_publishers";
 import { Services } from "./ros_services";
 import { Subscriptions } from "./ros_subscriptions";
@@ -21,4 +21,3 @@ export function createRos(namespace: string) {
 
   return { subscriptions, subscription_list, publishers, services };
 }
-

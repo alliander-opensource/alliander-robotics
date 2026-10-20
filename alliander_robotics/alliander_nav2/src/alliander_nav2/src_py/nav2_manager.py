@@ -14,7 +14,7 @@ from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 from nav_msgs.msg import Path
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
-from std_msgs.msg import Int32
+from std_msgs.msg import Int8
 from std_srvs.srv import Trigger
 
 
@@ -31,7 +31,7 @@ class Nav2Manager(Node):
         self.create_subscription(GeoPath, "/gps_waypoints", self.cb_gps_waypoints, 10)
         self.create_service(Trigger, "~/stop", self.cb_stop)
 
-        self.progress_pub = self.create_publisher(Int32, "~/reached_count", 10)
+        self.progress_pub = self.create_publisher(Int8, "~/reached_count", 10)
         self.route_length = 0
         self.reached_count = 0
         self.route_active = False
@@ -80,7 +80,7 @@ class Nav2Manager(Node):
             count (int): Number of reached waypoints, counted from the start of the route.
         """
         self.reached_count = count
-        self.progress_pub.publish(Int32(data=count))
+        self.progress_pub.publish(Int8(data=count))
 
     def cb_progress(self) -> None:
         """Timer callback that keeps reached_count up to date with Nav2's feedback.
@@ -93,7 +93,7 @@ class Nav2Manager(Node):
             return
 
         if not self.basic_navigator.isTaskComplete():
-            feedback = self.basic_navigator.getFeedback()
+            feedback: FollowWaypoints.Feedback = self.basic_navigator.getFeedback()
             if feedback is not None:
                 self.set_reached_count(feedback.current_waypoint)
             return

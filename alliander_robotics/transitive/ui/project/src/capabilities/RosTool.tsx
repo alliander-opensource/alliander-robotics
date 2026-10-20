@@ -16,26 +16,11 @@ import {
 import type { Ros } from "../ros/ros";
 import "./card.css";
 import { generateJWT } from "./jwt";
+import type { Subscription } from "../ros/ros_subscriptions";
+import type { Publisher } from "../ros/ros_publishers";
+import type { Service } from "../ros/ros_services";
 
 const ROS_VERSION = 2;
-// Poll interval to pick up new messages
-const POLL_INTERVAL_MS = 250;
-
-export interface Subscription {
-  topic: string;
-  fields: string[];
-  callback: (data: any) => void;
-}
-
-export interface Publisher {
-  topic: string;
-  type: string;
-}
-
-export interface Service {
-  name: string;
-  type: string;
-}
 
 interface RosContext {
   ready: boolean;
@@ -86,12 +71,6 @@ const RosBridge = ({
   apiRef.current = capability;
   const ready = !!capability.isReady?.();
   const messages = capability.deviceData?.ros?.[ROS_VERSION]?.messages;
-
-  const [_tick, setTick] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => onReadyChange(ready), [ready, onReadyChange]);
 
@@ -174,7 +153,10 @@ export function RosProvider({
     [],
   );
 
-  const ros_context = useMemo(() => ({ ready, publish, callService }), [ready, publish, callService]);
+  const ros_context = useMemo(
+    () => ({ ready, publish, callService }),
+    [ready, publish, callService],
+  );
   const status = useMemo(() => ({ error: jwtError, messages }), [jwtError, messages]);
 
   return (

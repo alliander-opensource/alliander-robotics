@@ -35,7 +35,14 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
             onChange={handleFileChange}
             hidden
           />
-          <button onClick={wp.onClear} disabled={isEmpty}>
+          <button
+            onClick={() => {
+              if (window.confirm(`Clear all ${wp.waypoints.length} waypoint?`)) {
+                wp.onClear();
+              }
+            }}
+            disabled={isEmpty}
+          >
             Clear
           </button>
         </div>
