@@ -143,6 +143,7 @@ class PredefinedConfigurations:
     @register_configuration("realsense")
     def config_realsense(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("realsense", (0, 0, 0.5))]
+        self.sim_conf.world = "walls.sdf"
 
     @register_configuration("realsense_apriltag")
     def config_realsense_apriltag(self) -> None:  # noqa: D102
@@ -159,6 +160,7 @@ class PredefinedConfigurations:
     @register_configuration("zed")
     def config_zed(self) -> None:  # noqa: D102
         self.plat_conf.platforms = [Camera("zed", (0, 0, 0.5), namespace="zed")]
+        self.sim_conf.world = "walls.sdf"
 
     @register_configuration("zed_apriltag")
     def config_zed_apriltag(self) -> None:  # noqa: D102
@@ -167,6 +169,7 @@ class PredefinedConfigurations:
             Apriltag("tag0", (0.5, -0.2, 0.5), id=0, publish_topic="/tag0/pose"),
             Apriltag("tag1", (0.5, 0.2, 0.5), id=1, publish_topic="/tag1/pose"),
         ]
+        self.sim_conf.world = "walls.sdf"
 
     @register_configuration("seekthermal")
     def config_seekthermal(self) -> None:  # noqa: D102

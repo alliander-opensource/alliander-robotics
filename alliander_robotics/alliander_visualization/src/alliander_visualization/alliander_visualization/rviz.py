@@ -88,18 +88,24 @@ class Rviz:  # noqa PLR0904
         )
 
     @staticmethod
-    def add_depth_cloud(color_topic: str, depth_topic: str) -> None:
+    def add_depth_cloud(
+        color_topic: str,
+        depth_topic: str,
+        camera_info_topic: str = "",
+    ) -> None:
         """Add a depth cloud to the RViz configuration.
 
         Args:
             color_topic (str): The topic of the color image.
             depth_topic (str): The topic of the depth image.
+            camera_info_topic (str): The topic of the camera info.
         """
         Rviz.displays.append(
             {
                 "Enabled": True,
                 "Class": "rviz_default_plugins/DepthCloud",
                 "Color Image Topic": color_topic,
+                "CameraInfo Topic": camera_info_topic,
                 "Depth Map Topic": depth_topic,
                 "Name": depth_topic,
             }

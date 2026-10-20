@@ -4,16 +4,11 @@
 
 
 import xml.etree.ElementTree as ET
-from typing import TypeVar
 
+from alliander_gazebo.bridge_config import BridgeConfig
 from alliander_gazebo.create_sdf import create_map_world
 from alliander_gazebo.gazebo_ros_paths import GazeboRosPaths
-from alliander_utilities.config_objects import (
-    GPS,
-    Platform,
-    PlatformList,
-    SimulatorConfig,
-)
+from alliander_utilities.config_objects import GPS, PlatformList, SimulatorConfig
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
 from alliander_utilities.ros_utils import get_file_path
@@ -57,48 +52,6 @@ def get_sdf_file(world: str) -> str:
         return get_file_path("alliander_gazebo", ["worlds"], world)
 
 
-T = TypeVar("T", bound=Platform)
-
-
-def get_bridge_topics(platforms: list[T]) -> list[str]:
-    """Get the list of topics to bridge between ROS and Gazebo.
-
-    Args:
-        platforms (list[T]): The list of platforms in the simulation.
-
-    Returns:
-        list[str]: The list of topics to bridge.
-    """
-    bridge_topics = ["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"]
-    for platform in platforms:
-        if platform.platform_type in {"Lidar", "Beamagine"}:
-            bridge_topics.append(
-                f"/{platform.namespace}/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
-            )
-        if platform.platform_type in {"Camera", "Beamagine"}:
-            bridge_topics.extend(
-                [
-                    f"/{platform.namespace}/color/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
-                    f"/{platform.namespace}/color/image_raw@sensor_msgs/msg/Image@gz.msgs.Image",
-                    f"/{platform.namespace}/depth/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
-                    f"/{platform.namespace}/depth/image_rect_raw_float@sensor_msgs/msg/Image@gz.msgs.Image",
-                ]
-            )
-        if platform.platform_type == "GPS":
-            bridge_topics.append(
-                f"/{platform.namespace}/gps/fix_raw@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat"
-            )
-        if platform.platform_type in {"ThermalCamera", "Beamagine"}:
-            bridge_topics.append(
-                f"/{platform.namespace}/thermal/image@sensor_msgs/msg/Image@gz.msgs.Image"
-            )
-        if platform.platform_type == "IMU":
-            bridge_topics.append(
-                f"/{platform.namespace}/imu/data@sensor_msgs/msg/Imu@gz.msgs.IMU"
-            )
-    return bridge_topics
-
-
 def launch_setup(context: LaunchContext) -> list:
     """The launch setup.
 
@@ -131,10 +84,19 @@ def launch_setup(context: LaunchContext) -> list:
         additional_env=GazeboRosPaths.get_env(),  # ty: ignore
     )
 
+    bridge_config = BridgeConfig("/tmp/gz_bridge_config.yaml")
+    bridge_config.create_bridge_config(platforms.platforms)
     bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=get_bridge_topics(platforms.platforms),
+        parameters=[{"config_file": bridge_config.config_file}],
+    )
+
+    bridge_image = Node(
+        package="ros_gz_image",
+        executable="image_bridge",
+        arguments=bridge_config.image_topics,
+        remappings=bridge_config.image_remaps,
     )
 
     spawn_platforms = Node(
@@ -186,6 +148,7 @@ def launch_setup(context: LaunchContext) -> list:
             "Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)]",
             context,
         ),
+        Register.on_start(bridge_image, context),
         Register.on_log(spawn_platforms, "All platforms spawned!", context),
         *[Register.on_start(node, context) for node in navsat_covariance_nodes],
         Register.on_start(unpause_sim, context),
