@@ -10,6 +10,7 @@ import rclpy
 from alliander_utilities.ros_utils import spin_executor
 from geographic_msgs.msg import GeoPath, GeoPoseStamped
 from geometry_msgs.msg import PoseStamped
+from nav2_msgs.action import FollowWaypoints
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 from nav_msgs.msg import Path
 from rclpy.executors import SingleThreadedExecutor
