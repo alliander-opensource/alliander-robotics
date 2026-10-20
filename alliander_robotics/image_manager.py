@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import argparse
+import re
 import subprocess
 import sys
 
@@ -10,6 +11,8 @@ from termcolor import colored, cprint
 from alliander_robotics import utils
 
 DOCKER_ORGANIZATION = "allianderrobotics"
+TAG_REGEX = re.compile(r"\w[\w.-]{0,127}", re.ASCII)
+REPO_REGEX = re.compile(r"[a-z0-9]+(?:[._-][a-z0-9]+)*")
 
 
 class ImageManager:
@@ -73,7 +76,9 @@ class ImageManager:
                 if set({package, "alliander_core"}).isdisjoint(changed_packages)
                 else utils.get_git_branch()
             )
+
             tag = "latest" if tag == "main" else tag
+
             if pull:
                 self.run_pull_subprocess(repository, tag)
             if build:
@@ -86,14 +91,20 @@ class ImageManager:
         Args:
             repository (str): repository of the docker image to build.
             tag (str): tag of the docker image to pull.
+
+        Raises:
+            ValueError: If repository or tag name contains illegal characters.
         """
         cprint(
             f"\n\n\n---------- Pulling {DOCKER_ORGANIZATION}/{repository}:{tag} ----------",
             "blue",
         )
 
-        cmd = f"docker pull {DOCKER_ORGANIZATION}/{repository}:{tag}"
-        subprocess.run(cmd, shell=True, check=True)
+        if not TAG_REGEX.fullmatch(repository) or not TAG_REGEX.fullmatch(tag):
+            raise ValueError("Invalid repository or tag")
+        subprocess.run(
+            ["docker", "pull", f"{DOCKER_ORGANIZATION}/{repository}:{tag}"], check=True
+        )
 
     def run_build_subprocess(self, repository: str, tag: str = "latest") -> None:
         """Runs a docker build command to build a specific image.
@@ -101,15 +112,18 @@ class ImageManager:
         Args:
             repository (str): repository of the docker image to build.
             tag (str): tag of the docker image to build.
+
+        Raises:
+            ValueError: If repository or tag name contains illegal characters.
         """
         cprint(
             f"\n\n\n---------- Building {DOCKER_ORGANIZATION}/{repository}:{tag} ----------",
             "blue",
         )
 
-        cache_str = ""
+        cache_args = []
         if self.no_cache:
-            cache_str = "--no-cache"
+            cache_args = ["--no-cache"]
 
         base_image_tag = (
             "latest" if not utils.is_core_docker_changed() else utils.get_git_branch()
@@ -117,14 +131,26 @@ class ImageManager:
         base_image_tag = "latest" if repository in {"base", "cuda"} else base_image_tag
         base_image_tag = "latest" if base_image_tag == "main" else base_image_tag
 
-        cmd = f"docker build \
-            -f {self.components[repository]['dockerfile']} \
-            --build-arg SRC_DIRECTORY={self.components[repository]['src_directory']} \
-            --build-arg BASE_IMAGE={self.components[repository]['base_image']}:{base_image_tag} \
-            --platform linux/{self.arch} \
-            -t {DOCKER_ORGANIZATION}/{repository}:{tag} {cache_str} \
-            ."
-        subprocess.run(cmd, shell=True, check=True)
+        component = self.components[repository]
+        cmd = [
+            "docker",
+            "build",
+            "-f",
+            component["dockerfile"],
+            "--build-arg",
+            f"SRC_DIRECTORY={component['src_directory']}",
+            "--build-arg",
+            f"BASE_IMAGE={component['base_image']}:{base_image_tag}",
+            "--platform",
+            f"linux/{self.arch}",
+            "-t",
+            f"{DOCKER_ORGANIZATION}/{repository}:{tag}",
+            *cache_args,
+            ".",
+        ]
+        if not TAG_REGEX.fullmatch(repository) or not TAG_REGEX.fullmatch(tag):
+            raise ValueError("Invalid repository or tag")
+        subprocess.run(cmd, check=True)
 
 
 class Parser(argparse.ArgumentParser):

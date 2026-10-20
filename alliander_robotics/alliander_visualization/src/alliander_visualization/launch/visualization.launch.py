@@ -39,8 +39,6 @@ def launch_setup(context: LaunchContext) -> list:
         get_file_path("alliander_visualization", ["launch"], "vizanti.launch.py")
     )
 
-    rosboard = Node(package="rosboard", executable="rosboard_node")
-
     gui = Node(
         package="alliander_visualization",
         executable="alliander_gui.py",
@@ -51,7 +49,6 @@ def launch_setup(context: LaunchContext) -> list:
         SetParameter(name="use_sim_time", value=simulation),
         Register.group(rviz, context) if config.rviz else SKIP,
         Register.group(vizanti, context) if config.vizanti else SKIP,
-        Register.on_start(rosboard, context) if config.rosboard else SKIP,
         Register.on_start(gui, context) if config.gui else SKIP,
     ]
 

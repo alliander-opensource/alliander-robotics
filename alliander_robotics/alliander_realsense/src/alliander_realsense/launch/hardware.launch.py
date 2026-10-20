@@ -44,7 +44,7 @@ def launch_setup(context: LaunchContext) -> list:
         remappings=[
             (
                 f"/{namespace}/camera/color/image_raw",
-                f"/{namespace}/color/image_raw",
+                f"/{namespace}/color/image",
             ),
             (
                 f"/{namespace}/camera/color/camera_info",
@@ -56,9 +56,8 @@ def launch_setup(context: LaunchContext) -> list:
             ),
             (
                 f"/{namespace}/camera/aligned_depth_to_color/image_raw",
-                f"/{namespace}/depth/image_rect_raw",
+                f"/{namespace}/depth/image",
             ),
-            (f"/{namespace}/camera/rgbd", f"/{namespace}/rgbd"),
         ],
     )
 

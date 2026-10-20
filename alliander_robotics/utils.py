@@ -16,7 +16,7 @@ def get_git_branch() -> str:
     Returns:
         str: The name of the current git branch.
     """
-    return subprocess.getoutput("git rev-parse --abbrev-ref HEAD")
+    return subprocess.getoutput("git rev-parse --abbrev-ref HEAD").replace("/", "-")
 
 
 def get_files_changed(verbose: bool = False) -> list[str]:

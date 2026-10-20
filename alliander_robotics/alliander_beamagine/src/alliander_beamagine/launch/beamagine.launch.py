@@ -9,7 +9,6 @@ from alliander_utilities.register import Register, RegisteredLaunchDescription
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import Node
 
 platform_arg = LaunchArgument("platform_config", "")
 
@@ -49,18 +48,9 @@ def launch_setup(context: LaunchContext) -> list:
         {"platform_config": beamagine_config.to_str()},
     )
 
-    convert_32fc1_to_16uc1 = Node(
-        package="alliander_utilities_depth_camera",
-        executable="convert_32FC1_to_16UC1",
-        namespace=beamagine_config.namespace,
-    )
-
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
-        Register.on_start(convert_32fc1_to_16uc1, context)
-        if beamagine_config.simulation
-        else SKIP,
         Register.group(hardware, context) if not beamagine_config.simulation else SKIP,
     ]
 
