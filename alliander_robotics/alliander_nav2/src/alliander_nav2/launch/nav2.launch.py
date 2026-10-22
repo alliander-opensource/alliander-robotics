@@ -237,16 +237,12 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         root_key=namespace_vehicle,
     )
 
-    keepout_mask_server_params = AdaptedYaml(
-        get_file_path("alliander_nav2", ["config", "nav2"], "keepout_mask_server_params.yaml"),
-        {
-            "topic_name": f"/{namespace_vehicle}/keepout_filter_mask",
-        },
-        root_key=namespace_vehicle,
-    )
-
     keepout_filter_info_server_params = AdaptedYaml(
-        get_file_path("alliander_nav2", ["config", "nav2"], "keepout_filter_info_server_params.yaml"),
+        get_file_path(
+            "alliander_nav2",
+            ["config", "nav2"],
+            "keepout_filter_info_server_params.yaml",
+        ),
         {
             "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
             "mask_topic": f"/{namespace_vehicle}/keepout_filter_mask",
@@ -429,7 +425,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
 
     dynamic_keepout_zones = Node(
         package="alliander_nav2",
-        executable="dynamic_keepout_zones.py",
+        executable="keepout_zone_manager",
         namespace=namespace_vehicle,
     )
 
@@ -446,13 +442,17 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
         SetRemap(src=f"/{namespace_vehicle}/cmd_vel", dst=pub_topic),
-        Register.on_start(dynamic_keepout_zones, context) if nav2.gps else SKIP,
         *[Register.on_start(node, context) for node in register_lifecycle_nodes],
         Register.on_start(ekf_global, context) if nav2.gps else SKIP,
         Register.on_start(navsat_transform, context) if nav2.gps else SKIP,
         Register.on_start(odom_gate, context) if nav2.gps else SKIP,
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
         Register.on_start(path_to_geopath, context) if nav2.gps else SKIP,
+        Register.on_log(
+            dynamic_keepout_zones, "Dynamic GPS Keepout Publisher initialized.", context
+        )
+        if nav2.gps
+        else SKIP,
         Register.on_log(nav2_manager, "Controller is ready.", context)
         if nav2.navigation
         else SKIP,
