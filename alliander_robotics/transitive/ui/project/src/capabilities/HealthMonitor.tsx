@@ -4,11 +4,13 @@
 
 import { TransitiveCapability } from '@transitive-sdk/utils-web';
 import { useEffect, useState } from 'react';
+import type { Ros } from '../ros/ros';
 import './card.css';
 import './HealthMonitor.css';
 import { generateJWT } from './jwt';
 
-export function HealthMonitor({ device, time }: { device: string, time: number | null }) {
+
+export function HealthMonitor({ device, ros }: Readonly<{ device: string, ros: Ros }>) {
   const [jwtToken, setJwtToken] = useState('');
   const [jwtError, setJwtError] = useState<string | null>(null);
   const [capability, setCapability] = useState(<div className="health-capability"></div>);
@@ -49,7 +51,7 @@ export function HealthMonitor({ device, time }: { device: string, time: number |
     <div className="card">
       <div className="header"><b>Health Monitor ({device})</b></div>
       <div className="widget">
-        Time: {time}
+        Time: {ros.subscriptions.time}
         {jwtError ? <p>Error: {jwtError}</p> : widget}
       </div>
     </div>

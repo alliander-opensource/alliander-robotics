@@ -2,94 +2,54 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-import './App.css';
-import { HealthMonitor } from './capabilities/HealthMonitor';
-import type { Subscription } from './capabilities/RosTool';
-import { RosTool } from './capabilities/RosTool';
-import { Teleoperation } from './capabilities/Teleoperation';
-import { Map } from './Map';
+import { useState } from "react";
+import "./App.css";
+import { HealthMonitor } from "./capabilities/HealthMonitor";
+import { RosProvider, RosTool } from "./capabilities/RosTool";
+import { Teleoperation } from "./capabilities/Teleoperation";
+import { MapComponent } from "./map/Map";
+import type { Device } from "./missionHelpers";
+import { createRos } from "./ros/ros";
 
-type Device = 'simulation' | 'lynx' | 'panther' | 'none';
-const DEVICE: Device = 'simulation';
+const DEVICES: Device[] = ["simulation", "lynx", "panther", "none"];
+const DEFAULT_DEVICE: Device = "simulation";
+const DEVICE_STORAGE_KEY = "device";
 
 function App() {
-  const device_stored = sessionStorage.getItem(DEVICE) as Device | null;
-  const [device] = useState<Device>(device_stored ?? DEVICE);
-  const [position, setPosition] = useState<[number, number] | null>(null);
-  const [time, setTime] = useState<number | null>(null);
+  const [device] = useState<Device>(
+    (sessionStorage.getItem(DEVICE_STORAGE_KEY) as Device | null) ?? DEFAULT_DEVICE,
+  );
+  const namespace = device == "lynx" ? "lynx" : "panther";
 
   const handleDeviceChange = (value: Device) => {
-    sessionStorage.setItem(DEVICE, value);
+    sessionStorage.setItem(DEVICE_STORAGE_KEY, value);
     window.location.reload();
   };
 
-  const deviceSelector = <div>
-    <label>
-      <input
-        type="radio"
-        checked={device === 'simulation'}
-        onChange={() => handleDeviceChange("simulation")} />
-      simulation
-    </label>
-    <label>
-      <input
-        type="radio"
-        checked={device === 'lynx'}
-        onChange={() => handleDeviceChange("lynx")} />
-      lynx
-    </label>
-    <label>
-      <input
-        type="radio"
-        checked={device === 'panther'}
-        onChange={() => handleDeviceChange("panther")} />
-      panther
-    </label>
-    <label>
-      <input
-        type="radio"
-        checked={device === 'none'}
-        onChange={() => handleDeviceChange("none")} />
-      none
-    </label>
-  </div>
+  const deviceSelector = (
+    <div>
+      {DEVICES.map((name) => (
+        <label key={name}>
+          <input type="radio" checked={device === name} onChange={() => handleDeviceChange(name)} />
+          {name}
+        </label>
+      ))}
+    </div>
+  );
 
-  //Subscription on GPS topic: 
-  const gps_callback = (data: any) => {
-    if (data && data.length >= 2) {
-      setPosition([data[0], data[1]]);
-    }
-  };
-  const gps_subscription: Subscription = {
-    topic: '/ublox/gps/fix',
-    fields: ['/latitude', '/longitude'],
-    callback: gps_callback,
-  };
+  // ROS:
+  const ros = createRos(namespace);
 
-  // Subscription on Clock topic:
-  const clock_callback = (data: any) => {
-    if (data && data.length >= 1) {
-      setTime(data[0]);
-    }
-  };
-  const clock_subscription: Subscription = {
-    topic: '/clock',
-    fields: ['/clock/sec'],
-    callback: clock_callback,
-  };
-
-  // Define ROS tool
-  const subscriptions: Subscription[] = [gps_subscription, clock_subscription];
-  const rosTool = <RosTool device={device} subscriptions={subscriptions} />;
-
+  // Capabilities:
+  const rosTool = <RosTool device={device} />;
   const teleoperation = <Teleoperation device={device} />;
-  const healthMonitor = <HealthMonitor device={device} time={time} />;
+  const healthMonitor = <HealthMonitor device={device} ros={ros} />;
 
-  const map = <Map position={position} />;
+  // UI Components:
+  const map = <MapComponent ros={ros} />;
 
   return (
-    <>
+    <RosProvider device={device} ros={ros}>
       <div className="app">
         <div className="title">
           <h1>Alliander Robotics Dashboard</h1>
@@ -100,12 +60,10 @@ function App() {
           {healthMonitor}
           {rosTool}
         </div>
-        <div className="map">
-          {map}
-        </div>
+        {map}
       </div>
-    </>
+    </RosProvider>
   );
 }
 
-export default App
+export default App;
