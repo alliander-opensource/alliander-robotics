@@ -18,10 +18,12 @@ SPDX-License-Identifier: Apache-2.0
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <depend>rclcpp</depend>
+  <depend>geographic_msgs</depend>
   <depend>nav2_behavior_tree</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>robot_localization</depend>
+  <depend>alliander_interfaces</depend>
 
   <exec_depend>navigation2</exec_depend>
   <exec_depend>slam_toolbox</exec_depend>
