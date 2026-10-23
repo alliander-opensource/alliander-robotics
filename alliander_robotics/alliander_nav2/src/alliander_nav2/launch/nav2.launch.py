@@ -361,10 +361,10 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             ("gps/fix", f"/{namespace_gps}/gps/fix"),
         ],
     )
-    odom_gate = Node(
+    georeferencing = Node(
         package="alliander_nav2",
-        executable="initialize_odometry_node",
-        name="odom_gate",
+        executable="georeferencing_node",
+        name="georeferencing",
         namespace=namespace_vehicle,
         remappings=[
             ("gps/fix", f"/{namespace_gps}/gps/fix"),
@@ -395,7 +395,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         *[Register.on_start(node, context) for node in register_lifecycle_nodes],
         Register.on_start(ekf_global, context) if nav2.gps else SKIP,
         Register.on_start(navsat_transform, context) if nav2.gps else SKIP,
-        Register.on_start(odom_gate, context) if nav2.gps else SKIP,
+        Register.on_start(georeferencing, context) if nav2.gps else SKIP,
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
         Register.on_log(nav2_manager, "Controller is ready.", context)
         if nav2.navigation

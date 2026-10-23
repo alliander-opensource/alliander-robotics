@@ -14,12 +14,14 @@ export interface Subscriptions {
   time: number | null;
   position: [number, number] | null;
   reachedCount: number | null;
+  plan: [number, number][] | null;
 }
 
 export function Subscriptions(namespace: string) {
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [time, setTime] = useState<number | null>(null);
   const [reachedCount, setReachedCount] = useState<number | null>(null);
+  const [plan, setPlan] = useState<[number, number][] | null>(null);
 
   const subscription_list: Subscription[] = [
     {
@@ -49,9 +51,25 @@ export function Subscriptions(namespace: string) {
         }
       },
     },
+    {
+      topic: `/${namespace}/plan_gps`,
+      fields: ["/poses"],
+      callback: (data: any) => {
+        let plan: [number, number][] = [];
+        if (data && data.length >= 1) {
+          const GeoPath = data[0];
+          for (const GeoPoseStamped of GeoPath) {
+            const GeoPose = GeoPoseStamped.pose;
+            const GeoPoint = GeoPose.position;
+            plan.push([GeoPoint.latitude, GeoPoint.longitude]);
+          }
+        }
+        setPlan(plan);
+      },
+    },
   ];
 
-  const subscriptions: Subscriptions = { time, position, reachedCount };
+  const subscriptions: Subscriptions = { time, position, reachedCount, plan };
 
   return { subscriptions, subscription_list };
 }
