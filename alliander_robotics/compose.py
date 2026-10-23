@@ -438,6 +438,8 @@ class Compose:
                             self.add_service(content, "apriltag")
                             apriltag_added = True
                         continue
+                    if platform.platform_type == "ChargingStation":
+                        continue
                     self.add_service(content, "platform", platform)
                     if getattr(platform, "moveit", False):
                         self.add_service(content, "moveit", platform)
