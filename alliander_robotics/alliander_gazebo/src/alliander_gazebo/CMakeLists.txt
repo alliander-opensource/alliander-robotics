@@ -26,7 +26,7 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-# C++ executables:
+# Navsat covariance node:
 add_executable(navsat_covariance_node
   src/navsat_covariance.cpp
 )
@@ -34,9 +34,29 @@ ament_target_dependencies(navsat_covariance_node
   rclcpp
   sensor_msgs
 )
- 
 install(TARGETS
   navsat_covariance_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Gazebo charging checker:
+find_package(gz_transport_vendor REQUIRED)
+find_package(gz-transport13 REQUIRED)
+find_package(gz_msgs_vendor REQUIRED)
+find_package(gz-msgs10 REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3 REQUIRED)
+add_executable(gz_charging_checker
+  src/gz_charging_checker.cpp
+)
+ament_target_dependencies(gz_charging_checker
+  rclcpp
+  gz-transport13
+  gz-msgs10
+  Eigen3
+)
+install(TARGETS
+  gz_charging_checker
   DESTINATION lib/${PROJECT_NAME}
 )
 

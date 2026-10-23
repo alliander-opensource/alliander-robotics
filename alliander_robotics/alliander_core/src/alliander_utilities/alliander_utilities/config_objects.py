@@ -287,6 +287,17 @@ class Apriltag(Platform):
 
 
 @dataclass
+class ChargingStation(Platform):
+    """Configuration for a ChargingStation platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+    """
+
+    platform_type: str = "ChargingStation"
+
+
+@dataclass
 class Gripper(Platform):
     """Configuration for a Gripper platform.
 
@@ -466,6 +477,7 @@ class PlatformList(Config):
                 Arm,
                 Vehicle,
                 Camera,
+                ChargingStation,
                 GPS,
                 Gripper,
                 IMU,

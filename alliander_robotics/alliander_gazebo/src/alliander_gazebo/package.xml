@@ -25,6 +25,9 @@ SPDX-License-Identifier: Apache-2.0
   <depend>alliander_interfaces</depend>
   <depend>rviz_visual_tools</depend>
   <depend>tf2_eigen</depend>
+  
+  <build_depend>gz_transport_vendor</build_depend>
+  <build_depend>gz_msgs_vendor</build_depend>
 
   <!-- Descriptions: -->
   <exec_depend>ewellix_description</exec_depend>

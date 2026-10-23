@@ -8,7 +8,13 @@ import xml.etree.ElementTree as ET
 from alliander_gazebo.bridge_config import BridgeConfig
 from alliander_gazebo.create_sdf import create_map_world
 from alliander_gazebo.gazebo_ros_paths import GazeboRosPaths
-from alliander_utilities.config_objects import GPS, PlatformList, SimulatorConfig
+from alliander_utilities.config_objects import (
+    GPS,
+    ChargingStation,
+    PlatformList,
+    SimulatorConfig,
+    Vehicle,
+)
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
 from alliander_utilities.ros_utils import get_file_path
@@ -65,7 +71,8 @@ def launch_setup(context: LaunchContext) -> list:
         ValueError: If the SDF file does not contain a world attribute with a name.
     """
     config = SimulatorConfig.from_str(config_arg.string_value(context))
-    platforms = PlatformList.from_str(platform_list_arg.string_value(context))
+    platform_list = PlatformList.from_str(platform_list_arg.string_value(context))
+    platforms = platform_list.platforms
 
     sdf_file = get_sdf_file(config.world)
     sdf = ET.parse(sdf_file)
@@ -85,7 +92,7 @@ def launch_setup(context: LaunchContext) -> list:
     )
 
     bridge_config = BridgeConfig("/tmp/gz_bridge_config.yaml")
-    bridge_config.create_bridge_config(platforms.platforms)
+    bridge_config.create_bridge_config(platforms)
     bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -102,12 +109,12 @@ def launch_setup(context: LaunchContext) -> list:
     spawn_platforms = Node(
         package="alliander_gazebo",
         executable="spawn_platforms.py",
-        parameters=[{"platform_config": platforms.to_str()}],
+        parameters=[{"platform_config": platform_list.to_str()}],
         output="screen",
     )
 
     # Republish GPS fixes with covariance (Gazebo plugin doesn't provide any) to make navsat_transform work properly in simulation
-    gps_platforms = [c for c in platforms.platforms if c.__class__ == GPS]
+    gps_platforms = [p for p in platforms if isinstance(p, GPS)]
     navsat_covariance_nodes = []
     for gps in gps_platforms:
         namespace_gps = gps.namespace
@@ -141,6 +148,24 @@ def launch_setup(context: LaunchContext) -> list:
         shell=False,
     )
 
+    vehicles = [p for p in platforms if isinstance(p, Vehicle)]
+    stations = [p for p in platforms if isinstance(p, ChargingStation)]
+    charging_checkers = []
+    for vehicle in vehicles:
+        for station in stations:
+            charging_checkers.append(
+                Node(
+                    package="alliander_gazebo",
+                    executable="gz_charging_checker",
+                    output="screen",
+                    name=f"{vehicle.name}_{station.name}_charging_checker",
+                    parameters=[
+                        {"name_robot": vehicle.name},
+                        {"name_station": station.name},
+                    ],
+                )
+            )
+
     return [
         Register.on_start(gazebo, context),
         Register.on_log(
@@ -152,6 +177,7 @@ def launch_setup(context: LaunchContext) -> list:
         Register.on_log(spawn_platforms, "All platforms spawned!", context),
         *[Register.on_start(node, context) for node in navsat_covariance_nodes],
         Register.on_start(unpause_sim, context),
+        *[Register.on_start(node, context) for node in charging_checkers],
     ]
 
 

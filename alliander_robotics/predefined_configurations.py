@@ -15,6 +15,7 @@ from alliander_robotics.alliander_core.src.alliander_utilities.alliander_utiliti
     Arm,
     Beamagine,
     Camera,
+    ChargingStation,
     Gripper,
     Lidar,
     Lift,
@@ -462,6 +463,20 @@ class PredefinedConfigurations:
         self.plat_conf.platforms = [vehicle, lidar, gps, imu, camera]
         self.viz_conf.gui = True
         self.sim_conf.world = "map_5.954036_51.977320"
+
+    @register_configuration("multi_charging")
+    def config_multi_charging(self) -> None:  # noqa: D102
+        panther = Vehicle("panther", (0, 1, 0.2), (0, 0, 0))
+        lynx = Vehicle("lynx", (0, -1, 0.13), (0, 0, 0))
+        charging_station1 = ChargingStation("wibotic1", (1, 1, 0))
+        charging_station2 = ChargingStation("wibotic2", (1, -1, 0))
+
+        self.plat_conf.platforms = [
+            panther,
+            lynx,
+            charging_station1,
+            charging_station2,
+        ]
 
     # Lynx:
     @register_configuration("lynx")
