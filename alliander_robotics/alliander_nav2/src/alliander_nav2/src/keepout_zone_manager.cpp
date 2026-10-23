@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-#include "dynamic_keepout_zones.hpp"
+#include "keepout_zone_manager.hpp"
 #include "rclcpp/qos.hpp"
 
 KeepoutZoneManager::KeepoutZoneManager()
