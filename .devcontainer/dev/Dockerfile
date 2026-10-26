@@ -35,6 +35,12 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount
     apt update && apt install -y --no-install-recommends \
     ros-"$ROS_DISTRO"-nav2-simple-commander
 
+# Install BehaviorTree.ROS2:
+RUN git clone -b humble https://github.com/BehaviorTree/BehaviorTree.ROS2.git src/behaviortree_ros2
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked \
+    apt update && apt install -y --no-install-recommends \
+    ros-"$ROS_DISTRO"-behaviortree-cpp
+
 # Install custom msgs:
 RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked \
     apt update && apt install -y --no-install-recommends \
@@ -67,6 +73,7 @@ RUN echo "source /.dev_bashrc" >> /home/"$REMOTE_USER"/.bashrc
 
 # Copy Alliander ROS packages with C++ code, install build dependencies and build the packages:
 COPY $SRC_DIRECTORY/alliander_apriltag/src /alliander/ros/src
+COPY $SRC_DIRECTORY/alliander_behaviors/src /alliander/ros/src
 COPY $SRC_DIRECTORY/alliander_core/src/ /alliander/ros/src
 COPY $SRC_DIRECTORY/alliander_diagnostics/src/ /alliander/ros/src
 COPY $SRC_DIRECTORY/alliander_franka/src/ /alliander/ros/src
