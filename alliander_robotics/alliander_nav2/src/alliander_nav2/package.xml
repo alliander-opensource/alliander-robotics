@@ -24,7 +24,6 @@ SPDX-License-Identifier: Apache-2.0
   <depend>alliander_interfaces</depend>
   <depend>geographic_msgs</depend>
   <depend>nav2_behavior_tree</depend>
-  <depend>geographic_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>

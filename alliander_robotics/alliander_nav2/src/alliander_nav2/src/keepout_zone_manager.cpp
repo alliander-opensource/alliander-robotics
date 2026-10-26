@@ -26,13 +26,13 @@ KeepoutZoneManager::KeepoutZoneManager()
   gps_subscriber_ = create_subscription<sensor_msgs::msg::NavSatFix>(
       "/ublox/gps/fix", 10,
       std::bind(&KeepoutZoneManager::gps_callback, this,
-                std::placeholders::_1));
+                std::placeholders::_1)); // TODO: hard-coded topic!
 
   const auto mask_qos =
       rclcpp::QoS(rclcpp::KeepLast(1)).reliable().transient_local();
 
   publisher_ = create_publisher<nav_msgs::msg::OccupancyGrid>(
-      "/panther/keepout_filter_mask", mask_qos);
+      "/panther/keepout_filter_mask", mask_qos); // TODO: hard-coded topic!
 
   srv_ = create_service<alliander_interfaces::srv::AddKeepoutZone>(
       "/add_ui_nogozone",
