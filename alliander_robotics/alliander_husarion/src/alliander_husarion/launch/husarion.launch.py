@@ -30,6 +30,7 @@ def launch_setup(context: LaunchContext) -> list:
         platform="husarion",
         xacro=f"{vehicle_config.name}.urdf.xacro",
         xacro_arguments={
+            "charging_receiver": str(vehicle_config.charging_receiver),
             "childs": str(
                 [
                     [child.connects_to, child.namespace, child.link]

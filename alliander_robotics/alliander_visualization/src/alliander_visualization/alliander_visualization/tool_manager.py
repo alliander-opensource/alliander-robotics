@@ -35,9 +35,6 @@ class ApplyConfigurations:
         Args:
             config (VisualizationConfig): configuration for Visualization tool -- list of platforms and boolean flags.
             platform_list (PlatformList): a list of all platforms required for the selected configuration.
-
-        Raises:
-            NotImplementedError: if platform.platform_type does not match any of the implemented types.
         """
         Rviz.set_fixed_frame("map")
 
@@ -62,16 +59,6 @@ class ApplyConfigurations:
                     self.add_lidar(Lidar.from_str(platform.to_str()))
                 case "GPS":
                     self.add_gps(GPS.from_str(platform.to_str()))
-                case "Gripper":
-                    pass
-                case "IMU":
-                    pass
-                case "Lift":
-                    pass
-                case _:
-                    raise NotImplementedError(
-                        f"Configuration for platform {type(platform).__name__} is not implemented."
-                    )
 
         if config.rviz:
             Rviz.create_rviz_file()

@@ -287,6 +287,17 @@ class Apriltag(Platform):
 
 
 @dataclass
+class ChargingStation(Platform):
+    """Configuration for a ChargingStation platform.
+
+    Attributes:
+        platform_type (str): Type identifier for the platform.
+    """
+
+    platform_type: str = "ChargingStation"
+
+
+@dataclass
 class Gripper(Platform):
     """Configuration for a Gripper platform.
 
@@ -329,10 +340,12 @@ class Vehicle(Platform):
 
     Attributes:
         platform_type (str): Type identifier for the platform.
+        charging_receiver (bool): Whether the vehicle has a charging receiver.
         nav2_config (Nav2Config): Nav2 configuration settings.
     """
 
     platform_type: str = "Vehicle"
+    charging_receiver: bool = False
     nav2_config: Nav2Config = field(default_factory=Nav2Config)
 
     @property
@@ -466,6 +479,7 @@ class PlatformList(Config):
                 Arm,
                 Vehicle,
                 Camera,
+                ChargingStation,
                 GPS,
                 Gripper,
                 IMU,

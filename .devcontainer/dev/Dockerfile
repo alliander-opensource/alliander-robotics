@@ -70,6 +70,7 @@ COPY $SRC_DIRECTORY/alliander_apriltag/src /alliander/ros/src
 COPY $SRC_DIRECTORY/alliander_core/src/ /alliander/ros/src
 COPY $SRC_DIRECTORY/alliander_diagnostics/src/ /alliander/ros/src
 COPY $SRC_DIRECTORY/alliander_franka/src/ /alliander/ros/src
+COPY $SRC_DIRECTORY/alliander_gazebo/src/ /alliander/ros/src
 COPY $SRC_DIRECTORY/alliander_joystick/src/ /alliander/ros/src
 COPY $SRC_DIRECTORY/alliander_meta/src/ /alliander/ros/src
 COPY $SRC_DIRECTORY/alliander_moveit/src/ /alliander/ros/src

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="wibotic_station">
+
+  <!-- Include the base wibotic station from the husarion components package: -->
+  <xacro:arg name="root_link" default="apriltag_link" />
+  <xacro:arg name="transmitter_height" default="0.15" />
+  <xacro:include filename="$(find husarion_components_description)/urdf/wibotic_station.urdf.xacro" />
+
+  <!-- Apply transformation so that the station is oriented correctly by default: -->
+  <link name="wibotic_station_base_link" />
+  <joint name="wibotic_station_base_to_apriltag" type="fixed">
+    <origin xyz="0 0 0.6" rpy="1.57 0 -1.57" />
+    <parent link="wibotic_station_base_link" />
+    <child link="$(arg root_link)" />
+  </joint>
+
+  <!-- Place an empty sensor at the transmitter, so that its pose can be published in Gazebo: -->
+  <gazebo reference="wibotic_station_wibotic_transmitter_link">
+    <sensor name="charging_transmitter" type="custom">
+    </sensor>
+  </gazebo>
+
+  <!-- Publish poses so that distance between wibotic transmitter and receiver can be measured: -->
+  <gazebo>
+    <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
+      <publish_model_pose>true</publish_model_pose>
+      <publish_sensor_pose>true</publish_sensor_pose>
+      <publish_link_pose>false</publish_link_pose>
+      <use_pose_vector_msg>true</use_pose_vector_msg>
+      <update_frequency>10</update_frequency>
+    </plugin>
+  </gazebo>
+</robot>

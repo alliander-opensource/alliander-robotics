@@ -9,17 +9,40 @@ SPDX-License-Identifier: Apache-2.0
   <!-- Set use_sim argument to let panther xacro load gazebo plugin: -->
   <xacro:arg name="simulation" default="true" />
   <xacro:arg name="namespace" default="panther" />
+  <xacro:arg name="charging_receiver" default="false" />
   <xacro:arg name="childs" default="${[]}" />
 
   <!-- Load panther: -->
-  <xacro:include filename="$(find alliander_husarion_description)/urdf/adapted/panther_macro.urdf.xacro"
+  <xacro:include
+    filename="$(find alliander_husarion_description)/urdf/adapted/panther_macro.urdf.xacro"
     ns="husarion" />
   <xacro:husarion.panther_robot
     use_sim="$(arg simulation)"
     wheel_config_file="$(find husarion_ugv_description)/config/WH01.yaml"
     controller_config_file="$(find alliander_husarion_description)/config/panther_controllers.yaml"
-    battery_config_file=""
+    battery_config_file="$(find alliander_husarion_description)/config/battery_plugin.yaml"
     namespace="$(arg namespace)" />
+
+  <xacro:if value="$(arg charging_receiver)">
+    <!-- Wibotic receiver: -->
+    <xacro:include
+      filename="$(find alliander_husarion_description)/urdf/wibotic_receiver.urdf.xacro" />
+    <xacro:alliander_wibotic_receiver
+      namespace="$(arg namespace)"
+      parent_link="front_bumper_link"
+      xyz="-0.01 0.0 0.0" />
+
+    <!-- Publish poses so that distance between wibotic receiver and transmitter can be measured: -->
+    <gazebo>
+      <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
+        <publish_model_pose>true</publish_model_pose>
+        <publish_sensor_pose>true</publish_sensor_pose>
+        <publish_link_pose>false</publish_link_pose>
+        <use_pose_vector_msg>true</use_pose_vector_msg>
+        <update_frequency>10</update_frequency>
+      </plugin>
+    </gazebo>
+  </xacro:if>
 
   <!-- Create detachable joints with given childs: -->
   <xacro:include filename="$(find alliander_description)/urdf/detachable_joints.urdf.xacro" />

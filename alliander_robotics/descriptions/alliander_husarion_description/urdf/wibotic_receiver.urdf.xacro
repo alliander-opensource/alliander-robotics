@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:macro name="alliander_wibotic_receiver"
+    params="namespace parent_link xyz:='0.0 0.0 0.0' rpy:='0.0 0.0 0.0'">
+
+    <!-- Include the base wibotic receiver from the husarion components package: -->
+    <xacro:include
+      filename="$(find husarion_components_description)/urdf/wibotic_receiver.urdf.xacro" />
+    <xacro:wibotic_receiver parent_link="${parent_link}" xyz="${xyz}" rpy="${rpy}" />
+
+    <!-- Place an empty sensor at the coil, so that its pose can be published in Gazebo: -->
+    <gazebo reference="wibotic_receiver_coil_link">
+      <sensor name="charging_receiver" type="custom">
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+</robot>

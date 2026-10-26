@@ -26,13 +26,15 @@ https://code.visualstudio.com/docs/editing/codebasics#_compare-files
         <initial_charge>${battery_config['initial_charge_percentage']*battery_config['capacity']}</initial_charge>
         <capacity>${battery_config['capacity']}</capacity>
         <resistance>0.15</resistance>
-        <smooth_current_tau>2.0</smooth_current_tau>
+        <smooth_current_tau>0.1</smooth_current_tau>
         <enable_recharge>true</enable_recharge>
         <charging_time>${battery_config['charging_time']}</charging_time>
         <soc_threshold>2.0</soc_threshold>
         <!-- TODO Because of https://github.com/gazebosim/gz-sim/issues/225 division by 100 -->
-        <power_load>${battery_config['power_load']/100.0}</power_load>
+        <power_load>${battery_config['power_load']}</power_load>
         <start_draining>${battery_config['simulate_discharging']}</start_draining>
+        <fix_issue_225>true</fix_issue_225>
+        <invert_current_sign>true</invert_current_sign>
       </plugin>
     </gazebo>
   </xacro:macro>
