@@ -17,14 +17,14 @@ RUN git clone -b humble https://github.com/BehaviorTree/BehaviorTree.ROS2.git /$
 # Install alliander packages:
 WORKDIR /$WORKDIR/ros
 COPY $SRC_DIRECTORY/alliander_core/src/ /$WORKDIR/ros/src
-COPY $SRC_DIRECTORY/alliander_behaviors/src/ /$WORKDIR/ros/src
+COPY $SRC_DIRECTORY/alliander_behavior/src/ /$WORKDIR/ros/src
 RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /$WORKDIR/rosdep_install.sh --build
 RUN /$WORKDIR/colcon_build.sh
 
 # Install python dependencies:
 WORKDIR $WORKDIR
 COPY $SRC_DIRECTORY/pyproject.toml /$WORKDIR/pyproject.toml
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv uv sync --group alliander-behaviors \
+RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv uv sync \
   && echo "export PYTHONPATH=\"$(dirname $(dirname $(uv python find)))/lib/python3.12/site-packages:\$PYTHONPATH\"" >> /root/.bashrc \
   && echo "export PATH=\"$(dirname $(dirname $(uv python find)))/bin:\$PATH\"" >> /root/.bashrc
 

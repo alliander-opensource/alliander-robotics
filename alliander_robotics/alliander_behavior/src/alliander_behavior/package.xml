@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 -->
 
 <package format="3">
-  <name>alliander_behaviors</name>
+  <name>alliander_behavior</name>
   <version>0.1.0</version>
   <description>Contains Behavior Trees for Alliander Robotics' robots.</description>
   <maintainer email="robots@alliander.com">Alliander Robotics</maintainer>
