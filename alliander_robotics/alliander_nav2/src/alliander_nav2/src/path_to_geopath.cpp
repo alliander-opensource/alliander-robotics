@@ -20,6 +20,7 @@ using geometry_msgs::msg::PoseStamped;
 using geometry_msgs::msg::TransformStamped;
 using nav_msgs::msg::Path;
 using std::placeholders::_1;
+using namespace std::chrono_literals;
 
 /**
  * @brief A ROS2 node that converts a Path to a GeoPath.
@@ -73,16 +74,17 @@ class RouteToGps : public rclcpp::Node {
    */
   void planCallback(const Path::SharedPtr msg) {
     // Check if a valid UTM datum has been set:
-    if (utm_datum_.zone < 0 || utm_datum_.zone > 60) {
-      RCLCPP_WARN(get_logger(),
-                  "No valid UTM zone set. Cannot convert plan to GPS.");
+    if (utm_datum_.zone < 1 || utm_datum_.zone > 60) {
+      RCLCPP_WARN_THROTTLE(
+          get_logger(), *get_clock(), 5000,
+          "No valid UTM zone set. Cannot convert plan to GPS.");
       return;
     }
 
     // Get the transform from the map frame to the UTM frame:
     TransformStamped map_to_utm;
     try {
-      map_to_utm = tf_buffer_.lookupTransform("utm", "map", tf2::TimePointZero);
+      map_to_utm = tf_buffer_.lookupTransform("utm", "map", this->now(), 50ms);
     } catch (const tf2::TransformException& ex) {
       RCLCPP_WARN(get_logger(), "Could not transform map to utm: %s",
                   ex.what());
