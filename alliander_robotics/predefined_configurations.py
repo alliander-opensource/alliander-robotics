@@ -467,7 +467,9 @@ class PredefinedConfigurations:
     @register_configuration("multi_charging")
     def config_multi_charging(self) -> None:  # noqa: D102
         panther = Vehicle("panther", (0, 1, 0.2), (0, 0, 0))
+        panther.charging_receiver = True
         lynx = Vehicle("lynx", (0, -1, 0.13), (0, 0, 0))
+        lynx.charging_receiver = True
         charging_station1 = ChargingStation("wibotic1", (1, 1, 0))
         charging_station2 = ChargingStation("wibotic2", (1, -1, 0))
 
