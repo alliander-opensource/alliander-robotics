@@ -371,6 +371,16 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         ],
     )
 
+    path_to_geopath = Node(
+        package="alliander_nav2",
+        executable="path_to_geopath_node",
+        namespace=namespace_vehicle,
+        remappings=[
+            ("/plan", f"/{namespace_vehicle}/plan"),
+            ("/plan_gps", f"/{namespace_vehicle}/plan_gps"),
+        ],
+    )
+
     nav2_manager = Node(
         package="alliander_nav2",
         executable="nav2_manager.py",
@@ -397,6 +407,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         Register.on_start(navsat_transform, context) if nav2.gps else SKIP,
         Register.on_start(odom_gate, context) if nav2.gps else SKIP,
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
+        Register.on_start(path_to_geopath, context) if nav2.gps else SKIP,
         Register.on_log(nav2_manager, "Controller is ready.", context)
         if nav2.navigation
         else SKIP,

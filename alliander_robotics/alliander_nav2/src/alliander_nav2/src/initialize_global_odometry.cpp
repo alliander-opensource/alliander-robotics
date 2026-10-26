@@ -2,6 +2,8 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
+#include <GeographicLib/UTMUPS.hpp>
+#include <alliander_interfaces/msg/utm_datum.hpp>
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 #include <robot_localization/srv/set_datum.hpp>
@@ -10,14 +12,15 @@
 #include <std_srvs/srv/empty.hpp>
 
 using namespace std::chrono_literals;
+using alliander_interfaces::msg::UTMDatum;
 
 /**
  * @brief A ROS2 node that gates the robot_localization datum on a run of
  * consecutive, sufficiently-precise GPS fixes.
  *
  * Listens on the gps/fix topic and, once required_consecutive_fixes_ good
- * fixes in a row have been seen, calls robot_localization's datum service
- * with that fix and shuts down.
+ * fixes in a row have been seen, calls robot_localization's datum service and
+ * publishes the UTM configuration on a latched topic.
  */
 class OdometryGateNode : public rclcpp::Node {
  public:
@@ -38,6 +41,10 @@ class OdometryGateNode : public rclcpp::Node {
         declare_parameter<int>("required_consecutive_fixes", 5);
     max_position_covariance_ =
         declare_parameter<double>("max_position_covariance_m2", 4.0);
+
+    rclcpp::QoS qos(1);
+    qos.transient_local();
+    utm_pub_ = create_publisher<UTMDatum>("/utm_datum", qos);
 
     RCLCPP_INFO(get_logger(),
                 "Waiting for %d consecutive good fixes on before setting datum "
@@ -134,6 +141,21 @@ class OdometryGateNode : public rclcpp::Node {
       return;
     }
 
+    // Define UTM coordinates for the current GPS fix:
+    bool northp;
+    int zone;
+    double x;
+    double y;
+    GeographicLib::UTMUPS::Forward(msg.latitude, msg.longitude, zone, northp, x,
+                                   y);
+
+    // Publish the UTM datum:
+    UTMDatum utm_datum;
+    utm_datum.zone = zone;
+    utm_datum.northp = northp;
+    utm_pub_->publish(utm_datum);
+
+    // Set the UTM datum for the robot_localization node:
     auto request =
         std::make_shared<robot_localization::srv::SetDatum::Request>();
     request->geo_pose.position.latitude = msg.latitude;
@@ -166,10 +188,12 @@ class OdometryGateNode : public rclcpp::Node {
     odometry_enabled_ = true;
     odometry_toggle_client_->async_send_request(
         request, [this](rclcpp::Client<std_srvs::srv::Empty>::SharedFuture) {
-          RCLCPP_INFO(get_logger(), "Global EKF enabled, shutting down");
-          rclcpp::shutdown();
+          RCLCPP_INFO(get_logger(), "Global EKF enabled.");
         });
   }
+
+  /// Publisher for the UTM datum
+  rclcpp::Publisher<UTMDatum>::SharedPtr utm_pub_;
 
   /// Subscriber that listens to the GPS fix topic
   rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr fix_sub_;
