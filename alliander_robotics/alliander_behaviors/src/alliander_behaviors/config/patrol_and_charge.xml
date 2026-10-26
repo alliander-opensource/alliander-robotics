@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="PatrolAndCharge">
+    <Repeat num_cycles="-1">
+      <ReactiveFallback>
+        <Sequence name="Charge">
+          <IsBatteryLow/>
+          <NavigateToDock/>
+          <DockRobot/>
+          <WaitUntilCharged/>
+          <UndockRobot/>
+        </Sequence>
+        <Sequence name="Patrol">
+          <GetCurrentWaypoint/>
+          <NavigateToPose/>
+          <IncrementWaypoint/>
+        </Sequence>
+      </ReactiveFallback>
+    </Repeat>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="DockRobot"
+            editable="true"/>
+    <Action ID="GetCurrentWaypoint"
+            editable="true"/>
+    <Action ID="IncrementWaypoint"
+            editable="true"/>
+    <Condition ID="IsBatteryLow"
+               editable="true"/>
+    <Action ID="NavigateToDock"
+            editable="true"/>
+    <Action ID="NavigateToPose"
+            editable="true"/>
+    <Action ID="UndockRobot"
+            editable="true"/>
+    <Action ID="WaitUntilCharged"
+            editable="true"/>
+  </TreeNodesModel>
+
+</root>

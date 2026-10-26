@@ -95,4 +95,74 @@ MainTree
             </Sequence>
         </RecoveryNode>
     </BehaviorTree>
+
+  <TreeNodesModel>
+    <!-- Control -->
+    <Control ID="PipelineSequence"/>
+    <Control ID="ReactiveSequence"/>
+    <Control ID="ReactiveFallback"/>
+    <Control ID="RoundRobin"/>
+    <Control ID="RecoveryNode">
+        <input_port name="number_of_retries" default="1"/>
+    </Control>
+
+    <!-- Decorator -->
+    <Decorator ID="RateController">
+        <input_port name="hz" default="10.0"/>
+    </Decorator>
+
+    <!-- Actions -->
+    <Action ID="ComputePathToPose">
+        <input_port name="goal"/>
+        <input_port name="start"/>
+        <input_port name="planner_id"/>
+        <output_port name="path"/>
+        <output_port name="error_code_id"/>
+    </Action>
+    <Action ID="FollowPath">
+        <input_port name="path"/>
+        <input_port name="controller_id"/>
+        <input_port name="goal_checker_id"/>
+        <input_port name="progress_checker_id"/>
+        <output_port name="error_code_id"/>
+    </Action>
+    <Action ID="Spin">
+        <input_port name="spin_dist" default="1.57"/>
+        <input_port name="time_allowance" default="10"/>
+        <input_port name="is_recovery" default="true"/>
+        <output_port name="error_code_id"/>
+    </Action>
+    <Action ID="BackUp">
+        <input_port name="backup_dist" default="0.15"/>
+        <input_port name="backup_speed" default="0.025"/>
+        <output_port name="error_code_id"/>
+    </Action>
+    <Action ID="Wait">
+        <input_port name="wait_duration" default="1.0"/>
+        <output_port name="error_code_id"/>
+    </Action>
+    <Action ID="ClearEntireCostmap">
+        <input_port name="service_name"/>
+    </Action>
+    <Action ID="ControllerSelector">
+        <input_port name="default_controller"/>
+        <input_port name="topic_name"/>
+        <output_port name="selected_controller"/>
+    </Action>
+    <Action ID="PlannerSelector">
+        <input_port name="default_planner"/>
+        <input_port name="topic_name"/>
+        <output_port name="selected_planner"/>
+    </Action>
+
+    <!-- Conditions -->
+    <Condition ID="GoalUpdated"/>
+    <Condition ID="IsSystemHealthy"/>
+    <Condition ID="WouldAControllerRecoveryHelp">
+        <input_port name="error_code"/>
+    </Condition>
+    <Condition ID="WouldAPlannerRecoveryHelp">
+        <input_port name="error_code"/>
+    </Condition>
+  </TreeNodesModel>
 </root>
