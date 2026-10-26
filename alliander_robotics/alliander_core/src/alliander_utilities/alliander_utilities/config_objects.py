@@ -266,6 +266,17 @@ class NtripConfig(Config):
     password: str = "pass"
 
 
+@dataclass
+class BehaviorTreeConfig(Config):
+    """Configuration for a Behavior Tree.
+
+    Attributes:
+        tree (Literal["patrol_and_charge"]): Which behavior tree to load.
+    """
+
+    tree: Literal["empty", "patrol_and_charge"] = "empty"
+
+
 # Platforms:
 @dataclass
 class Apriltag(Platform):
@@ -330,10 +341,12 @@ class Vehicle(Platform):
     Attributes:
         platform_type (str): Type identifier for the platform.
         nav2_config (Nav2Config): Nav2 configuration settings.
+        bt_config (BehaviorTreeConfig): Behavior Tree configuration settings.
     """
 
     platform_type: str = "Vehicle"
     nav2_config: Nav2Config = field(default_factory=Nav2Config)
+    bt_config: BehaviorTreeConfig = field(default_factory=BehaviorTreeConfig)
 
     @property
     def nav2(self) -> bool:
@@ -349,6 +362,15 @@ class Vehicle(Platform):
                 self.nav2_config.navigation,
             ]
         )
+
+    @property
+    def behavior(self) -> bool:
+        """Boolean indicating whether a Behavior Tree is added.
+
+        Returns:
+            bool: True if a Behavior Tree is added, False otherwise.
+        """
+        return self.bt_config.tree != "empty"
 
 
 @dataclass

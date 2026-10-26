@@ -21,6 +21,7 @@ from alliander_robotics.predefined_configurations import PredefinedConfiguration
 SERVICE = typing.Literal[
     "platform",
     "simulator",
+    "behavior",
     "moveit",
     "nav2",
     "visualization",
@@ -150,7 +151,7 @@ class Compose:
         Raises:
             ValueError: if platform is not provided while a platform is needed.
         """
-        needs_platform = service_type in {"platform", "moveit", "nav2"}
+        needs_platform = service_type in {"platform", "behavior", "moveit", "nav2"}
         if needs_platform and platform is None:
             raise ValueError(f"Platform required for '{service_type}'")
 
@@ -232,6 +233,11 @@ class Compose:
                     platform.package(),
                     f" platform_config:='{platform.to_str()}'",
                     {"needs_dependency": False},
+                ),
+                "behavior": (
+                    "alliander_behavior",
+                    f" platform_config:='{platform.to_str()}'",
+                    {"needs_dependency": True},
                 ),
                 "moveit": (
                     "alliander_moveit",
@@ -439,6 +445,8 @@ class Compose:
                             apriltag_added = True
                         continue
                     self.add_service(content, "platform", platform)
+                    if getattr(platform, "behavior", False):
+                        self.add_service(content, "behavior", platform)
                     if getattr(platform, "moveit", False):
                         self.add_service(content, "moveit", platform)
                     if getattr(platform, "nav2", False):

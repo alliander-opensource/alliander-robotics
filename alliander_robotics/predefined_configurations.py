@@ -14,6 +14,7 @@ from alliander_robotics.alliander_core.src.alliander_utilities.alliander_utiliti
     Apriltag,
     Arm,
     Beamagine,
+    BehaviorTreeConfig,
     Camera,
     Gripper,
     Lidar,
@@ -394,6 +395,13 @@ class PredefinedConfigurations:
         link(vehicle, lidar)
         self.plat_conf.platforms = [vehicle, lidar]
         self.sim_conf.world = "walls.sdf"
+
+    # TODO: remove
+    @register_configuration("panther_bt_test")
+    def config_behaviortree_test(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        vehicle.bt_config = BehaviorTreeConfig(tree="patrol_and_charge")
+        self.plat_conf.platforms = [vehicle]
 
     @register_configuration("panther_outdoor_navigation")
     def config_panther_outdoor_navigation(self) -> None:  # noqa: D102
