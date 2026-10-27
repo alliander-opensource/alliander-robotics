@@ -47,6 +47,13 @@ repos:
         pass_filenames: false
   - repo: local
     hooks:
+      - id: biome
+        name: biome
+        entry: biome check --reporter=summary 
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
       - id: clang-format
         name: clang-format
         entry: bash -c "uv run clang-format -i -Werror --dry-run $(find . -name *.cpp -o -name *.hpp -o -name *.c -o -name *.h | grep -v '.venv\|.nvim\|clangd')"
