@@ -5,7 +5,16 @@
 from typing import Literal, TypeVar
 
 import yaml
-from alliander_utilities.config_objects import Platform
+from alliander_utilities.config_objects import (
+    GPS,
+    IMU,
+    Beamagine,
+    Camera,
+    Lidar,
+    Platform,
+    ThermalCamera,
+    Vehicle,
+)
 
 T = TypeVar("T", bound=Platform)
 
@@ -68,22 +77,20 @@ class BridgeConfig:
             }
         )
 
-    def bridge_camera(self, ns: str) -> None:
+    def bridge_camera(self, ns: str, camera_type: Literal["color", "depth"]) -> None:
         """Bridge the camera topics using ros_gz_image bridge to have compressed image topics.
 
         Args:
             ns (str): The namespace.
+            camera_type (Literal["color", "depth"]): The type of camera.
         """
-        image_topics = [f"/{ns}/image", f"/{ns}/depth_image"]
-        remaps = [f"/{ns}/color/image", f"/{ns}/depth/image"]
+        topic = f"/{ns}/image" if camera_type == "color" else f"/{ns}/depth_image"
+        remap = f"/{ns}/{camera_type}/image"
         sub_topics = ["compressed", "compressedDepth", "theora", "zstd"]
-        self.image_topics.extend(image_topics)
-        for topic, remap in zip(image_topics, remaps, strict=False):
-            self.image_remaps.append((topic, remap))
-            for sub_topic in sub_topics:
-                self.image_remaps.append(
-                    (f"{topic}/{sub_topic}", f"{remap}/{sub_topic}")
-                )
+        self.image_topics.append(topic)
+        self.image_remaps.append((topic, remap))
+        for sub_topic in sub_topics:
+            self.image_remaps.append((f"{topic}/{sub_topic}", f"{remap}/{sub_topic}"))
 
     def bridge_camera_info(
         self, ns: str, camera_type: Literal["color", "depth"]
@@ -188,20 +195,27 @@ class BridgeConfig:
 
         for platform in platforms:
             ns = platform.namespace
-            if platform.platform_type == "Vehicle":
+            if isinstance(platform, Vehicle):
                 self.bridge_battery(ns)
-            if platform.platform_type in {"Lidar", "Beamagine"}:
+            if isinstance(platform, Lidar):
                 self.bridge_lidar(ns)
-            if platform.platform_type in {"Camera", "Beamagine"}:
-                self.bridge_camera(ns)
+            if isinstance(platform, Camera):
+                self.bridge_camera(ns, "color")
                 self.bridge_camera_info(ns, "color")
-                self.bridge_camera_info(ns, "depth")
-                self.bridge_camera_points(platform)
-            if platform.platform_type == "GPS":
-                self.bridge_gps(ns)
-            if platform.platform_type in {"ThermalCamera", "Beamagine"}:
+                if not platform.simulate_high_resolution:
+                    self.bridge_camera(ns, "depth")
+                    self.bridge_camera_info(ns, "depth")
+                    self.bridge_camera_points(platform)
+            if isinstance(platform, ThermalCamera):
                 self.bridge_thermal_camera(ns)
-            if platform.platform_type == "IMU":
+            if isinstance(platform, Beamagine):
+                self.bridge_camera(ns, "color")
+                self.bridge_camera_info(ns, "color")
+                self.bridge_thermal_camera(ns)
+                self.bridge_lidar(ns)
+            if isinstance(platform, GPS):
+                self.bridge_gps(ns)
+            if isinstance(platform, IMU):
                 self.bridge_imu(ns)
 
         with open(self.config_file, "w", encoding="utf-8") as outfile:

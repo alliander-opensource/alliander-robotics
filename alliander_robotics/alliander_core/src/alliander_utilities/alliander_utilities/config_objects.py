@@ -370,9 +370,11 @@ class Camera(Platform):
 
     Attributes:
         platform_type (str): Type identifier for the platform.
+        simulate_high_resolution (bool): Whether to simulate high resolution (RGB only) or full RGBD on lower resolutions.
     """
 
     platform_type: str = "Camera"
+    simulate_high_resolution: bool = False
 
 
 @dataclass
