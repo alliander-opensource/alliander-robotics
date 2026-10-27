@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 import typing
 from dataclasses import dataclass, field
-from typing import Annotated, List, Literal, Union
+from typing import Annotated, ClassVar, List, Literal, Union
 
 from mashumaro.mixins.json import DataClassJSONMixin
 from mashumaro.types import Discriminator
@@ -123,6 +123,7 @@ class Platform(Config):
         parent (Parent): Parent platform configuration.
         childs (list[Child]): List of child platform configurations.
         initialized (bool): Whether the platform has been initialized.
+        NAMESPACES (ClassVar[dict[str, int]]): Dictionary to keep track of namspaces already used, mapping namespace to its count.
     """
 
     name: str
@@ -140,13 +141,21 @@ class Platform(Config):
 
     initialized: bool = False
 
+    NAMESPACES: ClassVar[dict[str, int]] = {}
+
     def __post_init__(self) -> None:
         """Initialize the platform configuration."""
         if self.initialized:
             return
         self.orientation = tuple(map(math.radians, self.orientation))
         if not self.namespace:
-            self.namespace = self.name
+            namespace = self.name
+            if namespace in Platform.NAMESPACES:
+                Platform.NAMESPACES[namespace] += 1
+                namespace += f"{Platform.NAMESPACES[namespace]}"
+            else:
+                Platform.NAMESPACES[namespace] = 0
+            self.namespace = namespace
         if not self.parent.connects_to:
             self.parent.connects_to = self.default_link_to_parent()
         self.initialized = True
@@ -197,6 +206,8 @@ class Platform(Config):
                 return "wrist_3_link"
             case "ewellix":
                 return "lift_mount"
+            case "wibotic":
+                return "wibotic_station_base_link"
             case _:
                 raise ValueError(
                     f"No link_to_child for unknown platform name: {self.name}"

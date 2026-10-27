@@ -466,18 +466,27 @@ class PredefinedConfigurations:
 
     @register_configuration("multi_charging")
     def config_multi_charging(self) -> None:  # noqa: D102
+        # Robots:
         panther = Vehicle("panther", (0, 1, 0.2), (0, 0, 0))
         panther.charging_receiver = True
         lynx = Vehicle("lynx", (0, -1, 0.13), (0, 0, 0))
         lynx.charging_receiver = True
-        charging_station1 = ChargingStation("wibotic1", (1, 1, 0))
-        charging_station2 = ChargingStation("wibotic2", (1, -1, 0))
+
+        # Charging stations:
+        station1 = ChargingStation("wibotic", (1, 1, 0))
+        tag1 = Apriltag("tag", (0.0, 0.0, 0.8), id=1, publish_topic="/station1")
+        link(station1, tag1)
+        station2 = ChargingStation("wibotic", (1, -1, 0))
+        tag2 = Apriltag("tag", (0.0, 0.0, 0.8), id=2, publish_topic="/station2")
+        link(station2, tag2)
 
         self.plat_conf.platforms = [
             panther,
             lynx,
-            charging_station1,
-            charging_station2,
+            station1,
+            tag1,
+            station2,
+            tag2,
         ]
 
     # Lynx:
