@@ -489,6 +489,37 @@ class PredefinedConfigurations:
             tag2,
         ]
 
+    @register_configuration("panther_docking")
+    def config_panther_docking(self) -> None:  # noqa: D102
+        # Robot:
+        vehicle = Vehicle("panther", (-1, 0, 0.2))
+        vehicle.charging_receiver = True
+        vehicle.nav2_config.navigation = True
+        vehicle.nav2_config.slam = True
+        vehicle.nav2_config.docking = True
+        vehicle.nav2_config.docking_staging_offset = -1.0
+        vehicle.nav2_config.docking_final_offset = -0.4
+        lidar = Lidar("velodyne", position=(0.13, 0.17, 0.18))
+        camera = Camera("zed", (0.08, 0, 0.4), orientation=(0, 10, 0))
+        camera.simulate_high_resolution = True
+        link(vehicle, camera)
+        link(vehicle, lidar)
+
+        # Charging station:
+        station = ChargingStation("wibotic", (1.5, 0, 0))
+        tag = Apriltag(
+            "tag",
+            (0.0, 0.0, 0.8),
+            publish_topic=f"/{vehicle.namespace}/detected_dock_pose",
+            child_frame="dock",
+            child_frame_orientation=(0, -1.57, -1.57),
+        )
+        link(station, tag)
+
+        # World:
+        self.plat_conf.platforms = [vehicle, lidar, camera, station, tag]
+        self.sim_conf.world = "walls.sdf"
+
     # Lynx:
     @register_configuration("lynx")
     def config_lynx(self) -> None:  # noqa: D102
