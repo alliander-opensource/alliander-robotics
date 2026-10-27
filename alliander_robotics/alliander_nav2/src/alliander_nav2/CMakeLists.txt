@@ -50,7 +50,7 @@ ament_target_dependencies(keepout_zone_manager
   std_srvs
   alliander_interfaces
 )
-
+target_link_libraries(keepout_zone_manager PkgConfig::GEOGRAPHICLIB)
 install(
   TARGETS keepout_zone_manager
   DESTINATION lib/${PROJECT_NAME}
