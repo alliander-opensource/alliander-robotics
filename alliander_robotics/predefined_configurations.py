@@ -473,11 +473,11 @@ class PredefinedConfigurations:
         lynx.charging_receiver = True
 
         # Charging stations:
-        station1 = ChargingStation("wibotic", (1, 1, 0))
-        tag1 = Apriltag("tag", (0.0, 0.0, 0.8), id=1, publish_topic="/station1")
+        station1 = ChargingStation("wibotic", namespace="station1", position=(1, 1, 0))
+        tag1 = Apriltag("tag0", (0.0, 0.0, 0.8), id=1, publish_topic="/station1")
         link(station1, tag1)
-        station2 = ChargingStation("wibotic", (1, -1, 0))
-        tag2 = Apriltag("tag", (0.0, 0.0, 0.8), id=2, publish_topic="/station2")
+        station2 = ChargingStation("wibotic", namespace="station2", position=(1, -1, 0))
+        tag2 = Apriltag("tag1", (0.0, 0.0, 0.8), id=2, publish_topic="/station2")
         link(station2, tag2)
 
         self.plat_conf.platforms = [
