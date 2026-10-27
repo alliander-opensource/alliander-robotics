@@ -1,6 +1,6 @@
-// # SPDX-FileCopyrightText: Alliander N. V.
+// SPDX-FileCopyrightText: Alliander N. V.
 //
-// # SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 
 #ifndef KEEPOUT_ZONE_MANAGER_HPP_
 #define KEEPOUT_ZONE_MANAGER_HPP_
@@ -160,6 +160,14 @@ class KeepoutZoneManager : public rclcpp::Node {
    * @return True if the polygon was added successfully, false otherwise.
    */
   bool addPolygonToMask(const Polygon& polygon);
+
+  /**
+   * @brief Rebuilds the occupancy grid to fit all stored keepout polygons
+   * (within a reasonable size limit, otherwise the polygon will be rejected).
+   *
+   * @return True if the grid was rebuilt successfully, false otherwise.
+   */
+  bool rebuildMask();
 
   /**
    * @brief Publishes the current keepout zone occupancy grid.

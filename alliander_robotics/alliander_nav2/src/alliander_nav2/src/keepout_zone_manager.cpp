@@ -1,6 +1,6 @@
-// # SPDX-FileCopyrightText: Alliander N. V.
+// SPDX-FileCopyrightText: Alliander N. V.
 //
-// # SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 
 #include "keepout_zone_manager.hpp"
 
@@ -8,8 +8,11 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <limits>
 #include <memory>
+#include <new>
 #include <string>
 
 #include "rclcpp/qos.hpp"
@@ -20,16 +23,17 @@ using std::placeholders::_2;
 KeepoutZoneManager::KeepoutZoneManager()
     : Node("keepout_zone_manager"),
       resolution_(0.1),
-      width_(400),
-      height_(400),
-      origin_x_(-10.0),
-      origin_y_(-10.0),
+      width_(1),
+      height_(1),
+      origin_x_(0.0),
+      origin_y_(0.0),
       utm_reference_lat_(0.0),
       utm_reference_lon_(0.0),
       reference_initialized_(false),
       zone_count_(0) {
   rclcpp::QoS qos(1);
   qos.transient_local();
+
   utm_sub_ = create_subscription<UTMDatum>(
       "/utm_datum", qos, std::bind(&KeepoutZoneManager::utmCallback, this, _1));
   gps_sub_ = create_subscription<NavSatFix>(
@@ -37,6 +41,7 @@ KeepoutZoneManager::KeepoutZoneManager()
 
   const auto mask_qos =
       rclcpp::QoS(rclcpp::KeepLast(1)).reliable().transient_local();
+
   keepout_zone_pub_ =
       create_publisher<OccupancyGrid>("/keepout_filter_mask", mask_qos);
 
@@ -44,7 +49,9 @@ KeepoutZoneManager::KeepoutZoneManager()
       "/add_ui_nogozone",
       std::bind(&KeepoutZoneManager::addZoneCallback, this, _1, _2));
 
-  mask_data_.assign(static_cast<std::size_t>(width_) * height_, 0);
+  // Start with a minimal, empty grid. Its dimensions will grow to fit the
+  // stored polygons when keepout zones are added.
+  mask_data_.assign(1, 0);
 
   publishMask();
 
@@ -62,7 +69,7 @@ void KeepoutZoneManager::gpsCallback(const NavSatFix::SharedPtr msg) {
     return;
   }
 
-  // Check if a valid UTM datum has been set:
+  // Check if a valid UTM datum has been set.
   if (utm_datum_.zone < 1 || utm_datum_.zone > 60) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000,
                          "No valid UTM zone set. Cannot convert plan to GPS.");
@@ -92,9 +99,10 @@ KeepoutZoneManager::Point KeepoutZoneManager::gpsToLocalXY(
     double latitude, double longitude) const {
   bool northp = utm_datum_.northp;
   int zone = static_cast<int>(utm_datum_.zone);
-  double x;
-  double y;
+  double x = 0.0;
+  double y = 0.0;
   GeographicLib::UTMUPS::Forward(latitude, longitude, zone, northp, x, y);
+
   const double local_x = x - utm_reference_lat_;
   const double local_y = y - utm_reference_lon_;
 
@@ -116,8 +124,8 @@ KeepoutZoneManager::Polygon KeepoutZoneManager::gpsPathToPolygon(
 
 KeepoutZoneManager::Point KeepoutZoneManager::localToPixel(double x,
                                                            double y) const {
-  return {std::trunc((x - origin_x_) / resolution_),
-          std::trunc((y - origin_y_) / resolution_)};
+  return {std::floor((x - origin_x_) / resolution_),
+          std::floor((y - origin_y_) / resolution_)};
 }
 
 bool KeepoutZoneManager::pointInPolygon(double x, double y,
@@ -127,7 +135,6 @@ bool KeepoutZoneManager::pointInPolygon(double x, double y,
   }
 
   bool inside = false;
-
   auto previous = polygon.back();
 
   for (const auto& current : polygon) {
@@ -138,6 +145,7 @@ bool KeepoutZoneManager::pointInPolygon(double x, double y,
       const double intersection_x = (previous_x - current_x) * (y - current_y) /
                                         (previous_y - current_y) +
                                     current_x;
+
       if (x < intersection_x) {
         inside = !inside;
       }
@@ -171,6 +179,7 @@ bool KeepoutZoneManager::addPolygonToMask(const Polygon& polygon) {
 
   const int min_px = std::max(0, static_cast<int>(min_px_value));
   const int min_py = std::max(0, static_cast<int>(min_py_value));
+
   const int max_px = std::min(width_ - 1, static_cast<int>(max_px_value));
   const int max_py = std::min(height_ - 1, static_cast<int>(max_py_value));
 
@@ -184,12 +193,121 @@ bool KeepoutZoneManager::addPolygonToMask(const Polygon& polygon) {
       const double world_y = origin_y_ + (pixel_y + 0.5) * resolution_;
 
       if (pointInPolygon(world_x, world_y, polygon)) {
-        const auto index = static_cast<std::size_t>(pixel_y) * width_ + pixel_x;
+        const auto index = static_cast<std::size_t>(pixel_y) *
+                               static_cast<std::size_t>(width_) +
+                           static_cast<std::size_t>(pixel_x);
 
         mask_data_[index] = 100;
       }
     }
   }
+
+  return true;
+}
+
+bool KeepoutZoneManager::rebuildMask() {
+  // Keep a valid, minimal grid when no polygons have been added.
+  if (polygons_.empty()) {
+    width_ = 1;
+    height_ = 1;
+    origin_x_ = 0.0;
+    origin_y_ = 0.0;
+    mask_data_.assign(1, 0);
+    return true;
+  }
+
+  // Calculate the combined bounding box of all stored polygons.
+  double min_x = polygons_.front().local.front().first;
+  double max_x = min_x;
+  double min_y = polygons_.front().local.front().second;
+  double max_y = min_y;
+
+  for (const auto& stored_polygon : polygons_) {
+    for (const auto& [x, y] : stored_polygon.local) {
+      min_x = std::min(min_x, x);
+      max_x = std::max(max_x, x);
+      min_y = std::min(min_y, y);
+      max_y = std::max(max_y, y);
+    }
+  }
+
+  // Calculate the new origin without changing the current grid.
+  const double new_origin_x = std::floor(min_x / resolution_) * resolution_;
+  const double new_origin_y = std::floor(min_y / resolution_) * resolution_;
+
+  // Calculate the required grid dimensions.
+  const double width_cells =
+      std::ceil((max_x - new_origin_x) / resolution_) + 1.0;
+  const double height_cells =
+      std::ceil((max_y - new_origin_y) / resolution_) + 1.0;
+
+  // Reject invalid or excessively large grids before allocating memory (~10MB).
+  constexpr std::size_t max_nr_grid_cells = 10'000'000;
+
+  if (!std::isfinite(width_cells) || !std::isfinite(height_cells) ||
+      width_cells < 1.0 || height_cells < 1.0 ||
+      width_cells > static_cast<double>(std::numeric_limits<int>::max()) ||
+      height_cells > static_cast<double>(std::numeric_limits<int>::max()) ||
+      width_cells * height_cells > static_cast<double>(max_nr_grid_cells)) {
+    RCLCPP_ERROR(get_logger(),
+                 "Keepout grid dimensions are invalid or too large "
+                 "(width=%.0f, height=%.0f). Rejecting grid rebuild.",
+                 width_cells, height_cells);
+    return false;
+  }
+
+  const int new_width = static_cast<int>(width_cells);
+  const int new_height = static_cast<int>(height_cells);
+
+  const auto cell_count = static_cast<std::size_t>(new_width) *
+                          static_cast<std::size_t>(new_height);
+
+  // Allocate the new grid before changing the current grid.
+  std::vector<int8_t> new_mask;
+
+  try {
+    new_mask.assign(cell_count, 0);
+  } catch (const std::bad_alloc&) {
+    RCLCPP_ERROR(get_logger(),
+                 "Unable to allocate the new keepout grid. "
+                 "Keeping the previously published grid.");
+    return false;
+  }
+
+  // Commit the new grid only after its dimensions are valid and its memory
+  // has been allocated successfully.
+  const int old_width = width_;
+  const int old_height = height_;
+  const double old_origin_x = origin_x_;
+  const double old_origin_y = origin_y_;
+
+  width_ = new_width;
+  height_ = new_height;
+  origin_x_ = new_origin_x;
+  origin_y_ = new_origin_y;
+  mask_data_.swap(new_mask);
+
+  // Rebuild the mask using all stored polygons.
+  for (const auto& stored_polygon : polygons_) {
+    if (!addPolygonToMask(stored_polygon.local)) {
+      // Restore the previous grid if rasterization unexpectedly fails.
+      mask_data_.swap(new_mask);
+      width_ = old_width;
+      height_ = old_height;
+      origin_x_ = old_origin_x;
+      origin_y_ = old_origin_y;
+
+      RCLCPP_ERROR(get_logger(),
+                   "Failed to rasterize a keepout polygon. "
+                   "Keeping the previously published grid.");
+      return false;
+    }
+  }
+
+  RCLCPP_INFO(get_logger(),
+              "Rebuilt keepout mask: width=%d, height=%d, "
+              "resolution=%.3f m, origin=(%.3f, %.3f).",
+              width_, height_, resolution_, origin_x_, origin_y_);
 
   return true;
 }
@@ -219,12 +337,6 @@ void KeepoutZoneManager::addZoneCallback(
     }
   }
 
-  if (!addPolygonToMask(local_polygon)) {
-    response->success = false;
-    response->message = "The polygon is invalid or entirely outside the map.";
-    return;
-  }
-
   Polygon gps_polygon;
   gps_polygon.reserve(request->path.poses.size());
 
@@ -233,7 +345,21 @@ void KeepoutZoneManager::addZoneCallback(
                              pose.pose.position.longitude);
   }
 
+  // Store the new polygon before rebuilding so that all existing zones
+  // are included in the resized grid.
   polygons_.push_back({gps_polygon, local_polygon});
+
+  if (!rebuildMask()) {
+    // Remove the rejected polygon and keep the previous grid unchanged.
+    polygons_.pop_back();
+
+    response->success = false;
+    response->message =
+        "Keepout polygon rejected: the grid could not be rebuilt. "
+        "The previously accepted zones remain unchanged.";
+
+    return;
+  }
 
   ++zone_count_;
 
