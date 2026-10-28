@@ -274,7 +274,7 @@ class BehaviorTreeConfig(Config):
         tree (Literal["patrol_and_charge"]): Which behavior tree to load.
     """
 
-    tree: Literal["empty", "patrol_and_charge"] = "empty"
+    tree: Literal["Empty", "PatrolAndCharge"] = "Empty"
 
 
 # Platforms:

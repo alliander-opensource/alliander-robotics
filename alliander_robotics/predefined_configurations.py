@@ -400,7 +400,7 @@ class PredefinedConfigurations:
     @register_configuration("panther_bt_test")
     def config_behaviortree_test(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
-        vehicle.bt_config = BehaviorTreeConfig(tree="patrol_and_charge")
+        vehicle.bt_config = BehaviorTreeConfig(tree="PatrolAndCharge")
         self.plat_conf.platforms = [vehicle]
 
     @register_configuration("panther_outdoor_navigation")

@@ -4,13 +4,16 @@
 
 #include <behaviortree_ros2/bt_topic_sub_node.hpp>
 #include <cmath>
+#include <sensor_msgs/msg/battery_state.hpp>
 
 #include "behaviortree_cpp/tree_node.h"
+#include "sensor_msgs/msg/battery_state.hpp"
 
-class DockRobot : public BT::RosTopicSubNode<sensor_msgs::msg::BatteryState> {
+class IsBatteryBelow
+    : public BT::RosTopicSubNode<sensor_msgs::msg::BatteryState> {
  public:
-  DockRobot(const std::string& name, const BT::NodeConfig& conf,
-            const BT::RosNodeParams& params)
+  IsBatteryBelow(const std::string& name, const BT::NodeConfig& conf,
+                 const BT::RosNodeParams& params)
       : BT::RosTopicSubNode<sensor_msgs::msg::BatteryState>(name, conf,
                                                             params) {}
 

@@ -8,8 +8,9 @@ int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<rclcpp::Node>("task_planner");
 
-  node->declare_parameter<std::string>("tree_file", "tree.xml");
-  TaskPlanner task_planner(node, node->get_parameter("tree_file").as_string());
+  node->declare_parameter<std::string>("tree_name", "PatrolAndCharge");
+  TaskPlanner task_planner(node, node->get_parameter("tree_name").as_string(),
+                           node->get_parameter("config_dir").as_string());
 
   auto timer = node->create_wall_timer(std::chrono::milliseconds(100), [&] {
     const auto status = task_planner.tick();
