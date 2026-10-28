@@ -10,6 +10,7 @@ docking_server:
     base_frame: substitute_me
     fixed_frame: substitute_me
     dock_prestaging_tolerance: 0.01
+    wait_charge_timeout: 15.0
 
     dock_plugins: ["charging_dock"]
     charging_dock:
@@ -21,6 +22,7 @@ docking_server:
       charging_threshold: 0.2
       use_stall_detection: false
 
+      external_detection_timeout: 2.0
       external_detection_translation_x: substitute_me
       external_detection_translation_y: 0.0
       external_detection_rotation_roll: -1.57

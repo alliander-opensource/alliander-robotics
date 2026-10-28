@@ -497,8 +497,8 @@ class PredefinedConfigurations:
         vehicle.nav2_config.navigation = True
         vehicle.nav2_config.slam = True
         vehicle.nav2_config.docking = True
-        vehicle.nav2_config.docking_staging_offset = -1.0
-        vehicle.nav2_config.docking_final_offset = -0.4
+        vehicle.nav2_config.docking_staging_offset = -1.2
+        vehicle.nav2_config.docking_final_offset = -0.60
         lidar = Lidar("velodyne", position=(0.13, 0.17, 0.18))
         camera = Camera("zed", (0.08, 0, 0.4), orientation=(0, 10, 0))
         camera.simulate_high_resolution = True
