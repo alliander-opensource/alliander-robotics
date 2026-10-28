@@ -30,7 +30,8 @@ KeepoutZoneManager::KeepoutZoneManager()
       utm_reference_lat_(0.0),
       utm_reference_lon_(0.0),
       reference_initialized_(false),
-      zone_count_(0) {
+      zone_count_(0),
+      next_zone_id_(1) {
   rclcpp::QoS qos(1);
   qos.transient_local();
 
@@ -45,9 +46,9 @@ KeepoutZoneManager::KeepoutZoneManager()
   keepout_zone_pub_ =
       create_publisher<OccupancyGrid>("/keepout_filter_mask", mask_qos);
 
-  add_zone_srv_ = create_service<AddKeepoutZone>(
-      "/add_ui_nogozone",
-      std::bind(&KeepoutZoneManager::addZoneCallback, this, _1, _2));
+  manage_zones_srv_ = create_service<ManageKeepoutZones>(
+      "/manage_nogozones",
+      std::bind(&KeepoutZoneManager::manageZonesCallback, this, _1, _2));
 
   // Start with a minimal, empty grid. Its dimensions will grow to fit the
   // stored polygons when keepout zones are added.
@@ -312,65 +313,208 @@ bool KeepoutZoneManager::rebuildMask() {
   return true;
 }
 
-void KeepoutZoneManager::addZoneCallback(
-    const std::shared_ptr<AddKeepoutZone::Request> request,
-    std::shared_ptr<AddKeepoutZone::Response> response) {
-  if (!reference_initialized_) {
-    response->success = false;
-    response->message = "No GPS reference is available.";
-    return;
-  }
+void KeepoutZoneManager::manageZonesCallback(
+    const std::shared_ptr<ManageKeepoutZones::Request> request,
+    std::shared_ptr<ManageKeepoutZones::Response> response) {
+  switch (request->operation) {
+    case ManageKeepoutZones::Request::ADD:
+      if (!reference_initialized_) {
+        response->success = false;
+        response->message = "No GPS reference is available.";
+        return;
+      }
 
-  if (request->path.poses.size() < 3) {
-    response->success = false;
-    response->message = "The polygon must contain at least three points.";
-    return;
-  }
+      addZones(request, response);
+      break;
 
-  const Polygon local_polygon = gpsPathToPolygon(request->path);
+    case ManageKeepoutZones::Request::REMOVE:
+      removeSingleZone(request, response);
+      break;
 
-  for (const auto& [x, y] : local_polygon) {
-    if (!std::isfinite(x) || !std::isfinite(y)) {
+    case ManageKeepoutZones::Request::REMOVE_ALL:
+      removeAllZones(response);
+      break;
+
+    default:
       response->success = false;
-      response->message = "The polygon contains invalid GPS coordinates.";
-      return;
+      response->message = "Unknown keepout zone operation.";
+      break;
+  }
+
+  response->zone_ids.clear();
+  response->zone_ids.reserve(polygons_.size());
+
+  for (const auto& polygon : polygons_) {
+    response->zone_ids.push_back(polygon.id);
+  }
+}
+
+void KeepoutZoneManager::addZones(
+    const std::shared_ptr<ManageKeepoutZones::Request> request,
+    std::shared_ptr<ManageKeepoutZones::Response> response) {
+  std::size_t added_count = 0;
+  std::size_t skipped_count = 0;
+
+  for (const auto& path : request->paths) {
+    if (path.poses.size() < 3) {
+      RCLCPP_WARN(
+          get_logger(),
+          "Skipping keepout polygon: at least three points are required.");
+      ++skipped_count;
+      continue;
     }
+
+    // Convert GPS coordinates to local coordinates.
+    const Polygon local_polygon = gpsPathToPolygon(path);
+
+    // Reject polygons containing invalid local coordinates.
+    const bool valid_coordinates = std::all_of(
+        local_polygon.begin(), local_polygon.end(), [](const auto& point) {
+          return std::isfinite(point.first) && std::isfinite(point.second);
+        });
+
+    if (!valid_coordinates) {
+      RCLCPP_WARN(get_logger(),
+                  "Skipping keepout polygon: invalid local coordinates.");
+      ++skipped_count;
+      continue;
+    }
+
+    // Preserve the original GPS coordinates.
+    Polygon gps_polygon;
+    gps_polygon.reserve(path.poses.size());
+
+    for (const auto& pose : path.poses) {
+      gps_polygon.emplace_back(pose.pose.position.latitude,
+                               pose.pose.position.longitude);
+    }
+
+    polygons_.push_back({next_zone_id_, std::move(gps_polygon), local_polygon});
+
+    // Attempt to rebuild the occupancy grid with the new zone.
+    if (!rebuildMask()) {
+      // rebuildMask() preserves the previous grid on failure.
+      polygons_.pop_back();
+
+      RCLCPP_WARN(
+          get_logger(),
+          "Skipping keepout polygon #%s: failed to rebuild occupancy grid.",
+          std::to_string(next_zone_id_).c_str());
+
+      ++skipped_count;
+      continue;
+    }
+
+    RCLCPP_INFO(get_logger(), "Keepout polygon #%s created with %zu points.",
+                std::to_string(next_zone_id_).c_str(), local_polygon.size());
+
+    ++zone_count_;
+    ++next_zone_id_;
+    ++added_count;
   }
 
-  Polygon gps_polygon;
-  gps_polygon.reserve(request->path.poses.size());
-
-  for (const auto& pose : request->path.poses) {
-    gps_polygon.emplace_back(pose.pose.position.latitude,
-                             pose.pose.position.longitude);
+  // Publish once after processing all requested polygons.
+  if (added_count > 0) {
+    publishMask();
   }
 
-  // Store the new polygon before rebuilding so that all existing zones
-  // are included in the resized grid.
-  polygons_.push_back({gps_polygon, local_polygon});
+  // Report whether the request added any zones.
+  response->success = added_count > 0;
 
-  if (!rebuildMask()) {
-    // Remove the rejected polygon and keep the previous grid unchanged.
-    polygons_.pop_back();
-
-    response->success = false;
+  if (added_count == 0 && skipped_count == 0) {
+    response->message = "No keepout polygons were provided.";
+  } else {
     response->message =
-        "Keepout polygon rejected: the grid could not be rebuilt. "
-        "The previously accepted zones remain unchanged.";
+        "Added " + std::to_string(added_count) + " keepout zone(s); skipped " +
+        std::to_string(skipped_count) +
+        ". Total active zones: " + std::to_string(zone_count_) + ".";
+  }
+}
 
+void KeepoutZoneManager::removeSingleZone(
+    const std::shared_ptr<ManageKeepoutZones::Request> request,
+    std::shared_ptr<ManageKeepoutZones::Response> response) {
+  // Find the zone using its stable ID.
+  const auto zone_it = std::find_if(polygons_.begin(), polygons_.end(),
+                                    [request](const StoredPolygon& polygon) {
+                                      return polygon.id == request->zone_id;
+                                    });
+
+  if (zone_it == polygons_.end()) {
+    response->success = false;
+    response->message = "Keepout zone #" + std::to_string(request->zone_id) +
+                        " does not exist.";
     return;
   }
 
-  ++zone_count_;
+  // Save the zone and its position so it can be restored if rebuilding fails.
+  const auto original_position =
+      static_cast<std::size_t>(std::distance(polygons_.begin(), zone_it));
+  StoredPolygon removed_zone = *zone_it;
+
+  polygons_.erase(zone_it);
+
+  // Rebuild the grid without the removed zone.
+  if (!rebuildMask()) {
+    // Restore the zone to its original position.
+    polygons_.insert(polygons_.begin() + original_position,
+                     std::move(removed_zone));
+
+    response->success = false;
+    response->message = "Failed to remove keepout zone #" +
+                        std::to_string(request->zone_id) +
+                        ": the occupancy grid could not be rebuilt. "
+                        "The existing zones remain unchanged.";
+    return;
+  }
+
+  --zone_count_;
 
   publishMask();
 
-  RCLCPP_INFO(get_logger(), "Keepout polygon #%d created with %zu points.",
-              zone_count_, local_polygon.size());
+  RCLCPP_INFO(get_logger(), "Keepout zone #%lu removed successfully.",
+              request->zone_id);
 
   response->success = true;
-  response->message =
-      "Keepout polygon #" + std::to_string(zone_count_) + " added.";
+  response->message = "Keepout zone #" + std::to_string(request->zone_id) +
+                      " removed. Total number of keepout zones active: " +
+                      std::to_string(zone_count_);
+}
+
+void KeepoutZoneManager::removeAllZones(
+    std::shared_ptr<ManageKeepoutZones::Response> response) {
+  if (polygons_.empty()) {
+    response->success = true;
+    response->message = "No keepout zones are currently active.";
+    return;
+  }
+
+  // Preserve the current zones in case rebuilding fails.
+  auto previous_polygons = std::move(polygons_);
+  const std::size_t removed_count = previous_polygons.size();
+
+  polygons_.clear();
+
+  // Rebuild the occupancy grid without any keepout zones.
+  if (!rebuildMask()) {
+    // Restore the existing zones.
+    polygons_ = std::move(previous_polygons);
+
+    response->success = false;
+    response->message =
+        "Failed to remove all keepout zones because the occupancy "
+        "grid could not be rebuilt. Existing zones have been restored.";
+    return;
+  }
+
+  zone_count_ = 0;
+  publishMask();
+
+  RCLCPP_INFO(get_logger(), "Removed all %zu keepout zone(s).", removed_count);
+
+  response->success = true;
+  response->message = "Successfully removed all " +
+                      std::to_string(removed_count) + " keepout zone(s).";
 }
 
 void KeepoutZoneManager::publishMask() {

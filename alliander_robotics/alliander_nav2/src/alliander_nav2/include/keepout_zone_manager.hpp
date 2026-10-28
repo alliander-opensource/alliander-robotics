@@ -6,7 +6,7 @@
 #define KEEPOUT_ZONE_MANAGER_HPP_
 
 #include <alliander_interfaces/msg/utm_datum.hpp>
-#include <alliander_interfaces/srv/add_keepout_zone.hpp>
+#include <alliander_interfaces/srv/manage_keepout_zones.hpp>
 #include <cstdint>
 #include <geographic_msgs/msg/geo_path.hpp>
 #include <memory>
@@ -17,7 +17,7 @@
 #include <vector>
 
 using alliander_interfaces::msg::UTMDatum;
-using alliander_interfaces::srv::AddKeepoutZone;
+using alliander_interfaces::srv::ManageKeepoutZones;
 using geographic_msgs::msg::GeoPath;
 using nav_msgs::msg::OccupancyGrid;
 using sensor_msgs::msg::NavSatFix;
@@ -47,6 +47,8 @@ class KeepoutZoneManager : public rclcpp::Node {
    * contains coordinates transformed into the local UTM reference frame.
    */
   struct StoredPolygon {
+    /// Unique ID of the zone.
+    std::uint64_t id;
     /// Polygon represented by GPS latitude and longitude coordinates.
     Polygon gps;
     /// Polygon represented by local x and y coordinates.
@@ -60,8 +62,8 @@ class KeepoutZoneManager : public rclcpp::Node {
   rclcpp::Subscription<NavSatFix>::SharedPtr gps_sub_;
   /// Publisher that publishes the keepout zone occupancy grid.
   rclcpp::Publisher<OccupancyGrid>::SharedPtr keepout_zone_pub_;
-  /// Service that handles requests to add a keepout zone.
-  rclcpp::Service<AddKeepoutZone>::SharedPtr add_zone_srv_;
+  /// Service that adds or removes keepout zones.
+  rclcpp::Service<ManageKeepoutZones>::SharedPtr manage_zones_srv_;
 
   // UTM configuration variables:
   /// UTM zone and hemisphere information used for coordinate conversions.
@@ -90,6 +92,8 @@ class KeepoutZoneManager : public rclcpp::Node {
 
   /// Number of keepout zones added by the manager.
   int zone_count_;
+  /// ID to assign to the next newly created zone.
+  std::uint64_t next_zone_id_;
 
   // Keepout zone data:
   /// Occupancy grid data representing the keepout zone mask.
@@ -112,12 +116,36 @@ class KeepoutZoneManager : public rclcpp::Node {
   void gpsCallback(const NavSatFix::SharedPtr msg);
 
   /**
-   * @brief Callback that handles requests to add a keepout zone.
-   * @param request Service request containing the keepout zone definition.
-   * @param response Service response indicating the outcome of the request.
+   * @brief Handles requests to add or remove all remove keepout zones.
+   * @param request Request describing the operation and its arguments.
+   * @param response Response containing the operation result and affected IDs.
    */
-  void addZoneCallback(const std::shared_ptr<AddKeepoutZone::Request> request,
-                       std::shared_ptr<AddKeepoutZone::Response> response);
+  void manageZonesCallback(
+      const std::shared_ptr<ManageKeepoutZones::Request> request,
+      std::shared_ptr<ManageKeepoutZones::Response> response);
+
+  /**
+   * @brief Handles requests to add keepout zones.
+   * @param request Request describing the operation and its arguments.
+   * @param response Response containing the operation result and affected IDs.
+   */
+  void addZones(const std::shared_ptr<ManageKeepoutZones::Request> request,
+                std::shared_ptr<ManageKeepoutZones::Response> response);
+
+  /**
+   * @brief Handles requests to remove a specific keepout zone.
+   * @param request Request describing the operation and its arguments.
+   * @param response Response containing the operation result and affected IDs.
+   */
+  void removeSingleZone(
+      const std::shared_ptr<ManageKeepoutZones::Request> request,
+      std::shared_ptr<ManageKeepoutZones::Response> response);
+
+  /**
+   * @brief Handles requests to remove all keepout zones.
+   * @param response Response containing the operation result and affected IDs.
+   */
+  void removeAllZones(std::shared_ptr<ManageKeepoutZones::Response> response);
 
   /**
    * @brief Converts GPS coordinates into local x and y coordinates.
