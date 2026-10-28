@@ -18,7 +18,10 @@ SPDX-License-Identifier: Apache-2.0
 
   <depend>rclcpp</depend>
   <depend>rclcpp_action</depend>
+  <depend>alliander_interfaces</depend>
   <depend>behaviortree_cpp</depend>
+  <depend>nav2_msgs</depend>
+  <depend>sensor_msgs</depend>
 
   <exec_depend>behaviortree_ros2</exec_depend>
 

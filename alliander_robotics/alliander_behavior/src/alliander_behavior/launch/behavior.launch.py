@@ -27,18 +27,16 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
     vehicle_config = Vehicle.from_str(platform_arg.string_value(context))
     namespace = vehicle_config.namespace
     bt_config = vehicle_config.bt_config
-    tree = bt_config.tree
 
     task_planner_node = Node(
         package="alliander_behavior",
         executable="task_planner_node",
         namespace=namespace,
         parameters=[
-            {
-                "tree_file": get_file_path(
-                    "alliander_behavior", ["config"], f"{tree}.xml"
-                )
-            }
+            # ID of BehaviorTree that you want to run
+            {"tree_name": bt_config.tree},
+            # Doing this here rather in C++ code to levarage alliander_utilities
+            {"config_dir": get_file_path("alliander_behavior", ["config"], "")},
         ],
     )
     return [Register.on_start(task_planner_node, context)]

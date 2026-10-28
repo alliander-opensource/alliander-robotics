@@ -4,15 +4,14 @@
     <Repeat num_cycles="-1">
       <ReactiveFallback>
         <Sequence name="Charge">
-          <IsBatteryLow threshold="0.25"/>
-          <NavigateToDock/>
-          <DockRobot/>
-          <WaitUntilCharged/>
-          <UndockRobot/>
+	  <IsBatteryBelow threshold="{battery_threshold_low}"/>
+	  <CallTriggerAction name="DockRobot" action_name="{dock_robot_action}"/>
+	  <SubTree ID="WaitUntilCharged" target="{battery_threshold_charged}" timeout_ms="{charge_timeout_ms}"/>
+	  <CallTriggerAction name="UndockRobot" action_name="{undock_robot_action}"/>
         </Sequence>
         <Sequence name="Patrol">
           <GetCurrentWaypoint/>
-          <NavigateToPose/>
+	  <NavigateToPose action_name="{navigate_to_pose_action}"/>
           <IncrementWaypoint/>
         </Sequence>
       </ReactiveFallback>
@@ -29,8 +28,6 @@
             editable="true"/>
     <Condition ID="IsBatteryLow"
                editable="true"/>
-    <Action ID="NavigateToDock"
-            editable="true"/>
     <Action ID="NavigateToPose"
             editable="true"/>
     <Action ID="UndockRobot"
