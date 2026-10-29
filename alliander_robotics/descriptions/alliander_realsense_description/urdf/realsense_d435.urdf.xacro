@@ -11,6 +11,7 @@ SPDX-License-Identifier: Apache-2.0
     parent
     name:=camera
     gazebo:=true
+    simulate_high_resolution:=false
     align:=color
     ">
 
@@ -38,17 +39,17 @@ SPDX-License-Identifier: Apache-2.0
       <gazebo reference="${name}_${align}_frame">
 
         <!-- RGBD sensor -->
-        <sensor name="realsense" type="rgbd_camera">
+        <sensor name="realsense" type="${'camera' if simulate_high_resolution else 'rgbd_camera'}">
           <always_on>true</always_on>
           <update_rate>30.0</update_rate>
-          <topic>realsense</topic>
+          <topic>${'realsense/image' if simulate_high_resolution else 'realsense'}</topic>
 
           <camera>
             <optical_frame_id>${namespace}/${name}_${align}_optical_frame</optical_frame_id>
             <horizontal_fov>${69.0/180.0*pi}</horizontal_fov>
             <image>
-              <width>640</width>
-              <height>360</height>
+              <width>${1920 if simulate_high_resolution else 640}</width>
+              <height>${1080 if simulate_high_resolution else 360}</height>
             </image>
             <clip>
               <near>0.2</near>
@@ -62,5 +63,9 @@ SPDX-License-Identifier: Apache-2.0
   </xacro:macro>
   <xacro:arg name="namespace" default="realsense" />
   <xacro:arg name="parent" default="" />
-  <xacro:realsense_d435 namespace="$(arg namespace)" parent="$(arg parent)" />
+  <xacro:arg name="simulate_high_resolution" default="false" />
+  <xacro:realsense_d435
+    namespace="$(arg namespace)"
+    parent="$(arg parent)"
+    simulate_high_resolution="$(arg simulate_high_resolution)" />
 </robot>

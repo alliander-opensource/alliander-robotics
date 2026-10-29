@@ -165,11 +165,11 @@ class PredefinedConfigurations:
 
     @register_configuration("zed_apriltag")
     def config_zed_apriltag(self) -> None:  # noqa: D102
-        self.plat_conf.platforms = [
-            Camera("zed", (0, 0, 0.5), namespace="zed"),
-            Apriltag("tag0", (0.5, -0.2, 0.5), id=0, publish_topic="/tag0/pose"),
-            Apriltag("tag1", (0.5, 0.2, 0.5), id=1, publish_topic="/tag1/pose"),
-        ]
+        camera = Camera("zed", (-1, 0, 0.5), namespace="zed")
+        camera.simulate_high_resolution = True
+        apriltag0 = Apriltag("tag0", (1, -0.2, 0.5), id=0, publish_topic="/tag0/pose")
+        apriltag1 = Apriltag("tag1", (1, 0.2, 0.5), id=1, publish_topic="/tag1/pose")
+        self.plat_conf.platforms = [camera, apriltag0, apriltag1]
         self.sim_conf.world = "walls.sdf"
 
     @register_configuration("seekthermal")
