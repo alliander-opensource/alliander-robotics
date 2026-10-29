@@ -72,10 +72,9 @@ void KeepoutZoneManager::waitForUtmTransform() {
       tf_buffer_->canTransform("utm", "map", tf2::TimePointZero);
 
   if (!map_transform_available) {
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 5000,
-                         "Waiting for TF transforms: "
-                         "utm->map available=%s",
-                         map_transform_available ? "true" : "false");
+    RCLCPP_INFO_THROTTLE(
+        get_logger(), *get_clock(), 5000,
+        "Waiting for TF transforms: utm->map not yet available");
 
     return;
   }

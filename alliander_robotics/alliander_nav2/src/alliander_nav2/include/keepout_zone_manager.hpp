@@ -96,8 +96,9 @@ class KeepoutZoneManager : public rclcpp::Node {
   std::vector<StoredZones> zones_;
 
   // Wait for TF
-  /// TF buffer and listener.
+  /// TF buffer.
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+  /// TF listener
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
   /// Timer that waits for the required TF transforms.
