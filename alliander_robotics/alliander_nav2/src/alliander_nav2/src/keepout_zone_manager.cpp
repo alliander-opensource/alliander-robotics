@@ -115,8 +115,8 @@ KeepoutZoneManager::Polygon KeepoutZoneManager::geoPathToPolygon(
   return polygon;
 }
 
-KeepoutZoneManager::Point KeepoutZoneManager::UTMCoordinateToPixel(double x,
-                                                           double y) const {
+KeepoutZoneManager::Point KeepoutZoneManager::UTMCoordinateToPixel(
+    double x, double y) const {
   return {std::floor((x - grid_origin_x_) / resolution_),
           std::floor((y - grid_origin_y_) / resolution_)};
 }
