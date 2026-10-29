@@ -41,17 +41,17 @@ class KeepoutZoneManager : public rclcpp::Node {
   using Polygon = std::vector<Point>;
 
   /**
-   * @brief Stores a keepout polygon in GPS and local coordinates.
+   * @brief Stores a keepout zone in GPS and local coordinates.
    *
-   * The GPS polygon contains geographic coordinates, while the local polygon
-   * contains coordinates transformed into the local UTM reference frame.
+   * The GPS zone contains geographic coordinates, while the local zone contains
+   * coordinates transformed into the local UTM reference frame.
    */
-  struct StoredPolygon {
+  struct StoredZones {
     /// Unique ID of the zone.
     std::uint64_t id;
-    /// Polygon represented by GPS latitude and longitude coordinates.
+    /// Zone's polygon represented by GPS latitude and longitude coordinates.
     Polygon gps;
-    /// Polygon represented by local x and y coordinates.
+    /// Zone's polygon represented by local x and y coordinates.
     Polygon local;
   };
 
@@ -90,8 +90,6 @@ class KeepoutZoneManager : public rclcpp::Node {
   /// Indicates whether the reference GPS position has been initialized.
   bool reference_initialized_;
 
-  /// Number of keepout zones added by the manager.
-  int zone_count_;
   /// ID to assign to the next newly created zone.
   std::uint64_t next_zone_id_;
 
@@ -99,7 +97,7 @@ class KeepoutZoneManager : public rclcpp::Node {
   /// Occupancy grid data representing the keepout zone mask.
   std::vector<int8_t> mask_data_;
   /// Polygons defining the stored keepout zones in GPS and local coordinates.
-  std::vector<StoredPolygon> polygons_;
+  std::vector<StoredZones> zones_;
 
   /**
    * @brief Callback that processes incoming UTM configuration messages.
@@ -190,8 +188,8 @@ class KeepoutZoneManager : public rclcpp::Node {
   bool addPolygonToMask(const Polygon& polygon);
 
   /**
-   * @brief Rebuilds the occupancy grid to fit all stored keepout polygons
-   * (within a reasonable size limit, otherwise the polygon will be rejected).
+   * @brief Rebuilds the occupancy grid to fit all stored zones (within a
+   * reasonable size limit, otherwise the zone will be rejected).
    *
    * @return True if the grid was rebuilt successfully, false otherwise.
    */

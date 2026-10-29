@@ -453,7 +453,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
         Register.on_start(path_to_geopath, context) if nav2.gps else SKIP,
         Register.on_log(
-            dynamic_keepout_zones, "Dynamic GPS Keepout Publisher initialized.", context
+            dynamic_keepout_zones, "Keepout Zone Manager initialized.", context
         )
         if nav2.gps
         else SKIP,
