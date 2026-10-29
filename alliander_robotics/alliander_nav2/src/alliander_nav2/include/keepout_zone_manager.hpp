@@ -179,16 +179,6 @@ class KeepoutZoneManager : public rclcpp::Node {
   Point localToPixel(double x, double y) const;
 
   /**
-   * @brief Checks whether a point lies inside a polygon, such that these points
-   * can be marked as occupied in the keepout zone mask.
-   * @param x X-coordinate of the point.
-   * @param y Y-coordinate of the point.
-   * @param polygon Polygon against which the point is checked.
-   * @return True if the point is inside the polygon, false otherwise.
-   */
-  bool pointInPolygon(double x, double y, const Polygon& polygon) const;
-
-  /**
    * @brief Adds a polygon to the keepout zone occupancy grid.
    * @param polygon Polygon defining the keepout zone in local coordinates.
    * @return True if the polygon was added successfully, false otherwise.

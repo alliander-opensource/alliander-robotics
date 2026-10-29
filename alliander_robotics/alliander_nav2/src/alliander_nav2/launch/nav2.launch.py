@@ -132,8 +132,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             "plugins": plugins,
             "filters": ["keepout_filter"],
             "keepout_filter": {
-                "plugin": "nav2_costmap_2d::KeepoutFilter",
-                "enabled": True,
                 "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
             },
             "obstacle_layer": {
@@ -160,8 +158,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             "plugins": plugins,
             "filters": ["keepout_filter"],
             "keepout_filter": {
-                "plugin": "nav2_costmap_2d::KeepoutFilter",
-                "enabled": True,
                 "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
             },
             "obstacle_layer": {

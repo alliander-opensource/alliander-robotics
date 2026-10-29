@@ -16,6 +16,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(geographic_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
@@ -41,7 +42,8 @@ include_directories(include)
 add_executable(keepout_zone_manager src/keepout_zone_manager.cpp)
 target_include_directories(keepout_zone_manager PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+  $<INSTALL_INTERFACE:include>
+  ${OpenCV_INCLUDE_DIRS})
 ament_target_dependencies(keepout_zone_manager
   rclcpp
   geographic_msgs
@@ -51,7 +53,9 @@ ament_target_dependencies(keepout_zone_manager
   tf2_ros
   alliander_interfaces
 )
-target_link_libraries(keepout_zone_manager PkgConfig::GEOGRAPHICLIB)
+target_link_libraries(keepout_zone_manager 
+  PkgConfig::GEOGRAPHICLIB
+  ${OpenCV_LIBS})
 install(
   TARGETS keepout_zone_manager
   DESTINATION lib/${PROJECT_NAME}

@@ -5,6 +5,8 @@
 #include "keepout_zone_manager.hpp"
 
 #include <GeographicLib/UTMUPS.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -127,81 +129,29 @@ KeepoutZoneManager::Point KeepoutZoneManager::localToPixel(double x,
           std::floor((y - grid_origin_y_) / resolution_)};
 }
 
-bool KeepoutZoneManager::pointInPolygon(double x, double y,
-                                        const Polygon& polygon) const {
-  if (polygon.size() < 3) {
-    return false;
-  }
-
-  bool inside = false;
-  auto previous = polygon.back();
-
-  for (const auto& current : polygon) {
-    const auto [current_x, current_y] = current;
-    const auto [previous_x, previous_y] = previous;
-
-    if ((current_y > y) != (previous_y > y)) {
-      const double intersection_x = (previous_x - current_x) * (y - current_y) /
-                                        (previous_y - current_y) +
-                                    current_x;
-
-      if (x < intersection_x) {
-        inside = !inside;
-      }
-    }
-
-    previous = current;
-  }
-
-  return inside;
-}
-
 bool KeepoutZoneManager::addPolygonToMask(const Polygon& polygon) {
   if (polygon.size() < 3) {
     return false;
   }
 
-  double min_x = polygon.front().first;
-  double max_x = min_x;
-  double min_y = polygon.front().second;
-  double max_y = min_y;
+  std::vector<cv::Point> pixels;
+  pixels.reserve(polygon.size());
 
   for (const auto& [x, y] : polygon) {
-    min_x = std::min(min_x, x);
-    max_x = std::max(max_x, x);
-    min_y = std::min(min_y, y);
-    max_y = std::max(max_y, y);
+    const auto [px, py] = localToPixel(x, y);
+    pixels.emplace_back(static_cast<int>(px), static_cast<int>(py));
   }
 
-  const auto [min_px_value, min_py_value] = localToPixel(min_x, min_y);
-  const auto [max_px_value, max_py_value] = localToPixel(max_x, max_y);
-
-  const int min_px = std::max(0, static_cast<int>(min_px_value));
-  const int min_py = std::max(0, static_cast<int>(min_py_value));
-
-  const int max_px = std::min(width_ - 1, static_cast<int>(max_px_value));
-  const int max_py = std::min(height_ - 1, static_cast<int>(max_py_value));
-
-  if (min_px > max_px || min_py > max_py) {
+  // Reject polygons that do not intersect the occupancy grid.
+  const cv::Rect grid_bounds(0, 0, width_, height_);
+  if ((cv::boundingRect(pixels) & grid_bounds).empty()) {
     return false;
   }
 
-  // Fill in the mask.
-  for (int pixel_y = min_py; pixel_y <= max_py; ++pixel_y) {
-    for (int pixel_x = min_px; pixel_x <= max_px; ++pixel_x) {
-      const double world_x = grid_origin_x_ + (pixel_x + 0.5) * resolution_;
-      const double world_y = grid_origin_y_ + (pixel_y + 0.5) * resolution_;
-
-      if (pointInPolygon(world_x, world_y, polygon)) {
-        const auto index = static_cast<std::size_t>(pixel_y) *
-                               static_cast<std::size_t>(width_) +
-                           static_cast<std::size_t>(pixel_x);
-
-        mask_data_[index] = 100;
-      }
-    }
-  }
-
+  // OpenCV writes directly into the existing OccupancyGrid data buffer.
+  cv::Mat mask(height_, width_, CV_8SC1, mask_data_.data());
+  const std::vector<std::vector<cv::Point>> contours{std::move(pixels)};
+  cv::fillPoly(mask, contours, cv::Scalar(100));
   return true;
 }
 
