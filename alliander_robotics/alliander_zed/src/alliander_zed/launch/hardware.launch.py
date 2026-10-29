@@ -28,7 +28,7 @@ def launch_setup(context: LaunchContext) -> list:
     common_cfg = get_file_path(
         "alliander_zed_description", ["config"], "common_stereo.yaml"
     )
-    camera_cfg = get_file_path("zed_wrapper", ["config"], "zed2i.yaml")
+    camera_cfg = get_file_path("alliander_zed_description", ["config"], "zed2i.yaml")
 
     node_parameters = [
         common_cfg,

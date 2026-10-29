@@ -152,6 +152,10 @@ class ApplyConfigurations:
             Rviz.add_polygon(f"/{ns}/polygon_slower", "255; 255; 0")
             Rviz.add_polygon(f"/{ns}/velocity_polygon_stop", "255; 0; 0")
 
+        if nav2.docking:
+            Rviz.add_pose(f"/{ns}/staging_pose", "255; 0; 0")
+            Rviz.add_pose(f"/{ns}/dock_pose", "0; 0; 255")
+
     @staticmethod
     def add_lidar(platform: Lidar) -> None:
         """Add lidar configurations to RViz and Vizanti.
