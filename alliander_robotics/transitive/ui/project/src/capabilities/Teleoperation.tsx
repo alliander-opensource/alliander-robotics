@@ -3,7 +3,7 @@
 // # SPDX-License-Identifier: Apache-2.0
 
 import { TransitiveCapability } from "@transitive-sdk/utils-web";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./card.css";
 import { generateJWT } from "./jwt";
 import "./Teleoperation.css";
@@ -15,6 +15,8 @@ export function Teleoperation({ device }: { device: string }) {
   const [capability, setCapability] = useState(
     <div className="teleop-capability"></div>,
   );
+
+  const device_ref = useRef(device);
 
   // Generate JWT token on mount
   useEffect(() => {
@@ -34,7 +36,7 @@ export function Teleoperation({ device }: { device: string }) {
 
     const embed = (
       <TransitiveCapability
-        key={`${device}-${cameraTopic}`}
+        key={`${device_ref.current}-${cameraTopic}`}
         jwt={jwtToken}
         ssl="true"
         count="1"

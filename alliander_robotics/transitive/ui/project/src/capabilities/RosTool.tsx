@@ -17,10 +17,10 @@ import {
   useState,
 } from "react";
 import type { Ros } from "../ros/ros";
-import "./card.css";
 import type { Publisher } from "../ros/ros_publishers";
 import type { Service } from "../ros/ros_services";
 import type { Subscription } from "../ros/ros_subscriptions";
+import "./card.css";
 import { generateJWT } from "./jwt";
 
 const ROS_VERSION = 2;
@@ -88,11 +88,12 @@ const RosBridge = ({
   useEffect(() => {
     if (!ready) return;
     const topicList = topics.split("\n").filter((topic) => topic !== "");
-    topicList.forEach((topic) => apiRef.current.subscribe(ROS_VERSION, topic));
-    return () =>
-      topicList.forEach((topic) =>
-        apiRef.current.unsubscribe?.(ROS_VERSION, topic),
-      );
+    topicList.forEach((topic) => {
+      apiRef.current.subscribe(ROS_VERSION, topic);
+    });
+    topicList.forEach((topic) => {
+      apiRef.current.unsubscribe?.(ROS_VERSION, topic);
+    });
   }, [ready, topics, apiRef]);
 
   // Call a subscription's callback whenever one of its field values changes:
