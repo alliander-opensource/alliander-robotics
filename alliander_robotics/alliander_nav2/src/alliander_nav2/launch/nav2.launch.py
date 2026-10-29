@@ -73,7 +73,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             plugins.remove("static_layer")
         lifecycle_nodes_names.extend(
             [
-                "keepout_costmap_filter_info_server",  # TODO: find correct spot.
+                "keepout_costmap_filter_info_server",
                 "controller_server",
                 "planner_server",
                 "behavior_server",
