@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+uint8 ADD=0
+uint8 REMOVE=1
+uint8 REMOVE_ALL=2
+
+uint8 operation
+geographic_msgs/GeoPath[] paths
+uint64 zone_id
+---
+bool success
+string message
+uint64[] zone_ids
