@@ -375,7 +375,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         executable="keepout_zone_manager",
         namespace=namespace_vehicle,
         remappings=[
-            ("/gps/fix", f"/{namespace_gps}/gps/fix"),
             ("/keepout_filter_mask", f"/{namespace_vehicle}/keepout_filter_mask"),
         ],
     )

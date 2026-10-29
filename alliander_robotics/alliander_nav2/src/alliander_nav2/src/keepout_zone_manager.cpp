@@ -27,17 +27,13 @@ KeepoutZoneManager::KeepoutZoneManager()
       height_(1),
       origin_x_(0.0),
       origin_y_(0.0),
-      utm_reference_lat_(0.0),
-      utm_reference_lon_(0.0),
-      reference_initialized_(false),
+      utm_datum_initialized_(false),
       next_zone_id_(1) {
   rclcpp::QoS qos(1);
   qos.transient_local();
 
   utm_sub_ = create_subscription<UTMDatum>(
       "/utm_datum", qos, std::bind(&KeepoutZoneManager::utmCallback, this, _1));
-  gps_sub_ = create_subscription<NavSatFix>(
-      "/gps/fix", 10, std::bind(&KeepoutZoneManager::gpsCallback, this, _1));
 
   const auto mask_qos =
       rclcpp::QoS(rclcpp::KeepLast(1)).reliable().transient_local();
@@ -60,40 +56,7 @@ KeepoutZoneManager::KeepoutZoneManager()
 
 void KeepoutZoneManager::utmCallback(const UTMDatum::SharedPtr msg) {
   utm_datum_ = *msg;
-}
-
-void KeepoutZoneManager::gpsCallback(const NavSatFix::SharedPtr msg) {
-  if (msg->status.status < 0) {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000,
-                         "Invalid GPS fix received.");
-    return;
-  }
-
-  // Check if a valid UTM datum has been set.
-  if (utm_datum_.zone < 1 || utm_datum_.zone > 60) {
-    RCLCPP_WARN_THROTTLE(
-        get_logger(), *get_clock(), 5000,
-        "No valid UTM zone set. Cannot initialize a reference coordinate yet.");
-    return;
-  }
-
-  if (!reference_initialized_) {
-    bool northp = utm_datum_.northp;
-    int zone = static_cast<int>(utm_datum_.zone);
-    double x = 0.0;
-    double y = 0.0;
-    GeographicLib::UTMUPS::Forward(msg->latitude, msg->longitude, zone, northp,
-                                   x, y);
-
-    utm_reference_lat_ = x;
-    utm_reference_lon_ = y;
-
-    reference_initialized_ = true;
-
-    RCLCPP_INFO(get_logger(),
-                "GPS UTM reference set: latitude=%.8f, longitude=%.8f",
-                utm_reference_lat_, utm_reference_lon_);
-  }
+  utm_datum_initialized_ = true;
 }
 
 KeepoutZoneManager::Point KeepoutZoneManager::gpsToLocalXY(
@@ -104,10 +67,7 @@ KeepoutZoneManager::Point KeepoutZoneManager::gpsToLocalXY(
   double y = 0.0;
   GeographicLib::UTMUPS::Forward(latitude, longitude, zone, northp, x, y);
 
-  const double local_x = x - utm_reference_lat_;
-  const double local_y = y - utm_reference_lon_;
-
-  return {local_x, local_y};
+  return {x, y};
 }
 
 KeepoutZoneManager::Polygon KeepoutZoneManager::gpsPathToPolygon(
@@ -319,9 +279,9 @@ void KeepoutZoneManager::manageZonesCallback(
     std::shared_ptr<ManageKeepoutZones::Response> response) {
   switch (request->operation) {
     case ManageKeepoutZones::Request::ADD:
-      if (!reference_initialized_) {
+      if (!utm_datum_initialized_) {
         response->success = false;
-        response->message = "No GPS reference is available.";
+        response->message = "No UTM datum is available.";
         return;
       }
 
@@ -514,7 +474,7 @@ void KeepoutZoneManager::publishMask() {
   OccupancyGrid msg;
 
   msg.header.stamp = get_clock()->now();
-  msg.header.frame_id = "map";
+  msg.header.frame_id = "utm";
 
   msg.info.resolution = static_cast<float>(resolution_);
   msg.info.width = static_cast<std::uint32_t>(width_);

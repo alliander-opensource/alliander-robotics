@@ -58,8 +58,6 @@ class KeepoutZoneManager : public rclcpp::Node {
   // ROS2 communication variables:
   /// Subscriber that receives the UTM configuration.
   rclcpp::Subscription<UTMDatum>::SharedPtr utm_sub_;
-  /// Subscriber that receives GPS position updates.
-  rclcpp::Subscription<NavSatFix>::SharedPtr gps_sub_;
   /// Publisher that publishes the keepout zone occupancy grid.
   rclcpp::Publisher<OccupancyGrid>::SharedPtr keepout_zone_pub_;
   /// Service that adds or removes keepout zones.
@@ -68,6 +66,8 @@ class KeepoutZoneManager : public rclcpp::Node {
   // UTM configuration variables:
   /// UTM zone and hemisphere information used for coordinate conversions.
   UTMDatum utm_datum_;
+  /// Indicates whether the UTM datum has been initialized.
+  bool utm_datum_initialized_;
 
   // Costmap configuration variables:
   /// Resolution of the keepout zone occupancy grid in metres per cell.
@@ -81,14 +81,6 @@ class KeepoutZoneManager : public rclcpp::Node {
   double origin_x_;
   /// Y-coordinate of the occupancy grid origin in the local reference frame.
   double origin_y_;
-
-  // Reference position variables:
-  /// Latitude of the reference GPS position used for local coordinates.
-  double utm_reference_lat_;
-  /// Longitude of the reference GPS position used for local coordinates.
-  double utm_reference_lon_;
-  /// Indicates whether the reference GPS position has been initialized.
-  bool reference_initialized_;
 
   /// ID to assign to the next newly created zone.
   std::uint64_t next_zone_id_;
@@ -105,13 +97,6 @@ class KeepoutZoneManager : public rclcpp::Node {
    * information.
    */
   void utmCallback(const UTMDatum::SharedPtr msg);
-
-  /**
-   * @brief Callback that processes the reference lat-lon coordinates based on
-   * the incoming GPS position updates.
-   * @param msg GPS message containing the current latitude and longitude.
-   */
-  void gpsCallback(const NavSatFix::SharedPtr msg);
 
   /**
    * @brief Handles requests to add or remove all remove keepout zones.
@@ -151,7 +136,9 @@ class KeepoutZoneManager : public rclcpp::Node {
    * @param longitude GPS longitude in degrees.
    * @return Point containing the local x and y coordinates in metres.
    */
-  Point gpsToLocalXY(double latitude, double longitude) const;
+  Point gpsToLocalXY(double latitude, double longitude)
+      const;  // TODO: since the gps topic is now removed, look into renaming
+              // the functions with gps in the name
 
   /**
    * @brief Converts a geographic path into a polygon in local coordinates.
