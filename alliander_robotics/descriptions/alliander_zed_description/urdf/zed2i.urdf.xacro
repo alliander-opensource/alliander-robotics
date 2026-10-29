@@ -56,6 +56,10 @@ SPDX-License-Identifier: Apache-2.0
       <gazebo reference="${namespace}_${align}_camera_frame">
 
         <!-- RGBD sensor -->
+        <!-- Note: 
+        Real camera supports 2208x1242@15fps, 1920x1080@30fps, 1280x720@60fps, 672x376@100fps.
+        As 1920x1080@30fps is too heavy to simulate RGBD, we use a 640x360 to keep same aspect ratio.
+        -->
         <sensor name="zed" type="${'camera' if simulate_high_resolution else 'rgbd_camera'}">
           <always_on>true</always_on>
           <update_rate>30.0</update_rate>
@@ -66,7 +70,7 @@ SPDX-License-Identifier: Apache-2.0
             <horizontal_fov>${110.0/180.0*pi}</horizontal_fov>
             <image>
               <width>${1920 if simulate_high_resolution else 640}</width>
-              <height>${1080 if simulate_high_resolution else 480}</height>
+              <height>${1080 if simulate_high_resolution else 360}</height>
             </image>
             <clip>
               <near>0.2</near>
