@@ -69,25 +69,25 @@ class KeepoutZoneManager : public rclcpp::Node {
 
   // UTM configuration variables:
   /// UTM zone and hemisphere information used for coordinate conversions.
-  UTMDatum utm_datum_;
+  UTMDatum utm_datum_{};
   /// Indicates whether the UTM datum has been initialized.
-  bool utm_datum_initialized_;
+  bool utm_datum_initialized_{false};
 
   // Costmap configuration variables:
   /// Resolution of the keepout zone occupancy grid in metres per cell.
-  double resolution_;
+  double resolution_{0.1};
   /// Width of the keepout zone occupancy grid in cells.
-  int width_;
+  int width_{1};
   /// Height of the keepout zone occupancy grid in cells.
-  int height_;
+  int height_{1};
 
   /// X-coordinate of the occupancy grid origin in the local reference frame.
-  double grid_origin_x_;
+  double grid_origin_x_{0.0};
   /// Y-coordinate of the occupancy grid origin in the local reference frame.
-  double grid_origin_y_;
+  double grid_origin_y_{0.0};
 
   /// ID to assign to the next newly created zone.
-  std::uint64_t next_zone_id_;
+  std::uint64_t next_zone_id_{1};
 
   // Keepout zone data:
   /// Occupancy grid data representing the keepout zone mask.
@@ -152,31 +152,32 @@ class KeepoutZoneManager : public rclcpp::Node {
   void removeAllZones(std::shared_ptr<ManageKeepoutZones::Response> response);
 
   /**
-   * @brief Converts GPS coordinates into local x and y coordinates.
-   * @param latitude GPS latitude in degrees.
-   * @param longitude GPS longitude in degrees.
-   * @return Point containing the local x and y coordinates in metres.
+   * @brief Converts GPS coordinates into x and y coordinates in UTM tf-frame.
+   * @param latitude Latitude in degrees.
+   * @param longitude Longitude in degrees.
+   * @return Point containing the x and y coordinates (UTM tf-frame) in metres.
    */
-  Point gpsToLocalXY(double latitude, double longitude)
+  Point gpsToUTMCoordinates(double latitude, double longitude)
       const;  // TODO: since the gps topic is now removed, look into renaming
               // the functions with gps in the name
 
   /**
    * @brief Converts a geographic path into a polygon in local coordinates.
    * @param path Geographic path containing the polygon's GPS coordinates.
-   * @return Polygon containing the path points in local x and y coordinates.
+   * @return Polygon containing the path points in x and y coordinates (UTM
+   * tf-frame).
    */
-  Polygon gpsPathToPolygon(const GeoPath& path) const;
+  Polygon geoPathToPolygon(const GeoPath& path) const;
 
   /**
-   * @brief Converts local coordinates into occupancy grid pixel coordinates for
+   * @brief Converts UTM coordinates into occupancy grid pixel coordinates for
    * the mask.
-   * @param x Local x-coordinate in metres.
-   * @param y Local y-coordinate in metres.
+   * @param x UTM x-coordinate in metres.
+   * @param y UTM y-coordinate in metres.
    * @return Point containing the corresponding occupancy grid pixel
    * coordinates.
    */
-  Point localToPixel(double x, double y) const;
+  Point UTMCoordinateToPixel(double x, double y) const;
 
   /**
    * @brief Adds a polygon to the keepout zone occupancy grid.

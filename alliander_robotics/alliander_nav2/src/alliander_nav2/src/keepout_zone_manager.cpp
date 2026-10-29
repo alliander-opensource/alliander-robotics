@@ -5,8 +5,6 @@
 #include "keepout_zone_manager.hpp"
 
 #include <GeographicLib/UTMUPS.hpp>
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -15,6 +13,8 @@
 #include <limits>
 #include <memory>
 #include <new>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 #include <string>
 
 #include "rclcpp/qos.hpp"
@@ -22,15 +22,7 @@
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-KeepoutZoneManager::KeepoutZoneManager()
-    : Node("keepout_zone_manager"),
-      resolution_(0.1),
-      width_(1),
-      height_(1),
-      grid_origin_x_(0.0),
-      grid_origin_y_(0.0),
-      utm_datum_initialized_(false),
-      next_zone_id_(1) {
+KeepoutZoneManager::KeepoutZoneManager() : Node("keepout_zone_manager") {
   // Initialize TF buffer and listener.
   tf_buffer_ = std::make_shared<tf2_ros::Buffer>(get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -99,7 +91,7 @@ void KeepoutZoneManager::utmCallback(const UTMDatum::SharedPtr msg) {
   utm_datum_initialized_ = true;
 }
 
-KeepoutZoneManager::Point KeepoutZoneManager::gpsToLocalXY(
+KeepoutZoneManager::Point KeepoutZoneManager::gpsToUTMCoordinates(
     double latitude, double longitude) const {
   bool northp = utm_datum_.northp;
   int zone = static_cast<int>(utm_datum_.zone);
@@ -110,20 +102,20 @@ KeepoutZoneManager::Point KeepoutZoneManager::gpsToLocalXY(
   return {x, y};
 }
 
-KeepoutZoneManager::Polygon KeepoutZoneManager::gpsPathToPolygon(
+KeepoutZoneManager::Polygon KeepoutZoneManager::geoPathToPolygon(
     const GeoPath& path) const {
   Polygon polygon;
   polygon.reserve(path.poses.size());
 
   for (const auto& pose : path.poses) {
-    polygon.push_back(gpsToLocalXY(pose.pose.position.latitude,
-                                   pose.pose.position.longitude));
+    polygon.push_back(gpsToUTMCoordinates(pose.pose.position.latitude,
+                                          pose.pose.position.longitude));
   }
 
   return polygon;
 }
 
-KeepoutZoneManager::Point KeepoutZoneManager::localToPixel(double x,
+KeepoutZoneManager::Point KeepoutZoneManager::UTMCoordinateToPixel(double x,
                                                            double y) const {
   return {std::floor((x - grid_origin_x_) / resolution_),
           std::floor((y - grid_origin_y_) / resolution_)};
@@ -138,7 +130,7 @@ bool KeepoutZoneManager::addPolygonToMask(const Polygon& polygon) {
   pixels.reserve(polygon.size());
 
   for (const auto& [x, y] : polygon) {
-    const auto [px, py] = localToPixel(x, y);
+    const auto [px, py] = UTMCoordinateToPixel(x, y);
     pixels.emplace_back(static_cast<int>(px), static_cast<int>(py));
   }
 
@@ -313,7 +305,7 @@ void KeepoutZoneManager::addZones(
     }
 
     // Convert GPS coordinates to local coordinates.
-    const Polygon local_zone = gpsPathToPolygon(path);
+    const Polygon local_zone = geoPathToPolygon(path);
 
     // Reject zones containing invalid local coordinates.
     const bool valid_coordinates = std::all_of(
