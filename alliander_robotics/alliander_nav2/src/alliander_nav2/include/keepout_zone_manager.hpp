@@ -5,6 +5,10 @@
 #ifndef KEEPOUT_ZONE_MANAGER_HPP_
 #define KEEPOUT_ZONE_MANAGER_HPP_
 
+#include <tf2/time.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+
 #include <alliander_interfaces/msg/utm_datum.hpp>
 #include <alliander_interfaces/srv/manage_keepout_zones.hpp>
 #include <cstdint>
@@ -78,9 +82,9 @@ class KeepoutZoneManager : public rclcpp::Node {
   int height_;
 
   /// X-coordinate of the occupancy grid origin in the local reference frame.
-  double origin_x_;
+  double grid_origin_x_;
   /// Y-coordinate of the occupancy grid origin in the local reference frame.
-  double origin_y_;
+  double grid_origin_y_;
 
   /// ID to assign to the next newly created zone.
   std::uint64_t next_zone_id_;
@@ -90,6 +94,22 @@ class KeepoutZoneManager : public rclcpp::Node {
   std::vector<int8_t> mask_data_;
   /// Polygons defining the stored keepout zones in GPS and local coordinates.
   std::vector<StoredZones> zones_;
+
+  // Wait for TF
+  /// TF buffer and listener.
+  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+
+  /// Timer that waits for the required TF transforms.
+  rclcpp::TimerBase::SharedPtr initial_mask_timer_;
+
+  /// Prevent publishing the initial mask before TF is ready.
+  bool initial_mask_published_{false};
+
+  /**
+   * @brief Checks whether the TF UTM transform is available.
+   */
+  void waitForUtmTransform();
 
   /**
    * @brief Callback that processes incoming UTM configuration messages.

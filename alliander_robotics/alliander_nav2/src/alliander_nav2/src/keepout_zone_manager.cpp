@@ -25,10 +25,15 @@ KeepoutZoneManager::KeepoutZoneManager()
       resolution_(0.1),
       width_(1),
       height_(1),
-      origin_x_(0.0),
-      origin_y_(0.0),
+      grid_origin_x_(0.0),
+      grid_origin_y_(0.0),
       utm_datum_initialized_(false),
       next_zone_id_(1) {
+  // Initialize TF buffer and listener.
+  tf_buffer_ = std::make_shared<tf2_ros::Buffer>(get_clock());
+  tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
+  // Subscribe to the UTM datum.
   rclcpp::QoS qos(1);
   qos.transient_local();
 
@@ -49,9 +54,43 @@ KeepoutZoneManager::KeepoutZoneManager()
   // dimensions will grow accordingly.
   mask_data_.assign(1, 0);
 
+  initial_mask_timer_ = create_wall_timer(
+      std::chrono::milliseconds(500),
+      std::bind(&KeepoutZoneManager::waitForUtmTransform, this));
+
+  RCLCPP_INFO(get_logger(),
+              "Keepout Zone Manager initialized. Waiting for TF transforms.");
+}
+
+void KeepoutZoneManager::waitForUtmTransform() {
+  if (initial_mask_published_) {
+    initial_mask_timer_->cancel();
+    return;
+  }
+
+  const bool map_transform_available =
+      tf_buffer_->canTransform("utm", "map", tf2::TimePointZero);
+
+  if (!map_transform_available) {
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 5000,
+                         "Waiting for TF transforms: "
+                         "utm->map available=%s",
+                         map_transform_available ? "true" : "false");
+
+    return;
+  }
+
+  // Both transforms are available. Publish the initial mask.
+  initial_mask_published_ = true;
+
   publishMask();
 
-  RCLCPP_INFO(get_logger(), "Keepout Zone Manager initialized.");
+  RCLCPP_INFO(get_logger(),
+              "Required TF transforms are available. "
+              "Initial keepout mask published.");
+
+  // No need to keep checking after successful publication.
+  initial_mask_timer_->cancel();
 }
 
 void KeepoutZoneManager::utmCallback(const UTMDatum::SharedPtr msg) {
@@ -85,8 +124,8 @@ KeepoutZoneManager::Polygon KeepoutZoneManager::gpsPathToPolygon(
 
 KeepoutZoneManager::Point KeepoutZoneManager::localToPixel(double x,
                                                            double y) const {
-  return {std::floor((x - origin_x_) / resolution_),
-          std::floor((y - origin_y_) / resolution_)};
+  return {std::floor((x - grid_origin_x_) / resolution_),
+          std::floor((y - grid_origin_y_) / resolution_)};
 }
 
 bool KeepoutZoneManager::pointInPolygon(double x, double y,
@@ -151,8 +190,8 @@ bool KeepoutZoneManager::addPolygonToMask(const Polygon& polygon) {
   // Fill in the mask.
   for (int pixel_y = min_py; pixel_y <= max_py; ++pixel_y) {
     for (int pixel_x = min_px; pixel_x <= max_px; ++pixel_x) {
-      const double world_x = origin_x_ + (pixel_x + 0.5) * resolution_;
-      const double world_y = origin_y_ + (pixel_y + 0.5) * resolution_;
+      const double world_x = grid_origin_x_ + (pixel_x + 0.5) * resolution_;
+      const double world_y = grid_origin_y_ + (pixel_y + 0.5) * resolution_;
 
       if (pointInPolygon(world_x, world_y, polygon)) {
         const auto index = static_cast<std::size_t>(pixel_y) *
@@ -172,8 +211,8 @@ bool KeepoutZoneManager::rebuildMask() {
   if (zones_.empty()) {
     width_ = 1;
     height_ = 1;
-    origin_x_ = 0.0;
-    origin_y_ = 0.0;
+    grid_origin_x_ = 0.0;
+    grid_origin_y_ = 0.0;
     mask_data_.assign(1, 0);
     return true;
   }
@@ -240,13 +279,13 @@ bool KeepoutZoneManager::rebuildMask() {
   // has been allocated successfully.
   const int old_width = width_;
   const int old_height = height_;
-  const double old_origin_x = origin_x_;
-  const double old_origin_y = origin_y_;
+  const double old_origin_x = grid_origin_x_;
+  const double old_origin_y = grid_origin_y_;
 
   width_ = new_width;
   height_ = new_height;
-  origin_x_ = new_origin_x;
-  origin_y_ = new_origin_y;
+  grid_origin_x_ = new_origin_x;
+  grid_origin_y_ = new_origin_y;
   mask_data_.swap(new_mask);
 
   // Rebuild the mask using all stored zones.
@@ -256,8 +295,8 @@ bool KeepoutZoneManager::rebuildMask() {
       mask_data_.swap(new_mask);
       width_ = old_width;
       height_ = old_height;
-      origin_x_ = old_origin_x;
-      origin_y_ = old_origin_y;
+      grid_origin_x_ = old_origin_x;
+      grid_origin_y_ = old_origin_y;
 
       RCLCPP_ERROR(get_logger(),
                    "Failed to rasterize a keepout zone. "
@@ -269,7 +308,7 @@ bool KeepoutZoneManager::rebuildMask() {
   RCLCPP_INFO(get_logger(),
               "Rebuilt keepout mask: width=%d, height=%d, "
               "resolution=%.3f m, origin=(%.3f, %.3f).",
-              width_, height_, resolution_, origin_x_, origin_y_);
+              width_, height_, resolution_, grid_origin_x_, grid_origin_y_);
 
   return true;
 }
@@ -471,6 +510,12 @@ void KeepoutZoneManager::removeAllZones(
 }
 
 void KeepoutZoneManager::publishMask() {
+  if (!initial_mask_published_) {
+    RCLCPP_DEBUG(get_logger(),
+                 "Skipping keepout mask publication until TF is ready.");
+    return;
+  }
+
   OccupancyGrid msg;
 
   msg.header.stamp = get_clock()->now();
@@ -480,8 +525,8 @@ void KeepoutZoneManager::publishMask() {
   msg.info.width = static_cast<std::uint32_t>(width_);
   msg.info.height = static_cast<std::uint32_t>(height_);
 
-  msg.info.origin.position.x = origin_x_;
-  msg.info.origin.position.y = origin_y_;
+  msg.info.origin.position.x = grid_origin_x_;
+  msg.info.origin.position.y = grid_origin_y_;
   msg.info.origin.orientation.w = 1.0;
 
   msg.data = mask_data_;

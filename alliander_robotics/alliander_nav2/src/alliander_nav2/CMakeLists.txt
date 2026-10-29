@@ -48,6 +48,7 @@ ament_target_dependencies(keepout_zone_manager
   nav_msgs
   sensor_msgs
   std_srvs
+  tf2_ros
   alliander_interfaces
 )
 target_link_libraries(keepout_zone_manager PkgConfig::GEOGRAPHICLIB)
