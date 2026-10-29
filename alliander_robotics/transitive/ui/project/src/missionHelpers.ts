@@ -50,6 +50,9 @@ export function toGeoPath(waypoints: Waypoint[]): GeoPath {
   };
 }
 
-export function pendingWaypoints(waypoints: Waypoint[], reached: Set<number>): Waypoint[] {
+export function pendingWaypoints(
+  waypoints: Waypoint[],
+  reached: Set<number>,
+): Waypoint[] {
   return waypoints.filter((wp) => !reached.has(wp.id));
 }

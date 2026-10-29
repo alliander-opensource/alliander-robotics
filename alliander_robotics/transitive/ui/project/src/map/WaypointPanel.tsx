@@ -37,7 +37,9 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
           />
           <button
             onClick={() => {
-              if (window.confirm(`Clear all ${wp.waypoints.length} waypoint?`)) {
+              if (
+                window.confirm(`Clear all ${wp.waypoints.length} waypoint?`)
+              ) {
                 wp.onClear();
               }
             }}
@@ -52,7 +54,10 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
           <li
             key={w.id}
             className={
-              [wp.reached.has(w.id) && "reached", w.id === wp.current && "current"]
+              [
+                wp.reached.has(w.id) && "reached",
+                w.id === wp.current && "current",
+              ]
                 .filter(Boolean)
                 .join(" ") || undefined
             }

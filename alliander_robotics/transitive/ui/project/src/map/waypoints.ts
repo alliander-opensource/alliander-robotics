@@ -14,7 +14,11 @@ export function newWaypoint(lat: number, lng: number): Waypoint {
   return { id: nextId++, lat, lng };
 }
 
-export function addWaypoint(waypoints: Waypoint[], lat: number, lng: number): Waypoint[] {
+export function addWaypoint(
+  waypoints: Waypoint[],
+  lat: number,
+  lng: number,
+): Waypoint[] {
   return [...waypoints, newWaypoint(lat, lng)];
 }
 

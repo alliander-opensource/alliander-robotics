@@ -13,10 +13,9 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
-import { MissionPanel } from "./MissionPanel";
-
 import { pendingWaypoints } from "../missionHelpers";
 import type { Ros } from "../ros/ros";
+import { MissionPanel } from "./MissionPanel";
 import "./Map.css";
 import { UseWaypoints } from "./useWaypoints";
 import { WaypointMarker } from "./Waypoint";
