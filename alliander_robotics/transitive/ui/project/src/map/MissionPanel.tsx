@@ -53,7 +53,9 @@ export function MissionPanel({
     if (allReached) {
       wp.onReachedChange(new Set());
     }
-    sendRoute(allReached ? wp.waypoints : pendingWaypoints(wp.waypoints, wp.reached));
+    sendRoute(
+      allReached ? wp.waypoints : pendingWaypoints(wp.waypoints, wp.reached),
+    );
 
     setStatus("running");
   };
