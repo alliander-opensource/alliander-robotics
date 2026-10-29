@@ -9,6 +9,7 @@ SPDX-License-Identifier: Apache-2.0
   <!-- Include the base wibotic station from the husarion components package: -->
   <xacro:arg name="root_link" default="apriltag_link" />
   <xacro:arg name="transmitter_height" default="0.15" />
+  <xacro:arg name="childs" default="${[]}" />
   <xacro:include filename="$(find husarion_components_description)/urdf/wibotic_station.urdf.xacro" />
 
   <!-- Apply transformation so that the station is oriented correctly by default: -->
@@ -35,4 +36,8 @@ SPDX-License-Identifier: Apache-2.0
       <update_frequency>10</update_frequency>
     </plugin>
   </gazebo>
+
+  <!-- Create detachable joints with given childs: -->
+  <xacro:include filename="$(find alliander_description)/urdf/detachable_joints.urdf.xacro" />
+  <xacro:detachable_joints childs="${$(arg childs)}" />
 </robot>

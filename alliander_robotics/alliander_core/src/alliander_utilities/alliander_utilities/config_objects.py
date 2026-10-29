@@ -197,6 +197,8 @@ class Platform(Config):
                 return "wrist_3_link"
             case "ewellix":
                 return "lift_mount"
+            case "wibotic":
+                return "wibotic_station_base_link"
             case _:
                 raise ValueError(
                     f"No link_to_child for unknown platform name: {self.name}"
