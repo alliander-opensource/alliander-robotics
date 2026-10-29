@@ -20,7 +20,7 @@ function App() {
     (sessionStorage.getItem(DEVICE_STORAGE_KEY) as Device | null) ??
       DEFAULT_DEVICE,
   );
-  const namespace = device == "lynx" ? "lynx" : "panther";
+  const namespace = device === "lynx" ? "lynx" : "panther";
 
   const handleDeviceChange = (value: Device) => {
     sessionStorage.setItem(DEVICE_STORAGE_KEY, value);

@@ -24,10 +24,12 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
       <div className="panelActions">
         <div className="sectionTitle">Waypoints</div>
         <div className="buttonRow">
-          <button onClick={wp.onSave} disabled={isEmpty}>
+          <button type="button" onClick={wp.onSave} disabled={isEmpty}>
             Save
           </button>
-          <button onClick={() => fileInputRef.current?.click()}>Load</button>
+          <button type="button" onClick={() => fileInputRef.current?.click()}>
+            Load
+          </button>
           <input
             ref={fileInputRef}
             type="file"
@@ -36,6 +38,7 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
             hidden
           />
           <button
+            type="button"
             onClick={() => {
               if (
                 window.confirm(`Clear all ${wp.waypoints.length} waypoint?`)
@@ -63,16 +66,23 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
             }
           >
             {i + 1}: {w.lat.toFixed(5)}, {w.lng.toFixed(5)}
-            <button onClick={() => wp.onReorder(w.id, "up")} disabled={i === 0}>
+            <button
+              type="button"
+              onClick={() => wp.onReorder(w.id, "up")}
+              disabled={i === 0}
+            >
               ↑
             </button>
             <button
+              type="button"
               onClick={() => wp.onReorder(w.id, "down")}
               disabled={i === wp.waypoints.length - 1}
             >
               ↓
             </button>
-            <button onClick={() => wp.onRemove(w.id)}>✕</button>
+            <button type="button" onClick={() => wp.onRemove(w.id)}>
+              ✕
+            </button>
           </li>
         ))}
       </ol>

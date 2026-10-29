@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRos } from "../capabilities/RosTool";
 import type { TriggerResponse } from "../missionHelpers";
 import { pendingWaypoints, toGeoPath } from "../missionHelpers";
@@ -21,19 +21,28 @@ export function MissionPanel({
   onMissionActiveChange: (active: boolean) => void;
 }>) {
   const { ready, publish, callService } = useRos();
-
   const [status, setStatus] = useState<"idle" | "running" | "paused">("idle");
   const [routeIds, setRouteIds] = useState<number[]>([]);
+
+  const wp_ref = useRef(wp);
+  const status_ref = useRef(status);
+  const routeIds_ref = useRef(routeIds);
 
   useEffect(() => {
     onMissionActiveChange(status !== "idle");
   }, [status, onMissionActiveChange]);
 
   useEffect(() => {
-    if (ros.subscriptions.reachedCount === null || status === "idle") return;
-    const done = routeIds.slice(0, ros.subscriptions.reachedCount);
+    if (
+      ros.subscriptions.reachedCount === null ||
+      status_ref.current === "idle"
+    )
+      return;
+    const done = routeIds_ref.current.slice(0, ros.subscriptions.reachedCount);
     if (done.length > 0) {
-      wp.onReachedChange(new Set([...wp.reached, ...done]));
+      wp_ref.current.onReachedChange(
+        new Set([...wp_ref.current.reached, ...done]),
+      );
     }
   }, [ros.subscriptions.reachedCount]);
 
@@ -81,15 +90,24 @@ export function MissionPanel({
       <div className="sectionTitle">Mission</div>
       <div className="buttonRow">
         <button
+          type="button"
           onClick={onStart}
           disabled={!ready || status !== "idle" || wp.waypoints.length === 0}
         >
           Start
         </button>
-        <button onClick={onPauseResume} disabled={!ready || status === "idle"}>
+        <button
+          type="button"
+          onClick={onPauseResume}
+          disabled={!ready || status === "idle"}
+        >
           {status === "paused" ? "Resume" : "Pause"}
         </button>
-        <button onClick={onStop} disabled={!ready || status === "idle"}>
+        <button
+          type="button"
+          onClick={onStop}
+          disabled={!ready || status === "idle"}
+        >
           Stop
         </button>
       </div>

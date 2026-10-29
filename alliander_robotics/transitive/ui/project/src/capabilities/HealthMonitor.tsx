@@ -3,7 +3,7 @@
 // # SPDX-License-Identifier: Apache-2.0
 
 import { TransitiveCapability } from "@transitive-sdk/utils-web";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Ros } from "../ros/ros";
 import "./card.css";
 import "./HealthMonitor.css";
@@ -18,6 +18,8 @@ export function HealthMonitor({
   const [capability, setCapability] = useState(
     <div className="health-capability"></div>,
   );
+
+  const device_ref = useRef(device);
 
   // Generate JWT token on mount
   useEffect(() => {
@@ -36,7 +38,11 @@ export function HealthMonitor({
     }
 
     const embed = (
-      <TransitiveCapability key={`${device}`} jwt={jwtToken} ssl="true" />
+      <TransitiveCapability
+        key={`${device_ref.current}`}
+        jwt={jwtToken}
+        ssl="true"
+      />
     );
 
     setCapability(<div className="capability">{embed}</div>);

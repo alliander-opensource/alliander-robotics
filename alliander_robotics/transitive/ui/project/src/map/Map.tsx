@@ -15,8 +15,8 @@ import {
 } from "react-leaflet";
 import { pendingWaypoints } from "../missionHelpers";
 import type { Ros } from "../ros/ros";
-import { MissionPanel } from "./MissionPanel";
 import "./Map.css";
+import { MissionPanel } from "./MissionPanel";
 import { UseWaypoints } from "./useWaypoints";
 import { WaypointMarker } from "./Waypoint";
 import { WaypointPanel } from "./WaypointPanel";
@@ -69,10 +69,10 @@ function Controls({
       ref={controlsRef}
       className="leaflet-bottom leaflet-left leaflet-control controls"
     >
-      <button onClick={home}>
+      <button type="button" onClick={home}>
         <span className="button">🏠</span>
       </button>
-      <button onClick={robot}>
+      <button type="button" onClick={robot}>
         <span className="button">🤖</span>
       </button>
     </div>
