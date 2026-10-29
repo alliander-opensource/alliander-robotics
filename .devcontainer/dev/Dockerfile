@@ -18,6 +18,9 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount
 ADD https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash /tmp/download-actionlint.bash
 RUN bash /tmp/download-actionlint.bash latest /usr/bin
 
+ADD https://biomejs.dev/install /tmp/install-biome.sh
+RUN BIOME_INSTALL_DIR=/usr/local/bin bash /tmp/install-biome.sh
+
 # Install MoveIt: 
 RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked \
     apt update && apt install -y --no-install-recommends \
