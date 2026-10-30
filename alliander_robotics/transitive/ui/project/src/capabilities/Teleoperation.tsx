@@ -4,7 +4,7 @@
 
 import { TransitiveCapability } from "@transitive-sdk/utils-web";
 import { useEffect, useRef, useState } from "react";
-import "./card.css";
+import "./capability.css";
 import { generateJWT } from "./jwt";
 import "./Teleoperation.css";
 
@@ -80,13 +80,6 @@ export function Teleoperation({ device }: { device: string }) {
 
   // Render as a card with a title and the widget.
   return (
-    <div className="card">
-      <div className="header">
-        <b>Teleoperation ({device})</b>
-      </div>
-      <div className="widget">
-        {jwtError ? <p>Error: {jwtError}</p> : widget}
-      </div>
-    </div>
+    <div className="widget">{jwtError ? <p>Error: {jwtError}</p> : widget}</div>
   );
 }

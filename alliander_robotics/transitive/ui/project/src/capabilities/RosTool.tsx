@@ -20,7 +20,7 @@ import type { Ros } from "../ros/ros";
 import type { Publisher } from "../ros/ros_publishers";
 import type { Service } from "../ros/ros_services";
 import type { Subscription } from "../ros/ros_subscriptions";
-import "./card.css";
+import "./capability.css";
 import { generateJWT } from "./jwt";
 
 const ROS_VERSION = 2;
@@ -205,23 +205,18 @@ export function RosProvider({
   );
 }
 
-export function RosTool({ device }: { device: string }) {
+export function RosTool() {
   const { error, messages } = useContext(RosStatusContext);
 
   return (
-    <div className="card">
-      <div className="header">
-        <b>ROS Tool ({device})</b>
-      </div>
-      <div className="widget">
-        {error ? (
-          <p>Error: {error}</p>
-        ) : (
-          <div className="capability">
-            <pre>{messages || "No messages received."}</pre>
-          </div>
-        )}
-      </div>
+    <div className="widget">
+      {error ? (
+        <p>Error: {error}</p>
+      ) : (
+        <div className="capability">
+          <pre>{messages || "No messages received."}</pre>
+        </div>
+      )}
     </div>
   );
 }
