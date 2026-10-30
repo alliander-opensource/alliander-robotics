@@ -5,7 +5,7 @@
 import { TransitiveCapability } from "@transitive-sdk/utils-web";
 import { useEffect, useRef, useState } from "react";
 import type { Ros } from "../ros/ros";
-import "./card.css";
+import "./capability.css";
 import "./HealthMonitor.css";
 import { generateJWT } from "./jwt";
 
@@ -51,16 +51,11 @@ export function HealthMonitor({
   // Create a widget
   const widget = <>{capability}</>;
 
-  // Render as a card with a title and the widget.
+  // Render the widget.
   return (
-    <div className="card">
-      <div className="header">
-        <b>Health Monitor ({device})</b>
-      </div>
-      <div className="widget">
-        Time: {ros.subscriptions.time}
-        {jwtError ? <p>Error: {jwtError}</p> : widget}
-      </div>
+    <div className="widget">
+      Time: {ros.subscriptions.time}
+      {jwtError ? <p>Error: {jwtError}</p> : widget}
     </div>
   );
 }

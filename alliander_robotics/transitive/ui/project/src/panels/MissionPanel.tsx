@@ -2,14 +2,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import Button from "@mui/material/Button";
+
+import Stack from "@mui/material/Stack";
+
 import { useEffect, useRef, useState } from "react";
 import { useRos } from "../capabilities/RosTool";
 import type { TriggerResponse } from "../missionHelpers";
 import { pendingWaypoints, toGeoPath } from "../missionHelpers";
 import type { Ros } from "../ros/ros";
+import type { UseWaypoints } from "../waypoint/useWaypoints";
+import type { Waypoint } from "../waypoint/waypoints";
 import "./panels.css";
-import type { UseWaypoints } from "./useWaypoints";
-import type { Waypoint } from "./waypoints";
 
 export function MissionPanel({
   ros,
@@ -86,31 +90,31 @@ export function MissionPanel({
   };
 
   return (
-    <div className="panelActions">
+    <div className="panelRow">
       <div className="sectionTitle">Mission</div>
-      <div className="buttonRow">
-        <button
-          type="button"
+      <Stack direction="row" spacing={1}>
+        <Button
+          variant="contained"
           onClick={onStart}
           disabled={!ready || status !== "idle" || wp.waypoints.length === 0}
         >
           Start
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="contained"
           onClick={onPauseResume}
           disabled={!ready || status === "idle"}
         >
           {status === "paused" ? "Resume" : "Pause"}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="contained"
           onClick={onStop}
           disabled={!ready || status === "idle"}
         >
           Stop
-        </button>
-      </div>
+        </Button>
+      </Stack>
     </div>
   );
 }
