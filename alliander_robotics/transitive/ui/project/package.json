@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.5.0",
+    "@mui/material": "^9.5.0",
     "@transitive-sdk/utils-web": "^0.17.8",
     "jose": "^6.2.13",
     "leaflet": "^1.9.4",

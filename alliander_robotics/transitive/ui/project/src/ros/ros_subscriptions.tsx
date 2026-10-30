@@ -12,14 +12,16 @@ export interface Subscription {
 
 export interface Subscriptions {
   time: number | null;
+  battery: number | null;
   position: [number, number] | null;
   reachedCount: number | null;
   plan: [number, number][] | null;
 }
 
 export function Subscriptions(namespace: string) {
-  const [position, setPosition] = useState<[number, number] | null>(null);
   const [time, setTime] = useState<number | null>(null);
+  const [battery, setBattery] = useState<number | null>(null);
+  const [position, setPosition] = useState<[number, number] | null>(null);
   const [reachedCount, setReachedCount] = useState<number | null>(null);
   const [plan, setPlan] = useState<[number, number][] | null>(null);
 
@@ -30,6 +32,15 @@ export function Subscriptions(namespace: string) {
       callback: (data: any) => {
         if (data && data.length >= 1) {
           setTime(data[0]);
+        }
+      },
+    },
+    {
+      topic: `/${namespace}/battery/battery_status`,
+      fields: ["/percentage"],
+      callback: (data: any) => {
+        if (data && data.length >= 1) {
+          setBattery(data[0]);
         }
       },
     },
@@ -55,7 +66,7 @@ export function Subscriptions(namespace: string) {
       topic: `/${namespace}/plan_gps`,
       fields: ["/poses"],
       callback: (data: any) => {
-        let plan: [number, number][] = [];
+        const plan: [number, number][] = [];
         if (data && data.length >= 1) {
           const GeoPath = data[0];
           for (const GeoPoseStamped of GeoPath) {
@@ -69,7 +80,13 @@ export function Subscriptions(namespace: string) {
     },
   ];
 
-  const subscriptions: Subscriptions = { time, position, reachedCount, plan };
+  const subscriptions: Subscriptions = {
+    time,
+    battery,
+    position,
+    reachedCount,
+    plan,
+  };
 
   return { subscriptions, subscription_list };
 }

@@ -2,7 +2,7 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
-import type { Waypoint } from "./map/waypoints";
+import type { Waypoint } from "./waypoint/waypoints";
 
 export type Device = "simulation" | "lynx" | "panther" | "none";
 
@@ -50,6 +50,9 @@ export function toGeoPath(waypoints: Waypoint[]): GeoPath {
   };
 }
 
-export function pendingWaypoints(waypoints: Waypoint[], reached: Set<number>): Waypoint[] {
+export function pendingWaypoints(
+  waypoints: Waypoint[],
+  reached: Set<number>,
+): Waypoint[] {
   return waypoints.filter((wp) => !reached.has(wp.id));
 }

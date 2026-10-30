@@ -2,24 +2,30 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
-import { TransitiveCapability } from '@transitive-sdk/utils-web';
-import { useEffect, useState } from 'react';
-import './card.css';
-import { generateJWT } from './jwt';
-import './Teleoperation.css';
+import { TransitiveCapability } from "@transitive-sdk/utils-web";
+import { useEffect, useRef, useState } from "react";
+import "./capability.css";
+import { generateJWT } from "./jwt";
+import "./Teleoperation.css";
 
 export function Teleoperation({ device }: { device: string }) {
-  const [jwtToken, setJwtToken] = useState('');
+  const [jwtToken, setJwtToken] = useState("");
   const [jwtError, setJwtError] = useState<string | null>(null);
-  const [cameraTopic, setCameraTopic] = useState('/zed/color/image');
-  const [capability, setCapability] = useState(<div className="teleop-capability"></div>);
+  const [cameraTopic, setCameraTopic] = useState("/zed/color/image");
+  const [capability, setCapability] = useState(
+    <div className="teleop-capability"></div>,
+  );
+
+  const device_ref = useRef(device);
 
   // Generate JWT token on mount
   useEffect(() => {
-    generateJWT(device, '@transitive-robotics/remote-teleop').then(({ jwtToken: token, jwtError: error }) => {
-      setJwtToken(token);
-      setJwtError(error);
-    });
+    generateJWT(device, "@transitive-robotics/remote-teleop").then(
+      ({ jwtToken: token, jwtError: error }) => {
+        setJwtToken(token);
+        setJwtError(error);
+      },
+    );
   }, [device]);
 
   // Update the capability when the camera topic or JWT token changes
@@ -28,22 +34,24 @@ export function Teleoperation({ device }: { device: string }) {
       return;
     }
 
-    const embed = <TransitiveCapability
-      key={`${device}-${cameraTopic}`}
-      jwt={jwtToken}
-      ssl="true"
-      count="1"
-      quantizer="40"
-      timeout="1800"
-      type="rostopic"
-      rosVersion="2"
-      source={cameraTopic}
-      disabledeviceverification="true"
-      control_topic="/joy"
-      control_type="sensor_msgs/Joy"
-      alwayson="true"
-      inverted="true"
-    />;
+    const embed = (
+      <TransitiveCapability
+        key={`${device_ref.current}-${cameraTopic}`}
+        jwt={jwtToken}
+        ssl="true"
+        count="1"
+        quantizer="40"
+        timeout="1800"
+        type="rostopic"
+        rosVersion="2"
+        source={cameraTopic}
+        disabledeviceverification="true"
+        control_topic="/joy"
+        control_type="sensor_msgs/Joy"
+        alwayson="true"
+        inverted="true"
+      />
+    );
 
     setCapability(<div className="capability">{embed}</div>);
   }, [cameraTopic, jwtToken]);
@@ -72,11 +80,6 @@ export function Teleoperation({ device }: { device: string }) {
 
   // Render as a card with a title and the widget.
   return (
-    <div className="card">
-      <div className="header"><b>Teleoperation ({device})</b></div>
-      <div className="widget">
-        {jwtError ? <p>Error: {jwtError}</p> : widget}
-      </div>
-    </div>
+    <div className="widget">{jwtError ? <p>Error: {jwtError}</p> : widget}</div>
   );
 }

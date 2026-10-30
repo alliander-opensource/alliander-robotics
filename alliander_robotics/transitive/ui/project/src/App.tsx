@@ -4,63 +4,60 @@
 
 import { useState } from "react";
 import "./App.css";
-import { HealthMonitor } from "./capabilities/HealthMonitor";
-import { RosProvider, RosTool } from "./capabilities/RosTool";
-import { Teleoperation } from "./capabilities/Teleoperation";
+import { RosProvider } from "./capabilities/RosTool";
 import { MapComponent } from "./map/Map";
 import type { Device } from "./missionHelpers";
+import { ControlPanel } from "./panels/ControlPanel";
+import { DevicePanel } from "./panels/DevicePanel";
+import { MissionPanel } from "./panels/MissionPanel";
+import { StatusPanel } from "./panels/StatusPanel";
+import { WaypointPanel } from "./panels/WaypointPanel";
+import { WindowsPanel } from "./panels/WindowsPanel";
 import { createRos } from "./ros/ros";
+import { UseWaypoints } from "./waypoint/useWaypoints";
 
-const DEVICES: Device[] = ["simulation", "lynx", "panther", "none"];
 const DEFAULT_DEVICE: Device = "simulation";
-const DEVICE_STORAGE_KEY = "device";
 
 function App() {
-  const [device] = useState<Device>(
-    (sessionStorage.getItem(DEVICE_STORAGE_KEY) as Device | null) ?? DEFAULT_DEVICE,
-  );
-  const namespace = device == "lynx" ? "lynx" : "panther";
-
-  const handleDeviceChange = (value: Device) => {
-    sessionStorage.setItem(DEVICE_STORAGE_KEY, value);
-    window.location.reload();
-  };
-
-  const deviceSelector = (
-    <div>
-      {DEVICES.map((name) => (
-        <label key={name}>
-          <input type="radio" checked={device === name} onChange={() => handleDeviceChange(name)} />
-          {name}
-        </label>
-      ))}
-    </div>
-  );
-
-  // ROS:
+  const [device, setDevice] = useState<Device>(DEFAULT_DEVICE);
+  const namespace = device === "lynx" ? "lynx" : "panther";
   const ros = createRos(namespace);
+  const wp = UseWaypoints();
 
-  // Capabilities:
-  const rosTool = <RosTool device={device} />;
-  const teleoperation = <Teleoperation device={device} />;
-  const healthMonitor = <HealthMonitor device={device} ros={ros} />;
+  // TODO: Can this be defined inside the MissionPanel? Difficult because the map also needs to know if the mission is active.
+  const [missionActive, setMissionActive] = useState(false);
 
   // UI Components:
-  const map = <MapComponent ros={ros} />;
+  const map = <MapComponent ros={ros} wp={wp} missionActive={missionActive} />;
+
+  // Panels:
+  const devicePanel = <DevicePanel device={device} setDevice={setDevice} />;
+  const windowsPanel = <WindowsPanel device={device} ros={ros} />;
+  const statusPanel = <StatusPanel ros={ros} />;
+  const controlPanel = <ControlPanel ros={ros} />;
+  const waypointPanel = <WaypointPanel wp={wp} />;
+  const missionPanel = (
+    <MissionPanel ros={ros} wp={wp} onMissionActiveChange={setMissionActive} />
+  );
+
+  // Sections:
+  const mapSection = <div className="mapSection">{map}</div>;
+  const rightSection = (
+    <div className="rightSection">
+      {devicePanel}
+      {windowsPanel}
+      {statusPanel}
+      {controlPanel}
+      {missionPanel}
+      {waypointPanel}
+    </div>
+  );
 
   return (
     <RosProvider device={device} ros={ros}>
       <div className="app">
-        <div className="title">
-          <h1>Alliander Robotics Dashboard</h1>
-          {deviceSelector}
-        </div>
-        <div className="cards">
-          {teleoperation}
-          {healthMonitor}
-          {rosTool}
-        </div>
-        {map}
+        {mapSection}
+        {rightSection}
       </div>
     </RosProvider>
   );
