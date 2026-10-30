@@ -2,7 +2,7 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
-import type { Waypoint } from "./map/waypoints";
+import type { Waypoint } from "./waypoint/waypoints";
 
 export type Device = "simulation" | "lynx" | "panther" | "none";
 
