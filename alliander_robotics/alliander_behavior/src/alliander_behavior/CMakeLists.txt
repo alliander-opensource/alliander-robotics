@@ -14,7 +14,10 @@ find_package(rclcpp_action REQUIRED)
 find_package(alliander_interfaces REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(behaviortree_ros2 REQUIRED)
+find_package(geographic_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(robot_localization REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 include_directories(include)
@@ -25,17 +28,20 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-add_executable(task_planner_node src/main.cpp)
-ament_target_dependencies(task_planner_node
+add_executable(autonomous_navigation_node src/autonomous_navigation.cpp)
+ament_target_dependencies(autonomous_navigation_node
   rclcpp
   rclcpp_action
   alliander_interfaces
   behaviortree_cpp
   behaviortree_ros2
+  geographic_msgs
+  geometry_msgs
   nav2_msgs
+  robot_localization
   sensor_msgs
 )
 
-install(TARGETS task_planner_node DESTINATION lib/${PROJECT_NAME})
+install(TARGETS autonomous_navigation_node DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

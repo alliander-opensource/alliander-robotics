@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<root>
+  <BehaviorTree ID="GetCurrentWaypoint">
+    <Sequence>
+      <SelectWaypoint route="{route}" waypoint_index="{waypoint_index}" latitude="{lat}" longitude="{lon}" orientation="{orientation}"/>
+      <FromLL latitude="{lat}" longitude="{lon}" map_point="{map_point}"/>
+      <MakePose point="{map_point}" orientation="{orientation}" frame_id="map" pose="{current_waypoint}"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

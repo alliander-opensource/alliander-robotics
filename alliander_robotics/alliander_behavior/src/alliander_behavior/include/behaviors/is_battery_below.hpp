@@ -1,3 +1,6 @@
+// # SPDX-FileCopyrightText: Alliander N. V.
+//
+// # SPDX-License-Identifier: Apache-2.0
 #pragma once
 
 #include <behaviortree_cpp/basic_types.h>
@@ -51,4 +54,6 @@ class IsBatteryBelow
     return (msg->percentage <= threshold) ? BT::NodeStatus::SUCCESS
                                           : BT::NodeStatus::FAILURE;
   }
+
+  bool latchLastMessage() const override { return true; }
 };

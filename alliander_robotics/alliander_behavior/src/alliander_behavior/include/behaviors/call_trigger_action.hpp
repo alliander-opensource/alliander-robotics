@@ -1,3 +1,6 @@
+// # SPDX-FileCopyrightText: Alliander N. V.
+//
+// # SPDX-License-Identifier: Apache-2.0
 #pragma once
 
 #include <behaviortree_cpp/basic_types.h>
@@ -17,11 +20,6 @@ class CallTriggerAction
                     const BT::RosNodeParams& params)
       : BT::RosActionNode<alliander_interfaces::action::TriggerAction>(
             name, conf, params) {}
-
-  static BT::PortsList providedPorts() {
-    return providedBasicPorts({BT::InputPort<std::string>(
-        "action_name", "", "Action name to call action server for")});
-  }
 
   bool setGoal(Goal& goal) override {
     // TriggerAction has no goal fields
