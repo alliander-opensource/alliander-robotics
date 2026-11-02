@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<root>
+  <BehaviorTree ID="Patrol">
+    <Sequence>
+      <SubTree ID="GetCurrentWaypoint" _autoremap="true"/>
+      <Fallback>
+	<GoToWaypoint/>
+	<PublishStatus message="Navigation to waypoint failed, skipping"/>
+      </Fallback>
+      <Script name="IncrementWaypoint" code="waypoint_index += 1"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

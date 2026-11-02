@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BehaviorTree ID="WaitUntilCharged">
-  <Timeout msec="{timeout_ms}">
-    <!-- Wait until charged: invert "IsBatteryLow" logic. Keep retrying until we get a SUCCESS (e.g. battery >= 90%) -->
-    <RetryUntilSuccessful num_attempts="-1">
-      <Inverter>
-	<IsBatteryBelow threshold="{target}"/>
-      </Inverter>
-    </RetryUntilSuccessful>
-  </Timeout>
-</BehaviorTree>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
 
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<root BTCPP_format="4">
+  <BehaviorTree ID="WaitUntilCharged">
+    <Timeout msec="{timeout_ms}">
+      <!-- Wait until charged: invert "IsBatteryBelow" logic. Keep retrying until we get a SUCCESS (e.g. battery >= 90%) -->
+      <RetryUntilSuccessful num_attempts="-1">
+	<Inverter>
+	  <IsBatteryBelow name="WaitUntilCharged" threshold="{target}"/>
+	</Inverter>
+      </RetryUntilSuccessful>
+    </Timeout>
+  </BehaviorTree>
+</root>

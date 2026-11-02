@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<root>
+  <BehaviorTree ID="Charge">
+    <Sequence>
+      <IsBatteryBelow threshold="{battery_threshold_low}"/>
+      <DockRobot name="DockRobot"/>
+      <SubTree ID="WaitUntilCharged" _autoremap="true"/>
+      <UndockRobot name="UndockRobot"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

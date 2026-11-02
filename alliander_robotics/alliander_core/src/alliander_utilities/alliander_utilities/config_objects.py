@@ -273,7 +273,7 @@ class BehaviorTreeConfig(Config):
     """Configuration for a Behavior Tree.
 
     Attributes:
-        tree (Literal["patrol_and_charge"]): Which behavior tree to load.
+        tree (Literal["Empty", "PatrolAndCharge"]): Which behavior tree to load.
     """
 
     tree: Literal["Empty", "PatrolAndCharge"] = "Empty"
