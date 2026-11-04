@@ -9,10 +9,11 @@ SPDX-License-Identifier: Apache-2.0
     <Sequence>
       <SubTree ID="GetCurrentWaypoint" _autoremap="true"/>
       <Fallback>
-	<GoToWaypoint/>
+	<GoToWaypoint pose="{current_waypoint}"/>
 	<PublishStatus message="Navigation to waypoint failed, skipping"/>
       </Fallback>
-      <Script name="IncrementWaypoint" code="waypoint_index += 1"/>
+      <!-- Modulo operator does not exist in BT.cpp scripts -->
+      <Script name="IncrementWaypoint" code="waypoint_index = (waypoint_index + 1 >= route_size) ? 0 : waypoint_index + 1"/>
     </Sequence>
   </BehaviorTree>
 </root>

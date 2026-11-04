@@ -214,6 +214,7 @@ class Nav2Config(Config):
         collision_monitor (bool): Whether to enable collision monitoring.
         slam (bool): Whether to enable SLAM.
         navigation (bool): Whether to enable navigation.
+        manager (bool): Whether to enable the nav2_manager, which uses the Simple Commander API.
         gps (bool): Whether to enable GPS integration.
         controller (Literal["dwb", "graceful_motion", "mppi", "pure_pursuit", "rotation_shim", "vector_pursuit"]): Navigation controller type to use.
         map (Literal["simulation_map", "ipkw", "ipkw_buiten"]): Map to use for navigation.
@@ -223,6 +224,7 @@ class Nav2Config(Config):
     collision_monitor: bool = False
     slam: bool = False
     navigation: bool = False
+    manager: bool = True
     gps: bool = False
     controller: Literal[
         "dwb",

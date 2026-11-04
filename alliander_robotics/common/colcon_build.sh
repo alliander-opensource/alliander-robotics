@@ -20,7 +20,7 @@ else
 fi
 
 # Build the packages:
-colcon build "${COLCON_ARGS[@]}" --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1 "${CMAKE_ARGS[@]}"
+colcon build "${COLCON_ARGS[@]}" -j"$(nproc)" --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1 "${CMAKE_ARGS[@]}"
 
 # Run tests if we are building internal packages. If any test fails, print the test results:
 if [ "$1" != "--external" ]; then

@@ -30,7 +30,11 @@ class FromLL : public BT::RosServiceNode<robot_localization::srv::FromLL> {
     auto lat = getInput<double>("latitude");
     auto lon = getInput<double>("longitude");
 
-    if (!lat || !lon) return false;
+    if (!lat || !lon) {
+      RCLCPP_ERROR(logger(), "FromLL: bad ports: %s",
+                   (!lat ? lat.error() : lon.error()).c_str());
+      return false;
+    }
 
     request->ll_point.latitude = lat.value();
     request->ll_point.longitude = lon.value();

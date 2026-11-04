@@ -24,7 +24,7 @@ export function Services(namespace: string) {
       type: "std_srvs/srv/Trigger",
     },
     nav2_stop: {
-      name: `/${namespace}/nav2_manager/stop`,
+      name: `/${namespace}/navigation/stop`,
       type: "std_srvs/srv/Trigger",
     },
   };

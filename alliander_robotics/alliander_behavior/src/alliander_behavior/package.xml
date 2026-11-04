@@ -25,6 +25,7 @@ SPDX-License-Identifier: Apache-2.0
   <depend>nav2_msgs</depend>
   <depend>robot_localization</depend>
   <depend>sensor_msgs</depend>
+  <depend>std_srvs</depend>
 
   <exec_depend>behaviortree_ros2</exec_depend>
 

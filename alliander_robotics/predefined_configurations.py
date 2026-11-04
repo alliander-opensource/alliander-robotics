@@ -407,9 +407,11 @@ class PredefinedConfigurations:
     @register_configuration("panther_bt_nav")
     def config_behaviortree_nav(self) -> None:  # noqa: D102
         vehicle = Vehicle("panther", (0, 0, 0.2))
+        vehicle.charging_receiver = True
         vehicle.bt_config = BehaviorTreeConfig(tree="PatrolAndCharge")
         vehicle.nav2_config.controller = "mppi"
         vehicle.nav2_config.navigation = True
+        vehicle.nav2_config.manager = False
         vehicle.nav2_config.gps = True
         vehicle.nav2_config.window_size = 150
 
@@ -430,11 +432,19 @@ class PredefinedConfigurations:
             usb_device="PANTHER",
         )
         imu = IMU("xsens", position=(0.16, -0.09, 0.155), orientation=(90, 0, -90))
+        # camera = Camera("zed", (0.08, 0, 0.4), orientation=(0, 10, 0))
 
         link(vehicle, lidar)
         link(vehicle, gps)
         link(vehicle, imu)
-        self.plat_conf.platforms = [vehicle, lidar, gps, imu]
+        # link(vehicle, camera)
+
+        # Charging stations:
+        station = ChargingStation("wibotic", namespace="station", position=(1, 1, 0))
+        # tag = Apriltag("tag", (0.0, 0.0, 0.8), id=1, publish_topic="/station")
+        # link(station, tag)
+
+        self.plat_conf.platforms = [vehicle, lidar, gps, imu, station]
         self.viz_conf.gui = True
         self.sim_conf.world = "map_5.954036_51.977320"
 

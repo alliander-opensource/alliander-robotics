@@ -31,7 +31,11 @@ class SelectWaypoint : public BT::SyncActionNode {
   BT::NodeStatus tick() override {
     auto route = getInput<geographic_msgs::msg::GeoPath>("route");
     auto waypoint_index = getInput<size_t>("waypoint_index");
-    if (!route || !waypoint_index) return BT::NodeStatus::FAILURE;
+    if (!route || !waypoint_index) {
+      RCLCPP_ERROR(logger_, "SelectWaypoint: bad ports: %s",
+                   (!route ? route.error() : waypoint_index.error()).c_str());
+      return BT::NodeStatus::FAILURE;
+    }
 
     auto index = waypoint_index.value();
     auto route_size = route->poses.size();
@@ -46,6 +50,9 @@ class SelectWaypoint : public BT::SyncActionNode {
     setOutput("latitude", wp.pose.position.latitude);
     setOutput("longitude", wp.pose.position.longitude);
     setOutput("orientation", wp.pose.orientation);
+
+    RCLCPP_INFO(logger_, "Navigating to waypoint index %zu", index);
+
     return BT::NodeStatus::SUCCESS;
   }
 
