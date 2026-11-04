@@ -9,11 +9,11 @@ SPDX-License-Identifier: Apache-2.0
   <BehaviorTree ID="WaitUntilCharged">
     <Timeout msec="{timeout_ms}">
       <!-- Wait until charged: invert "IsBatteryBelow" logic. Keep retrying until we get a SUCCESS (e.g. battery >= 90%) -->
-      <RetryUntilSuccessful num_attempts="-1">
-	<Inverter>
-	  <IsBatteryBelow name="WaitUntilCharged" threshold="{target}"/>
-	</Inverter>
-      </RetryUntilSuccessful>
+      <Inverter>
+	<KeepRunningUntilFailure>
+	  <IsBatteryBelow name="WaitUntilCharged" threshold="{battery_threshold_charged}"/>
+	</KeepRunningUntilFailure>
+      </Inverter>
     </Timeout>
   </BehaviorTree>
 </root>

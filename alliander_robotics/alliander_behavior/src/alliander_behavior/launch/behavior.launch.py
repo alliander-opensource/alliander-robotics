@@ -9,7 +9,7 @@ from alliander_utilities.register import Register
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 
 platform_arg = LaunchArgument("platform_config", "")
 
@@ -32,6 +32,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         package="alliander_behavior",
         executable="autonomous_navigation_node",
         namespace=namespace,
+        # arguments=["--ros-args", "--log-level", "DEBUG"],
         parameters=[
             # ID of BehaviorTree that you want to run
             {"tree_name": bt_config.tree},
@@ -39,15 +40,20 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             {"config_dir": get_file_path("alliander_behavior", ["config"], "")},
             {"server_timeout_ms": 10000},
             # Topics/services/actions here to change them in the XML files
-            {"waypoints_topic": f"/{namespace}/gps_waypoints"},
+            {"waypoints_topic": "/gps_waypoints"},
             {"battery_topic": f"/{namespace}/battery/battery_status"},
+            {"status_topic": f"/{namespace}/status"},
             {"dock_action": f"/{namespace}/dock_robot"},
             {"undock_action": f"/{namespace}/undock_robot"},
             {"navigate_to_pose_action": f"/{namespace}/navigate_to_pose"},
             {"fromll_service": f"/{namespace}/fromLL"},
+            {"stop_nav_service": f"/{namespace}/navigation/stop"},
         ],
     )
-    return [Register.on_start(task_planner_node, context)]
+    return [
+        SetParameter(name="use_sim_time", value=vehicle_config.simulation),
+        Register.on_start(task_planner_node, context),
+    ]
 
 
 def generate_launch_description() -> LaunchDescription:

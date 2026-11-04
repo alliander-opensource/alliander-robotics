@@ -15,13 +15,13 @@ simulate_discharging: true
 # Battery capacity
 # BAT01 - 20 Ah
 # BAT02 - 40 Ah
-capacity: 20.0 # [Ah]
+capacity: 2.0 # [Ah]
 
 # Sets the initial charge percentage of the battery (range 0-1).
 initial_charge_percentage: 0.7
 
 # Specifies the charging time for the battery in hours.
-charging_time: 6.0 # [h]
+charging_time: 0.01 # [h]
 
 # Constant power discharging the battery.
 # 120W – represents the power consumed during normal operation.

@@ -32,9 +32,9 @@ AutonomousNavigationBT::AutonomousNavigationBT(rclcpp::Node::SharedPtr node)
   node_->declare_parameter<std::string>("navigate_to_pose_action",
                                         "navigate_to_pose");
   node_->declare_parameter<std::string>("fromll_service", "/fromLL");
+  node_->declare_parameter<std::string>("stop_nav_service",
+                                        "/stop_nav_service");
   node_->declare_parameter<std::string>("status_topic", "/status_topic");
-
-  auto waypoints_topic = node_->get_parameter("waypoints_topic").as_string();
 
   // stub for unimplemented behavior. TODO: remove
   auto stub = [this](const std::string& id) {
@@ -48,8 +48,11 @@ AutonomousNavigationBT::AutonomousNavigationBT(rclcpp::Node::SharedPtr node)
 
   BT::RosNodeParams params;
   params.nh = node_;
+  // timeout while waiting for server to come up
   params.wait_for_server_timeout = std::chrono::milliseconds(
       node_->get_parameter("server_timeout_ms").as_int());
+  // timeout waiting for response from server
+  params.server_timeout = std::chrono::milliseconds(3000);
   params.default_port_value = node_->get_parameter("battery_topic").as_string();
   factory_.registerNodeType<IsBatteryBelow>("IsBatteryBelow", params);
 
@@ -91,10 +94,23 @@ AutonomousNavigationBT::AutonomousNavigationBT(rclcpp::Node::SharedPtr node)
 
   tree_ = factory_.createTree(tree_name);
 
+  // Logging state transitions in ROS
+  status_logger_ =
+      std::make_unique<RosStatusLogger>(tree_, node_->get_logger());
+
   // Blackboard
   bb_ = tree_.rootBlackboard();
+
+  // --- routes
   bb_->set("has_new_route", false);
+  bb_->set("received_stop", false);
+  bb_->set("route", geographic_msgs::msg::GeoPath{});
   bb_->set("pending_route", geographic_msgs::msg::GeoPath{});
+  bb_->set("current_waypoint", geometry_msgs::msg::PoseStamped{});
+  bb_->set("route_size", 0UL);
+  bb_->set("waypoint_index", 0UL);
+
+  // --- battery
   bb_->set<unsigned>("timeout_ms",
                      static_cast<unsigned>(
                          node_->get_parameter("charge_timeout_ms").as_int()));
@@ -104,15 +120,20 @@ AutonomousNavigationBT::AutonomousNavigationBT(rclcpp::Node::SharedPtr node)
       "battery_threshold_charged",
       node_->get_parameter("battery_threshold_charged").as_double());
 
-  // ROS inits
+  // ROS inits -- volatile on sub because that is Transitive ROS Tool's QoS
   sub_waypoints_ = node_->create_subscription<geographic_msgs::msg::GeoPath>(
-      waypoints_topic, rclcpp::QoS(1).reliable().transient_local(),
+      node_->get_parameter("waypoints_topic").as_string(),
+      rclcpp::QoS(1).reliable().durability_volatile(),
       [this](const geographic_msgs::msg::GeoPath::SharedPtr msg) {
         waypointsCallback(msg);
       });
 
-  RCLCPP_INFO(node_->get_logger(), "Loaded Behavior Tree with name %s",
-              tree_name.c_str());
+  srv_stop_nav_ = node_->create_service<std_srvs::srv::Trigger>(
+      node_->get_parameter("stop_nav_service").as_string(),
+      [this](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
+             std::shared_ptr<std_srvs::srv::Trigger::Response> resp) {
+        stopNavCallback(req, resp);
+      });
 }
 
 void AutonomousNavigationBT::registerTreesFromDirectory(const fs::path& dir) {
@@ -138,9 +159,30 @@ void AutonomousNavigationBT::waypointsCallback(
     return;
   }
 
+  RCLCPP_INFO(node_->get_logger(), "Received route with %zu waypoints",
+              msg->poses.size());
+
   // this will trigger the LoadRoute behavior on next tick
+  bb_->set("route_size", msg->poses.size());
   bb_->set("pending_route", *msg);
   bb_->set("has_new_route", true);
+
+  // only way to break a Stop in Patrol is with a new route
+  bb_->set("received_stop", false);
+}
+
+void AutonomousNavigationBT::stopNavCallback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
+  RCLCPP_INFO(node_->get_logger(), "Received STOP request for navigation");
+
+  const bool already_requested = bb_->get<bool>("received_stop");
+  bb_->set("received_stop", true);
+
+  response->success = true;
+  response->message = already_requested
+                          ? "Navigation stop was already requested"
+                          : "Navigation stop requested";
 }
 
 int main(int argc, char* argv[]) {

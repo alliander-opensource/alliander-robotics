@@ -19,6 +19,7 @@ class LoadRoute : public BT::SyncActionNode {
   static BT::PortsList providedPorts() {
     return {BT::InputPort<geographic_msgs::msg::GeoPath>("pending"),
             BT::OutputPort<geographic_msgs::msg::GeoPath>("route"),
+            BT::OutputPort<size_t>("route_size"),
             BT::OutputPort<size_t>("waypoint_index"),
             BT::OutputPort<bool>("has_new_route")};
   }
@@ -27,7 +28,8 @@ class LoadRoute : public BT::SyncActionNode {
     auto pending = getInput<geographic_msgs::msg::GeoPath>("pending");
     if (!pending) return BT::NodeStatus::FAILURE;
     setOutput("route", pending.value());
-    setOutput("waypoint_index", 0);
+    setOutput("waypoint_index", 0UL);
+    setOutput("route_size", pending.value().poses.size());
     setOutput("has_new_route", false);
     return BT::NodeStatus::SUCCESS;
   }

@@ -19,6 +19,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(robot_localization REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 include_directories(include)
 
@@ -40,6 +41,7 @@ ament_target_dependencies(autonomous_navigation_node
   nav2_msgs
   robot_localization
   sensor_msgs
+  std_srvs
 )
 
 install(TARGETS autonomous_navigation_node DESTINATION lib/${PROJECT_NAME})
