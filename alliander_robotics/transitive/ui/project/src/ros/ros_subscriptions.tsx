@@ -55,7 +55,7 @@ export function Subscriptions(namespace: string) {
       topic: `/${namespace}/plan_gps`,
       fields: ["/poses"],
       callback: (data: any) => {
-        let plan: [number, number][] = [];
+        const plan: [number, number][] = [];
         if (data && data.length >= 1) {
           const GeoPath = data[0];
           for (const GeoPoseStamped of GeoPath) {

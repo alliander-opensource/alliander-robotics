@@ -46,7 +46,8 @@
         "github.vscode-pull-request-github",
         "davidanson.vscode-markdownlint",
         "redhat.vscode-xml",
-        "sonarsource.sonarlint-vscode"
+        "sonarsource.sonarlint-vscode",
+        "biomejs.biome"
       ]
     }
   }
