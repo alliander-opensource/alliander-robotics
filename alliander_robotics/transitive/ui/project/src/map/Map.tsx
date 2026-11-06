@@ -4,7 +4,7 @@
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -13,14 +13,11 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
-import { MissionPanel } from "./MissionPanel";
-
 import { pendingWaypoints } from "../missionHelpers";
 import type { Ros } from "../ros/ros";
+import type { UseWaypoints } from "../waypoint/useWaypoints";
+import { WaypointMarker } from "../waypoint/Waypoint";
 import "./Map.css";
-import { UseWaypoints } from "./useWaypoints";
-import { WaypointMarker } from "./Waypoint";
-import { WaypointPanel } from "./WaypointPanel";
 
 const HOME: [number, number] = [52.06, 5.38];
 const ZOOM: number = 7;
@@ -70,29 +67,30 @@ function Controls({
       ref={controlsRef}
       className="leaflet-bottom leaflet-left leaflet-control controls"
     >
-      <button onClick={home}>
+      <button type="button" onClick={home}>
         <span className="button">🏠</span>
       </button>
-      <button onClick={robot}>
+      <button type="button" onClick={robot}>
         <span className="button">🤖</span>
       </button>
     </div>
   );
 }
 
-export function MapComponent({ ros }: Readonly<{ ros: Ros }>) {
-  const wp = UseWaypoints();
+export function MapComponent({
+  ros,
+  wp,
+  missionActive,
+}: Readonly<{
+  ros: Ros;
+  wp: ReturnType<typeof UseWaypoints>;
+  missionActive: boolean;
+}>) {
   const route: [number, number][] = wp.waypoints.map((w) => [w.lat, w.lng]);
 
-  const [missionActive, setMissionActive] = useState(false);
   const current = missionActive
     ? (pendingWaypoints(wp.waypoints, wp.reached)[0]?.id ?? null)
     : null;
-
-  const missionPanel = (
-    <MissionPanel ros={ros} wp={wp} onMissionActiveChange={setMissionActive} />
-  );
-  const waypointPanel = <WaypointPanel wp={wp} />;
 
   const position = ros.subscriptions.position;
   const plan = ros.subscriptions.plan;
@@ -131,13 +129,5 @@ export function MapComponent({ ros }: Readonly<{ ros: Ros }>) {
     </MapContainer>
   );
 
-  return (
-    <div className="mapRow">
-      <div className="map">{map}</div>
-      <div className="panelStack">
-        <div className="mission">{missionPanel}</div>
-        <div className="waypoints">{waypointPanel}</div>
-      </div>
-    </div>
-  );
+  return <div className="map">{map}</div>;
 }

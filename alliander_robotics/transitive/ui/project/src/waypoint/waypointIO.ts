@@ -21,13 +21,18 @@ export function parseWaypoints(json: string): Waypoint[] {
   return raw.map((entry) => {
     const { lat, lng } = entry ?? {};
     if (typeof lat !== "number" || typeof lng !== "number") {
-      throw new TypeError("Invalid waypoints file: each entry needs numeric lat/lng");
+      throw new TypeError(
+        "Invalid waypoints file: each entry needs numeric lat/lng",
+      );
     }
     return newWaypoint(lat, lng);
   });
 }
 
-export function downloadWaypoints(waypoints: Waypoint[], filename = "waypoints.json"): void {
+export function downloadWaypoints(
+  waypoints: Waypoint[],
+  filename = "waypoints.json",
+): void {
   const blob = new Blob([serializeWaypoints(waypoints)], {
     type: "application/json",
   });

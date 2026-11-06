@@ -2,14 +2,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from "react";
+import Button from "@mui/material/Button";
+
+import Stack from "@mui/material/Stack";
+
+import { useEffect, useRef, useState } from "react";
 import { useRos } from "../capabilities/RosTool";
 import type { TriggerResponse } from "../missionHelpers";
 import { pendingWaypoints, toGeoPath } from "../missionHelpers";
 import type { Ros } from "../ros/ros";
+import type { UseWaypoints } from "../waypoint/useWaypoints";
+import type { Waypoint } from "../waypoint/waypoints";
 import "./panels.css";
-import type { UseWaypoints } from "./useWaypoints";
-import type { Waypoint } from "./waypoints";
 
 export function MissionPanel({
   ros,
@@ -21,19 +25,28 @@ export function MissionPanel({
   onMissionActiveChange: (active: boolean) => void;
 }>) {
   const { ready, publish, callService } = useRos();
-
   const [status, setStatus] = useState<"idle" | "running" | "paused">("idle");
   const [routeIds, setRouteIds] = useState<number[]>([]);
+
+  const wp_ref = useRef(wp);
+  const status_ref = useRef(status);
+  const routeIds_ref = useRef(routeIds);
 
   useEffect(() => {
     onMissionActiveChange(status !== "idle");
   }, [status, onMissionActiveChange]);
 
   useEffect(() => {
-    if (ros.subscriptions.reachedCount === null || status === "idle") return;
-    const done = routeIds.slice(0, ros.subscriptions.reachedCount);
+    if (
+      ros.subscriptions.reachedCount === null ||
+      status_ref.current === "idle"
+    )
+      return;
+    const done = routeIds_ref.current.slice(0, ros.subscriptions.reachedCount);
     if (done.length > 0) {
-      wp.onReachedChange(new Set([...wp.reached, ...done]));
+      wp_ref.current.onReachedChange(
+        new Set([...wp_ref.current.reached, ...done]),
+      );
     }
   }, [ros.subscriptions.reachedCount]);
 
@@ -53,7 +66,9 @@ export function MissionPanel({
     if (allReached) {
       wp.onReachedChange(new Set());
     }
-    sendRoute(allReached ? wp.waypoints : pendingWaypoints(wp.waypoints, wp.reached));
+    sendRoute(
+      allReached ? wp.waypoints : pendingWaypoints(wp.waypoints, wp.reached),
+    );
 
     setStatus("running");
   };
@@ -75,22 +90,31 @@ export function MissionPanel({
   };
 
   return (
-    <div className="panelActions">
+    <div className="panelRow">
       <div className="sectionTitle">Mission</div>
-      <div className="buttonRow">
-        <button
+      <Stack direction="row" spacing={1}>
+        <Button
+          variant="contained"
           onClick={onStart}
           disabled={!ready || status !== "idle" || wp.waypoints.length === 0}
         >
           Start
-        </button>
-        <button onClick={onPauseResume} disabled={!ready || status === "idle"}>
+        </Button>
+        <Button
+          variant="contained"
+          onClick={onPauseResume}
+          disabled={!ready || status === "idle"}
+        >
           {status === "paused" ? "Resume" : "Pause"}
-        </button>
-        <button onClick={onStop} disabled={!ready || status === "idle"}>
+        </Button>
+        <Button
+          variant="contained"
+          onClick={onStop}
+          disabled={!ready || status === "idle"}
+        >
           Stop
-        </button>
-      </div>
+        </Button>
+      </Stack>
     </div>
   );
 }
