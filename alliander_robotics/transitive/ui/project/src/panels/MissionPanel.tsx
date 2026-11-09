@@ -2,10 +2,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import PauseIcon from "@mui/icons-material/Pause";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
+import StopIcon from "@mui/icons-material/Stop";
 import Button from "@mui/material/Button";
-
 import Stack from "@mui/material/Stack";
-
 import { useEffect, useRef, useState } from "react";
 import { useRos } from "../capabilities/RosTool";
 import type { TriggerResponse } from "../missionHelpers";
@@ -98,21 +100,21 @@ export function MissionPanel({
           onClick={onStart}
           disabled={!ready || status !== "idle" || wp.waypoints.length === 0}
         >
-          Start
+          <PlayCircleFilledIcon />
         </Button>
         <Button
           variant="contained"
           onClick={onPauseResume}
           disabled={!ready || status === "idle"}
         >
-          {status === "paused" ? "Resume" : "Pause"}
+          {status === "paused" ? <PlayArrowIcon /> : <PauseIcon />}
         </Button>
         <Button
           variant="contained"
           onClick={onStop}
           disabled={!ready || status === "idle"}
         >
-          Stop
+          <StopIcon />
         </Button>
       </Stack>
     </div>

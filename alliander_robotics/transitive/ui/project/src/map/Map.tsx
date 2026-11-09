@@ -2,6 +2,9 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
+import HomeIcon from "@mui/icons-material/Home";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
+import Button from "@mui/material/Button";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef } from "react";
@@ -67,12 +70,12 @@ function Controls({
       ref={controlsRef}
       className="leaflet-bottom leaflet-left leaflet-control controls"
     >
-      <button type="button" onClick={home}>
-        <span className="button">🏠</span>
-      </button>
-      <button type="button" onClick={robot}>
-        <span className="button">🤖</span>
-      </button>
+      <Button variant="contained" onClick={home}>
+        <HomeIcon />
+      </Button>
+      <Button variant="contained" onClick={robot}>
+        <MyLocationIcon />
+      </Button>
     </div>
   );
 }

@@ -25,7 +25,7 @@ export function StatusPanel({ ros }: Readonly<{ ros: Ros }>) {
           </TableRow>
           <TableRow>
             <TableCell>E-Stop:</TableCell>
-            <TableCell>TODO</TableCell>
+            <TableCell>{String(ros.subscriptions.estop)}</TableCell>
           </TableRow>
         </TableBody>
       </Table>
