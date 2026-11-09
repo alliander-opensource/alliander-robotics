@@ -3,8 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
 import NorthIcon from "@mui/icons-material/North";
+import SaveIcon from "@mui/icons-material/Save";
 import SouthIcon from "@mui/icons-material/South";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
@@ -41,14 +44,14 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
             onClick={wp.onSave}
             disabled={isEmpty}
           >
-            Save
+            <SaveIcon />
           </Button>
           <Button
             variant="contained"
             type="button"
             onClick={() => fileInputRef.current?.click()}
           >
-            Load
+            <UploadFileIcon />
           </Button>
           <input
             ref={fileInputRef}
@@ -69,7 +72,7 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
             }}
             disabled={isEmpty}
           >
-            Clear
+            <DeleteIcon />
           </Button>
         </Stack>
       </div>
