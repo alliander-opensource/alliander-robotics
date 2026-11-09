@@ -342,11 +342,13 @@ class Vehicle(Platform):
 
     Attributes:
         platform_type (str): Type identifier for the platform.
+        e_stop_initial_state (bool): Initial state of the emergency stop.
         charging_receiver (bool): Whether the vehicle has a charging receiver.
         nav2_config (Nav2Config): Nav2 configuration settings.
     """
 
     platform_type: str = "Vehicle"
+    e_stop_initial_state: bool = True
     charging_receiver: bool = False
     nav2_config: Nav2Config = field(default_factory=Nav2Config)
 

@@ -9,6 +9,7 @@ SPDX-License-Identifier: Apache-2.0
   <!-- Set use_sim argument to let panther xacro load gazebo plugin: -->
   <xacro:arg name="simulation" default="true" />
   <xacro:arg name="namespace" default="panther" />
+  <xacro:arg name="e_stop_initial_state" default="true"/>
   <xacro:arg name="charging_receiver" default="false" />
   <xacro:arg name="childs" default="${[]}" />
 
@@ -18,6 +19,7 @@ SPDX-License-Identifier: Apache-2.0
     ns="husarion" />
   <xacro:husarion.panther_robot
     use_sim="$(arg simulation)"
+    e_stop_initial_state="$(arg e_stop_initial_state)"
     wheel_config_file="$(find husarion_ugv_description)/config/WH01.yaml"
     controller_config_file="$(find alliander_husarion_description)/config/panther_controllers.yaml"
     battery_config_file="$(find alliander_husarion_description)/config/battery_plugin.yaml"
