@@ -506,10 +506,10 @@ class PredefinedConfigurations:
         link(vehicle, lidar)
 
         # Charging station:
-        station = ChargingStation("wibotic", (1.5, 0, 0))
+        station = ChargingStation("wibotic", (1, 0, 0))
         tag = Apriltag(
             "tag",
-            (0.0, 0.0, 0.8),
+            (0.2, 0.0, 0.9),
             publish_topic=f"/{vehicle.namespace}/detected_dock_pose",
             child_frame="dock",
             child_frame_orientation=(0, -1.57, -1.57),
