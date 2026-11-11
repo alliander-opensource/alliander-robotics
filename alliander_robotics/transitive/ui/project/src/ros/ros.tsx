@@ -16,7 +16,7 @@ export interface Ros {
 
 export function createRos(namespace: string) {
   const { subscriptions, subscription_list } = Subscriptions(namespace);
-  const { publishers } = Publishers();
+  const { publishers } = Publishers(namespace);
   const { services } = Services(namespace);
 
   return { subscriptions, subscription_list, publishers, services };

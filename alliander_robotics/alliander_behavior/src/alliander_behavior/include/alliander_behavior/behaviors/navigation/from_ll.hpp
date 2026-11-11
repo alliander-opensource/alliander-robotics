@@ -13,19 +13,37 @@
 
 #include "robot_localization/srv/from_ll.hpp"
 
+namespace alliander_behavior {
+
+/// Class that calls the FromLL service to transform [lat, lon] to map frame
 class FromLL : public BT::RosServiceNode<robot_localization::srv::FromLL> {
  public:
+  /**
+   * @brief initializes the FromLL service node.
+   * @param name BT node name.
+   * @param conf runtime config, port mappings, etc.
+   * @param params ROS2 context for node.
+   */
   FromLL(const std::string& name, const BT::NodeConfig& conf,
          const BT::RosNodeParams& params)
       : BT::RosServiceNode<robot_localization::srv::FromLL>(name, conf,
                                                             params) {}
 
+  /**
+   * @brief fills out BT.CPP's ports.
+   * @return BT.CPP ports list.
+   */
   static BT::PortsList providedPorts() {
     return providedBasicPorts(
         {BT::InputPort<double>("latitude"), BT::InputPort<double>("longitude"),
          BT::OutputPort<geometry_msgs::msg::Point>("map_point")});
   }
 
+  /**
+   * @brief creates a FromLL request.
+   * @param request BT.ROS2 service request with the lat/lon input.
+   * @return whether request is successfully created.
+   */
   bool setRequest(Request::SharedPtr& request) override {
     auto lat = getInput<double>("latitude");
     auto lon = getInput<double>("longitude");
@@ -42,14 +60,26 @@ class FromLL : public BT::RosServiceNode<robot_localization::srv::FromLL> {
     return true;
   }
 
+  /**
+   * @brief callback for when a response is received on the service call.
+   * @param response BT.ROS2 service response with the converted map location.
+   * @return status for this BT node.
+   */
   BT::NodeStatus onResponseReceived(
       const Response::SharedPtr& response) override {
     setOutput("map_point", response->map_point);
     return BT::NodeStatus::SUCCESS;
   }
 
+  /**
+   * @brief override what to do on Node failre. In this case, log an error.
+   * @param error the BT.ROS2 error to propagate.
+   * @return status for this BT node.
+   */
   BT::NodeStatus onFailure(BT::ServiceNodeErrorCode error) override {
     RCLCPP_ERROR(logger(), "FromLL error: %s", BT::toStr(error));
     return BT::NodeStatus::FAILURE;
   }
 };
+
+}  // namespace alliander_behavior

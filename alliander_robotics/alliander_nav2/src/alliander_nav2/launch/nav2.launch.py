@@ -386,7 +386,8 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         executable="nav2_manager.py",
         namespace=namespace_vehicle,
         parameters=[{"costmap_size": float(nav2.window_size)}],
-        remappings=remappings,
+        remappings=remappings
+        + [("/gps_waypoints", f"/{namespace_vehicle}/gps_waypoints")],
     )
 
     pub_topic = (

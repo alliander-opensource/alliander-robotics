@@ -432,19 +432,12 @@ class PredefinedConfigurations:
             usb_device="PANTHER",
         )
         imu = IMU("xsens", position=(0.16, -0.09, 0.155), orientation=(90, 0, -90))
-        # camera = Camera("zed", (0.08, 0, 0.4), orientation=(0, 10, 0))
 
         link(vehicle, lidar)
         link(vehicle, gps)
         link(vehicle, imu)
-        # link(vehicle, camera)
 
-        # Charging stations:
-        station = ChargingStation("wibotic", namespace="station", position=(1, 1, 0))
-        # tag = Apriltag("tag", (0.0, 0.0, 0.8), id=1, publish_topic="/station")
-        # link(station, tag)
-
-        self.plat_conf.platforms = [vehicle, lidar, gps, imu, station]
+        self.plat_conf.platforms = [vehicle, lidar, gps, imu]
         self.viz_conf.gui = True
         self.sim_conf.world = "map_5.954036_51.977320"
 

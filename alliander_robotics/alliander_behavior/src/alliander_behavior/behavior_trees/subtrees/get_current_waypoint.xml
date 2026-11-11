@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: Alliander N. V.
 
 SPDX-License-Identifier: Apache-2.0
 -->
-<root>
+<root BTCPP_format="4">
   <BehaviorTree ID="GetCurrentWaypoint">
     <Sequence>
       <SelectWaypoint route="{route}" waypoint_index="{waypoint_index}" latitude="{lat}" longitude="{lon}" orientation="{orientation}"/>

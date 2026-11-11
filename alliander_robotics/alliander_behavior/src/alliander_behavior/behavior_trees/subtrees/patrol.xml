@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<root BTCPP_format="4">
+  <BehaviorTree ID="Patrol">
+    <Sequence>
+      <SubTree ID="GetCurrentWaypoint" _autoremap="true"/>
+      <Fallback>
+        <Sequence>
+	  <!-- Navigate to pose and reset failures if successful -->
+          <NavigateToPose pose="{current_waypoint}"/>
+          <Script code="navigation_failures := 0"/>
+        </Sequence>
+	<!-- On failure, skip waypoint -->
+        <Sequence name="NavigationFailed">
+          <Script code="navigation_failures += 1"/>
+          <PublishStatus message="Navigation to waypoint failed, skipping it"/>
+          <Sleep msec="{@navigation_retry_delay_ms}"/>
+        </Sequence>
+      </Fallback>
+
+      <!-- If every waypoint failed, abandon route -->
+      <Fallback>
+        <ScriptCondition code="navigation_failures &lt; route_size"/>
+        <Sequence name="AbandonRoute">
+          <PublishStatus message="ALERT: navigation failed for every waypoint, abandoning route"/>
+          <Script code="route_size := 0"/>
+        </Sequence>
+      </Fallback>
+
+      <!-- Modulo operator does not exist in BT.cpp scripts -->
+      <Script name="IncrementWaypoint" code="waypoint_index = (waypoint_index + 1 >= route_size) ? 0 : waypoint_index + 1"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

@@ -11,11 +11,24 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 
+namespace alliander_behavior {
+
+/// Class to create a PoseStamped out of a given Point in map frame.
+/// This class does not use BT.ROS2 as it can be purely BT.CPP.
 class MakePose : public BT::SyncActionNode {
  public:
+  /**
+   * @brief initializes the MakePose object.
+   * @param name the BT node name.
+   * @param conf BT config holding port mappings, runtime config, etc.
+   */
   MakePose(const std::string& name, const BT::NodeConfig& conf)
       : BT::SyncActionNode(name, conf) {}
 
+  /**
+   * @brief fills out the BT ports.
+   * @return BT.CPP ports list.
+   */
   static BT::PortsList providedPorts() {
     return {BT::InputPort<geometry_msgs::msg::Point>("point"),
             BT::InputPort<geometry_msgs::msg::Quaternion>("orientation"),
@@ -23,6 +36,11 @@ class MakePose : public BT::SyncActionNode {
             BT::OutputPort<geometry_msgs::msg::PoseStamped>("pose")};
   }
 
+  /**
+   * @brief overrides standard tick() behavior. Creates a
+   * PoseStamped from a Point.
+   * @return status for this node.
+   */
   BT::NodeStatus tick() override {
     auto map_point = getInput<geometry_msgs::msg::Point>("point");
     auto orientation = getInput<geometry_msgs::msg::Quaternion>("orientation");
@@ -39,3 +57,5 @@ class MakePose : public BT::SyncActionNode {
     return BT::NodeStatus::SUCCESS;
   }
 };
+
+}  // namespace alliander_behavior

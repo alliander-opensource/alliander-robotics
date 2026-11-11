@@ -389,7 +389,7 @@ class Vehicle(Platform):
         Returns:
             bool: True if a Behavior Tree is added, False otherwise.
         """
-        return self.bt_config.tree != "empty"
+        return self.bt_config.tree != "Empty"
 
 
 @dataclass

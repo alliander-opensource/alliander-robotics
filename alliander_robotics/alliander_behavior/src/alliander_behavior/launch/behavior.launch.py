@@ -14,7 +14,26 @@ from launch_ros.actions import Node, SetParameter
 platform_arg = LaunchArgument("platform_config", "")
 
 
-def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
+def camel_to_snake(text: str) -> str:
+    """Converts a CamelCase string to snake_case.
+
+    Args:
+        text (str): CamelCase string to convert.
+
+    Returns:
+        str: snake_case converted string.
+    """
+    result = [text[0].lower()]
+    for char in text[1:]:
+        if char.isupper():
+            result.append("_")
+            result.append(char.lower())
+        else:
+            result.append(char)
+    return "".join(result)
+
+
+def launch_setup(context: LaunchContext) -> list:
     """The launch setup.
 
     Args:
@@ -25,34 +44,42 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
     """
     # TODO: make this generic, not only for Vehicles
     vehicle_config = Vehicle.from_str(platform_arg.string_value(context))
-    namespace = vehicle_config.namespace
     bt_config = vehicle_config.bt_config
 
-    task_planner_node = Node(
+    params_filename = f"{camel_to_snake(bt_config.tree)}.yaml"
+    params_file = get_file_path("alliander_behavior", ["config"], params_filename)
+
+    behavior_executor = Node(
         package="alliander_behavior",
-        executable="autonomous_navigation_node",
-        namespace=namespace,
-        # arguments=["--ros-args", "--log-level", "DEBUG"],
+        executable="behavior_executor",
+        namespace=vehicle_config.namespace,
         parameters=[
-            # ID of BehaviorTree that you want to run
-            {"tree_name": bt_config.tree},
-            # Doing this here rather in C++ code to levarage alliander_utilities
-            {"config_dir": get_file_path("alliander_behavior", ["config"], "")},
-            {"server_timeout_ms": 10000},
-            # Topics/services/actions here to change them in the XML files
-            {"waypoints_topic": "/gps_waypoints"},
-            {"battery_topic": f"/{namespace}/battery/battery_status"},
-            {"status_topic": f"/{namespace}/status"},
-            {"dock_action": f"/{namespace}/dock_robot"},
-            {"undock_action": f"/{namespace}/undock_robot"},
-            {"navigate_to_pose_action": f"/{namespace}/navigate_to_pose"},
-            {"fromll_service": f"/{namespace}/fromLL"},
-            {"stop_nav_service": f"/{namespace}/navigation/stop"},
+            params_file,
+            {
+                "tree_name": bt_config.tree,
+                "behavior_trees": [
+                    "alliander_behavior/behavior_trees",
+                    "alliander_behavior/behavior_trees/subtrees",
+                ],
+                "plugins": [
+                    "alliander_behavior/bt_plugins/common",
+                    "alliander_behavior/bt_plugins/navigation",
+                    "alliander_behavior/bt_plugins/power",
+                ],
+                "blackboard.battery_percentage_scale": (
+                    0.01 if vehicle_config.simulation else 1.0
+                ),
+            },
+        ],
+        remappings=[
+            ("waypoints", "gps_waypoints"),
+            ("battery_status", "battery/battery_status"),
+            ("stop_navigation", "navigation/stop"),
         ],
     )
     return [
         SetParameter(name="use_sim_time", value=vehicle_config.simulation),
-        Register.on_start(task_planner_node, context),
+        Register.on_start(behavior_executor, context),
     ]
 
 
