@@ -83,9 +83,9 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
               <TableCell component="th" scope="row">
                 {i + 1}
               </TableCell>
-              <TableCell>
-                {w.lat.toFixed(5)}, {w.lng.toFixed(5)}
-              </TableCell>
+              <TableCell>{w.lat.toFixed(2)}</TableCell>
+              <TableCell>{w.lng.toFixed(2)}</TableCell>
+              <TableCell>{w.rot_str()}</TableCell>
               <TableCell>
                 <ButtonGroup>
                   <IconButton

@@ -2,6 +2,7 @@
 //
 // # SPDX-License-Identifier: Apache-2.0
 
+import { Quaternion as QuaternionLib } from "quaternion";
 import type { Waypoint } from "./waypoint/waypoints";
 
 export type Device = "simulation" | "lynx" | "panther" | "none";
@@ -44,7 +45,9 @@ export function toGeoPath(waypoints: Waypoint[]): GeoPath {
       header: { frame_id: "map" },
       pose: {
         position: { latitude: wp.lat, longitude: wp.lng, altitude: 0 },
-        orientation: { x: 0, y: 0, z: 0, w: 1 },
+        orientation: wp.rot
+          ? QuaternionLib.fromEuler(0, 0, wp.rot)
+          : { x: 0, y: 0, z: 0, w: 0 },
       },
     })),
   };

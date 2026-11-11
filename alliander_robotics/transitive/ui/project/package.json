@@ -16,6 +16,7 @@
     "@transitive-sdk/utils-web": "^0.17.8",
     "jose": "^6.2.13",
     "leaflet": "^1.9.4",
+    "quaternion": "^2.2.0",
     "react": "^19.3.1",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.3.1",
