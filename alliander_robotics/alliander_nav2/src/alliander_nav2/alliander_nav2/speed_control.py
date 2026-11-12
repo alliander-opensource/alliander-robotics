@@ -33,7 +33,7 @@ class SpeedControl:
         """
         self.node = node
         self.logger = node.get_logger()
-        self.timeout = 1
+        self.timeout = 3
         self.controller_server_get_parameters = node.create_client(
             GetParameters, "controller_server/get_parameters"
         )
@@ -71,27 +71,39 @@ class SpeedControl:
 
         parameters = [param_lin_speed, param_ang_speed, param_ang_speed_heading]
 
-        # Get current speed:
+        # Get current speed and remove parameters that are already set:
         request = GetParameters.Request()
         request.names = [param.name for param in parameters]
+        if not self.controller_server_get_parameters.wait_for_service(self.timeout):
+            self.logger.error("Controller server get parameters service not available.")
+            return False
         response = self.controller_server_get_parameters.call(request, self.timeout)
         if not isinstance(response, GetParameters.Response):
             self.logger.error("Failed to get current speed limit due to no response.")
             return False
+        parameters_to_update = []
         for param, value in zip(parameters, response.values, strict=True):
             if param.value.double_value == value.double_value:
                 self.logger.debug(f"{param.name} is {param.value.double_value}")
-                return True
+            else:
+                parameters_to_update.append(param)
 
-        # Change speed:
+        # If no parameters need updating, return:
+        if not parameters_to_update:
+            return True
+
+        # Change speed for parameters that need updating:
         request = SetParameters.Request()
-        request.parameters = parameters
+        request.parameters = parameters_to_update
+        if not self.controller_server_set_parameters.wait_for_service(self.timeout):
+            self.logger.error("Controller server set parameters service not available.")
+            return False
         response = self.controller_server_set_parameters.call(request, self.timeout)
         if not isinstance(response, SetParameters.Response):
             self.logger.error("Failed to set speed due to no response.")
             return False
 
-        for param, result in zip(parameters, response.results, strict=True):
+        for param, result in zip(parameters_to_update, response.results, strict=True):
             if result.successful:
                 self.logger.info(f"{param.name} set to {param.value.double_value}")
             else:

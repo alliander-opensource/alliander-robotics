@@ -45,6 +45,7 @@ class DockingControl:
             "docking_staging_offset"
         ).value
 
+        self.busy = False
         self.canceled = False
 
     def cancel(self) -> None:
@@ -58,15 +59,22 @@ class DockingControl:
         Returns:
             bool: True if undocking was successful, False otherwise.
         """
+        if self.busy:
+            self.logger.error("Docking control is already docking or undocking.")
+            return False
+        self.busy = True
         self.canceled = False
         self.basic_navigator.undockRobot()
         while not self.basic_navigator.isTaskComplete():
             if self.canceled:
                 self.basic_navigator.cancelTask()
+                self.busy = False
                 return False
             self.logger.info("Undocking...")
             time.sleep(1)
-        return self.basic_navigator.getResult() == TaskResult.SUCCEEDED
+        result = self.basic_navigator.getResult() == TaskResult.SUCCEEDED
+        self.busy = False
+        return result
 
     def dock_robot(self) -> bool:
         """Dock the robot by first navigating to a staging pose and then performing the final docking maneuver.
@@ -74,16 +82,20 @@ class DockingControl:
         Returns:
             bool: True if docking was successful, False otherwise.
         """
+        if self.busy:
+            self.logger.error("Docking control is already docking or undocking.")
+            return False
+        self.busy = True
         self.canceled = False
         pose_dock, pose_stage = self.get_poses_in_dock_frame()
 
-        return all(
-            [
-                self.speed_control.set_max_speed(DOCKING_STAGING_SPEED),
-                self.navigate_to_staging_pose(pose_stage),
-                self.perform_docking_maneuver(pose_dock),
-            ]
+        result = (
+            self.speed_control.set_max_speed(DOCKING_STAGING_SPEED)
+            and self.navigate_to_staging_pose(pose_stage)
+            and self.perform_docking_maneuver(pose_dock)
         )
+        self.busy = False
+        return result
 
     def get_poses_in_dock_frame(self) -> tuple[PoseStamped, PoseStamped]:
         """Define the docking and staging poses.
@@ -120,7 +132,6 @@ class DockingControl:
                     self.basic_navigator.cancelTask()
                     return False
                 self.logger.info("Navigating to staging pose...")
-                time.sleep(1)
         task_result: TaskResult = self.basic_navigator.getResult()
         if task_result != TaskResult.SUCCEEDED:
             self.logger.error("Failed to reach staging pose.")
@@ -149,6 +160,8 @@ class DockingControl:
             self.logger.info("Docking...")
             time.sleep(1)
         task_result: TaskResult = self.basic_navigator.getResult()
+        if task_result != TaskResult.SUCCEEDED:
+            self.logger.error("Failed to perform docking maneuver.")
         return task_result == TaskResult.SUCCEEDED
 
     def transform_pose(self, pose_in: PoseStamped, pose_out: PoseStamped) -> bool:

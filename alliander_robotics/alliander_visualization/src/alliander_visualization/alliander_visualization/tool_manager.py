@@ -173,7 +173,7 @@ class ApplyConfigurations:
         Args:
             platform (Camera): The camera platform configuration.
         """
-        Rviz.add_image(f"/{platform.namespace}/color/image")
+        Rviz.add_image(f"/{platform.namespace}/color/image/compressed")
 
     @staticmethod
     def add_depth_camera(platform: Camera) -> None:

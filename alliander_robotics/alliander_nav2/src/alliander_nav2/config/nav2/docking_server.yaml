@@ -32,4 +32,5 @@ docking_server:
     controller:
       v_linear_min: 0.05
       v_linear_max: 0.05
-      use_collision_detection: false
+      use_collision_detection: true
+      dock_collision_threshold: 0.5
