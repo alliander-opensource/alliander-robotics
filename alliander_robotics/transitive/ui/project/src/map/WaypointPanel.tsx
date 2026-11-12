@@ -41,7 +41,7 @@ export function WaypointPanel({ wp }: Readonly<{ wp: UseWaypoints }>) {
             type="button"
             onClick={() => {
               if (
-                window.confirm(`Clear all ${wp.waypoints.length} waypoint?`)
+                window.confirm(`Clear all ${wp.waypoints.length} waypoints?`)
               ) {
                 wp.onClear();
               }
