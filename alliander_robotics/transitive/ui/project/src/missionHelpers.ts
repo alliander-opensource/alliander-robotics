@@ -6,6 +6,7 @@ import { Quaternion as QuaternionLib } from "quaternion";
 import type { Waypoint } from "./waypoint/waypoints";
 
 export type Device = "simulation" | "lynx" | "panther" | "none";
+export type Camera = "zed" | "realsense" | "none";
 
 interface GeoPoint {
   latitude: number;

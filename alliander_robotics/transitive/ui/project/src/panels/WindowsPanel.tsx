@@ -11,10 +11,11 @@ import "./panels.css";
 
 export function WindowsPanel({
   device,
+  camera,
   ros,
-}: Readonly<{ device: string; ros: Ros }>) {
+}: Readonly<{ device: string; camera: string; ros: Ros }>) {
   const rosTool = <RosTool device={device} />;
-  const teleoperation = <Teleoperation device={device} />;
+  const teleoperation = <Teleoperation device={device} camera={camera} />;
   const healthMonitor = <HealthMonitor device={device} ros={ros} />;
 
   return (

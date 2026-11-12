@@ -3,83 +3,58 @@
 // # SPDX-License-Identifier: Apache-2.0
 
 import { TransitiveCapability } from "@transitive-sdk/utils-web";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./capability.css";
 import { generateJWT } from "./jwt";
 import "./Teleoperation.css";
 
-export function Teleoperation({ device }: { device: string }) {
-  const [jwtToken, setJwtToken] = useState("");
-  const [jwtError, setJwtError] = useState<string | null>(null);
-  const [cameraTopic, setCameraTopic] = useState("/zed/color/image");
-  const [capability, setCapability] = useState(
-    <div className="teleop-capability"></div>,
-  );
+export function Teleoperation({
+  device,
+  camera,
+}: Readonly<{ device: string; camera: string }>) {
+  const [capability, setCapability] = useState(<div></div>);
 
-  const device_ref = useRef(device);
+  // Load the WebRTC capability with the given JWT token.
+  const load_capability = useCallback(
+    (token: string) => {
+      if (camera === "none") {
+        setCapability(<div className="capability">No camera selected</div>);
+        return;
+      }
+      const embed = (
+        <TransitiveCapability
+          key={`${device}`}
+          jwt={token}
+          ssl="true"
+          count="1"
+          disabledeviceverification="true"
+          type="rostopic"
+          rosversion="2"
+          source={`/${camera}/color/image`}
+          hardware="nvidia"
+          control_topic="/joy"
+          control_type="sensor_msgs/Joy"
+          alwayson="true"
+          inverted="true"
+        />
+      );
+      setCapability(<div className="capability">{embed}</div>);
+    },
+    [device, camera],
+  );
 
   // Generate JWT token on mount
   useEffect(() => {
     generateJWT(device, "@transitive-robotics/remote-teleop").then(
-      ({ jwtToken: token, jwtError: error }) => {
-        setJwtToken(token);
-        setJwtError(error);
+      ({ jwtToken: token }) => {
+        load_capability(token);
+      },
+      (error) => {
+        setCapability(<div className="capability">Error: {error}</div>);
       },
     );
-  }, [device]);
-
-  // Update the capability when the camera topic or JWT token changes
-  useEffect(() => {
-    if (!jwtToken) {
-      return;
-    }
-
-    const embed = (
-      <TransitiveCapability
-        key={`${device_ref.current}-${cameraTopic}`}
-        jwt={jwtToken}
-        ssl="true"
-        count="1"
-        quantizer="40"
-        timeout="1800"
-        type="rostopic"
-        rosVersion="2"
-        source={cameraTopic}
-        disabledeviceverification="true"
-        control_topic="/joy"
-        control_type="sensor_msgs/Joy"
-        alwayson="true"
-        inverted="true"
-      />
-    );
-
-    setCapability(<div className="capability">{embed}</div>);
-  }, [cameraTopic, jwtToken]);
-
-  // Input field to specify the camera topic
-  const inputField = (
-    <div>
-      <input
-        type="text"
-        value={cameraTopic}
-        onChange={(event) => {
-          setCameraTopic(event.target.value);
-        }}
-        placeholder="/camera_topic"
-      />
-    </div>
-  );
-
-  // Combine the input field and capability into a single widget
-  const widget = (
-    <>
-      {inputField}
-      {capability}
-    </>
-  );
+  }, [device, load_capability]);
 
   // Render as a card with a title and the widget.
-  return (
-    <div className="widget">{jwtError ? <p>Error: {jwtError}</p> : widget}</div>
-  );
+  return <div className="widget">{capability}</div>;
 }

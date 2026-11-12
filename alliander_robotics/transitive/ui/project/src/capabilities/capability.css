@@ -16,3 +16,16 @@ SPDX-License-Identifier: Apache-2.0
   margin-left: 1%;
   margin-top: 1%;
 }
+
+.camera_only:has(.webrtc-video-wrapper)
+  *:not(
+    .webrtc-video-wrapper,
+    .webrtc-video-wrapper *,
+    :has(.webrtc-video-wrapper)
+  ) {
+  display: none;
+}
+
+.webrtc-video-wrapper video {
+  max-width: 100%;
+}

@@ -6,7 +6,8 @@ import { useState } from "react";
 import "./App.css";
 import { RosProvider } from "./capabilities/RosTool";
 import { MapComponent } from "./map/Map";
-import type { Device } from "./missionHelpers";
+import type { Camera, Device } from "./missionHelpers";
+import { CameraPanel } from "./panels/CameraPanel";
 import { ControlPanel } from "./panels/ControlPanel";
 import { DevicePanel } from "./panels/DevicePanel";
 import { MissionPanel } from "./panels/MissionPanel";
@@ -17,9 +18,11 @@ import { createRos } from "./ros/ros";
 import { UseWaypoints } from "./waypoint/useWaypoints";
 
 const DEFAULT_DEVICE: Device = "simulation";
+const DEFAULT_CAMERA: Camera = "none";
 
 function App() {
   const [device, setDevice] = useState<Device>(DEFAULT_DEVICE);
+  const [camera, setCamera] = useState<Camera>(DEFAULT_CAMERA);
   const namespace = device === "lynx" ? "lynx" : "panther";
   const ros = createRos(namespace);
   const wp = UseWaypoints();
@@ -31,8 +34,18 @@ function App() {
   const map = <MapComponent ros={ros} wp={wp} missionActive={missionActive} />;
 
   // Panels:
-  const devicePanel = <DevicePanel device={device} setDevice={setDevice} />;
-  const windowsPanel = <WindowsPanel device={device} ros={ros} />;
+  const cameraPanel = <CameraPanel device={device} camera={camera} />;
+  const devicePanel = (
+    <DevicePanel
+      device={device}
+      setDevice={setDevice}
+      camera={camera}
+      setCamera={setCamera}
+    />
+  );
+  const windowsPanel = (
+    <WindowsPanel device={device} camera={camera} ros={ros} />
+  );
   const statusPanel = <StatusPanel ros={ros} />;
   const controlPanel = <ControlPanel ros={ros} />;
   const waypointPanel = <WaypointPanel wp={wp} />;
@@ -44,6 +57,7 @@ function App() {
   const mapSection = <div className="mapSection">{map}</div>;
   const rightSection = (
     <div className="rightSection">
+      {cameraPanel}
       {devicePanel}
       {windowsPanel}
       {statusPanel}
