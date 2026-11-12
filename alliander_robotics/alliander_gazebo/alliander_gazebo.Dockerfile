@@ -20,7 +20,8 @@ RUN mkdir -p /"$WORKDIR"/osm2world \
 # Install external packages:
 WORKDIR /$WORKDIR/external
 COPY $SRC_DIRECTORY/common/get_vendor_descriptions.py /$WORKDIR/get_vendor_descriptions.py
-RUN python3 /"$WORKDIR"/get_vendor_descriptions.py
+RUN python3 /"$WORKDIR"/get_vendor_descriptions.py --get_gazebo_plugins
+ARG HUSARION_ROS_BUILD_TYPE=simulation
 RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked --mount=type=cache,id=apt-lists,target=/var/lib/apt,sharing=locked /"$WORKDIR"/rosdep_install.sh --build
 RUN /"$WORKDIR"/colcon_build.sh --external
 

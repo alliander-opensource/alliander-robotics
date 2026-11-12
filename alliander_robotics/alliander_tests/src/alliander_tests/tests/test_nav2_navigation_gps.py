@@ -125,6 +125,7 @@ for vehicle in ["panther", "lynx"]:
     for lidar in ["velodyne", "ouster"]:
         for gps in ["ublox"]:
             vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
+            vehicle_platform.e_stop_initial_state = False
             lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
             gps_platform = GPS(gps, (0, 0, 0.2))
             link(vehicle_platform, lidar_platform)

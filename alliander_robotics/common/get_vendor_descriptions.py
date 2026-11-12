@@ -15,9 +15,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "-v", "--vendors", action="append", help="List of vendors.", required=False
     )
+    parser.add_argument(
+        "--get_gazebo_plugins",
+        action="store_true",
+        help="Include gazebo plugins.",
+        required=False,
+    )
     args = parser.parse_args()
 
     vendors = args.vendors
+    get_gazebo_plugins = args.get_gazebo_plugins
+
     if not vendors:
         vendors = VENDORS
     else:
@@ -33,9 +41,12 @@ if __name__ == "__main__":
                 && echo 'GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:{os.getcwd()}/install/franka_description/share' >> /root/.bashrc
                 """
             case "husarion":
-                cmd = r"""
+                packages = ["husarion_ugv_description"]
+                if get_gazebo_plugins:
+                    packages.append("husarion_ugv_gazebo")
+                cmd = rf"""
                 git clone --depth=1 --filter=blob:none --sparse -b 2.3.1 https://github.com/husarion/husarion_ugv_ros.git src/husarion_ugv_ros \
-                && cd src/husarion_ugv_ros && git sparse-checkout set husarion_ugv_description && cd ../..
+                && cd src/husarion_ugv_ros && git sparse-checkout set {" ".join(packages)} && cd ../..
                 """
             case "realsense":
                 cmd = r"""

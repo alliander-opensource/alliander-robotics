@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
-from _pytest.fixtures import SubRequest
 from alliander_utilities.config_objects import Vehicle
 from geometry_msgs.msg import TwistStamped
 from rclpy.node import Node
@@ -39,18 +38,13 @@ class _TestVehicle:
             timeout=timeout,
         )
 
-    def test_e_stop_request_reset(
-        self, request: SubRequest, test_node: Node, timeout: int
-    ) -> None:
+    def test_e_stop_request_reset(self, test_node: Node, timeout: int) -> None:
         """Test that the E-Stop request service can be called to unlock the Panther.
 
         Args:
-            request (SubRequest): The pytest request object, used to access command line options
             test_node (Node): The ROS 2 node to use for the test.
             timeout (int): The timeout in seconds to wait before failing the test.
         """
-        if request.config.getoption("simulation"):
-            pytest.skip("E-Stop is not available.")
         assert (
             call_trigger_service(
                 node=test_node,
@@ -91,18 +85,13 @@ class _TestVehicle:
             f"The current joint value is {joint_value_after_driving}, but it should be different from {joint_value_before_driving}."
         )
 
-    def test_e_stop_request_trigger(
-        self, request: SubRequest, test_node: Node, timeout: int
-    ) -> None:
+    def test_e_stop_request_trigger(self, test_node: Node, timeout: int) -> None:
         """Test that the E-Stop request service can be called to lock the panther.
 
         Args:
-            request (SubRequest): The pytest request object, used to access command line options
             test_node (Node): The ROS 2 node to use for the test.
             timeout (int): The timeout in seconds to wait before failing the test.
         """
-        if request.config.getoption("simulation"):
-            pytest.skip("E-Stop is not available.")
         assert (
             call_trigger_service(
                 node=test_node,
