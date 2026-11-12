@@ -134,6 +134,7 @@ for vehicle in ["panther", "lynx"]:
             link(vehicle_platform, gps_platform)
             vehicle_platform.nav2_config.navigation = True
             vehicle_platform.nav2_config.gps = True
+            vehicle_platform.bt_config.tree = "PatrolAndCharge"
             test_class = type(
                 f"Test{vehicle.capitalize()}{lidar.capitalize()}{gps.capitalize()}Navigation",
                 (_TestNavigationGPS,),
