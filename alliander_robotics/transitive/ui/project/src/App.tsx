@@ -17,9 +17,10 @@ const DEVICE_STORAGE_KEY = "device";
 
 function App() {
   const [device] = useState<Device>(
-    (sessionStorage.getItem(DEVICE_STORAGE_KEY) as Device | null) ?? DEFAULT_DEVICE,
+    (sessionStorage.getItem(DEVICE_STORAGE_KEY) as Device | null) ??
+      DEFAULT_DEVICE,
   );
-  const namespace = device == "lynx" ? "lynx" : "panther";
+  const namespace = device === "lynx" ? "lynx" : "panther";
 
   const handleDeviceChange = (value: Device) => {
     sessionStorage.setItem(DEVICE_STORAGE_KEY, value);
@@ -30,7 +31,11 @@ function App() {
     <div>
       {DEVICES.map((name) => (
         <label key={name}>
-          <input type="radio" checked={device === name} onChange={() => handleDeviceChange(name)} />
+          <input
+            type="radio"
+            checked={device === name}
+            onChange={() => handleDeviceChange(name)}
+          />
           {name}
         </label>
       ))}

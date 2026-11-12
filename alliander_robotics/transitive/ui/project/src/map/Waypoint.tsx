@@ -8,7 +8,11 @@ import { Marker } from "react-leaflet";
 import type { Waypoint } from "./waypoints";
 
 function waypointIcon(index: number, reached: boolean, current: boolean) {
-  const classes = ["waypoint-marker", reached && "reached", current && "current"]
+  const classes = [
+    "waypoint-marker",
+    reached && "reached",
+    current && "current",
+  ]
     .filter(Boolean)
     .join(" ");
   return L.divIcon({
@@ -34,7 +38,10 @@ export function WaypointMarker({
   onMove: (id: number, lat: number, lng: number) => void;
   onRemove: (id: number) => void;
 }>) {
-  const icon = useMemo(() => waypointIcon(index, reached, current), [index, reached, current]);
+  const icon = useMemo(
+    () => waypointIcon(index, reached, current),
+    [index, reached, current],
+  );
   const position = useMemo<[number, number]>(
     () => [waypoint.lat, waypoint.lng],
     [waypoint.lat, waypoint.lng],
@@ -55,4 +62,3 @@ export function WaypointMarker({
     />
   );
 }
-
