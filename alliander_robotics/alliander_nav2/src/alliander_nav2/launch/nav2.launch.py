@@ -314,10 +314,12 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
 
     remappings = []
     if nav2.gps:
-        remappings.append(("/gps/fix", f"/{namespace_gps}/gps/fix"))
-        remappings.append(("/fromLL", f"/{namespace_vehicle}/fromLL"))
-        remappings.append(
-            ("odometry/filtered", f"/{namespace_vehicle}/odometry/global")
+        remappings.extend(
+            [
+                ("/gps/fix", f"/{namespace_gps}/gps/fix"),
+                ("/fromLL", f"/{namespace_vehicle}/fromLL"),
+                ("odometry/filtered", f"/{namespace_vehicle}/odometry/global"),
+            ]
         )
 
     all_lifecycle_nodes["waypoint_follower"] = LifecycleNode(

@@ -50,7 +50,9 @@ class RosStatusLogger : public BT::StatusChangeLogger {
   /**
    * @brief ROS logging is handled immediately, there is no buffer.
    */
-  void flush() override {}
+  void flush() override {
+    // no buffer, so nothing to flush
+  }
 
  private:
   /// rclcpp Logger instance to log to.

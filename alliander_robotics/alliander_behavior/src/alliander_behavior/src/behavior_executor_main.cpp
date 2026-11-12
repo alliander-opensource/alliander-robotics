@@ -14,7 +14,7 @@
 // will stop moving to its goal when the system goes down.
 std::atomic<bool> g_shutdown_requested{false};
 
-void onSignal(int _signal) { g_shutdown_requested = true; }
+void onSignal(int) { g_shutdown_requested = true; }
 
 int main(int argc, char* argv[]) {
   rclcpp::init(argc, argv, rclcpp::InitOptions(),
@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
   std::signal(SIGTERM, onSignal);
 
   auto node = std::make_shared<rclcpp::Node>("behavior_executor");
-  auto* executor = new alliander_behavior::BehaviorExecutor(node);
+  auto executor = std::make_unique<alliander_behavior::BehaviorExecutor>(node);
 
   // Spin ROS node separately
   rclcpp::executors::SingleThreadedExecutor ros_executor;
