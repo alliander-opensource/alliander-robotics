@@ -302,8 +302,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, lidar)
@@ -358,8 +356,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, lidar)
@@ -374,8 +370,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, lidar)
@@ -389,8 +383,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, lidar)
@@ -418,8 +410,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         ntrip = NtripConfig()
@@ -452,8 +442,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         ntrip = NtripConfig()
@@ -485,8 +473,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         ntrip = NtripConfig()
@@ -630,7 +616,6 @@ class PredefinedConfigurations:
             "velodyne",
             position=(0.125, 0.185, 0.20),
             orientation=(0.0, 0.0, 45.0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, arm)

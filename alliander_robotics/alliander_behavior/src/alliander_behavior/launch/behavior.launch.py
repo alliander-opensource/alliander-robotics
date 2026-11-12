@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
+import re
+
 from alliander_utilities.config_objects import Vehicle
 from alliander_utilities.launch_argument import LaunchArgument
 from alliander_utilities.register import Register
@@ -23,14 +25,7 @@ def camel_to_snake(text: str) -> str:
     Returns:
         str: snake_case converted string.
     """
-    result = [text[0].lower()]
-    for char in text[1:]:
-        if char.isupper():
-            result.append("_")
-            result.append(char.lower())
-        else:
-            result.append(char)
-    return "".join(result)
+    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", "_", text).lower()
 
 
 def launch_setup(context: LaunchContext) -> list:
@@ -42,7 +37,12 @@ def launch_setup(context: LaunchContext) -> list:
     Returns:
         list: The actions to start.
     """
-    # TODO: make this generic, not only for Vehicles
+    # Temporary, until other behaviors are implemented
+    if "Vehicle" not in platform_arg.string_value(context):
+        print(
+            f"ERROR: for now, only Vehicles are supported in alliander_behavior. Faulty config: {platform_arg.string_value(context)}.\n\n Exiting..."
+        )
+        return []
     vehicle_config = Vehicle.from_str(platform_arg.string_value(context))
     bt_config = vehicle_config.bt_config
 

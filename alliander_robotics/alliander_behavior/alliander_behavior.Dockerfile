@@ -12,7 +12,7 @@ ARG SRC_DIRECTORY
 ENV ROS_DISTRO=jazzy
 
 # Install BehaviorTree.ROS2 from its repo:
-RUN git clone -b humble https://github.com/BehaviorTree/BehaviorTree.ROS2.git /$WORKDIR/ros/src/behaviortree_ros2
+RUN git clone -b humble https://github.com/BehaviorTree/BehaviorTree.ROS2.git /$WORKDIR/external/behaviortree_ros2
 
 # Install alliander packages:
 WORKDIR /$WORKDIR/ros

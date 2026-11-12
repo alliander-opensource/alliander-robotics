@@ -3,12 +3,11 @@
 // # SPDX-License-Identifier: Apache-2.0
 #include "alliander_behavior/behavior_executor.hpp"
 
-#include <array>
-#include <cstdint>
 #include <rclcpp/parameter_value.hpp>
-#include <thread>
 
 namespace alliander_behavior {
+
+const uint16_t HALT_SLEEP_PERIOD = 50;
 
 /**
  * @brief returns a monotonically increasing amount of ticks since epoch.
@@ -187,7 +186,8 @@ bool BehaviorExecutor::haltAndWait(std::chrono::milliseconds timeout) {
   const auto deadline = std::chrono::steady_clock::now() + timeout;
   while (tree_active_) {
     if (std::chrono::steady_clock::now() > deadline) return false;
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    // cede execution to other parts of software
+    std::this_thread::sleep_for(std::chrono::milliseconds(HALT_SLEEP_PERIOD));
   }
   return true;
 }
