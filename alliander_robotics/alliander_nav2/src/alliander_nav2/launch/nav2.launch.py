@@ -73,6 +73,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             plugins.remove("static_layer")
         lifecycle_nodes_names.extend(
             [
+                "keepout_costmap_filter_info_server",
                 "controller_server",
                 "planner_server",
                 "behavior_server",
@@ -129,6 +130,10 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             "width": 10,
             "height": 10,
             "plugins": plugins,
+            "filters": ["keepout_filter"],
+            "keepout_filter": {
+                "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
+            },
             "obstacle_layer": {
                 "scan": {
                     "topic": f"/{namespace_lidar}/scan",
@@ -151,6 +156,10 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             "width": nav2.window_size,
             "height": nav2.window_size,
             "plugins": plugins,
+            "filters": ["keepout_filter"],
+            "keepout_filter": {
+                "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
+            },
             "obstacle_layer": {
                 "scan": {
                     "topic": f"/{namespace_lidar}/scan",
@@ -224,6 +233,19 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         root_key=namespace_vehicle,
     )
 
+    keepout_filter_info_server_params = AdaptedYaml(
+        get_file_path(
+            "alliander_nav2",
+            ["config", "nav2"],
+            "keepout_filter_info_server_params.yaml",
+        ),
+        {
+            "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
+            "mask_topic": f"/{namespace_vehicle}/keepout_filter_mask",
+        },
+        root_key=namespace_vehicle,
+    )
+
     # Define lifecycle nodes:
     all_lifecycle_nodes = {}
 
@@ -261,6 +283,14 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
                 "topic_name": f"/{namespace_vehicle}/map",
             }
         ],
+        namespace=namespace_vehicle,
+    )
+
+    all_lifecycle_nodes["keepout_costmap_filter_info_server"] = LifecycleNode(
+        package="nav2_map_server",
+        executable="costmap_filter_info_server",
+        name="keepout_costmap_filter_info_server",
+        parameters=[keepout_filter_info_server_params.file],
         namespace=namespace_vehicle,
     )
 
@@ -336,6 +366,15 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         namespace=namespace_vehicle,
     )
 
+    dynamic_keepout_zones = Node(
+        package="alliander_nav2",
+        executable="keepout_zone_manager",
+        namespace=namespace_vehicle,
+        remappings=[
+            ("/keepout_filter_mask", f"/{namespace_vehicle}/keepout_filter_mask"),
+        ],
+    )
+
     # robot-localization nodes
     ekf_global = Node(
         package="robot_localization",
@@ -408,6 +447,11 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         Register.on_start(odom_gate, context) if nav2.gps else SKIP,
         Register.on_log(lifecycle_manager, "Managed nodes are active", context),
         Register.on_start(path_to_geopath, context) if nav2.gps else SKIP,
+        Register.on_log(
+            dynamic_keepout_zones, "Keepout Zone Manager initialized.", context
+        )
+        if nav2.gps
+        else SKIP,
         Register.on_log(nav2_manager, "Controller is ready.", context)
         if nav2.navigation
         else SKIP,
