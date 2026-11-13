@@ -3,11 +3,9 @@
 // # SPDX-License-Identifier: Apache-2.0
 #include "alliander_behavior/behavior_executor.hpp"
 
-#include <rclcpp/parameter_value.hpp>
-
 namespace alliander_behavior {
 
-const uint16_t HALT_SLEEP_PERIOD = 50;
+const uint16_t HALT_SLEEP_PERIOD_MS = 50;
 
 /**
  * @brief returns a monotonically increasing amount of ticks since epoch.
@@ -78,7 +76,11 @@ void BehaviorExecutor::scheduleAutostart(
   autostart_client_ =
       rclcpp_action::create_client<ExecuteTree>(node(), action_name);
 
-  const auto deadline = steadyNow() + discovery_timeout.count();
+  const auto discovery_timeout_ticks =
+      std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+          discovery_timeout)
+          .count();
+  const auto deadline = steadyNow() + discovery_timeout_ticks;
 
   // retried on a timer, because the client needs to discover our own server
   autostart_timer_ = node()->create_wall_timer(
@@ -187,7 +189,8 @@ bool BehaviorExecutor::haltAndWait(std::chrono::milliseconds timeout) {
   while (tree_active_) {
     if (std::chrono::steady_clock::now() > deadline) return false;
     // cede execution to other parts of software
-    std::this_thread::sleep_for(std::chrono::milliseconds(HALT_SLEEP_PERIOD));
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(HALT_SLEEP_PERIOD_MS));
   }
   return true;
 }

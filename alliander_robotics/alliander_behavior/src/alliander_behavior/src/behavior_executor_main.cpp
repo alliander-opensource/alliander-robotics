@@ -9,6 +9,8 @@
 
 #include "alliander_behavior/behavior_executor.hpp"
 
+const uint16_t SHUTDOWN_SLEEP_PERIOD_MS = 100;
+
 // Handle shutdown ourselves, so that actions can be cancelled
 // before everything gets taken down by ROS. This way the robot
 // will stop moving to its goal when the system goes down.
@@ -32,7 +34,8 @@ int main(int argc, char* argv[]) {
 
   // Catch interrupt here separately
   while (!g_shutdown_requested && rclcpp::ok()) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(SHUTDOWN_SLEEP_PERIOD_MS));
   }
 
   RCLCPP_INFO(node->get_logger(), "Shutting down, halting the running tree");

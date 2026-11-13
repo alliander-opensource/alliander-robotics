@@ -8,7 +8,6 @@
 #include <behaviortree_ros2/tree_execution_server.hpp>
 #include <chrono>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
