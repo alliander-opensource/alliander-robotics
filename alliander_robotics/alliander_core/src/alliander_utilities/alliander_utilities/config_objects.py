@@ -214,6 +214,7 @@ class Nav2Config(Config):
         collision_monitor (bool): Whether to enable collision monitoring.
         slam (bool): Whether to enable SLAM.
         navigation (bool): Whether to enable navigation.
+        manager (bool): Whether to enable the nav2_manager, which uses the Simple Commander API.
         gps (bool): Whether to enable GPS integration.
         controller (Literal["dwb", "graceful_motion", "mppi", "pure_pursuit", "rotation_shim", "vector_pursuit"]): Navigation controller type to use.
         map (Literal["simulation_map", "ipkw", "ipkw_buiten"]): Map to use for navigation.
@@ -223,6 +224,7 @@ class Nav2Config(Config):
     collision_monitor: bool = False
     slam: bool = False
     navigation: bool = False
+    manager: bool = True
     gps: bool = False
     controller: Literal[
         "dwb",
@@ -266,6 +268,17 @@ class NtripConfig(Config):
     mountpoint: str = "APEL00NLD0"
     username: str = "user"
     password: str = "pass"
+
+
+@dataclass
+class BehaviorTreeConfig(Config):
+    """Configuration for a Behavior Tree.
+
+    Attributes:
+        tree (Literal["Empty", "PatrolAndCharge"]): Which behavior tree to load.
+    """
+
+    tree: Literal["Empty", "PatrolAndCharge"] = "Empty"
 
 
 # Platforms:
@@ -345,12 +358,14 @@ class Vehicle(Platform):
         e_stop_initial_state (bool): Initial state of the emergency stop.
         charging_receiver (bool): Whether the vehicle has a charging receiver.
         nav2_config (Nav2Config): Nav2 configuration settings.
+        bt_config (BehaviorTreeConfig): Behavior Tree configuration settings.
     """
 
     platform_type: str = "Vehicle"
     e_stop_initial_state: bool = True
     charging_receiver: bool = False
     nav2_config: Nav2Config = field(default_factory=Nav2Config)
+    bt_config: BehaviorTreeConfig = field(default_factory=BehaviorTreeConfig)
 
     @property
     def nav2(self) -> bool:
@@ -366,6 +381,15 @@ class Vehicle(Platform):
                 self.nav2_config.navigation,
             ]
         )
+
+    @property
+    def behavior(self) -> bool:
+        """Boolean indicating whether a Behavior Tree is added.
+
+        Returns:
+            bool: True if a Behavior Tree is added, False otherwise.
+        """
+        return self.bt_config.tree != "Empty"
 
 
 @dataclass

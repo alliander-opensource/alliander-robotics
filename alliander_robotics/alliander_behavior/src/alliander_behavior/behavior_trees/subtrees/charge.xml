@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<root BTCPP_format="4">
+  <BehaviorTree ID="Charge">
+    <Sequence>
+      <IsBatteryBelow threshold="{@battery_threshold_low}" percentage_scale="{@battery_percentage_scale}"/>
+      <Fallback name="DockWithAlert">
+        <RetryUntilSuccessful num_attempts="5">
+          <AlwaysSuccess name="DockRobotPlaceholder"/>
+        </RetryUntilSuccessful>
+
+	<!-- Alert if docking failed after X attempts -->
+        <Sequence>
+          <PublishStatus message="ALERT: Failed to dock after 5 attempts"/>
+          <Sleep msec="{@dock_retry_delay_ms}"/>
+          <AlwaysFailure/>
+        </Sequence>
+      </Fallback>
+
+      <SubTree ID="WaitUntilCharged" _autoremap="true"/>
+      <AlwaysSuccess name="UndockRobotPlaceholder"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

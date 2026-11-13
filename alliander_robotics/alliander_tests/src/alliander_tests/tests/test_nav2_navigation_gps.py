@@ -81,7 +81,9 @@ class _TestNavigationGPS:
         goal_nav_sat = copy.deepcopy(current_nav_sat)
         goal_nav_sat.latitude += 1e-5
 
-        publisher = test_node.create_publisher(GeoPath, "/gps_waypoints", 10)
+        publisher = test_node.create_publisher(
+            GeoPath, f"/{self.platforms['vehicle'].namespace}/gps_waypoints", 10
+        )
         wait_for_subscriber(publisher, timeout)
         goal_msg = GeoPath()
         goal_pose = GeoPoseStamped()
@@ -132,6 +134,7 @@ for vehicle in ["panther", "lynx"]:
             link(vehicle_platform, gps_platform)
             vehicle_platform.nav2_config.navigation = True
             vehicle_platform.nav2_config.gps = True
+            vehicle_platform.bt_config.tree = "PatrolAndCharge"
             test_class = type(
                 f"Test{vehicle.capitalize()}{lidar.capitalize()}{gps.capitalize()}Navigation",
                 (_TestNavigationGPS,),
