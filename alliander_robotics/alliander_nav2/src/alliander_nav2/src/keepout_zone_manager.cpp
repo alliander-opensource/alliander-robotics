@@ -290,11 +290,75 @@ void KeepoutZoneManager::manageZonesCallback(
   }
 }
 
+bool old_method = true;
+
 void KeepoutZoneManager::addZones(
     const std::shared_ptr<ManageKeepoutZones::Request> request,
     std::shared_ptr<ManageKeepoutZones::Response> response) {
   std::size_t added_count = 0;
   std::size_t skipped_count = 0;
+
+  if (!old_method) {
+    // Define how many points per meter we want for the rasterization.
+    // As we multi
+    int ppm = 100;  // points per meter (100 means cm precision)
+
+    // Validate that all paths have at least three points:
+    for (const auto& path : request->paths) {
+      if (path.poses.size() < 3) {
+        throw std::runtime_error(
+            "Invalid path: at least three points are required.");
+        return;
+      }
+    }
+
+    // Convert Geopath to UTM contours with the defined precision:
+    std::vector<cv::Mat> contours;
+    for (const auto& path : request->paths) {
+      cv::Mat contour;
+      for (const auto& pose : path.poses) {
+        auto point = gpsToUTMCoordinates(pose.pose.position.latitude,
+                                         pose.pose.position.longitude);
+        cv::Point cv_point(point.first, point.second);
+        cv_point *= ppm;
+        contour.push_back(cv_point);
+      }
+      contours.push_back(contour);
+    }
+
+    // Combine all contours to calculate the total bounding box:
+    cv::Mat combined_contour;
+    cv::vconcat(contours, combined_contour);
+    auto bounding_box = cv::boundingRect(combined_contour);
+
+    // The image origin should be defined in meters, so devide by ppm:
+    grid_origin_x_ = int(bounding_box.x / ppm);
+    grid_origin_y_ = int(bounding_box.y / ppm);
+
+    // Define the image data:
+    width_ = bounding_box.width;
+    height_ = bounding_box.height;
+    std::vector<int8_t> data;
+    data.assign(width_ * height_, 0);
+    cv::Mat mask(height_, width_, CV_8SC1, data.data());
+
+    // Substract the bounding box origin from all contours:
+    for (auto& contour : contours) {
+      contour -= cv::Scalar(bounding_box.x, bounding_box.y);
+    }
+
+    // Fill the mask with the polygon points:
+    for (const auto& contour : contours) {
+      cv::fillPoly(mask, contour, cv::Scalar(100));
+    }
+
+    // Set mask:
+    mask_data_.swap(data);
+    publishMask();
+
+    return;
+  }
+  old_method = false;
 
   for (const auto& path : request->paths) {
     if (path.poses.size() < 3) {
