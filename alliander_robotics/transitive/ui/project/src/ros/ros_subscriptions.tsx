@@ -12,14 +12,18 @@ export interface Subscription {
 
 export interface Subscriptions {
   time: number | null;
+  battery: number | null;
+  estop: boolean | null;
   position: [number, number] | null;
   reachedCount: number | null;
   plan: [number, number][] | null;
 }
 
 export function Subscriptions(namespace: string) {
-  const [position, setPosition] = useState<[number, number] | null>(null);
   const [time, setTime] = useState<number | null>(null);
+  const [battery, setBattery] = useState<number | null>(null);
+  const [estop, setEstop] = useState<boolean | null>(null);
+  const [position, setPosition] = useState<[number, number] | null>(null);
   const [reachedCount, setReachedCount] = useState<number | null>(null);
   const [plan, setPlan] = useState<[number, number][] | null>(null);
 
@@ -30,6 +34,25 @@ export function Subscriptions(namespace: string) {
       callback: (data: any) => {
         if (data && data.length >= 1) {
           setTime(data[0]);
+        }
+      },
+    },
+    {
+      topic: `/${namespace}/battery/battery_status`,
+      fields: ["/percentage"],
+      callback: (data: any) => {
+        if (data && data.length >= 1) {
+          setBattery(data[0]);
+        }
+      },
+    },
+    {
+      topic: `/${namespace}/hardware/e_stop`,
+      fields: ["/data"],
+      callback: (data: any) => {
+        console.log("E-Stop data received:", data);
+        if (data && data.length >= 1) {
+          setEstop(data[0]);
         }
       },
     },
@@ -69,7 +92,14 @@ export function Subscriptions(namespace: string) {
     },
   ];
 
-  const subscriptions: Subscriptions = { time, position, reachedCount, plan };
+  const subscriptions: Subscriptions = {
+    time,
+    battery,
+    estop,
+    position,
+    reachedCount,
+    plan,
+  };
 
   return { subscriptions, subscription_list };
 }
