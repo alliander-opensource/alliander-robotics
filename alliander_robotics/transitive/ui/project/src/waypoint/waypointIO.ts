@@ -7,7 +7,7 @@ import { newWaypoint } from "./waypoints";
 
 export function serializeWaypoints(waypoints: Waypoint[]): string {
   return JSON.stringify(
-    waypoints.map(({ lat, lng }) => ({ lat, lng })),
+    waypoints.map(({ lat, lng, rot }) => ({ lat, lng, rot })),
     null,
     2,
   );
@@ -19,13 +19,13 @@ export function parseWaypoints(json: string): Waypoint[] {
     throw new TypeError("Invalid waypoints file: expected an array");
   }
   return raw.map((entry) => {
-    const { lat, lng } = entry ?? {};
+    const { lat, lng, rot } = entry ?? {};
     if (typeof lat !== "number" || typeof lng !== "number") {
       throw new TypeError(
         "Invalid waypoints file: each entry needs numeric lat/lng",
       );
     }
-    return newWaypoint(lat, lng);
+    return newWaypoint(lat, lng, rot);
   });
 }
 

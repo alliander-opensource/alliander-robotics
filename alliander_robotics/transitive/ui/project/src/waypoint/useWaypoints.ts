@@ -4,13 +4,13 @@
 
 import { useState } from "react";
 import { downloadWaypoints, readWaypointsFile } from "./waypointIO";
-import type { Waypoint } from "./waypoints";
 import {
   addWaypoint,
   clearWaypoints,
   moveWaypoint,
   removeWaypoint,
   reorderWaypoint,
+  Waypoint,
 } from "./waypoints";
 
 export interface UseWaypoints {
@@ -19,6 +19,7 @@ export interface UseWaypoints {
   onAdd: (lat: number, lng: number) => void;
   onRemove: (id: number) => void;
   onMove: (id: number, lat: number, lng: number) => void;
+  onRotate: (id: number, rot: number) => void;
   onReorder: (id: number, direction: "up" | "down") => void;
   onSave: () => void;
   onLoad: (file: File) => Promise<void>;
@@ -38,6 +39,11 @@ export function UseWaypoints() {
   };
   const onMove = (id: number, lat: number, lng: number) => {
     setWaypoints((wps) => moveWaypoint(wps, id, lat, lng));
+  };
+  const onRotate = (id: number, rot: number) => {
+    setWaypoints((wps) =>
+      wps.map((w) => (w.id === id ? new Waypoint(w.id, w.lat, w.lng, rot) : w)),
+    );
   };
   const onReorder = (id: number, direction: "up" | "down") => {
     setWaypoints((wps) => reorderWaypoint(wps, id, direction));
@@ -61,6 +67,7 @@ export function UseWaypoints() {
     reached,
     onAdd,
     onRemove,
+    onRotate,
     onMove,
     onReorder,
     onSave,
