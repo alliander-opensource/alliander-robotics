@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: Alliander N. V.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+/**:
+  behavior_executor:
+    ros__parameters:
+      blackboard:
+        battery_threshold_low: 0.2
+        battery_threshold_charged: 0.9
+        charge_timeout_ms: 600000
+        dock_retry_delay_ms: 5000
+        navigation_retry_delay_ms: 5000

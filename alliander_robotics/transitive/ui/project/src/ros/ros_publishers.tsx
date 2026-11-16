@@ -11,10 +11,10 @@ export interface Publishers {
   geopath: Publisher;
 }
 
-export function Publishers() {
+export function Publishers(namespace: string) {
   const publishers: Publishers = {
     geopath: {
-      topic: "/gps_waypoints",
+      topic: `/${namespace}/gps_waypoints`,
       type: "geographic_msgs/msg/GeoPath",
     },
   };

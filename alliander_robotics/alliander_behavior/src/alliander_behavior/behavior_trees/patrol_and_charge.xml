@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+SPDX-FileCopyrightText: Alliander N. V.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<root BTCPP_format="4">
+  <BehaviorTree ID="PatrolAndCharge">
+    <Sequence>
+      <!-- Tree init logic here instead of generic behavior_executor -->
+      <Script name="InitRoute" code="route_size := 0; waypoint_index := 0; navigation_failures := 0"/>
+
+      <Repeat num_cycles="-1">
+	<!-- ReactiveFallback: keep Patrolling until one of the earlier childs returns SUCCESS --> 
+        <ReactiveFallback>
+          <SubTree ID="Charge" _autoremap="true"/>
+
+          <!-- TODO: do we want a Stop to mean "also stop charging"? -->
+          <Sequence name="StopCurrentRoute">
+            <TriggerReceived name="StopRequested" service_name="stop_navigation"/>
+            <Script code="route_size := 0"/>
+            <PublishStatus message="Navigation stopped"/>
+          </Sequence>
+
+          <!-- A new route will not interrupt Charge with this design -->
+          <Sequence name="ApplyNewRoute">
+            <ReceiveRoute topic_name="waypoints" route="{route}" route_size="{route_size}"/>
+            <Script code="waypoint_index := 0; navigation_failures := 0"/>
+            <PublishStatus message="New route received"/>
+          </Sequence>
+
+	  <!-- Patrol, but only if we have a route -->
+          <Sequence name="PatrolIfRoute">
+            <ScriptCondition code="route_size > 0"/>
+            <SubTree ID="Patrol" _autoremap="true"/>
+          </Sequence>
+
+	  <!-- If nothing else, idle -->
+          <Sequence name="Idle">
+            <PublishStatus message="Idle: waiting for route"/>
+            <Sleep msec="5000"/>
+          </Sequence>
+        </ReactiveFallback>
+      </Repeat>
+    </Sequence>
+  </BehaviorTree>
+</root>
