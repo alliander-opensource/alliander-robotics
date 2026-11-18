@@ -75,7 +75,7 @@ class KeepoutZoneManager : public rclcpp::Node {
 
   // Costmap configuration variables:
   /// Resolution of the keepout zone occupancy grid in metres per cell.
-  double resolution_{0.1};
+  double resolution_{0.01};
   /// Width of the keepout zone occupancy grid in cells.
   int width_{1};
   /// Height of the keepout zone occupancy grid in cells.
