@@ -6,18 +6,14 @@
 
 #include <GeographicLib/UTMUPS.hpp>
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <functional>
-#include <limits>
-#include <memory>
 #include <new>
-#include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <string>
-
-#include "rclcpp/qos.hpp"
+#include <utility>
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -63,7 +59,7 @@ void KeepoutZoneManager::waitForUtmTransform() {
   }
 
   const bool map_transform_available =
-      tf_buffer_->canTransform("utm", "map", tf2::TimePointZero);
+      tf_buffer_->canTransform("utm", "map", this->now());
 
   if (!map_transform_available) {
     RCLCPP_INFO_THROTTLE(
@@ -95,56 +91,32 @@ KeepoutZoneManager::Point KeepoutZoneManager::gpsToUTMCoordinates(
     double latitude, double longitude) const {
   bool northp = utm_datum_.northp;
   int zone = static_cast<int>(utm_datum_.zone);
-  double x = 0.0;
-  double y = 0.0;
+  double x;
+  double y;
   GeographicLib::UTMUPS::Forward(latitude, longitude, zone, northp, x, y);
 
   return {x, y};
 }
 
-KeepoutZoneManager::Polygon KeepoutZoneManager::geoPathToPolygon(
-    const GeoPath& path) const {
-  Polygon polygon;
-  polygon.reserve(path.poses.size());
+cv::Mat KeepoutZoneManager::geoPathToContour(const GeoPath& path) const {
+  cv::Mat contour;
 
   for (const auto& pose : path.poses) {
-    polygon.push_back(gpsToUTMCoordinates(pose.pose.position.latitude,
-                                          pose.pose.position.longitude));
+    auto point = gpsToUTMCoordinates(pose.pose.position.latitude,
+                                     pose.pose.position.longitude);
+
+    if (!std::isfinite(point.first) || !std::isfinite(point.second)) {
+      return {};
+    }
+
+    cv::Point cv_point(
+        static_cast<int>(std::floor(point.first / resolution_)),
+        static_cast<int>(std::floor(point.second / resolution_)));
+
+    contour.push_back(cv_point);
   }
 
-  return polygon;
-}
-
-KeepoutZoneManager::Point KeepoutZoneManager::UTMCoordinateToPixel(
-    double x, double y) const {
-  return {std::floor((x - grid_origin_x_) / resolution_),
-          std::floor((y - grid_origin_y_) / resolution_)};
-}
-
-bool KeepoutZoneManager::addPolygonToMask(const Polygon& polygon) {
-  if (polygon.size() < 3) {
-    return false;
-  }
-
-  std::vector<cv::Point> pixels;
-  pixels.reserve(polygon.size());
-
-  for (const auto& [x, y] : polygon) {
-    const auto [px, py] = UTMCoordinateToPixel(x, y);
-    pixels.emplace_back(static_cast<int>(px), static_cast<int>(py));
-  }
-
-  // Reject polygons that do not intersect the occupancy grid.
-  const cv::Rect grid_bounds(0, 0, width_, height_);
-  if ((cv::boundingRect(pixels) & grid_bounds).empty()) {
-    return false;
-  }
-
-  // OpenCV writes directly into the existing OccupancyGrid data buffer.
-  cv::Mat mask(height_, width_, CV_8SC1, mask_data_.data());
-  const std::vector<std::vector<cv::Point>> contours{std::move(pixels)};
-  cv::fillPoly(mask, contours, cv::Scalar(100));
-  return true;
+  return contour;
 }
 
 bool KeepoutZoneManager::rebuildMask() {
@@ -158,53 +130,45 @@ bool KeepoutZoneManager::rebuildMask() {
     return true;
   }
 
-  // Calculate the combined bounding box of all stored zones.
-  double min_x = zones_.front().local.front().first;
-  double max_x = min_x;
-  double min_y = zones_.front().local.front().second;
-  double max_y = min_y;
+  // Collect all local contours.
+  std::vector<cv::Mat> contours;
+  contours.reserve(zones_.size());
 
-  for (const auto& stored_zone : zones_) {
-    for (const auto& [x, y] : stored_zone.local) {
-      min_x = std::min(min_x, x);
-      max_x = std::max(max_x, x);
-      min_y = std::min(min_y, y);
-      max_y = std::max(max_y, y);
+  for (const auto& zone : zones_) {
+    if (zone.local.empty() || zone.local.rows < 3 ||
+        zone.local.type() != CV_32SC2) {
+      RCLCPP_ERROR(get_logger(), "Cannot rebuild mask: invalid zone contour.");
+      return false;
     }
+
+    contours.push_back(zone.local.clone());
   }
 
-  // Calculate the new origin without changing the current grid.
-  const double new_origin_x = std::floor(min_x / resolution_) * resolution_;
-  const double new_origin_y = std::floor(min_y / resolution_) * resolution_;
+  // Calculate the combined bounding box of all contours.
+  cv::Mat combined_contour;
+  cv::vconcat(contours, combined_contour);
+  const cv::Rect bounding_box = cv::boundingRect(combined_contour);
 
   // Calculate the required grid dimensions.
-  const double width_cells =
-      std::ceil((max_x - new_origin_x) / resolution_) + 1.0;
-  const double height_cells =
-      std::ceil((max_y - new_origin_y) / resolution_) + 1.0;
-
-  // Reject invalid or excessively large grids before allocating memory (~10MB).
   constexpr std::size_t max_nr_grid_cells = 10'000'000;
 
-  if (!std::isfinite(width_cells) || !std::isfinite(height_cells) ||
-      width_cells < 1.0 || height_cells < 1.0 ||
-      width_cells > static_cast<double>(std::numeric_limits<int>::max()) ||
-      height_cells > static_cast<double>(std::numeric_limits<int>::max()) ||
-      width_cells * height_cells > static_cast<double>(max_nr_grid_cells)) {
+  const auto cell_count = static_cast<std::size_t>(bounding_box.width) *
+                          static_cast<std::size_t>(bounding_box.height);
+
+  if (bounding_box.width < 1 || bounding_box.height < 1 ||
+      cell_count > max_nr_grid_cells) {
     RCLCPP_ERROR(get_logger(),
                  "Keepout grid dimensions are invalid or too large "
-                 "(width=%.0f, height=%.0f). Rejecting grid rebuild.",
-                 width_cells, height_cells);
+                 "(width=%d, height=%d).",
+                 bounding_box.width, bounding_box.height);
     return false;
   }
 
-  const int new_width = static_cast<int>(width_cells);
-  const int new_height = static_cast<int>(height_cells);
+  // Calculate the grid origin in metres.
+  const double new_origin_x = bounding_box.x * resolution_;
+  const double new_origin_y = bounding_box.y * resolution_;
 
-  const auto cell_count = static_cast<std::size_t>(new_width) *
-                          static_cast<std::size_t>(new_height);
-
-  // Allocate the new grid before changing the current grid.
+  // Allocate the new grid.
   std::vector<int8_t> new_mask;
 
   try {
@@ -216,35 +180,23 @@ bool KeepoutZoneManager::rebuildMask() {
     return false;
   }
 
-  // Use the new grid only after its dimensions are valid and its memory
-  // has been allocated successfully.
-  const int old_width = width_;
-  const int old_height = height_;
-  const double old_origin_x = grid_origin_x_;
-  const double old_origin_y = grid_origin_y_;
+  cv::Mat mask(bounding_box.height, bounding_box.width, CV_8SC1,
+               new_mask.data());
 
-  width_ = new_width;
-  height_ = new_height;
+  // Shift all contours relative to the new grid origin.
+  for (auto& contour : contours) {
+    contour -= cv::Scalar(bounding_box.x, bounding_box.y);
+  }
+
+  // Fill the mask with all keepout contours.
+  cv::fillPoly(mask, contours, cv::Scalar(100));
+
+  // Commit the new grid.
+  width_ = bounding_box.width;
+  height_ = bounding_box.height;
   grid_origin_x_ = new_origin_x;
   grid_origin_y_ = new_origin_y;
   mask_data_.swap(new_mask);
-
-  // Rebuild the mask using all stored zones.
-  for (const auto& stored_zone : zones_) {
-    if (!addPolygonToMask(stored_zone.local)) {
-      // Restore the previous grid if rasterization unexpectedly fails.
-      mask_data_.swap(new_mask);
-      width_ = old_width;
-      height_ = old_height;
-      grid_origin_x_ = old_origin_x;
-      grid_origin_y_ = old_origin_y;
-
-      RCLCPP_ERROR(get_logger(),
-                   "Failed to rasterize a keepout zone. "
-                   "Keeping the previously published grid.");
-      return false;
-    }
-  }
 
   RCLCPP_INFO(get_logger(),
               "Rebuilt keepout mask: width=%d, height=%d, "
@@ -298,34 +250,28 @@ void KeepoutZoneManager::addZones(
 
   for (const auto& path : request->paths) {
     if (path.poses.size() < 3) {
-      RCLCPP_WARN(get_logger(),
-                  "Skipping zone: at least three points are required.");
+      RCLCPP_WARN(
+          get_logger(),
+          "Skipping zone: invalid path, at least three points are required.");
       ++skipped_count;
       continue;
     }
 
     // Convert GPS coordinates to local coordinates.
-    const Polygon local_zone = geoPathToPolygon(path);
+    const cv::Mat local_zone = geoPathToContour(path);
 
     // Reject zones containing invalid local coordinates.
-    const bool valid_coordinates = std::all_of(
-        local_zone.begin(), local_zone.end(), [](const auto& point) {
-          return std::isfinite(point.first) && std::isfinite(point.second);
-        });
-
-    if (!valid_coordinates) {
+    if (local_zone.empty()) {
       RCLCPP_WARN(get_logger(), "Skipping zone: invalid local coordinates.");
       ++skipped_count;
       continue;
     }
 
     // Preserve the original GPS coordinates.
-    Polygon gps_zone;
-    gps_zone.reserve(path.poses.size());
-
+    cv::Mat gps_zone;
     for (const auto& pose : path.poses) {
-      gps_zone.emplace_back(pose.pose.position.latitude,
-                            pose.pose.position.longitude);
+      gps_zone.push_back(cv::Point2d(pose.pose.position.latitude,
+                                     pose.pose.position.longitude));
     }
 
     zones_.push_back({next_zone_id_, std::move(gps_zone), local_zone});
@@ -344,8 +290,8 @@ void KeepoutZoneManager::addZones(
       continue;
     }
 
-    RCLCPP_INFO(get_logger(), "Keepout zone #%s created with %zu points.",
-                std::to_string(next_zone_id_).c_str(), local_zone.size());
+    RCLCPP_INFO(get_logger(), "Keepout zone #%s created with %d points.",
+                std::to_string(next_zone_id_).c_str(), local_zone.rows);
 
     ++next_zone_id_;
     ++added_count;

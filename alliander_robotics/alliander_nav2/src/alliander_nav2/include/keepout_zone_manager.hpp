@@ -15,8 +15,8 @@
 #include <geographic_msgs/msg/geo_path.hpp>
 #include <memory>
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include <opencv2/core.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <utility>
 #include <vector>
 
@@ -24,7 +24,6 @@ using alliander_interfaces::msg::UTMDatum;
 using alliander_interfaces::srv::ManageKeepoutZones;
 using geographic_msgs::msg::GeoPath;
 using nav_msgs::msg::OccupancyGrid;
-using sensor_msgs::msg::NavSatFix;
 
 /// Class to manage keepout zones in the navigation costmap.
 class KeepoutZoneManager : public rclcpp::Node {
@@ -41,8 +40,6 @@ class KeepoutZoneManager : public rclcpp::Node {
   // Other variables:
   /// A point represented by its x and y coordinates.
   using Point = std::pair<double, double>;
-  /// A polygon represented by a sequence of points.
-  using Polygon = std::vector<Point>;
 
   /**
    * @brief Stores a keepout zone in GPS and local coordinates.
@@ -53,10 +50,10 @@ class KeepoutZoneManager : public rclcpp::Node {
   struct StoredZones {
     /// Unique ID of the zone.
     std::uint64_t id;
-    /// Zone's polygon represented by GPS latitude and longitude coordinates.
-    Polygon gps;
-    /// Zone's polygon represented by local x and y coordinates.
-    Polygon local;
+    /// Zone's contour represented by GPS latitude and longitude coordinates.
+    cv::Mat gps;
+    /// Zone's contour represented by local x and y coordinates.
+    cv::Mat local;
   };
 
   // ROS2 communication variables:
@@ -75,7 +72,9 @@ class KeepoutZoneManager : public rclcpp::Node {
 
   // Costmap configuration variables:
   /// Resolution of the keepout zone occupancy grid in metres per cell.
-  double resolution_{0.1};
+  double resolution_{0.01};
+  /// Points per meter (100 means cm precision).
+  int ppm{100};
   /// Width of the keepout zone occupancy grid in cells.
   int width_{1};
   /// Height of the keepout zone occupancy grid in cells.
@@ -92,7 +91,7 @@ class KeepoutZoneManager : public rclcpp::Node {
   // Keepout zone data:
   /// Occupancy grid data representing the keepout zone mask.
   std::vector<int8_t> mask_data_;
-  /// Polygons defining the stored keepout zones in GPS and local coordinates.
+  /// Contours defining the stored keepout zones in GPS and local coordinates.
   std::vector<StoredZones> zones_;
 
   // Wait for TF
@@ -162,29 +161,12 @@ class KeepoutZoneManager : public rclcpp::Node {
               // the functions with gps in the name
 
   /**
-   * @brief Converts a geographic path into a polygon in local coordinates.
-   * @param path Geographic path containing the polygon's GPS coordinates.
-   * @return Polygon containing the path points in x and y coordinates (UTM
+   * @brief Converts a geographic path into a contour in local coordinates.
+   * @param path Geographic path containing the contour's GPS coordinates.
+   * @return Contour containing the path points in x and y coordinates (UTM
    * tf-frame).
    */
-  Polygon geoPathToPolygon(const GeoPath& path) const;
-
-  /**
-   * @brief Converts UTM coordinates into occupancy grid pixel coordinates for
-   * the mask.
-   * @param x UTM x-coordinate in metres.
-   * @param y UTM y-coordinate in metres.
-   * @return Point containing the corresponding occupancy grid pixel
-   * coordinates.
-   */
-  Point UTMCoordinateToPixel(double x, double y) const;
-
-  /**
-   * @brief Adds a polygon to the keepout zone occupancy grid.
-   * @param polygon Polygon defining the keepout zone in local coordinates.
-   * @return True if the polygon was added successfully, false otherwise.
-   */
-  bool addPolygonToMask(const Polygon& polygon);
+  cv::Mat geoPathToContour(const GeoPath& path) const;
 
   /**
    * @brief Rebuilds the occupancy grid to fit all stored zones (within a
