@@ -319,8 +319,9 @@ void KeepoutZoneManager::addZones(
       for (const auto& pose : path.poses) {
         auto point = gpsToUTMCoordinates(pose.pose.position.latitude,
                                          pose.pose.position.longitude);
-        cv::Point cv_point(point.first, point.second);
-        cv_point *= ppm;
+        cv::Point cv_point(
+            static_cast<int>(std::floor(point.first * ppm)),
+            static_cast<int>(std::floor(point.second * ppm)));
         contour.push_back(cv_point);
       }
       contours.push_back(contour);
@@ -332,8 +333,8 @@ void KeepoutZoneManager::addZones(
     auto bounding_box = cv::boundingRect(combined_contour);
 
     // The image origin should be defined in meters, so devide by ppm:
-    grid_origin_x_ = int(bounding_box.x / ppm);
-    grid_origin_y_ = int(bounding_box.y / ppm);
+    grid_origin_x_ = static_cast<double>(bounding_box.x) / ppm;
+    grid_origin_y_ = static_cast<double>(bounding_box.y) / ppm;
 
     // Define the image data:
     width_ = bounding_box.width;
