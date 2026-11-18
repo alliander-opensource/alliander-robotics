@@ -130,7 +130,6 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
             "width": 10,
             "height": 10,
             "plugins": plugins,
-            "filters": ["keepout_filter"],
             "keepout_filter": {
                 "filter_info_topic": f"/{namespace_vehicle}/keepout_costmap_filter_info",
             },
