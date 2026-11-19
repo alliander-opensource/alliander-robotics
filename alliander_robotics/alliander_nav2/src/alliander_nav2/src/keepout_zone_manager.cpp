@@ -152,15 +152,19 @@ bool KeepoutZoneManager::rebuildMask() {
   // Calculate the required grid dimensions.
   constexpr std::size_t max_nr_grid_cells = 10'000'000;
 
-  const auto cell_count = static_cast<std::size_t>(bounding_box.width) *
-                          static_cast<std::size_t>(bounding_box.height);
-
-  if (bounding_box.width < 1 || bounding_box.height < 1 ||
-      cell_count > max_nr_grid_cells) {
+  if (bounding_box.width < 1 || bounding_box.height < 1) {
     RCLCPP_ERROR(get_logger(),
-                 "Keepout grid dimensions are invalid or too large "
+                 "Keepout grid dimensions are invalid: "
                  "(width=%d, height=%d).",
                  bounding_box.width, bounding_box.height);
+    return false;
+  }
+
+  const std::size_t cell_count =
+      static_cast<std::size_t>(bounding_box.width) * bounding_box.height;
+
+  if (cell_count > max_nr_grid_cells) {
+    RCLCPP_ERROR(get_logger(), "Keepout grid dimensions are too large.");
     return false;
   }
 
