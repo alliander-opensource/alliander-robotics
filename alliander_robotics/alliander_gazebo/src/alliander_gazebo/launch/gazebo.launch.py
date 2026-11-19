@@ -158,10 +158,10 @@ def launch_setup(context: LaunchContext) -> list:
                     package="alliander_gazebo",
                     executable="gz_charging_checker",
                     output="screen",
-                    name=f"{vehicle.name}_{station.name}_charging_checker",
+                    name=f"{vehicle.namespace}_{station.namespace}_charging_checker",
                     parameters=[
-                        {"name_robot": vehicle.name},
-                        {"name_station": station.name},
+                        {"name_robot": vehicle.namespace},
+                        {"name_station": station.namespace},
                     ],
                 )
             )

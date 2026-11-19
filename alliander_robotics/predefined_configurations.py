@@ -14,6 +14,7 @@ from alliander_robotics.alliander_core.src.alliander_utilities.alliander_utiliti
     Apriltag,
     Arm,
     Beamagine,
+    BehaviorTreeConfig,
     Camera,
     ChargingStation,
     Gripper,
@@ -165,11 +166,11 @@ class PredefinedConfigurations:
 
     @register_configuration("zed_apriltag")
     def config_zed_apriltag(self) -> None:  # noqa: D102
-        self.plat_conf.platforms = [
-            Camera("zed", (0, 0, 0.5), namespace="zed"),
-            Apriltag("tag0", (0.5, -0.2, 0.5), id=0, publish_topic="/tag0/pose"),
-            Apriltag("tag1", (0.5, 0.2, 0.5), id=1, publish_topic="/tag1/pose"),
-        ]
+        camera = Camera("zed", (-1, 0, 0.5), namespace="zed")
+        camera.simulate_high_resolution = True
+        apriltag0 = Apriltag("tag0", (1, -0.2, 0.5), id=0, publish_topic="/tag0/pose")
+        apriltag1 = Apriltag("tag1", (1, 0.2, 0.5), id=1, publish_topic="/tag1/pose")
+        self.plat_conf.platforms = [camera, apriltag0, apriltag1]
         self.sim_conf.world = "walls.sdf"
 
     @register_configuration("seekthermal")
@@ -301,8 +302,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, lidar)
@@ -357,8 +356,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, lidar)
@@ -373,8 +370,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, lidar)
@@ -388,13 +383,46 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, lidar)
         self.plat_conf.platforms = [vehicle, lidar]
         self.sim_conf.world = "walls.sdf"
+
+    @register_configuration("panther_bt_nav")
+    def config_behaviortree_nav(self) -> None:  # noqa: D102
+        vehicle = Vehicle("panther", (0, 0, 0.2))
+        vehicle.charging_receiver = True
+        vehicle.bt_config = BehaviorTreeConfig(tree="PatrolAndCharge")
+        vehicle.nav2_config.controller = "mppi"
+        vehicle.nav2_config.navigation = True
+        vehicle.nav2_config.manager = False
+        vehicle.nav2_config.gps = True
+        vehicle.nav2_config.window_size = 150
+
+        lidar = Lidar(
+            "velodyne",
+            position=(0.13, 0.17, 0.18),
+        )
+
+        ntrip = NtripConfig()
+        gps = GPS(
+            "ublox",
+            (-0.21, -0.2, 0.19),
+            namespace="ublox",
+            operation_mode="rover",
+            ntrip_config=ntrip,
+            usb_device="PANTHER",
+        )
+        imu = IMU("xsens", position=(0.16, -0.09, 0.155), orientation=(90, 0, -90))
+
+        link(vehicle, lidar)
+        link(vehicle, gps)
+        link(vehicle, imu)
+
+        self.plat_conf.platforms = [vehicle, lidar, gps, imu]
+        self.viz_conf.gui = True
+        self.sim_conf.world = "map_5.954036_51.977320"
 
     @register_configuration("panther_outdoor_navigation")
     def config_panther_outdoor_navigation(self) -> None:  # noqa: D102
@@ -407,8 +435,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         ntrip = NtripConfig()
@@ -440,8 +466,6 @@ class PredefinedConfigurations:
         lidar = Lidar(
             "velodyne",
             position=(0.13, 0.17, 0.18),
-            orientation=(0, 0, 0),
-            ip_address="10.15.20.5",
         )
 
         ntrip = NtripConfig()
@@ -466,18 +490,27 @@ class PredefinedConfigurations:
 
     @register_configuration("multi_charging")
     def config_multi_charging(self) -> None:  # noqa: D102
+        # Robots:
         panther = Vehicle("panther", (0, 1, 0.2), (0, 0, 0))
         panther.charging_receiver = True
         lynx = Vehicle("lynx", (0, -1, 0.13), (0, 0, 0))
         lynx.charging_receiver = True
-        charging_station1 = ChargingStation("wibotic1", (1, 1, 0))
-        charging_station2 = ChargingStation("wibotic2", (1, -1, 0))
+
+        # Charging stations:
+        station1 = ChargingStation("wibotic", namespace="station1", position=(1, 1, 0))
+        tag1 = Apriltag("tag0", (0.0, 0.0, 0.8), id=1, publish_topic="/station1")
+        link(station1, tag1)
+        station2 = ChargingStation("wibotic", namespace="station2", position=(1, -1, 0))
+        tag2 = Apriltag("tag1", (0.0, 0.0, 0.8), id=2, publish_topic="/station2")
+        link(station2, tag2)
 
         self.plat_conf.platforms = [
             panther,
             lynx,
-            charging_station1,
-            charging_station2,
+            station1,
+            tag1,
+            station2,
+            tag2,
         ]
 
     # Lynx:
@@ -576,7 +609,6 @@ class PredefinedConfigurations:
             "velodyne",
             position=(0.125, 0.185, 0.20),
             orientation=(0.0, 0.0, 45.0),
-            ip_address="10.15.20.5",
         )
 
         link(vehicle, arm)

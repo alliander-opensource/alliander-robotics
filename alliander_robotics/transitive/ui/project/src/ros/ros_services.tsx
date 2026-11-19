@@ -8,13 +8,23 @@ export interface Service {
 }
 
 export interface Services {
+  estop_trigger: Service;
+  estop_reset: Service;
   nav2_stop: Service;
 }
 
 export function Services(namespace: string) {
   const services: Services = {
+    estop_trigger: {
+      name: `/${namespace}/hardware/e_stop_trigger`,
+      type: "std_srvs/srv/Trigger",
+    },
+    estop_reset: {
+      name: `/${namespace}/hardware/e_stop_reset`,
+      type: "std_srvs/srv/Trigger",
+    },
     nav2_stop: {
-      name: `/${namespace}/nav2_manager/stop`,
+      name: `/${namespace}/navigation/stop`,
       type: "std_srvs/srv/Trigger",
     },
   };

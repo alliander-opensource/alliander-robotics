@@ -14,6 +14,7 @@ https://code.visualstudio.com/docs/editing/codebasics#_compare-files
             controller_config_file
             battery_config_file
             use_sim:=false
+            e_stop_initial_state:=true
             imu_xyz:='0.052 0.073 -0.006'
             imu_rpy:='0.0 0.0 -1.57'
             namespace:=''">
@@ -68,7 +69,8 @@ https://code.visualstudio.com/docs/editing/codebasics#_compare-files
     <ros2_control name="${ns}lynx_system" type="system">
       <hardware>
         <xacro:if value="${use_sim}">
-          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+          <plugin>husarion_ugv_gazebo/EStopSystem</plugin>
+          <param name="e_stop_initial_state">${e_stop_initial_state}</param>
         </xacro:if>
 
         <xacro:unless value="${use_sim}">

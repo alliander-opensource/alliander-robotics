@@ -10,14 +10,13 @@ from typing import TypeVar
 
 import numpy as np
 import rclpy
-from alliander_gazebo.create_apriltag import create_apriltag
+from alliander_gazebo.create_urdf import create_apriltag, create_charging_station
 from alliander_utilities.config_objects import (
     Apriltag,
     ChargingStation,
     Platform,
     PlatformList,
 )
-from alliander_utilities.ros_utils import get_file_path, get_robot_description
 from rclpy.node import Node
 from scipy.spatial.transform import RigidTransform, Rotation
 
@@ -84,22 +83,14 @@ class SpawnPlatform(Node):
                     raise ValueError("Failed to define rotation for platform to spawn.")
                 orientation = rotation.as_euler("xyz")
 
-            # Generate apriltags and load via file:
-            model_path = ""
+            # Generate urdf files for platforms that don't have a robot_description topic:
+            urdf_path = ""
             if isinstance(platform, Apriltag):
-                create_apriltag(platform, self)
-                model_path = f"/tmp/apriltag_{platform.id}.sdf"
+                urdf_path = create_apriltag(platform, self)
             if isinstance(platform, ChargingStation):
-                xacro_file = get_file_path(
-                    "alliander_husarion_description",
-                    ["urdf"],
-                    "wibotic_station.urdf.xacro",
-                )
-                urdf = get_robot_description(xacro_file)["robot_description"]
-                model_path = "/tmp/charging_station.urdf"
-                with open(model_path, "w", encoding="utf-8") as f:
-                    f.write(urdf)
-            self.spawn_platform(platform.namespace, position, orientation, model_path)
+                urdf_path = create_charging_station(platform)
+
+            self.spawn_platform(platform.namespace, position, orientation, urdf_path)
 
     def spawn_platform(
         self,

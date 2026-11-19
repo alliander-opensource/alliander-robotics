@@ -5,9 +5,9 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .form-label {
-    min-width: 25%;
+  min-width: 25%;
 }
 
 .col-sm-4 {
-    min-width: 75%;
+  min-width: 75%;
 }

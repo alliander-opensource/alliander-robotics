@@ -269,7 +269,7 @@ class VehicleControl:
             Trigger, f"/{self.namespace}/nav2_manager/stop"
         )
         self.gps_waypoints_publisher = self.node.create_publisher(
-            GeoPath, "/gps_waypoints", 10
+            GeoPath, f"/{self.namespace}/gps_waypoints", 10
         )
 
     def start_navigation(self, waypoints: list[Waypoint]) -> None:

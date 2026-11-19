@@ -179,12 +179,13 @@ class ApplyConfigurations:
             platform (Camera): The camera platform configuration.
         """
         ApplyConfigurations.add_rgb_camera(platform)
-        Rviz.add_image(f"/{platform.namespace}/depth/image")
-        Rviz.add_depth_cloud(
-            f"/{platform.namespace}/color/image",
-            f"/{platform.namespace}/depth/image",
-            f"/{platform.namespace}/color/camera_info",
-        )
+        if not platform.simulation or not platform.simulate_high_resolution:
+            Rviz.add_image(f"/{platform.namespace}/depth/image")
+            Rviz.add_depth_cloud(
+                f"/{platform.namespace}/color/image",
+                f"/{platform.namespace}/depth/image",
+                f"/{platform.namespace}/color/camera_info",
+            )
 
     @staticmethod
     def add_thermal_camera(platform: ThermalCamera) -> None:

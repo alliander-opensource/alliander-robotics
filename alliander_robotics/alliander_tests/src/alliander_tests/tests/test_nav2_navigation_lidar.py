@@ -11,7 +11,7 @@ from alliander_utilities.config_objects import Lidar, Vehicle, link
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from rclpy.node import Node
 from rclpy.time import Time
-from tf2_ros import TransformException  # ty: ignore[unresolved-import]
+from tf2_ros import TransformException  # ty: ignore[import-not-found]
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
@@ -109,6 +109,7 @@ class _TestNavigationLidar:
 for vehicle in ["panther", "lynx"]:
     for lidar in ["velodyne", "ouster"]:
         vehicle_platform = Vehicle(vehicle, (0, 0, 0.2))
+        vehicle_platform.e_stop_initial_state = False
         lidar_platform = Lidar(lidar, (0.13, -0.13, 0.35))
         link(vehicle_platform, lidar_platform)
         vehicle_platform.nav2_config.navigation = True

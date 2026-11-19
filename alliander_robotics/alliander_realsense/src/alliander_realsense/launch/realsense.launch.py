@@ -30,6 +30,7 @@ def launch_setup(context: LaunchContext) -> list:
         xacro="realsense_d435.urdf.xacro",
         xacro_arguments={
             "parent": "" if camera_config.parent.link else "world",
+            "simulate_high_resolution": str(camera_config.simulate_high_resolution),
         },
     )
 

@@ -343,10 +343,12 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
 
     remappings = []
     if nav2.gps:
-        remappings.append(("/gps/fix", f"/{namespace_gps}/gps/fix"))
-        remappings.append(("/fromLL", f"/{namespace_vehicle}/fromLL"))
-        remappings.append(
-            ("odometry/filtered", f"/{namespace_vehicle}/odometry/global")
+        remappings.extend(
+            [
+                ("/gps/fix", f"/{namespace_gps}/gps/fix"),
+                ("/fromLL", f"/{namespace_vehicle}/fromLL"),
+                ("odometry/filtered", f"/{namespace_vehicle}/odometry/global"),
+            ]
         )
 
     all_lifecycle_nodes["waypoint_follower"] = LifecycleNode(
@@ -424,7 +426,8 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         executable="nav2_manager.py",
         namespace=namespace_vehicle,
         parameters=[{"costmap_size": float(nav2.window_size)}],
-        remappings=remappings,
+        remappings=remappings
+        + [("/gps_waypoints", f"/{namespace_vehicle}/gps_waypoints")],
     )
 
     pub_topic = (
@@ -452,7 +455,7 @@ def launch_setup(context: LaunchContext) -> list:  # noqa: PLR0912, PLR0915
         if nav2.gps
         else SKIP,
         Register.on_log(nav2_manager, "Controller is ready.", context)
-        if nav2.navigation
+        if nav2.manager
         else SKIP,
     ]
 
