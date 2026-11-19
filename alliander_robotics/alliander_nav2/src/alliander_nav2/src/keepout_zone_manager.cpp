@@ -90,7 +90,7 @@ void KeepoutZoneManager::utmCallback(const UTMDatum::SharedPtr msg) {
 KeepoutZoneManager::Point KeepoutZoneManager::gpsToUTMCoordinates(
     double latitude, double longitude) const {
   bool northp = utm_datum_.northp;
-  int zone = static_cast<int>(utm_datum_.zone);
+  int zone = utm_datum_.zone;
   double x;
   double y;
   GeographicLib::UTMUPS::Forward(latitude, longitude, zone, northp, x, y);
@@ -331,8 +331,7 @@ void KeepoutZoneManager::removeSingleZone(
   }
 
   // Save the zone and its position so it can be restored if rebuilding fails.
-  const auto original_position =
-      static_cast<std::size_t>(std::distance(zones_.begin(), zone_it));
+  const auto original_position = std::distance(zones_.begin(), zone_it);
   StoredZones removed_zone = *zone_it;
 
   zones_.erase(zone_it);
