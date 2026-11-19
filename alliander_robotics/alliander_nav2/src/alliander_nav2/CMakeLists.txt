@@ -11,10 +11,12 @@ find_package(ament_cmake_python REQUIRED)
 find_package(nav2_behavior_tree REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(alliander_interfaces REQUIRED)
+find_package(geographic_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(geographic_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
@@ -32,6 +34,30 @@ add_library(bt_is_system_healthy_node SHARED
 # Python executables:
 install(
   DIRECTORY src_py/
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# No-go zones executable
+include_directories(include)
+add_executable(keepout_zone_manager src/keepout_zone_manager.cpp)
+target_include_directories(keepout_zone_manager PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  ${OpenCV_INCLUDE_DIRS})
+ament_target_dependencies(keepout_zone_manager
+  rclcpp
+  geographic_msgs
+  nav_msgs
+  sensor_msgs
+  std_srvs
+  tf2_ros
+  alliander_interfaces
+)
+target_link_libraries(keepout_zone_manager 
+  PkgConfig::GEOGRAPHICLIB
+  ${OpenCV_LIBS})
+install(
+  TARGETS keepout_zone_manager
   DESTINATION lib/${PROJECT_NAME}
 )
 
