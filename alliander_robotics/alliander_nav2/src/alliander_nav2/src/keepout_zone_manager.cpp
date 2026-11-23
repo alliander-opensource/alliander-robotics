@@ -161,7 +161,8 @@ bool KeepoutZoneManager::rebuildMask() {
   return true;
 }
 
-bool KeepoutZoneManager::collectLocalContours(std::vector<cv::Mat>& contours) const {
+bool KeepoutZoneManager::collectLocalContours(
+    std::vector<cv::Mat>& contours) const {
   contours.reserve(zones_.size());
 
   for (const auto& zone : zones_) {
