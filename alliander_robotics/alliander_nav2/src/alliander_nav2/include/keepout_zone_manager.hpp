@@ -145,12 +145,12 @@ class KeepoutZoneManager : public rclcpp::Node {
   bool rebuildMask();
 
   /**
-   * @brief Validates and collects copies of all stored zone contours.
+   * @brief Validates and collects copies of all stored local zone contours.
    *
    * @param contours Vector to which the validated contour copies are added.
    * @return True if all contours are valid, false otherwise.
    */
-  bool collectContours(std::vector<cv::Mat>& contours) const;
+  bool collectLocalContours(std::vector<cv::Mat>& contours) const;
 
   /**
    * @brief Creates an occupancy grid containing all provided contours.

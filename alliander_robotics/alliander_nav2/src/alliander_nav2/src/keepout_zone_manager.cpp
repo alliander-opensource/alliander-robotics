@@ -131,7 +131,7 @@ bool KeepoutZoneManager::rebuildMask() {
 
   std::vector<cv::Mat> contours;
 
-  if (!collectContours(contours)) {
+  if (!collectLocalContours(contours)) {
     return false;
   }
 
@@ -161,7 +161,7 @@ bool KeepoutZoneManager::rebuildMask() {
   return true;
 }
 
-bool KeepoutZoneManager::collectContours(std::vector<cv::Mat>& contours) const {
+bool KeepoutZoneManager::collectLocalContours(std::vector<cv::Mat>& contours) const {
   contours.reserve(zones_.size());
 
   for (const auto& zone : zones_) {
@@ -182,11 +182,12 @@ bool KeepoutZoneManager::createMask(std::vector<cv::Mat>& contours,
                                     int& new_width, int& new_height,
                                     double& new_origin_x,
                                     double& new_origin_y) const {
+  // Calculate the combined bounding box of all contours.
   cv::Mat combined_contour;
   cv::vconcat(contours, combined_contour);
-
   const cv::Rect bounding_box = cv::boundingRect(combined_contour);
 
+  // Calculate the required grid dimensions.
   constexpr std::size_t max_nr_grid_cells = 10'000'000;
 
   if (bounding_box.width < 1 || bounding_box.height < 1) {
@@ -202,9 +203,11 @@ bool KeepoutZoneManager::createMask(std::vector<cv::Mat>& contours,
     return false;
   }
 
+  // Calculate the grid origin in metres.
   new_origin_x = bounding_box.x * resolution_;
   new_origin_y = bounding_box.y * resolution_;
 
+  // Allocate the new grid.
   try {
     new_mask.assign(cell_count, 0);
   } catch (const std::bad_alloc&) {
@@ -215,10 +218,12 @@ bool KeepoutZoneManager::createMask(std::vector<cv::Mat>& contours,
   cv::Mat mask(bounding_box.height, bounding_box.width, CV_8SC1,
                new_mask.data());
 
+  // Shift all contours relative to the new grid origin.
   for (auto& contour : contours) {
     contour -= cv::Scalar(bounding_box.x, bounding_box.y);
   }
 
+  // Fill the mask with all keepout contours.
   cv::fillPoly(mask, contours, cv::Scalar(100));
 
   new_width = bounding_box.width;
