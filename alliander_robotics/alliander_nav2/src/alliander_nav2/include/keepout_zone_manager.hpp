@@ -177,6 +177,30 @@ class KeepoutZoneManager : public rclcpp::Node {
   bool rebuildMask();
 
   /**
+   * @brief Validates and collects copies of all stored zone contours.
+   *
+   * @param contours Vector to which the validated contour copies are added.
+   * @return True if all contours are valid, false otherwise.
+   */
+  bool collectContours(std::vector<cv::Mat>& contours) const;
+
+  /**
+   * @brief Creates an occupancy grid containing all supplied contours.
+   *
+   * @param contours Contours to rasterize. Their coordinates are shifted
+   *                 relative to the calculated grid origin.
+   * @param new_mask Vector containing the generated occupancy grid data.
+   * @param new_width Calculated grid width in cells.
+   * @param new_height Calculated grid height in cells.
+   * @param new_origin_x Calculated grid origin along the X-axis in metres.
+   * @param new_origin_y Calculated grid origin along the Y-axis in metres.
+   * @return True if the mask was created successfully, false otherwise.
+   */
+  bool createMask(std::vector<cv::Mat>& contours, std::vector<int8_t>& new_mask,
+                  int& new_width, int& new_height, double& new_origin_x,
+                  double& new_origin_y) const;
+
+  /**
    * @brief Publishes the current keepout zone occupancy grid.
    */
   void publishMask();
