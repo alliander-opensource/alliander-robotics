@@ -119,38 +119,6 @@ class KeepoutZoneManager : public rclcpp::Node {
   void utmCallback(const UTMDatum::SharedPtr msg);
 
   /**
-   * @brief Handles requests to add or remove all remove keepout zones.
-   * @param request Request describing the operation and its arguments.
-   * @param response Response containing the operation result and affected IDs.
-   */
-  void manageZonesCallback(
-      const std::shared_ptr<ManageKeepoutZones::Request> request,
-      std::shared_ptr<ManageKeepoutZones::Response> response);
-
-  /**
-   * @brief Handles requests to add keepout zones.
-   * @param request Request describing the operation and its arguments.
-   * @param response Response containing the operation result and affected IDs.
-   */
-  void addZones(const std::shared_ptr<ManageKeepoutZones::Request> request,
-                std::shared_ptr<ManageKeepoutZones::Response> response);
-
-  /**
-   * @brief Handles requests to remove a specific keepout zone.
-   * @param request Request describing the operation and its arguments.
-   * @param response Response containing the operation result and affected IDs.
-   */
-  void removeSingleZone(
-      const std::shared_ptr<ManageKeepoutZones::Request> request,
-      std::shared_ptr<ManageKeepoutZones::Response> response);
-
-  /**
-   * @brief Handles requests to remove all keepout zones.
-   * @param response Response containing the operation result and affected IDs.
-   */
-  void removeAllZones(std::shared_ptr<ManageKeepoutZones::Response> response);
-
-  /**
    * @brief Converts GPS coordinates into x and y coordinates in UTM tf-frame.
    * @param latitude Latitude in degrees.
    * @param longitude Longitude in degrees.
@@ -185,7 +153,7 @@ class KeepoutZoneManager : public rclcpp::Node {
   bool collectContours(std::vector<cv::Mat>& contours) const;
 
   /**
-   * @brief Creates an occupancy grid containing all supplied contours.
+   * @brief Creates an occupancy grid containing all provided contours.
    *
    * @param contours Contours to rasterize. Their coordinates are shifted
    *                 relative to the calculated grid origin.
@@ -199,6 +167,38 @@ class KeepoutZoneManager : public rclcpp::Node {
   bool createMask(std::vector<cv::Mat>& contours, std::vector<int8_t>& new_mask,
                   int& new_width, int& new_height, double& new_origin_x,
                   double& new_origin_y) const;
+
+  /**
+   * @brief Handles requests to add or remove all remove keepout zones.
+   * @param request Request describing the operation and its arguments.
+   * @param response Response containing the operation result and affected IDs.
+   */
+  void manageZonesCallback(
+      const std::shared_ptr<ManageKeepoutZones::Request> request,
+      std::shared_ptr<ManageKeepoutZones::Response> response);
+
+  /**
+   * @brief Handles requests to add keepout zones.
+   * @param request Request describing the operation and its arguments.
+   * @param response Response containing the operation result and affected IDs.
+   */
+  void addZones(const std::shared_ptr<ManageKeepoutZones::Request> request,
+                std::shared_ptr<ManageKeepoutZones::Response> response);
+
+  /**
+   * @brief Handles requests to remove a specific keepout zone.
+   * @param request Request describing the operation and its arguments.
+   * @param response Response containing the operation result and affected IDs.
+   */
+  void removeSingleZone(
+      const std::shared_ptr<ManageKeepoutZones::Request> request,
+      std::shared_ptr<ManageKeepoutZones::Response> response);
+
+  /**
+   * @brief Handles requests to remove all keepout zones.
+   * @param response Response containing the operation result and affected IDs.
+   */
+  void removeAllZones(std::shared_ptr<ManageKeepoutZones::Response> response);
 
   /**
    * @brief Publishes the current keepout zone occupancy grid.
