@@ -35,7 +35,8 @@ def launch_setup(context: LaunchContext) -> list:
             (
                 "/topic_out_image/compressed",
                 "thermal/image/compressed",
-            )
+            ),
+            ("/topic_out_raw", "thermal/raw"),
         ],
         namespace=camera_config.namespace,
     )

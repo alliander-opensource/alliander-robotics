@@ -8,6 +8,7 @@ import time
 from enum import Enum
 from typing import List, Optional
 
+import numpy as np
 import rclpy
 import requests
 from alliander_seekthermal.mac_finder import MacAddressFinder
@@ -15,6 +16,7 @@ from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.timer import Timer
 from sensor_msgs.msg import CompressedImage
+from std_msgs.msg import Float32MultiArray
 
 
 class ColorPalette(Enum):
@@ -37,6 +39,9 @@ class ColorPalette(Enum):
     IRON = 5
     AMBER = 6
     HI = 7
+
+
+DEFAULT_PALETTE = ColorPalette.WHITEHOT
 
 
 class SeekThermalBridge(Node):
@@ -78,11 +83,14 @@ class SeekThermalBridge(Node):
             color_palette = ColorPalette[palette_str.upper()]
         except KeyError:
             self.get_logger().warn(
-                f"Invalid color palette {palette_str}. Options are {[p.value for p in ColorPalette]}. Defaulting to {ColorPalette(4).name}."
+                f"Invalid color palette {palette_str}. Options are {[p.value for p in ColorPalette]}. Defaulting to {DEFAULT_PALETTE.name}."
             )
-            color_palette = ColorPalette(4)
+            color_palette = DEFAULT_PALETTE
 
-        self.publisher_: Publisher = self.create_publisher(
+        self.pub_raw_: Publisher = self.create_publisher(
+            Float32MultiArray, "/topic_out_raw", 1
+        )
+        self.pub_image_: Publisher = self.create_publisher(
             CompressedImage, "/topic_out_image/compressed", 1
         )
         self.timer_: Timer = self.create_timer(poll_period, self.timer_callback)
@@ -147,6 +155,23 @@ class SeekThermalBridge(Node):
         )
         resp.raise_for_status()
 
+    def get_raw(self) -> Float32MultiArray:
+        """Gets the raw thermal data per pixel, as a numpy array of floats.
+
+        Returns:
+            np.ndarray: per-pixel temperature, as an array of floats.
+        """
+        resp = self.session_.get(
+            f"http://{self.ip_addr}/therm32bitfloat",
+            headers={"Authorization": f"Bearer {self.token_}"},
+        )
+        resp.raise_for_status()
+
+        arr = np.frombuffer(resp.content, dtype="<f4")
+        msg = Float32MultiArray(data=arr.data)
+
+        return msg
+
     def get_image(self) -> bytes:
         """Fetch the current JPEG image from the camera.
 
@@ -183,10 +208,13 @@ class SeekThermalBridge(Node):
         return msg
 
     def timer_callback(self) -> None:
-        """Poll the camera for a new image and publish it to the ROS topic."""
+        """Poll the camera for raw data and a new image and publish them to the ROS topics."""
+        raw = self.get_raw()
+        self.pub_raw_.publish(raw)
+
         image = self.get_image()
         image_ros = self.convert_image(image)
-        self.publisher_.publish(image_ros)
+        self.pub_image_.publish(image_ros)
 
 
 def main(args: Optional[List[str]] = None) -> None:
