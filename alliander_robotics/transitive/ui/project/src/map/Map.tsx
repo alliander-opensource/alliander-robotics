@@ -116,6 +116,7 @@ export function MapComponent({
           current={w.id === current}
           onMove={wp.onMove}
           onRemove={wp.onRemove}
+          onRotate={wp.onRotate}
         />
       ))}
       {position && (
