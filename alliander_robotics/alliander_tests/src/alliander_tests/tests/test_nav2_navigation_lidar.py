@@ -11,7 +11,7 @@ from alliander_utilities.config_objects import Lidar, Vehicle, link
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from rclpy.node import Node
 from rclpy.time import Time
-from tf2_ros import TransformException  # ty: ignore[import-not-found]
+from tf2_ros import TransformException  # ty: ignore[missing-module-member]
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
