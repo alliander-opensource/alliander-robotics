@@ -9,6 +9,7 @@ from alliander_utilities.register import Register, RegisteredLaunchDescription
 from alliander_utilities.ros_utils import get_file_path
 from launch import LaunchContext, LaunchDescription
 from launch.actions import OpaqueFunction
+from launch_ros.actions import Node
 
 platform_arg = LaunchArgument("platform_config", "")
 
@@ -48,10 +49,20 @@ def launch_setup(context: LaunchContext) -> list:
         {"platform_config": camera_config.to_str()},
     )
 
+    detector = Node(
+        package="alliander_seekthermal",
+        executable="thermal_detector_node",
+        name="thermal_detector_node",
+        arguments=[],
+        remappings=[("/topic_in_data", "thermal/raw")],
+        namespace=camera_config.namespace,
+    )
+
     return [
         Register.on_start(state_publisher, context),
         Register.on_start(static_tf, context),
         Register.group(hardware, context) if not camera_config.simulation else SKIP,
+        Register.on_start(detector, context),
     ]
 
 
