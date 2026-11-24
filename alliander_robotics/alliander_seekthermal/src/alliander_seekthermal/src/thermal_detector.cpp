@@ -23,12 +23,8 @@ ThermalDetector::ThermalDetector() : rclcpp::Node("thermal_detector") {
   timer_ = create_wall_timer(std::chrono::milliseconds(250),
                              [this]() { onTimer(); });
 
-  // debugging
-  sub_image_ = create_subscription<sensor_msgs::msg::Image>(
-      "/topic_in_image", 1,
-      [this](const sensor_msgs::msg::Image::SharedPtr msg) { image_ = *msg; });
-  pub_intermediate_ = create_publisher<sensor_msgs::msg::Image>(
-      "/debug_intermediate_result", 1);
+  pub_hotspots_image_ =
+      create_publisher<sensor_msgs::msg::Image>("/topic_out_hotspots", 1);
 }
 
 void ThermalDetector::dataCallback(
@@ -120,17 +116,12 @@ std::vector<Hotspot> ThermalDetector::createHotspots(const cv::Mat mask) {
 
 void ThermalDetector::overlayHotspots(const cv::Mat& mask,
                                       const std::vector<Hotspot>& hotspots) {
-  constexpr float DISPLAY_MIN_TEMP = 0.0F;
-  constexpr float DISPLAY_MAX_TEMP = 100.0F;
-
-  // convert temperature to 8-bit values
+  // convert temperature to 8-bit values ( 0 - 100 C)
   cv::Mat clipped;
-  cv::max(temperature_, DISPLAY_MIN_TEMP, clipped);
-  cv::min(clipped, DISPLAY_MAX_TEMP, clipped);
+  cv::max(temperature_, 0., clipped);
+  cv::min(clipped, 100., clipped);
   cv::Mat temperature_8u;
-  const double scale = 255.0 / (DISPLAY_MAX_TEMP - DISPLAY_MIN_TEMP);
-  const double offset = -DISPLAY_MIN_TEMP * scale;
-  clipped.convertTo(temperature_8u, CV_8UC1, scale, offset);
+  clipped.convertTo(temperature_8u, CV_8UC1, 255.0 / 100.0, 0.0);
 
   // colorized thermal image
   cv::Mat overlay;
@@ -163,5 +154,5 @@ void ThermalDetector::overlayHotspots(const cv::Mat& mask,
   msg->header.stamp = get_clock()->now();
   msg->header.frame_id = "seekthermal/base_link";
 
-  pub_intermediate_->publish(*msg);
+  pub_hotspots_image_->publish(*msg);
 }

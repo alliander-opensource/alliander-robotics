@@ -36,7 +36,7 @@ class ThermalDetector : public rclcpp::Node {
 
   // for debugging, remove later
   sensor_msgs::msg::Image image_;
-  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_intermediate_;
+  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_hotspots_image_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_image_;
   void publishDebugImage(cv::Mat mat);
 };
